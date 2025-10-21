@@ -8,8 +8,9 @@ server:
   fileHostUrl: 'http://127.0.0.1:9527/' # 文件访问域名 【需修改】
   whiteList: '*' # 白名单
   originList: '*' # cors地址列表以逗号相隔 默认* 按需配置如：https://example1.com,https://example2.com,
+  uploadType: 1 # 上传类型 1:本地 2:阿里云 3:火山云 4:腾讯云（待对接）
 swagger:
-  enabled: true
+  enabled: false
   basePath: '/'
   filePath: './docs/swagger.json'
   path: 'docs'
@@ -61,7 +62,7 @@ redis:
   maxIdleTime: 30   # 单位（分）
   maxLifeTime: 60   # 单位（秒）
 amqp:
-  enabled: true # 是否启用rabbitmq
+  enabled: false # 是否启用rabbitmq
   host: '127.0.0.1'
   port: '5672'
   user: 'guest'

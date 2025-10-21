@@ -2,6 +2,7 @@ package oss
 
 import (
 	"bytes"
+	"io/ioutil"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 )
@@ -39,6 +40,16 @@ func (o *Oss) PutObject(object string, content []byte) error {
 }
 
 // PutObjectFromFile 上传文件
-func (o *Oss) PutObjectFromFile(object, local string) error {
-	return o.bucket.PutObjectFromFile(object, local)
+func (o *Oss) PutObjectFromFile(object, localPath string) error {
+	return o.bucket.PutObjectFromFile(object, localPath)
+}
+
+// GetObject 获取文件
+func (o *Oss) GetObject(object string) ([]byte, error) {
+	body, err := o.bucket.GetObject(object)
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+	return ioutil.ReadAll(body)
 }

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
 	"github.com/spf13/cast"
 
@@ -9,6 +10,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
+
+var NoAuthPaths = []string{
+	"/backend/auth/login",
+}
 
 // AuthMiddleware jwt authentication middleware
 func AuthMiddleware() fiber.Handler {
@@ -31,11 +36,7 @@ func AuthMiddleware() fiber.Handler {
 			return response.UnauthorizedException(ctx, "token is invalid")
 		},
 		Filter: func(ctx *fiber.Ctx) bool {
-			// notice: 在此可自定义路由通过auth验证
-			//if strings.HasPrefix(ctx.Path(), "/backend/auth/login") {
-			//	return true
-			//}
-			return false
+			return helper.InAnySlice(NoAuthPaths, ctx.Path())
 		},
 		// ContextKey: "user", // used in ctx.Locals("user").(*jwt.Token)
 	})

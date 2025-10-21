@@ -1,9 +1,9 @@
 package vars
 
 import (
+	"log/slog"
 	"path"
 	"runtime"
-	"sync"
 
 	"github.com/MQEnergy/go-skeleton/pkg/config"
 
@@ -18,8 +18,9 @@ var (
 	MDB      map[string]*gorm.DB // mysql多数据库操作
 	Redis    *redis.Client       // redis连接池
 	Router   *fiber.Router       // 路由
+	Routes   []fiber.Route       // 所有路由
 	Config   config.Config       // 配置
-	Once     sync.Once
+	Logger   *slog.Logger        // 日志
 )
 
 func init() {

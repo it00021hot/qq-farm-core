@@ -6,6 +6,7 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/middleware"
 	"github.com/MQEnergy/go-skeleton/internal/router/routes"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"github.com/MQEnergy/go-skeleton/pkg/database"
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
 	"github.com/goccy/go-json"
@@ -71,16 +72,25 @@ func Register(appName string) *fiber.App {
 	// common
 	routes.InitCommonGroup(r, publicMiddleware...)
 
+	prefix := vars.Config.GetString("database.mysql.sources." + database.DefaultAlias + ".prefix")
+
 	// backend
 	routes.InitBackendGroup(r,
-		middleware.AuthMiddleware(),  // jwt token middleware
-		middleware.CacheMiddleware(), // http cache middleware 此配置会缓存http请求，让相同参数请求接口的第二次请求走http缓存 接口速度更快 根据业务使用
+		append(publicMiddleware,
+			middleware.AuthMiddleware(),  // jwt token middleware
+			middleware.CacheMiddleware(), // http cache middleware 此配置会缓存http请求，让相同参数请求接口的第二次请求走http缓存 接口速度更快 根据业务使用
+			middleware.CasbinMiddleware(vars.DB, prefix, "sys_casbin_rule"),
+		)...,
 	)
 
 	// frontend
 	routes.InitFrontendGroup(r,
-		middleware.AuthMiddleware(),
-		middleware.CacheMiddleware(), // http cache middleware 按需使用
+		append(publicMiddleware,
+			middleware.AuthMiddleware(),
+			middleware.CacheMiddleware(), // http cache middleware 按需使用
+		)...,
 	)
+
+	vars.Routes = r.GetRoutes()
 	return r
 }

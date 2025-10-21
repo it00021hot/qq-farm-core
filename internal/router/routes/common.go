@@ -1,7 +1,8 @@
 package routes
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/app/controller/backend"
+	"github.com/MQEnergy/go-skeleton/internal/app/controller/backend/attachment"
+	"github.com/MQEnergy/go-skeleton/internal/app/controller/backend/user/auth"
 	"github.com/MQEnergy/go-skeleton/internal/middleware"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
 	"github.com/MQEnergy/go-skeleton/pkg/jwtauth"
@@ -48,11 +49,7 @@ func InitCommonGroup(r fiber.Router, handles ...fiber.Handler) {
 			})
 		})
 
-		// 上传资源
-		router.Post("/attachment/upload", backend.Attachment.Upload)
-
-		// 登录
-		router.Post("/backend/auth/login", backend.User.Login)
-
+		router.Post("/backend/auth/login", auth.Auth.Login).Name("登录")
+		router.Get("/file/:file_path", attachment.Attachment.ReadFile).Name("读取文件数据内容")
 	}
 }

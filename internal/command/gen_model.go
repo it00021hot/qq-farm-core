@@ -8,14 +8,13 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/MQEnergy/go-skeleton/pkg/helper"
-
 	"github.com/MQEnergy/go-skeleton/internal/app/entity"
 	"github.com/MQEnergy/go-skeleton/internal/bootstrap"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
 	"github.com/MQEnergy/go-skeleton/pkg/command"
 	"github.com/MQEnergy/go-skeleton/pkg/config"
 	"github.com/MQEnergy/go-skeleton/pkg/database"
+	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/urfave/cli/v2"
 	"gorm.io/gen"
 	"gorm.io/gorm"

@@ -1,35 +1,14 @@
 package helper
 
 import (
-	"crypto/md5"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"math/rand/v2"
-	"mime/multipart"
-	"os"
+	"math"
 	"os/exec"
-	"path/filepath"
 	"reflect"
-	"strconv"
+	"regexp"
 	"strings"
-	"sync"
-	"time"
 
-	"github.com/bwmarrin/snowflake"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/hashicorp/go-uuid"
 	"gorm.io/gorm/schema"
-)
-
-var (
-	snowflakeNode *snowflake.Node
-	sequence      uint32
-	sequenceMutex sync.Mutex
-	generatedIDs  map[int64]bool
-	idMutex       sync.Mutex
 )
 
 // InAnySlice 判断某个字符串是否在字符串切片中
@@ -52,6 +31,14 @@ func InAnyMap[T comparable](haystack map[string]T, needle T) bool {
 	return false
 }
 
+// InAnyKeyMap 判断某个map的键是否存在
+func InAnyKeyMap[T comparable, V comparable](haystack map[T]V, needle T) bool {
+	if _, ok := haystack[needle]; ok {
+		return true
+	}
+	return false
+}
+
 // GetKeyByMap 根据map中的值获取键
 func GetKeyByMap[T comparable](m map[string]T, value T) string {
 	for key, val := range m {
@@ -60,151 +47,6 @@ func GetKeyByMap[T comparable](m map[string]T, value T) string {
 		}
 	}
 	return ""
-}
-
-// GenerateSnowId 生成唯一ID
-func GenerateSnowId() int64 {
-	// 清理已生成的ID记录，防止内存泄漏
-	if len(generatedIDs) > 1000000 { // 假设我们只保留最近的100万个ID
-		generatedIDs = make(map[int64]bool)
-	}
-	// 生成基础ID
-	id := snowflakeNode.Generate().Int64()
-
-	// 添加序列号
-	sequenceMutex.Lock()
-	sequence++
-	id += int64(sequence)
-	sequenceMutex.Unlock()
-
-	// 检查是否重复
-	idMutex.Lock()
-	if !generatedIDs[id] {
-		generatedIDs[id] = true
-		idMutex.Unlock()
-		return id
-	}
-	idMutex.Unlock()
-
-	// 如果重复，等待一小段时间后重试
-	time.Sleep(time.Millisecond)
-	return GenerateSnowId()
-}
-
-// GenerateRandomUUID 生成随机字符串
-func GenerateRandomUUID(size int) string {
-	str, err := uuid.GenerateUUID()
-	if err != nil {
-		return ""
-	}
-	return gstr.SubStr(str, 0, size)
-}
-
-// RandString 随机字符串
-func RandString(length int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[rand.IntN(len(charset))]
-	}
-	return string(b)
-}
-
-// GeneratePasswordHash 生成密码hash值
-func GeneratePasswordHash(password string, salt string) string {
-	s := sha256.New()
-	io.WriteString(s, password+salt)
-	str := fmt.Sprintf("%x", s.Sum(nil))
-	return str
-}
-
-// GenerateHash 生成md5 hash值
-func GenerateHash(str string) string {
-	s := md5.New()
-	s.Write([]byte(str))
-	return hex.EncodeToString(s.Sum(nil))
-}
-
-// IsPathExist 判断所给路径文件/文件夹是否存在
-func IsPathExist(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil {
-		if os.IsExist(err) {
-			return true
-		}
-		return false
-	}
-	return true
-}
-
-// MakeMultiDir 调用os.MkdirAll递归创建文件夹
-func MakeMultiDir(filePath string) error {
-	if !IsPathExist(filePath) {
-		return os.MkdirAll(filePath, os.ModePerm)
-	}
-	return nil
-}
-
-// MakeFileOrPath 创建文件/文件夹
-func MakeFileOrPath(path string) (*os.File, error) {
-	file, err := os.Create(path)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
-}
-
-// WriteContentToFile
-// @Description: 写文件
-// @param filePath
-// @return error
-func WriteContentToFile(file *multipart.FileHeader, filePath string) error {
-	f, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	open, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer open.Close()
-	fileBytes, err := ioutil.ReadAll(open)
-	if err != nil {
-		return err
-	}
-	if _, err := f.Write(fileBytes); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MakeTimeFormatDir
-// @Description: 创建时间格式的目录 如：upload/{path}/2023-01-07/
-// @param rootPath 根目录
-// @param pathName 子目录名称
-// @param timeFormat 时间格式 如：2006-01-02、20060102
-// @return string
-// @return error
-func MakeTimeFormatDir(rootPath, pathName, timeFormat string) (string, error) {
-	filePath := "upload/"
-	if pathName != "" {
-		filePath += pathName + "/"
-	}
-	filePath += time.Now().Format(timeFormat) + "/"
-	if err := MakeMultiDir(rootPath + filePath); err != nil {
-		return "", err
-	}
-	return filePath, nil
-}
-
-// String2Int 将数组的string转int
-func String2Int(strArr []string) []int {
-	res := make([]int, len(strArr))
-	for index, val := range strArr {
-		res[index], _ = strconv.Atoi(val)
-	}
-	return res
 }
 
 // GetStructColumnName 获取结构体中的字段名称 _type: 1: 获取tag字段值 2：获取结构体字段值
@@ -241,100 +83,36 @@ func GetProjectModuleName() string {
 	return strings.Trim(string(output), "\n")
 }
 
-// GetFileNamesByDirPath 获取当前文件夹下的所有文件和文件夹名称（包括子文件夹和文件）
-func GetFileNamesByDirPath(root string) ([]map[string]interface{}, error) {
-	paths := make([]map[string]interface{}, 0)
-	dirs, err := GetAllDirs(root)
-	if err != nil {
-		return paths, err
+// GetDeliveryTime 计算配送时间 配送时间默认3000m以内60分钟，超过1000m增加5分钟，返回秒
+func GetDeliveryTime(distance int, startDistance int, startTime int, addDistance int, addTime int) int {
+	if startDistance == 0 {
+		startDistance = 3000
 	}
-	// 获取每个文件夹的第一级文件列表
-	for _, dir := range dirs {
-		var pathItem map[string]interface{}
-		fileNames := make([]string, 0)
-		files, err := ioutil.ReadDir(dir)
-		if err != nil {
-			continue
-		}
-
-		dir = strings.Replace(dir, "\\", "/", -1)
-		pathItem = map[string]interface{}{
-			"path":  strings.Replace(dir, root, "", 1),
-			"files": []string{},
-		}
-		for _, file := range files {
-			if !strings.HasSuffix(file.Name(), ".go") {
-				continue
-			}
-			if strings.HasSuffix(file.Name(), "_test.go") {
-				continue
-			}
-			fileNames = append(fileNames, strings.Replace(file.Name(), ".go", "", -1))
-		}
-		pathItem["files"] = fileNames
-		paths = append(paths, pathItem)
+	if startTime == 0 {
+		startTime = 60
 	}
-	return paths, nil
+	if addDistance == 0 {
+		addDistance = 1000
+	}
+	if addTime == 0 {
+		addTime = 5
+	}
+	if distance < startDistance {
+		return startTime * 60
+	}
+	return (int(math.Ceil(float64(distance-startDistance)/float64(addDistance)))*addTime + startTime) * 60
 }
 
-// getFilesInDir 获取指定目录下的所有文件名称
-func getFilesInDir(dir string) ([]string, error) {
-	files := make([]string, 0)
-	if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// 判断是否为文件
-		if !info.IsDir() && strings.HasSuffix(info.Name(), ".go") {
-			files = append(files, strings.Replace(info.Name(), ".go", "", -1))
-		}
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-	return files, nil
+// IsValidPhone 验证手机号格式
+func IsValidPhone(phone string) bool {
+	// 中国大陆手机号格式验证
+	reg := regexp.MustCompile(`^1[3-9]\d{9}$`)
+	return reg.MatchString(phone)
 }
 
-// GetAllDirs 获取指定文件夹中所有文件夹路径
-func GetAllDirs(root string) ([]string, error) {
-	var dirs []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			dirs = append(dirs, path)
-		}
-		return nil
-	})
-	return dirs, err
-}
-
-// ToCamelCase 将字符串转换成驼峰写法
-func ToCamelCase(s string) string {
-	words := strings.FieldsFunc(s, func(r rune) bool {
-		return r == ' ' || r == '_' || r == '-' || r == '.' || r == '~' || r == ':'
-	})
-	var result string
-	for i, word := range words {
-		if i == 0 {
-			result += strings.ToLower(word)
-		} else {
-			result += strings.Title(word)
-		}
-	}
-	return result
-}
-
-// ArrayChunk 数组分组
-func ArrayChunk[T any](arr []T, size int) [][]T {
-	var chunks [][]T
-	for i := 0; i < len(arr); i += size {
-		end := i + size
-		if end > len(arr) {
-			end = len(arr)
-		}
-		chunks = append(chunks, arr[i:end])
-	}
-	return chunks
+// IsValidEmail 验证邮箱格式
+func IsValidEmail(email string) bool {
+	// 邮箱格式验证
+	reg := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	return reg.MatchString(email)
 }

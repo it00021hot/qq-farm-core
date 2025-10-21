@@ -1,25 +1,23 @@
 package routes
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/app/controller/backend"
-	"github.com/MQEnergy/go-skeleton/internal/middleware"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/database"
+	"github.com/MQEnergy/go-skeleton/internal/app/controller/backend/attachment"
+	"github.com/MQEnergy/go-skeleton/internal/app/controller/backend/user/auth"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
 	"github.com/gofiber/fiber/v2"
 )
 
 // InitBackendGroup 初始化后台接口路由
 func InitBackendGroup(r fiber.Router, handles ...fiber.Handler) {
-	prefix := vars.Config.GetString("database.mysql.sources." + database.DefaultAlias + ".prefix")
-	backendHandles := append(handles, middleware.CasbinMiddleware(vars.DB, prefix, ""))
-	router := r.Group("backend", backendHandles...)
+	router := r.Group("backend", handles...)
 	{
-		router.Get("/", func(ctx *fiber.Ctx) error {
-			return response.SuccessJSON(ctx, "", "backend")
+		router.Get("/ping", func(ctx *fiber.Ctx) error {
+			return response.SuccessJSON(ctx, "", "backend pong")
 		})
 
-		router.Get("/user/index", backend.User.Index)
+		router.Get("/auth/routes", auth.Auth.Routes).Name("获取所有后端路由")
+		router.Post("/auth/logout", auth.Auth.Logout).Name("退出登录")
+		router.Post("/attachment/upload", attachment.Attachment.Upload).Name("上传资源")
 	}
 
 	// casbin中间件可根据不同的数据库进行单独配置 示例如下：

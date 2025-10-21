@@ -26,10 +26,14 @@ var (
 
 // BootService Load service
 func BootService(services ...string) {
-	// loading configuration
+	// init config
 	if err := boots.InitConfig(); err != nil {
 		panic("Failed to load config：" + err.Error())
 	}
+	// init logger
+	boots.InitLogger()
+
+	// init service
 	if len(services) == 0 {
 		services = serviceMap.keys()
 	}
@@ -43,8 +47,7 @@ func BootService(services ...string) {
 			BootedService = append(BootedService, k)
 		}
 	}
-	boots.InitLogger()
-	// load dao
+	// init dao
 	boots.InitDao()
 }
 

@@ -18,10 +18,33 @@ import (
 	"gorm.io/gorm"
 )
 
+// 定义不需要权限校验的路径
+var excludePaths = []string{
+	"/backend/auth/login",
+	"/backend/auth/loginForTest",
+	"/backend/auth/shop-login",
+	"/backend/auth/wx-login",
+	"/backend/auth/wx-qr-register",
+	"/backend/auth/forget-pass",
+}
+
 // CasbinMiddleware casbin middleware
 func CasbinMiddleware(db *gorm.DB, prefix, tableName string) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
+		// 使用helper.InAnySlice判断当前路径是否需要跳过权限校验
+		if helper.InAnySlice[string](excludePaths, ctx.Path()) {
+			return ctx.Next()
+		}
 		if db == nil {
+			return ctx.Next()
+		}
+
+		roleIds := ctx.GetRespHeader("role_ids")
+		if roleIds == "" {
+			return response.UnauthorizedException(ctx, "该用户还未分配角色权限")
+		}
+		roleList := strings.Split(roleIds, ",")
+		if helper.InAnySlice[string](roleList, vars.Config.GetString("server.superRoleId")) {
 			return ctx.Next()
 		}
 		if tableName == "" {
@@ -33,18 +56,9 @@ func CasbinMiddleware(db *gorm.DB, prefix, tableName string) fiber.Handler {
 		e.AddFunction("ParamsObjMatch", ParamsObjMatchFunc)
 		e.AddFunction("ParamsActMatch", ParamsActMatchFunc)
 		_ = e.LoadPolicy()
-
 		//	获取当前请求的url
 		obj := ctx.Path()
 		act := ctx.Method()
-		roleIds := ctx.GetRespHeader("role_ids")
-		if roleIds == "" {
-			return response.UnauthorizedException(ctx, "该用户还未分配权限")
-		}
-		roleList := strings.Split(roleIds, ",")
-		if helper.InAnySlice[string](roleList, vars.Config.GetString("server.superRoleId")) {
-			return ctx.Next()
-		}
 		flag := false
 		for _, sub := range roleList {
 			//	判断策略中是否存在
@@ -54,7 +68,7 @@ func CasbinMiddleware(db *gorm.DB, prefix, tableName string) fiber.Handler {
 			}
 		}
 		if !flag {
-			return response.ForbiddenException(ctx, "该用户无此权限")
+			return response.ForbiddenException(ctx, "该用户未授权访问权限")
 		}
 		return ctx.Next()
 	}

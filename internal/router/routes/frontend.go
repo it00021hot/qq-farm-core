@@ -9,8 +9,8 @@ import (
 func InitFrontendGroup(r fiber.Router, handles ...fiber.Handler) {
 	router := r.Group("api", handles...)
 	{
-		router.Get("/", func(ctx *fiber.Ctx) error {
-			return response.SuccessJSON(ctx, "", "api")
+		router.Get("/ping", func(ctx *fiber.Ctx) error {
+			return response.SuccessJSON(ctx, "", "api pong")
 		})
 	}
 }

@@ -1,10 +1,10 @@
 package pagination
 
 import (
-	"gorm.io/gorm"
 	"math"
 
 	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"gorm.io/gorm"
 )
 
 // PaginateResp ...
@@ -39,7 +39,7 @@ func (pb *PaginateResp) ParsePage(currentPage, pageSize int) (page PaginateResp)
 	if page.LastPage < 1 {
 		page.LastPage = 1
 	}
-	return
+	return page
 }
 
 // GetOffset 获取偏移量
@@ -75,14 +75,14 @@ func (pb *PaginateResp) SetCount(count int64) *PaginateResp {
 // FindByPage 分页查询
 func FindByPage[T comparable](db *gorm.DB, offset int, limit int) (result []T, count int64, err error) {
 	if err = db.Offset(offset).Limit(limit).Find(&result).Error; err != nil {
-		return
+		return result, count, err
 	}
 	if size := len(result); 0 < limit && 0 < size && size < limit {
 		count = int64(size + offset)
-		return
+		return result, count, err
 	}
 	if err = db.Offset(-1).Limit(-1).Count(&count).Error; err != nil {
-		return
+		return result, count, err
 	}
-	return
+	return result, count, err
 }
