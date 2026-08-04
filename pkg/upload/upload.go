@@ -1,10 +1,8 @@
 package upload
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"image"
 	"mime/multipart"
 	"net/url"
 	"path/filepath"
@@ -15,16 +13,19 @@ import (
 	"github.com/MQEnergy/go-skeleton/pkg/config"
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/MQEnergy/go-skeleton/pkg/oss"
-	"github.com/MQEnergy/go-skeleton/pkg/tos"
+	s3store "github.com/MQEnergy/go-skeleton/pkg/s3"
 
-	"github.com/disintegration/imaging"
 	"github.com/samber/lo"
-	"github.com/spf13/cast"
 )
 
 const (
 	// MaxUploadSize 默认最大上传资源大小是10M
-	MaxUploadSize = 10 << 20 // 使用位运算更清晰
+	MaxUploadSize = 10 << 20
+
+	// UploadTypeOSS 阿里云 OSS
+	UploadTypeOSS = 1
+	// UploadTypeS3 S3 兼容存储
+	UploadTypeS3 = 2
 )
 
 var (
@@ -81,10 +82,12 @@ type FileHeader struct {
 	AttachmentId uint64 `json:"attachment_id"`
 	Filename     string `json:"file_name"`   // 图片新名称
 	FileSize     int64  `json:"file_size"`   // 图片大小
-	FilePath     string `json:"file_path"`   // 相对路径地址
+	FilePath     string `json:"file_path"`   // 相对路径地址（DB 存的 canonical key）
 	OriginName   string `json:"origin_name"` // 图片原名称
 	MimeType     string `json:"mime_type"`   // 附件mime类型
 	Extension    string `json:"extension"`   // 附件后缀名
+	SignedURL    string `json:"signed_url"`  // 短期预签名访问地址
+	Expire       int64  `json:"expire"`      // 预签名有效秒数
 }
 
 // New 创建一个新的上传实例
@@ -124,83 +127,95 @@ func (u *Upload) Upload(file *multipart.FileHeader, path string) (*FileHeader, e
 		return nil, err
 	}
 
-	uploadDir, err := u.makeUploadDir(path)
-	if err != nil {
-		return nil, err
-	}
+	uploadDir := u.makeObjectDir(path)
 	switch uploadType {
-	case 1:
-		return u.uploadToLocal(fileBytes, header, uploadDir)
-	case 2:
+	case UploadTypeOSS:
 		return u.uploadToOss(fileBytes, header, uploadDir)
-	case 3:
-		return u.uploadToTos(fileBytes, header, uploadDir)
+	case UploadTypeS3:
+		return u.uploadToS3(fileBytes, header, uploadDir)
 	default:
-		return u.uploadToLocal(fileBytes, header, uploadDir)
+		return nil, fmt.Errorf("不支持的上传类型: %d（仅支持 1:阿里云OSS 2:S3）", uploadType)
 	}
-}
-
-// uploadToLocal 上传文件到本地服务器
-func (u *Upload) uploadToLocal(fileBytes []byte, header *FileHeader, uploadDir string) (*FileHeader, error) {
-	filePath := filepath.Join(uploadDir, header.Filename)
-	if err := helper.WriteBytesToFile(fileBytes, filePath); err != nil {
-		return nil, err
-	}
-	pathParts := lo.Compact[string](strings.Split(filepath.ToSlash(filePath), "/"))
-	// 数组中去除server.fileUploadPath的值
-	pathParts = pathParts[len(vars.Config.GetStringSlice("server.fileUploadPath")):]
-	header.FilePath = strings.Join(pathParts, "_")
-	return header, nil
 }
 
 // uploadToOss 上传文件到阿里云OSS
 func (u *Upload) uploadToOss(fileBytes []byte, header *FileHeader, uploadDir string) (*FileHeader, error) {
-
-	o, err := oss.New(&oss.Config{
-		EndPoint:     u.config.GetString("oss.endPoint"),
-		AccessId:     u.config.GetString("oss.accessKeyId"),
-		AccessSecret: u.config.GetString("oss.accessKeySecret"),
-		BucketName:   u.config.GetString("oss.bucketName"),
-	})
+	o, err := u.newOss()
 	if err != nil {
 		return nil, err
 	}
 
-	filePath := filepath.Join(uploadDir, header.Filename)
+	filePath := filepath.ToSlash(filepath.Join(uploadDir, header.Filename))
 	if err := o.PutObject(filePath, fileBytes); err != nil {
 		return nil, err
 	}
-	pathParts := lo.Compact[string](strings.Split(filepath.ToSlash(filePath), "/"))
-	pathParts = pathParts[len(vars.Config.GetStringSlice("server.fileUploadPath")):]
-	header.FilePath = strings.Join(pathParts, "_")
+	header.FilePath = toStorageKey(filePath)
 	return header, nil
 }
 
-// uploadToTos 上传文件到火山引擎TOS
-func (u *Upload) uploadToTos(fileBytes []byte, header *FileHeader, uploadDir string) (*FileHeader, error) {
-	o, err := tos.New(&tos.Config{
-		EndPoint:     u.config.GetString("tos.endPoint"),
-		AccessId:     u.config.GetString("tos.accessKeyId"),
-		AccessSecret: u.config.GetString("tos.accessKeySecret"),
-		BucketName:   u.config.GetString("tos.bucketName"),
-		Region:       u.config.GetString("tos.region"),
-	})
+// uploadToS3 上传文件到 S3 兼容存储
+func (u *Upload) uploadToS3(fileBytes []byte, header *FileHeader, uploadDir string) (*FileHeader, error) {
+	o, err := u.newS3()
 	if err != nil {
 		return nil, err
 	}
 
-	filePath := filepath.Join(uploadDir, header.Filename)
+	filePath := filepath.ToSlash(filepath.Join(uploadDir, header.Filename))
 	if err := o.PutObject(filePath, fileBytes); err != nil {
 		return nil, err
 	}
-	pathParts := lo.Compact[string](strings.Split(filepath.ToSlash(filePath), "/"))
-	pathParts = pathParts[len(vars.Config.GetStringSlice("server.fileUploadPath")):]
-	header.FilePath = strings.Join(pathParts, "_")
+	header.FilePath = toStorageKey(filePath)
 	return header, nil
 }
 
-// GetFileInfo 根据不同的上传类型获取文信息
-func (u *Upload) GetFileInfo(filePath, xOssProcess string) (*multipart.FileHeader, []byte, error) {
+// SignExpireSeconds 预签名有效秒数
+func (u *Upload) SignExpireSeconds() int64 {
+	sec := u.config.GetInt64("server.signExpireSeconds")
+	if sec <= 0 {
+		sec = 3600
+	}
+	return sec
+}
+
+// ResolveObjectPath 将 DB/接口中的 underscore key 还原为对象存储路径
+func ResolveObjectPath(fileURL string) string {
+	filePath := strings.ReplaceAll(fileURL, "_", "/")
+	base := vars.Config.GetString("server.fileUploadPath")
+	if base != "" && !strings.HasPrefix(filePath, base) {
+		filePath = filepath.ToSlash(filepath.Join(base, filePath))
+	}
+	return filepath.ToSlash(filePath)
+}
+
+// SignURL 按当前上传类型签发短期访问地址
+func (u *Upload) SignURL(filePathKey string) (string, int64, error) {
+	expireSec := u.SignExpireSeconds()
+	objectPath := ResolveObjectPath(filePathKey)
+	uploadType := u.config.GetInt("server.uploadType")
+	expire := time.Duration(expireSec) * time.Second
+
+	switch uploadType {
+	case UploadTypeOSS:
+		o, err := u.newOss()
+		if err != nil {
+			return "", 0, err
+		}
+		signed, err := o.SignGetURL(objectPath, expire)
+		return signed, expireSec, err
+	case UploadTypeS3:
+		o, err := u.newS3()
+		if err != nil {
+			return "", 0, err
+		}
+		signed, err := o.SignGetURL(objectPath, expire)
+		return signed, expireSec, err
+	default:
+		return "", 0, fmt.Errorf("不支持的上传类型: %d（仅支持 1:阿里云OSS 2:S3）", uploadType)
+	}
+}
+
+// GetFileInfo 根据不同的上传类型获取文件信息
+func (u *Upload) GetFileInfo(filePath, _ string) (*multipart.FileHeader, []byte, error) {
 	uploadType := u.config.GetInt("server.uploadType")
 	var fileBytes []byte
 	var err error
@@ -218,49 +233,25 @@ func (u *Upload) GetFileInfo(filePath, xOssProcess string) (*multipart.FileHeade
 	}
 
 	switch uploadType {
-	case 2: // OSS存储
-		o, err1 := oss.New(&oss.Config{
-			EndPoint:     u.config.GetString("oss.endPoint"),
-			AccessId:     u.config.GetString("oss.accessKeyId"),
-			AccessSecret: u.config.GetString("oss.accessKeySecret"),
-			BucketName:   u.config.GetString("oss.bucketName"),
-		})
+	case UploadTypeOSS:
+		o, err1 := u.newOss()
 		if err1 != nil {
 			return nil, nil, err1
 		}
-		fileBytes, err = o.GetObject(filePath)
-	case 3: // TOS存储
-		o, err1 := tos.New(&tos.Config{
-			EndPoint:     u.config.GetString("tos.endPoint"),
-			AccessId:     u.config.GetString("tos.accessKeyId"),
-			AccessSecret: u.config.GetString("tos.accessKeySecret"),
-			BucketName:   u.config.GetString("tos.bucketName"),
-			Region:       u.config.GetString("tos.region"),
-		})
+		fileBytes, err = o.GetObject(filepath.ToSlash(filePath))
+	case UploadTypeS3:
+		o, err1 := u.newS3()
 		if err1 != nil {
 			return nil, nil, err1
 		}
-		fileBytes, err = o.GetObject(filePath)
-	case 1: // 本地存储
-		fallthrough
+		fileBytes, err = o.GetObject(filepath.ToSlash(filePath))
 	default:
-		if strings.HasPrefix(mimeType, "image/") && xOssProcess != "" {
-			processedBytes, procErr := ProcessImageWithXOssProcess(filePath, xOssProcess)
-			if procErr == nil {
-				fileBytes = processedBytes
-			} else {
-				// 如果处理失败，则回退到读取原始文件
-				fileBytes, err = helper.ReadLocalFile(filePath)
-			}
-		} else {
-			fileBytes, err = helper.ReadLocalFile(filePath)
-		}
+		return nil, nil, fmt.Errorf("不支持的上传类型: %d（仅支持 1:阿里云OSS 2:S3）", uploadType)
 	}
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// 创建 multipart.FileHeader
 	fileHeader := &multipart.FileHeader{
 		Filename: filepath.Base(filePath),
 		Size:     int64(len(fileBytes)),
@@ -271,132 +262,45 @@ func (u *Upload) GetFileInfo(filePath, xOssProcess string) (*multipart.FileHeade
 	return fileHeader, fileBytes, nil
 }
 
-// ParseXOssProcess 解析x-oss-process参数
-// 示例: image/resize,m_lfit,h_200,w_200
-func ParseXOssProcess(xOssProcess string) map[string]string {
-	if xOssProcess == "" {
-		return nil
-	}
-
-	params := make(map[string]string)
-
-	// 按逗号分割参数
-	parts := strings.Split(xOssProcess, ",")
-
-	for i, part := range parts {
-		trimmedPart := strings.TrimSpace(part)
-		if trimmedPart == "" {
-			continue
-		}
-
-		if i == 0 {
-			// 第一个参数永远是image/*类型，设置为type
-			params["type"] = trimmedPart
-		} else {
-			// 处理其他参数
-			if strings.Contains(trimmedPart, "_") {
-				// 处理类似 m_lfit 的参数，将下划线前的部分作为key
-				kv := strings.SplitN(trimmedPart, "_", 2)
-				if len(kv) == 2 {
-					params[kv[0]] = kv[1]
-				}
-			} else if strings.Contains(trimmedPart, "=") {
-				// 处理类似 h=200 的参数
-				kv := strings.SplitN(trimmedPart, "=", 2)
-				if len(kv) == 2 {
-					params[kv[0]] = kv[1]
-				}
-			}
-		}
-	}
-
-	return params
-}
-
-// ProcessImageWithXOssProcess 根据x-oss-process参数处理图片
-// aliyun oss doc: https://help.aliyun.com/document_detail/44688.html
-func ProcessImageWithXOssProcess(filePath, xOssProcess string) ([]byte, error) {
-	params := ParseXOssProcess(xOssProcess)
-	if len(params) == 0 {
-		return nil, fmt.Errorf("无效的x-oss-process参数")
-	}
-
-	img, err := imaging.Open(filePath, imaging.AutoOrientation(true))
-	if err != nil {
-		return nil, fmt.Errorf("打开图片失败: %w", err)
-	}
-
-	format, err := imaging.FormatFromExtension(filepath.Ext(filePath))
-	if err != nil {
-		// 如果无法从扩展名确定格式，则回退到PNG
-		format = imaging.PNG
-	}
-
-	opType, ok := params["type"]
-	if !ok {
-		return nil, fmt.Errorf("无效的参数 type")
-	}
-
-	var processedImage image.Image
-	switch opType {
-	case "image/resize":
-		width, wOk := params["w"]
-		height, hOk := params["h"]
-
-		w := cast.ToInt(width)
-		h := cast.ToInt(height)
-
-		if (!wOk && !hOk) || (w == 0 && h == 0) {
-			return nil, fmt.Errorf("无效的参数")
-		}
-
-		mode, mOk := params["m"]
-		if !mOk {
-			mode = "lfit"
-		}
-
-		switch mode {
-		case "lfit":
-			if w == 0 {
-				// h=200, w=0 => 高度为200，宽度等比缩放
-				processedImage = imaging.Resize(img, 0, h, imaging.Lanczos)
-			} else if h == 0 {
-				// h=0, w=200 => 宽度为200，高度等比缩放
-				processedImage = imaging.Resize(img, w, 0, imaging.Lanczos)
-			} else {
-				// h=200, w=200 => 宽高最大为200，等比缩放
-				processedImage = imaging.Fit(img, w, h, imaging.Lanczos)
-			}
-		case "fixed":
-			// h=0或w=0时，等比缩放
-			processedImage = imaging.Resize(img, w, h, imaging.Lanczos)
-		default:
-			processedImage = img
-		}
-	default:
-		return nil, fmt.Errorf("不支持的操作类型: %s", opType)
-	}
-
-	if processedImage == nil {
-		return nil, fmt.Errorf("图片处理失败")
-	}
-
-	buf := new(bytes.Buffer)
-	err = imaging.Encode(buf, processedImage, format)
-	if err != nil {
-		return nil, fmt.Errorf("编码处理后的图片失败: %w", err)
-	}
-	return buf.Bytes(), nil
-}
-
-// makeUploadDir 创建上传目录
-func (u *Upload) makeUploadDir(path string) (string, error) {
+// makeObjectDir 生成对象目录前缀（不落本地磁盘）
+func (u *Upload) makeObjectDir(path string) string {
 	baseUploadPath := vars.Config.GetString("server.fileUploadPath")
-	filePath, err := helper.MakeTimeFormatDir(baseUploadPath, path, time.DateOnly)
-	if err != nil {
-		return "", fmt.Errorf("创建上传目录失败: %w", err)
+	parts := []string{baseUploadPath}
+	if strings.TrimSpace(path) != "" {
+		parts = append(parts, path)
 	}
-	return filePath, nil
+	parts = append(parts, time.Now().Format(time.DateOnly))
+	return filepath.ToSlash(filepath.Join(parts...))
+}
+
+func toStorageKey(fullPath string) string {
+	pathParts := lo.Compact(strings.Split(filepath.ToSlash(fullPath), "/"))
+	base := vars.Config.GetString("server.fileUploadPath")
+	if base != "" && len(pathParts) > 0 && pathParts[0] == base {
+		pathParts = pathParts[1:]
+	}
+	return strings.Join(pathParts, "_")
+}
+
+func (u *Upload) newOss() (*oss.Oss, error) {
+	return oss.New(&oss.Config{
+		EndPoint:     u.config.GetString("oss.endPoint"),
+		AccessId:     u.config.GetString("oss.accessKeyId"),
+		AccessSecret: u.config.GetString("oss.accessKeySecret"),
+		BucketName:   u.config.GetString("oss.bucketName"),
+	})
+}
+
+func (u *Upload) newS3() (*s3store.S3, error) {
+	return s3store.New(&s3store.Config{
+		EndPoint:     u.config.GetString("s3.endPoint"),
+		AccessId:     u.config.GetString("s3.accessKeyId"),
+		AccessSecret: u.config.GetString("s3.accessKeySecret"),
+		BucketName:   u.config.GetString("s3.bucketName"),
+		UseSSL:       u.config.GetBool("s3.useSSL"),
+		BaseURL:      u.config.GetString("s3.baseUrl"),
+		Region:       u.config.GetString("s3.region"),
+	})
 }
 
 // validate 验证上传文件的有效性

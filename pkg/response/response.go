@@ -1,7 +1,7 @@
 package response
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type JSONResponse struct {
@@ -12,7 +12,7 @@ type JSONResponse struct {
 }
 
 // JSON 基础返回
-func JSON(ctx *fiber.Ctx, status int, errcode Code, message string, data interface{}) error {
+func JSON(ctx fiber.Ctx, status int, errcode Code, message string, data interface{}) error {
 	if message == "" {
 		message = CodeMap[errcode]
 	}
@@ -25,7 +25,7 @@ func JSON(ctx *fiber.Ctx, status int, errcode Code, message string, data interfa
 }
 
 // SuccessJSON 成功返回
-func SuccessJSON(ctx *fiber.Ctx, message string, data interface{}) error {
+func SuccessJSON(ctx fiber.Ctx, message string, data interface{}) error {
 	if message == "" {
 		message = Success.Msg()
 	}
@@ -33,7 +33,7 @@ func SuccessJSON(ctx *fiber.Ctx, message string, data interface{}) error {
 }
 
 // BadRequestException 400错误
-func BadRequestException(ctx *fiber.Ctx, message string) error {
+func BadRequestException(ctx fiber.Ctx, message string) error {
 	if message == "" {
 		message = CodeMap[RequestParamErr]
 	}
@@ -41,7 +41,7 @@ func BadRequestException(ctx *fiber.Ctx, message string) error {
 }
 
 // UnauthorizedException 401错误
-func UnauthorizedException(ctx *fiber.Ctx, message string) error {
+func UnauthorizedException(ctx fiber.Ctx, message string) error {
 	if message == "" {
 		message = CodeMap[UnAuthed]
 	}
@@ -49,7 +49,7 @@ func UnauthorizedException(ctx *fiber.Ctx, message string) error {
 }
 
 // ForbiddenException 403错误
-func ForbiddenException(ctx *fiber.Ctx, message string) error {
+func ForbiddenException(ctx fiber.Ctx, message string) error {
 	if message == "" {
 		message = CodeMap[Failed]
 	}
@@ -57,7 +57,7 @@ func ForbiddenException(ctx *fiber.Ctx, message string) error {
 }
 
 // NotFoundException 404错误
-func NotFoundException(ctx *fiber.Ctx, message string) error {
+func NotFoundException(ctx fiber.Ctx, message string) error {
 	if message == "" {
 		message = CodeMap[RequestMethodErr]
 	}
@@ -65,7 +65,7 @@ func NotFoundException(ctx *fiber.Ctx, message string) error {
 }
 
 // InternalServerException 500错误
-func InternalServerException(ctx *fiber.Ctx, message string) error {
+func InternalServerException(ctx fiber.Ctx, message string) error {
 	if message == "" {
 		message = CodeMap[InternalErr]
 	}

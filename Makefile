@@ -43,7 +43,7 @@ docs:
 		echo "swag not found, installing..."; \
 		go install github.com/swaggo/swag/cmd/swag@latest; \
 	fi
-	@swag init -g ../../cmd/app/main.go -d cmd/app,internal/app --exclude "docs/,vendor/,**/*_test.go" --parseDepth 3 --parseDependency --parseInternal -o docs
+	@swag init -g main.go -d ./cmd/app,./internal/app/controller,./pkg/response --exclude "docs/,vendor/,**/*_test.go" --parseDepth 3 --parseDependency --parseInternal -o ./docs
 
 .PHONY: help
 help:

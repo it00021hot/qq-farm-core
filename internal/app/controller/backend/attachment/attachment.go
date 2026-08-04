@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 
 	attachment2 "github.com/MQEnergy/go-skeleton/internal/app/service/backend/attachment"
 	"github.com/MQEnergy/go-skeleton/internal/types/attachment"
@@ -22,10 +22,13 @@ type AttachmentController struct {
 
 var Attachment = &AttachmentController{}
 
+// AccessURLReq swagger 置换访问地址参数
+type AccessURLReq = attachment.AccessURLReq
+
 // Upload 上传资源
 //
 //	@Summary		上传资源
-//	@Description	上传资源文件接口
+//	@Description	上传资源文件接口，返回 file_path（入库 key）与短期 signed_url
 //	@Tags			附件管理
 //	@Accept			multipart/form-data
 //	@Produce		json
@@ -33,7 +36,7 @@ var Attachment = &AttachmentController{}
 //	@Param			file	formData	file					true	"上传的文件"
 //	@Success		200		{object}	response.JSONResponse	"成功"
 //	@Router			/backend/attachment/upload [post]
-func (c *AttachmentController) Upload(ctx *fiber.Ctx) error {
+func (c *AttachmentController) Upload(ctx fiber.Ctx) error {
 	var reqParams attachment.UploadReq
 	if err := c.Validate(ctx, &reqParams); err != nil {
 		return response.BadRequestException(ctx, err.Error())
@@ -45,17 +48,42 @@ func (c *AttachmentController) Upload(ctx *fiber.Ctx) error {
 	return response.SuccessJSON(ctx, "", fileHeader)
 }
 
-// ReadFile 根据文件路径获取并返回文件内容
+// AccessURL 置换私有对象临时访问地址
 //
-// @Summary        获取文件内容
-// @Description    根据文件路径获取并返回文件内容,支持图片等文件类型的直接显示和gzip压缩
-// @Tags           附件管理
-// @Accept         json
-// @Produce        octet-stream
-// @Param          file_path    path        string    true    "文件路径,支持相对路径和绝对路径"
-// @Success        200    {file}        []byte    "文件内容(支持gzip压缩)"
-// @Router         /file/{file_path} [get]
-func (c *AttachmentController) ReadFile(ctx *fiber.Ctx) error {
+//	@Summary		置换临时访问地址
+//	@Description	根据 file_path（attach_url）签发短期预签名 GET URL
+//	@Tags			附件管理
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			payload	body		AccessURLReq			true	"访问参数"
+//	@Success		200		{object}	response.JSONResponse	"成功"
+//	@Failure		400		{object}	response.JSONResponse	"请求错误"
+//	@Router			/backend/attachment/access-url [post]
+func (c *AttachmentController) AccessURL(ctx fiber.Ctx) error {
+	var reqParams attachment.AccessURLReq
+	if err := c.Validate(ctx, &reqParams); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	resp, err := attachment2.Attachment.AccessURL(reqParams.FilePath)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", resp)
+}
+
+// ReadFile 根据文件路径获取并返回文件内容（需登录；云存储场景优先使用 access-url 预签名）
+//
+//	@Summary		获取文件内容
+//	@Description	服务端代理读取对象存储文件内容。云存储场景请优先使用 access-url 预签名直链。
+//	@Tags			附件管理
+//	@Accept			json
+//	@Produce		octet-stream
+//	@Security		ApiKeyAuth
+//	@Param			file_path	path		string	true	"文件路径"
+//	@Success		200			{file}		[]byte	"文件内容(支持gzip压缩)"
+//	@Router			/backend/attachment/file/{file_path} [get]
+func (c *AttachmentController) ReadFile(ctx fiber.Ctx) error {
 	var reqParams attachment.ReadFileReq
 	if err := c.Validate(ctx, &reqParams); err != nil {
 		return ctx.Status(fiber.StatusOK).Send([]byte("参数错误"))
@@ -77,7 +105,6 @@ func (c *AttachmentController) ReadFile(ctx *fiber.Ctx) error {
 	// 检查是否支持gzip压缩
 	if strings.Contains(ctx.Get("Accept-Encoding"), "gzip") {
 		ctx.Set("Content-Encoding", "gzip")
-		// slog.Info("客户端支持gzip压缩,使用压缩传输")
 
 		gz := gzip.NewWriter(ctx.Response().BodyWriter())
 		if _, err := gz.Write(fileData); err != nil {

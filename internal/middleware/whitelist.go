@@ -8,12 +8,12 @@ import (
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // WhiteIpMiddleware white list middleware
 func WhiteIpMiddleware() fiber.Handler {
-	return func(ctx *fiber.Ctx) error {
+	return func(ctx fiber.Ctx) error {
 		clientIp := ctx.IP()
 		flag := false
 		whiteList := vars.Config.GetString("server.whiteList")

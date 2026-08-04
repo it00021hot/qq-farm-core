@@ -53,12 +53,12 @@ func (g *GenModel) Command() *cli.Command {
 				Name:        "alias",
 				Aliases:     []string{"a"},
 				Value:       database.DefaultAlias,
-				Usage:       "请输入数据库别名（alias）需要与config.yaml配置中mysql的alias保持一致",
+				Usage:       "请输入数据库别名（alias）需要与config.yaml配置中pgsql的alias保持一致",
 				Destination: &dbAlias,
 			},
 		},
 		Before: func(ctx *cli.Context) error {
-			bootstrap.BootService(bootstrap.MysqlService)
+			bootstrap.BootService(bootstrap.PgsqlService)
 			return nil
 		},
 		Action: func(ctx *cli.Context) error {

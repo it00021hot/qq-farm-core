@@ -9,11 +9,11 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/vars"
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
-	"github.com/casbin/casbin/v2"
-	"github.com/casbin/casbin/v2/model"
-	"github.com/casbin/casbin/v2/util"
+	"github.com/casbin/casbin/v3"
+	"github.com/casbin/casbin/v3/model"
+	"github.com/casbin/casbin/v3/util"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
@@ -30,8 +30,7 @@ var excludePaths = []string{
 
 // CasbinMiddleware casbin middleware
 func CasbinMiddleware(db *gorm.DB, prefix, tableName string) fiber.Handler {
-	return func(ctx *fiber.Ctx) error {
-		// 使用helper.InAnySlice判断当前路径是否需要跳过权限校验
+	return func(ctx fiber.Ctx) error {
 		if helper.InAnySlice[string](excludePaths, ctx.Path()) {
 			return ctx.Next()
 		}
@@ -50,18 +49,27 @@ func CasbinMiddleware(db *gorm.DB, prefix, tableName string) fiber.Handler {
 		if tableName == "" {
 			tableName = "casbin_rule"
 		}
-		adapter, _ := gormadapter.NewFilteredAdapterByDB(db, prefix, tableName)
-		rc, _ := model.NewModelFromString(configs.RbacModelConf)
-		e, _ := casbin.NewEnforcer(rc, adapter)
+		adapter, err := gormadapter.NewFilteredAdapterByDB(db, prefix, tableName)
+		if err != nil {
+			return response.InternalServerException(ctx, "casbin adapter: "+err.Error())
+		}
+		rc, err := model.NewModelFromString(configs.RbacModelConf)
+		if err != nil {
+			return response.InternalServerException(ctx, "casbin model: "+err.Error())
+		}
+		e, err := casbin.NewEnforcer(rc, adapter)
+		if err != nil {
+			return response.InternalServerException(ctx, "casbin enforcer: "+err.Error())
+		}
 		e.AddFunction("ParamsObjMatch", ParamsObjMatchFunc)
 		e.AddFunction("ParamsActMatch", ParamsActMatchFunc)
-		_ = e.LoadPolicy()
-		//	获取当前请求的url
+		if err := e.LoadPolicy(); err != nil {
+			return response.InternalServerException(ctx, "casbin load policy: "+err.Error())
+		}
 		obj := ctx.Path()
 		act := ctx.Method()
 		flag := false
 		for _, sub := range roleList {
-			//	判断策略中是否存在
 			if ok, _ := e.Enforce(sub, obj, act); ok {
 				flag = true
 				break

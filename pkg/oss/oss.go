@@ -2,7 +2,9 @@ package oss
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
+	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 )
@@ -52,4 +54,16 @@ func (o *Oss) GetObject(object string) ([]byte, error) {
 	}
 	defer body.Close()
 	return ioutil.ReadAll(body)
+}
+
+// SignGetURL 生成短期预签名 GET URL
+func (o *Oss) SignGetURL(object string, expire time.Duration) (string, error) {
+	if expire <= 0 {
+		expire = time.Hour
+	}
+	signed, err := o.bucket.SignURL(object, oss.HTTPGet, int64(expire/time.Second))
+	if err != nil {
+		return "", fmt.Errorf("OSS 预签名失败: %w", err)
+	}
+	return signed, nil
 }

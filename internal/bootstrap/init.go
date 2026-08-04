@@ -10,8 +10,9 @@ import (
 
 // Define service list
 const (
-	MysqlService = `Mysql`
+	PgsqlService = `Pgsql`
 	RedisService = `Redis`
+	S3Service    = `S3`
 )
 
 type bootServiceMap map[string]func() error
@@ -19,8 +20,9 @@ type bootServiceMap map[string]func() error
 var (
 	BootedService []string
 	serviceMap    = bootServiceMap{
-		MysqlService: boots.InitMultiMysql,
+		PgsqlService: boots.InitMultiPgsql,
 		RedisService: boots.InitRedis,
+		S3Service:    boots.InitS3,
 	}
 )
 
@@ -46,6 +48,10 @@ func BootService(services ...string) {
 			slog.Info("Loading " + k + " service successfully")
 			BootedService = append(BootedService, k)
 		}
+	}
+	// auto migrate + seed
+	if err := boots.InitMigrate(); err != nil {
+		panic("Failed to migrate database：" + err.Error())
 	}
 	// init dao
 	boots.InitDao()

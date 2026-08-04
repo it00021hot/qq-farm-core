@@ -6,7 +6,7 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/vars"
 	"github.com/MQEnergy/go-skeleton/pkg/logger"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	slogfiber "github.com/samber/slog-fiber"
 )
 
@@ -23,7 +23,7 @@ func LoggerMiddleware() fiber.Handler {
 		WithRequestBody:  true,
 		WithRequestID:    true,
 		Filters: []slogfiber.Filter{
-			func(c *fiber.Ctx) bool {
+			func(c fiber.Ctx) bool {
 				if file, err := c.FormFile("file"); err == nil {
 					if file != nil {
 						return false

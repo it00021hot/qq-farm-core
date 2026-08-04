@@ -10,34 +10,31 @@ import (
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
 	"github.com/goccy/go-json"
-	"github.com/gofiber/contrib/swagger"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/compress"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/gofiber/contrib/v3/swagger"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/compress"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	"github.com/gofiber/fiber/v3/middleware/recover"
+	"github.com/gofiber/fiber/v3/middleware/requestid"
 )
 
 // Register ...
 func Register(appName string) *fiber.App {
-	publicMiddleware := []fiber.Handler{
+	publicMiddleware := []any{
 		middleware.LoggerMiddleware(),  // 日志
 		middleware.WhiteIpMiddleware(), // 白名单
 	}
 
 	r := fiber.New(fiber.Config{
-		Prefork: vars.Config.GetBool("server.prefork"),
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
+		ErrorHandler: func(c fiber.Ctx, err error) error {
 			return response.NotFoundException(c, err.Error())
 		},
-		DisableStartupMessage: false,             // When set to true, it will not print out debug information
-		BodyLimit:             100 * 1024 * 1024, // Set the body limit to 100MB
-		AppName:               appName,           // This allows to setup app name for the app
-		JSONEncoder:           json.Marshal,      // If you're not happy with the performance of encoding/json, we recommend you to use these libraries
-		JSONDecoder:           json.Unmarshal,
+		BodyLimit:       100 * 1024 * 1024, // Set the body limit to 100MB
+		AppName:         appName,           // This allows to setup app name for the app
+		JSONEncoder:     json.Marshal,      // If you're not happy with the performance of encoding/json, we recommend you to use these libraries
+		JSONDecoder:     json.Unmarshal,
+		ReadBufferSize:  vars.Config.GetInt("server.bufferSize"), // fix: Request Header Fields Too Large
 	})
-	// fix: Request Header Fields Too Large
-	r.Server().ReadBufferSize = vars.Config.GetInt("server.bufferSize")
 	// middleware cors, compress, cache, X-Request-Id
 	r.Use(
 		recover.New(),
@@ -72,7 +69,7 @@ func Register(appName string) *fiber.App {
 	// common
 	routes.InitCommonGroup(r, publicMiddleware...)
 
-	prefix := vars.Config.GetString("database.mysql.sources." + database.DefaultAlias + ".prefix")
+	prefix := vars.Config.GetString("database.pgsql.sources." + database.DefaultAlias + ".prefix")
 
 	// backend
 	routes.InitBackendGroup(r,

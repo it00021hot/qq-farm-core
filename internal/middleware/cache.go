@@ -6,18 +6,18 @@ import (
 
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cache"
-	"github.com/gofiber/fiber/v2/utils"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cache"
+	"github.com/gofiber/utils/v2"
 )
 
 // CacheMiddleware http cache middleware
 func CacheMiddleware() fiber.Handler {
 	return cache.New(cache.Config{
-		Next: func(c *fiber.Ctx) bool {
+		Next: func(c fiber.Ctx) bool {
 			return c.Query("noCache") == "true"
 		},
-		KeyGenerator: func(ctx *fiber.Ctx) string {
+		KeyGenerator: func(ctx fiber.Ctx) string {
 			keyG := ctx.IP() + ":" + ctx.Path()
 			switch ctx.Method() {
 			case fiber.MethodGet:
@@ -31,8 +31,8 @@ func CacheMiddleware() fiber.Handler {
 			}
 			return utils.CopyString(helper.GenerateHash(keyG))
 		},
-		Expiration:   60 * time.Second,
-		CacheControl: true, // enables client side caching if set to true
-		Methods:      []string{fiber.MethodGet, fiber.MethodHead, fiber.MethodPost},
+		Expiration:            60 * time.Second,
+		DisableCacheControl:   false, // client side caching enabled when false
+		Methods:               []string{fiber.MethodGet, fiber.MethodHead, fiber.MethodPost},
 	})
 }

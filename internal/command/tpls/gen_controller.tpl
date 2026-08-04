@@ -6,7 +6,7 @@ import (
     {{end -}}
 	"{{.ImportPackage}}/pkg/response"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type {{.CtlName}}Controller struct{
@@ -20,7 +20,7 @@ type {{.CtlName}}Controller struct{
 var {{.CtlName}} = &{{.CtlName}}Controller{}
 
 // Index ...
-func (s *{{.CtlName}}Controller) Index(ctx *fiber.Ctx) error {
+func (s *{{.CtlName}}Controller) Index(ctx fiber.Ctx) error {
     // Todo implement ...
 	return response.SuccessJSON(ctx, "", "")
 }

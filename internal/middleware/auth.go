@@ -6,8 +6,8 @@ import (
 	"github.com/MQEnergy/go-skeleton/pkg/response"
 	"github.com/spf13/cast"
 
-	jwtware "github.com/gofiber/contrib/jwt"
-	"github.com/gofiber/fiber/v2"
+	jwtware "github.com/gofiber/contrib/v3/jwt"
+	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -19,11 +19,11 @@ var NoAuthPaths = []string{
 func AuthMiddleware() fiber.Handler {
 	return jwtware.New(jwtware.Config{
 		SigningKey: jwtware.SigningKey{Key: []byte(vars.Config.GetString("jwt.secret"))},
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
+		ErrorHandler: func(c fiber.Ctx, err error) error {
 			return response.UnauthorizedException(c, "会话已过期，请重新登录 err: "+err.Error())
 		},
-		SuccessHandler: func(ctx *fiber.Ctx) error {
-			if user, ok := ctx.Locals("user").(*jwt.Token); ok {
+		SuccessHandler: func(ctx fiber.Ctx) error {
+			if user := jwtware.FromContext(ctx); user != nil {
 				if claims, ok := user.Claims.(jwt.MapClaims); ok && user.Valid {
 					if sub, ok := claims["sub"].(map[string]interface{}); ok {
 						ctx.Set("uuid", cast.ToString(sub["uuid"]))
@@ -35,9 +35,8 @@ func AuthMiddleware() fiber.Handler {
 			}
 			return response.UnauthorizedException(ctx, "token is invalid")
 		},
-		Filter: func(ctx *fiber.Ctx) bool {
+		Next: func(ctx fiber.Ctx) bool {
 			return helper.InAnySlice(NoAuthPaths, ctx.Path())
 		},
-		// ContextKey: "user", // used in ctx.Locals("user").(*jwt.Token)
 	})
 }

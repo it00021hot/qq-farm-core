@@ -57,7 +57,7 @@ func (g *GenCommand) Command() *cli.Command {
 				Name:        "service",
 				Aliases:     []string{"s"},
 				Value:       "",
-				Usage:       "加载其他自定义服务(已经开启的服务) 如：mysql、redis ... 格式：以英文逗号相隔 如：mysql,redis",
+				Usage:       "加载其他自定义服务(已经开启的服务) 如：pgsql、redis ... 格式：以英文逗号相隔 如：pgsql,redis",
 				Destination: &service,
 				Required:    false,
 			},

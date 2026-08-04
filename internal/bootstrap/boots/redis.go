@@ -20,7 +20,7 @@ func InitRedis() error {
 	vars.Redis, err = redis.New(redis.Config{
 		Addr:        fmt.Sprintf("%s:%s", vars.Config.GetString("redis.host"), vars.Config.GetString("redis.port")),
 		Password:    vars.Config.GetString("redis.password"),
-		DbNum:       vars.Config.GetInt("redis.dbname"),
+		DbNum:       vars.Config.GetInt("redis.dbNum"),
 		PoolSize:    vars.Config.GetInt("redis.poolSize"),
 		MinIdleConn: vars.Config.GetInt("redis.minIdleConn"),
 		MaxIdleConn: vars.Config.GetInt("redis.maxIdleConn"),

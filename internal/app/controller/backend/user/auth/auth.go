@@ -7,7 +7,7 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/vars"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type AuthController struct {
@@ -15,6 +15,9 @@ type AuthController struct {
 }
 
 var Auth = &AuthController{}
+
+// LoginReq swagger 登录参数（复用 types）
+type LoginReq = auth.LoginReq
 
 // Login 用户登录
 //
@@ -27,7 +30,7 @@ var Auth = &AuthController{}
 //	@Success		200		{object}	response.JSONResponse	"成功"
 //	@Failure		400		{object}	response.JSONResponse	"请求错误"
 //	@Router			/backend/auth/login [post]
-func (c *AuthController) Login(ctx *fiber.Ctx) error {
+func (c *AuthController) Login(ctx fiber.Ctx) error {
 	var reqParams auth.LoginReq
 	if err := c.Validate(ctx, &reqParams); err != nil {
 		return response.BadRequestException(ctx, err.Error())
@@ -50,7 +53,7 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 //	@Success		200	{object}	response.JSONResponse	"成功"
 //	@Failure		400	{object}	response.JSONResponse	"请求错误"
 //	@Router			/backend/auth/logout [post]
-func (c *AuthController) Logout(ctx *fiber.Ctx) error {
+func (c *AuthController) Logout(ctx fiber.Ctx) error {
 	uuid := ctx.GetRespHeader("uuid")
 	if err := auth2.Auth.Logout(uuid); err != nil {
 		return response.BadRequestException(ctx, err.Error())
@@ -69,7 +72,7 @@ func (c *AuthController) Logout(ctx *fiber.Ctx) error {
 //	@Success		200	{object}	response.JSONResponse	"成功"
 //	@Failure		400	{object}	response.JSONResponse	"请求错误"
 //	@Router			/backend/auth/routes [get]
-func (c *AuthController) Routes(ctx *fiber.Ctx) error {
+func (c *AuthController) Routes(ctx fiber.Ctx) error {
 	routeList := make([]fiber.Route, 0)
 	for _, route := range vars.Routes {
 		if route.Method != "GET" && route.Method != "POST" {

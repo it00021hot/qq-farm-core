@@ -1,6 +1,7 @@
 package wecom
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ArtisanCloud/PowerSocialite/v3/src/providers"
@@ -115,19 +116,19 @@ func (c *Config) GetOAuthUrl() string {
 
 // GetUserDetail 获取用户敏感信息
 func (c *Config) GetUserDetail(userTicket string) (*weCom.ResponseGetUserDetail, error) {
-	accessToken, err := c.work.AccessToken.GetToken(false)
+	accessToken, err := c.work.AccessToken.GetToken(context.Background(), false)
 	if err != nil {
 		return nil, err
 	}
 	if accessToken.ErrCode != 0 {
-		return nil, fmt.Errorf(accessToken.ErrMsg)
+		return nil, fmt.Errorf("%s", accessToken.ErrMsg)
 	}
 	userDetail, err := c.work.OAuth.Provider.WithApiAccessToken(accessToken.AccessToken).GetUserDetail(userTicket)
 	if err != nil {
 		return nil, err
 	}
 	if userDetail.ErrCode != 0 {
-		return nil, fmt.Errorf(userDetail.ErrMSG)
+		return nil, fmt.Errorf("%s", userDetail.ErrMSG)
 	}
 	return userDetail, nil
 }
@@ -144,7 +145,7 @@ func (c *Config) GetUserInfo(code string) (*weCom.ResponseGetUserInfo, error) {
 		return nil, err
 	}
 	if userInfo.ErrCode != 0 {
-		return nil, fmt.Errorf(userInfo.ErrMSG)
+		return nil, fmt.Errorf("%s", userInfo.ErrMSG)
 	}
 	return userInfo, nil
 }
@@ -156,7 +157,7 @@ func (c *Config) GetUserByID(userID string) (*weCom.ResponseGetUserByID, error) 
 		return nil, err
 	}
 	if userByID.ErrCode != 0 {
-		return nil, fmt.Errorf(userByID.ErrMSG)
+		return nil, fmt.Errorf("%s", userByID.ErrMSG)
 	}
 	return userByID, nil
 }

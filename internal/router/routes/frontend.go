@@ -1,16 +1,14 @@
 package routes
 
 import (
-	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/MQEnergy/go-skeleton/internal/app/controller/frontend"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func InitFrontendGroup(r fiber.Router, handles ...fiber.Handler) {
+func InitFrontendGroup(r fiber.Router, handles ...any) {
 	router := r.Group("api", handles...)
 	{
-		router.Get("/ping", func(ctx *fiber.Ctx) error {
-			return response.SuccessJSON(ctx, "", "api pong")
-		})
+		router.Get("/ping", frontend.Frontend.Ping)
 	}
 }

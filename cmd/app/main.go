@@ -8,7 +8,9 @@ import (
 
 	"github.com/MQEnergy/go-skeleton/internal/bootstrap"
 	"github.com/MQEnergy/go-skeleton/internal/router"
+	"github.com/MQEnergy/go-skeleton/internal/vars"
 	"github.com/MQEnergy/go-skeleton/pkg/config"
+	"github.com/gofiber/fiber/v3"
 	"github.com/urfave/cli/v2"
 )
 
@@ -65,7 +67,10 @@ func Stack() *cli.App {
 		// bootstrap service
 		bootstrap.BootService()
 		// register routes and listen port
-		return router.Register(AppName).Listen(":" + AppPort)
+		return router.Register(AppName).Listen(":"+AppPort, fiber.ListenConfig{
+			EnablePrefork:         vars.Config.GetBool("server.prefork"),
+			DisableStartupMessage: false,
+		})
 	}
 	return app
 }
@@ -83,8 +88,13 @@ func Stack() *cli.App {
 //	@license.name	Apache 2.0
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host		localhost:9527
-// @basePath	/
+//	@host		localhost:9527
+//	@BasePath	/
+
+//	@securityDefinitions.apikey	ApiKeyAuth
+//	@in							header
+//	@name						Authorization
+//	@description				JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"
 func main() {
 	if err := Stack().Run(os.Args); err != nil {
 		panic(err)

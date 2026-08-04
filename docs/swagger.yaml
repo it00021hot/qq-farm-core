@@ -1,0 +1,333 @@
+basePath: /
+definitions:
+  github_com_MQEnergy_go-skeleton_internal_app_controller_backend_attachment.AccessURLReq:
+    properties:
+      file_path:
+        description: 附件 attach_url / file_path
+        type: string
+    required:
+    - file_path
+    type: object
+  github_com_MQEnergy_go-skeleton_internal_app_controller_backend_user_auth.LoginReq:
+    properties:
+      account:
+        type: string
+      password:
+        type: string
+    required:
+    - account
+    - password
+    type: object
+  response.Code:
+    enum:
+    - 0
+    - 10001
+    - 10002
+    - 10003
+    - 10004
+    - 10005
+    - 10006
+    - 10007
+    - 10008
+    type: integer
+    x-enum-varnames:
+    - Success
+    - Failed
+    - UnAuthed
+    - AuthExpired
+    - InternalErr
+    - RequestMethodErr
+    - RequestParamErr
+    - RequestFormErr
+    - AccountInfoErr
+  response.JSONResponse:
+    properties:
+      data: {}
+      errcode:
+        $ref: '#/definitions/response.Code'
+      message:
+        type: string
+      requestid:
+        type: string
+    type: object
+host: localhost:9527
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: 基于Go语言和fiber框架的高性能高并发的Web项目骨架
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Go-skeleton API Docs
+  version: "1.0"
+paths:
+  /:
+    get:
+      description: 服务根路径健康探测
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      summary: 服务首页
+      tags:
+      - 公共接口
+  /api/ping:
+    get:
+      description: 前台/API 模块健康检查，需要登录
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 前台健康检查
+      tags:
+      - 前台公共
+  /backend/attachment/access-url:
+    post:
+      consumes:
+      - application/json
+      description: 根据 file_path（attach_url）签发短期预签名 GET URL
+      parameters:
+      - description: 访问参数
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_backend_attachment.AccessURLReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+        "400":
+          description: 请求错误
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 置换临时访问地址
+      tags:
+      - 附件管理
+  /backend/attachment/file/{file_path}:
+    get:
+      consumes:
+      - application/json
+      description: 服务端代理读取对象存储文件内容。云存储场景请优先使用 access-url 预签名直链。
+      parameters:
+      - description: 文件路径
+        in: path
+        name: file_path
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: 文件内容(支持gzip压缩)
+          schema:
+            type: file
+      security:
+      - ApiKeyAuth: []
+      summary: 获取文件内容
+      tags:
+      - 附件管理
+  /backend/attachment/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传资源文件接口，返回 file_path（入库 key）与短期 signed_url
+      parameters:
+      - description: 上传的文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 上传资源
+      tags:
+      - 附件管理
+  /backend/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 用户登录接口
+      parameters:
+      - description: 登录请求参数
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_backend_user_auth.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+        "400":
+          description: 请求错误
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      summary: 用户登录
+      tags:
+      - 鉴权管理
+  /backend/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: 用户退出登录
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+        "400":
+          description: 请求错误
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 退出登录
+      tags:
+      - 鉴权管理
+  /backend/auth/routes:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有后端路由接口
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+        "400":
+          description: 请求错误
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取所有后端路由
+      tags:
+      - 鉴权管理
+  /backend/ping:
+    get:
+      description: 后台模块健康检查，需要登录
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 后台健康检查
+      tags:
+      - 后台公共
+  /ping:
+    get:
+      description: 公共健康检查接口
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      summary: 健康检查
+      tags:
+      - 公共接口
+  /token/create:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 演示用 JWT 签发，固定账号 john/doe
+      parameters:
+      - default: john
+        description: 用户名
+        in: formData
+        name: user
+        required: true
+        type: string
+      - default: doe
+        description: 密码
+        in: formData
+        name: pass
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功，data 为 token 字符串
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+        "401":
+          description: 认证失败
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      summary: 创建 Demo Token
+      tags:
+      - 公共接口
+  /token/view:
+    post:
+      consumes:
+      - application/json
+      description: 解析 Authorization Bearer Token，返回 uid/uuid/role_ids
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/response.JSONResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 查看 Token Claims
+      tags:
+      - 公共接口
+securityDefinitions:
+  ApiKeyAuth:
+    description: 'JWT Authorization header using the Bearer scheme. Example: "Bearer
+      {token}"'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
