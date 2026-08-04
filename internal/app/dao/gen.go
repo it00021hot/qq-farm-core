@@ -16,99 +16,117 @@ import (
 )
 
 var (
-	Q             = new(Query)
-	Attachment    *attachment
-	SysAdmin      *sysAdmin
-	SysCasbinRule *sysCasbinRule
-	SysResource   *sysResource
-	SysRole       *sysRole
-	SysRoleAuth   *sysRoleAuth
+	Q              = new(Query)
+	Attachment     *attachment
+	SysAdmin       *sysAdmin
+	SysAdminTenant *sysAdminTenant
+	SysCasbinRule  *sysCasbinRule
+	SysResource    *sysResource
+	SysRole        *sysRole
+	SysRoleAuth    *sysRoleAuth
+	SysTenant      *sysTenant
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	Attachment = &Q.Attachment
 	SysAdmin = &Q.SysAdmin
+	SysAdminTenant = &Q.SysAdminTenant
 	SysCasbinRule = &Q.SysCasbinRule
 	SysResource = &Q.SysResource
 	SysRole = &Q.SysRole
 	SysRoleAuth = &Q.SysRoleAuth
+	SysTenant = &Q.SysTenant
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:            db,
-		Attachment:    newAttachment(db, opts...),
-		SysAdmin:      newSysAdmin(db, opts...),
-		SysCasbinRule: newSysCasbinRule(db, opts...),
-		SysResource:   newSysResource(db, opts...),
-		SysRole:       newSysRole(db, opts...),
-		SysRoleAuth:   newSysRoleAuth(db, opts...),
+		db:             db,
+		Attachment:     newAttachment(db, opts...),
+		SysAdmin:       newSysAdmin(db, opts...),
+		SysAdminTenant: newSysAdminTenant(db, opts...),
+		SysCasbinRule:  newSysCasbinRule(db, opts...),
+		SysResource:    newSysResource(db, opts...),
+		SysRole:        newSysRole(db, opts...),
+		SysRoleAuth:    newSysRoleAuth(db, opts...),
+		SysTenant:      newSysTenant(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	Attachment    attachment
-	SysAdmin      sysAdmin
-	SysCasbinRule sysCasbinRule
-	SysResource   sysResource
-	SysRole       sysRole
-	SysRoleAuth   sysRoleAuth
+	Attachment     attachment
+	SysAdmin       sysAdmin
+	SysAdminTenant sysAdminTenant
+	SysCasbinRule  sysCasbinRule
+	SysResource    sysResource
+	SysRole        sysRole
+	SysRoleAuth    sysRoleAuth
+	SysTenant      sysTenant
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
+func (q *Query) UnderlyingDB() *gorm.DB { return q.db }
+
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:            db,
-		Attachment:    q.Attachment.clone(db),
-		SysAdmin:      q.SysAdmin.clone(db),
-		SysCasbinRule: q.SysCasbinRule.clone(db),
-		SysResource:   q.SysResource.clone(db),
-		SysRole:       q.SysRole.clone(db),
-		SysRoleAuth:   q.SysRoleAuth.clone(db),
+		db:             db,
+		Attachment:     q.Attachment.clone(db),
+		SysAdmin:       q.SysAdmin.clone(db),
+		SysAdminTenant: q.SysAdminTenant.clone(db),
+		SysCasbinRule:  q.SysCasbinRule.clone(db),
+		SysResource:    q.SysResource.clone(db),
+		SysRole:        q.SysRole.clone(db),
+		SysRoleAuth:    q.SysRoleAuth.clone(db),
+		SysTenant:      q.SysTenant.clone(db),
 	}
 }
 
 func (q *Query) ReadDB() *Query {
-	return q.ReplaceDB(q.db.Clauses(dbresolver.Read))
+	return q.clone(q.db.Clauses(dbresolver.Read))
 }
 
 func (q *Query) WriteDB() *Query {
-	return q.ReplaceDB(q.db.Clauses(dbresolver.Write))
+	return q.clone(q.db.Clauses(dbresolver.Write))
 }
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:            db,
-		Attachment:    q.Attachment.replaceDB(db),
-		SysAdmin:      q.SysAdmin.replaceDB(db),
-		SysCasbinRule: q.SysCasbinRule.replaceDB(db),
-		SysResource:   q.SysResource.replaceDB(db),
-		SysRole:       q.SysRole.replaceDB(db),
-		SysRoleAuth:   q.SysRoleAuth.replaceDB(db),
+		db:             db,
+		Attachment:     q.Attachment.replaceDB(db),
+		SysAdmin:       q.SysAdmin.replaceDB(db),
+		SysAdminTenant: q.SysAdminTenant.replaceDB(db),
+		SysCasbinRule:  q.SysCasbinRule.replaceDB(db),
+		SysResource:    q.SysResource.replaceDB(db),
+		SysRole:        q.SysRole.replaceDB(db),
+		SysRoleAuth:    q.SysRoleAuth.replaceDB(db),
+		SysTenant:      q.SysTenant.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	Attachment    IAttachmentDo
-	SysAdmin      ISysAdminDo
-	SysCasbinRule ISysCasbinRuleDo
-	SysResource   ISysResourceDo
-	SysRole       ISysRoleDo
-	SysRoleAuth   ISysRoleAuthDo
+	Attachment     IAttachmentDo
+	SysAdmin       ISysAdminDo
+	SysAdminTenant ISysAdminTenantDo
+	SysCasbinRule  ISysCasbinRuleDo
+	SysResource    ISysResourceDo
+	SysRole        ISysRoleDo
+	SysRoleAuth    ISysRoleAuthDo
+	SysTenant      ISysTenantDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		Attachment:    q.Attachment.WithContext(ctx),
-		SysAdmin:      q.SysAdmin.WithContext(ctx),
-		SysCasbinRule: q.SysCasbinRule.WithContext(ctx),
-		SysResource:   q.SysResource.WithContext(ctx),
-		SysRole:       q.SysRole.WithContext(ctx),
-		SysRoleAuth:   q.SysRoleAuth.WithContext(ctx),
+		Attachment:     q.Attachment.WithContext(ctx),
+		SysAdmin:       q.SysAdmin.WithContext(ctx),
+		SysAdminTenant: q.SysAdminTenant.WithContext(ctx),
+		SysCasbinRule:  q.SysCasbinRule.WithContext(ctx),
+		SysResource:    q.SysResource.WithContext(ctx),
+		SysRole:        q.SysRole.WithContext(ctx),
+		SysRoleAuth:    q.SysRoleAuth.WithContext(ctx),
+		SysTenant:      q.SysTenant.WithContext(ctx),
 	}
 }
 

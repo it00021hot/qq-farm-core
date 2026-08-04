@@ -19,8 +19,8 @@ var (
 	AppUsage = "基于Go语言和fiber框架的高性能高并发的Web项目骨架"
 	Authors  = []*cli.Author{
 		{
-			Name:  "chenxi",
-			Email: "bbxycx.18@163.com",
+			Name:  "it00021hot",
+			Email: "15077731547@163.com",
 		},
 	}
 	AppPort string // port
@@ -57,7 +57,7 @@ func Stack() *cli.App {
 		&cli.StringFlag{
 			Name:        "port",
 			Aliases:     []string{"p"},
-			Value:       "9527",
+			Value:       "9528",
 			Usage:       "请选择启动端口",
 			Destination: &AppPort,
 		},

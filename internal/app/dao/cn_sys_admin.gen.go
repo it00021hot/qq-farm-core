@@ -6,6 +6,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -27,63 +28,44 @@ func newSysAdmin(db *gorm.DB, opts ...gen.DOOption) sysAdmin {
 
 	tableName := _sysAdmin.sysAdminDo.TableName()
 	_sysAdmin.ALL = field.NewAsterisk(tableName)
-	_sysAdmin.ID = field.NewUint64(tableName, "id")
+	_sysAdmin.ID = field.NewInt64(tableName, "id")
 	_sysAdmin.UUID = field.NewString(tableName, "uuid")
-	_sysAdmin.DeptID = field.NewUint64(tableName, "dept_id")
+	_sysAdmin.TenantID = field.NewInt64(tableName, "tenant_id")
 	_sysAdmin.NickName = field.NewString(tableName, "nick_name")
 	_sysAdmin.RealName = field.NewString(tableName, "real_name")
-	_sysAdmin.Desc = field.NewString(tableName, "desc")
-	_sysAdmin.Gender = field.NewUint8(tableName, "gender")
 	_sysAdmin.Account = field.NewString(tableName, "account")
 	_sysAdmin.Password = field.NewString(tableName, "password")
 	_sysAdmin.Phone = field.NewString(tableName, "phone")
 	_sysAdmin.Email = field.NewString(tableName, "email")
-	_sysAdmin.Avatar = field.NewString(tableName, "avatar")
 	_sysAdmin.Salt = field.NewString(tableName, "salt")
 	_sysAdmin.RoleIds = field.NewString(tableName, "role_ids")
-	_sysAdmin.Type = field.NewUint8(tableName, "type")
-	_sysAdmin.IsMain = field.NewUint8(tableName, "is_main")
-	_sysAdmin.IsAuth = field.NewUint8(tableName, "is_auth")
-	_sysAdmin.MfaSecret = field.NewString(tableName, "mfa_secret")
-	_sysAdmin.Status = field.NewUint8(tableName, "status")
-	_sysAdmin.CreatedBy = field.NewString(tableName, "created_by")
-	_sysAdmin.CreatedAt = field.NewUint(tableName, "created_at")
-	_sysAdmin.UpdatedBy = field.NewString(tableName, "updated_by")
-	_sysAdmin.UpdatedAt = field.NewUint(tableName, "updated_at")
+	_sysAdmin.Status = field.NewInt16(tableName, "status")
+	_sysAdmin.CreatedAt = field.NewInt64(tableName, "created_at")
+	_sysAdmin.UpdatedAt = field.NewInt64(tableName, "updated_at")
 
 	_sysAdmin.fillFieldMap()
 
 	return _sysAdmin
 }
 
-// sysAdmin 后台管理员表
 type sysAdmin struct {
 	sysAdminDo
 
 	ALL       field.Asterisk
-	ID        field.Uint64
+	ID        field.Int64  // 主键ID
 	UUID      field.String // 唯一id号
-	DeptID    field.Uint64 // 部门ID
+	TenantID  field.Int64  // 租户ID 0：平台账号
 	NickName  field.String // 昵称
 	RealName  field.String // 真实姓名
-	Desc      field.String // 描述
-	Gender    field.Uint8  // 性别 1:男 2:女 0:未知
 	Account   field.String // 账号
 	Password  field.String // 密码
 	Phone     field.String // 手机号
 	Email     field.String // 邮箱
-	Avatar    field.String // 头像
-	Salt      field.String // 密码
+	Salt      field.String // 密码盐
 	RoleIds   field.String // 角色IDs
-	Type      field.Uint8  // 类型：1：平台 2：商家 3：代理商
-	IsMain    field.Uint8  // 是否主账号 1：是 2：不是
-	IsAuth    field.Uint8  // 是否认证 1:未认证 2:已认证
-	MfaSecret field.String // mfa密钥
-	Status    field.Uint8  // 状态 1：正常 2：禁用
-	CreatedBy field.String // 创建者
-	CreatedAt field.Uint
-	UpdatedBy field.String // 编辑者
-	UpdatedAt field.Uint
+	Status    field.Int16  // 状态 1：正常 2：禁用
+	CreatedAt field.Int64  // 创建时间
+	UpdatedAt field.Int64  // 更新时间
 
 	fieldMap map[string]field.Expr
 }
@@ -100,29 +82,20 @@ func (s sysAdmin) As(alias string) *sysAdmin {
 
 func (s *sysAdmin) updateTableName(table string) *sysAdmin {
 	s.ALL = field.NewAsterisk(table)
-	s.ID = field.NewUint64(table, "id")
+	s.ID = field.NewInt64(table, "id")
 	s.UUID = field.NewString(table, "uuid")
-	s.DeptID = field.NewUint64(table, "dept_id")
+	s.TenantID = field.NewInt64(table, "tenant_id")
 	s.NickName = field.NewString(table, "nick_name")
 	s.RealName = field.NewString(table, "real_name")
-	s.Desc = field.NewString(table, "desc")
-	s.Gender = field.NewUint8(table, "gender")
 	s.Account = field.NewString(table, "account")
 	s.Password = field.NewString(table, "password")
 	s.Phone = field.NewString(table, "phone")
 	s.Email = field.NewString(table, "email")
-	s.Avatar = field.NewString(table, "avatar")
 	s.Salt = field.NewString(table, "salt")
 	s.RoleIds = field.NewString(table, "role_ids")
-	s.Type = field.NewUint8(table, "type")
-	s.IsMain = field.NewUint8(table, "is_main")
-	s.IsAuth = field.NewUint8(table, "is_auth")
-	s.MfaSecret = field.NewString(table, "mfa_secret")
-	s.Status = field.NewUint8(table, "status")
-	s.CreatedBy = field.NewString(table, "created_by")
-	s.CreatedAt = field.NewUint(table, "created_at")
-	s.UpdatedBy = field.NewString(table, "updated_by")
-	s.UpdatedAt = field.NewUint(table, "updated_at")
+	s.Status = field.NewInt16(table, "status")
+	s.CreatedAt = field.NewInt64(table, "created_at")
+	s.UpdatedAt = field.NewInt64(table, "updated_at")
 
 	s.fillFieldMap()
 
@@ -139,29 +112,20 @@ func (s *sysAdmin) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *sysAdmin) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 23)
+	s.fieldMap = make(map[string]field.Expr, 14)
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["uuid"] = s.UUID
-	s.fieldMap["dept_id"] = s.DeptID
+	s.fieldMap["tenant_id"] = s.TenantID
 	s.fieldMap["nick_name"] = s.NickName
 	s.fieldMap["real_name"] = s.RealName
-	s.fieldMap["desc"] = s.Desc
-	s.fieldMap["gender"] = s.Gender
 	s.fieldMap["account"] = s.Account
 	s.fieldMap["password"] = s.Password
 	s.fieldMap["phone"] = s.Phone
 	s.fieldMap["email"] = s.Email
-	s.fieldMap["avatar"] = s.Avatar
 	s.fieldMap["salt"] = s.Salt
 	s.fieldMap["role_ids"] = s.RoleIds
-	s.fieldMap["type"] = s.Type
-	s.fieldMap["is_main"] = s.IsMain
-	s.fieldMap["is_auth"] = s.IsAuth
-	s.fieldMap["mfa_secret"] = s.MfaSecret
 	s.fieldMap["status"] = s.Status
-	s.fieldMap["created_by"] = s.CreatedBy
 	s.fieldMap["created_at"] = s.CreatedAt
-	s.fieldMap["updated_by"] = s.UpdatedBy
 	s.fieldMap["updated_at"] = s.UpdatedAt
 }
 
@@ -232,6 +196,8 @@ type ISysAdminDo interface {
 	FirstOrCreate() (*model.SysAdmin, error)
 	FindByPage(offset int, limit int) (result []*model.SysAdmin, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Rows() (*sql.Rows, error)
+	Row() *sql.Row
 	Scan(result interface{}) (err error)
 	Returning(value interface{}, columns ...string) ISysAdminDo
 	UnderlyingDB() *gorm.DB

@@ -74,8 +74,9 @@ func Register(appName string) *fiber.App {
 	// backend
 	routes.InitBackendGroup(r,
 		append(publicMiddleware,
-			middleware.AuthMiddleware(),  // jwt token middleware
-			middleware.CacheMiddleware(), // http cache middleware 此配置会缓存http请求，让相同参数请求接口的第二次请求走http缓存 接口速度更快 根据业务使用
+			middleware.AuthMiddleware(),                    // jwt
+			middleware.TenantMiddleware(vars.DB),           // 租户上下文 / 过期校验 / 多租户切换
+			middleware.CacheMiddleware(),                   // http cache（按需）
 			middleware.CasbinMiddleware(vars.DB, prefix, "sys_casbin_rule"),
 		)...,
 	)

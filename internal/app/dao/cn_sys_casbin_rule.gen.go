@@ -6,6 +6,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -27,7 +28,7 @@ func newSysCasbinRule(db *gorm.DB, opts ...gen.DOOption) sysCasbinRule {
 
 	tableName := _sysCasbinRule.sysCasbinRuleDo.TableName()
 	_sysCasbinRule.ALL = field.NewAsterisk(tableName)
-	_sysCasbinRule.ID = field.NewUint64(tableName, "id")
+	_sysCasbinRule.ID = field.NewInt64(tableName, "id")
 	_sysCasbinRule.Ptype = field.NewString(tableName, "ptype")
 	_sysCasbinRule.V0 = field.NewString(tableName, "v0")
 	_sysCasbinRule.V1 = field.NewString(tableName, "v1")
@@ -43,21 +44,20 @@ func newSysCasbinRule(db *gorm.DB, opts ...gen.DOOption) sysCasbinRule {
 	return _sysCasbinRule
 }
 
-// sysCasbinRule 角色菜单权限表
 type sysCasbinRule struct {
 	sysCasbinRuleDo
 
 	ALL   field.Asterisk
-	ID    field.Uint64
-	Ptype field.String
-	V0    field.String
-	V1    field.String
-	V2    field.String
-	V3    field.String
-	V4    field.String
-	V5    field.String
-	V6    field.String
-	V7    field.String
+	ID    field.Int64  // 主键ID
+	Ptype field.String // 策略类型 p/g
+	V0    field.String // 主体(角色ID)
+	V1    field.String // 对象(路径)
+	V2    field.String // 动作(方法)
+	V3    field.String // 扩展字段v3
+	V4    field.String // 扩展字段v4
+	V5    field.String // 扩展字段v5
+	V6    field.String // 扩展字段v6
+	V7    field.String // 扩展字段v7
 
 	fieldMap map[string]field.Expr
 }
@@ -74,7 +74,7 @@ func (s sysCasbinRule) As(alias string) *sysCasbinRule {
 
 func (s *sysCasbinRule) updateTableName(table string) *sysCasbinRule {
 	s.ALL = field.NewAsterisk(table)
-	s.ID = field.NewUint64(table, "id")
+	s.ID = field.NewInt64(table, "id")
 	s.Ptype = field.NewString(table, "ptype")
 	s.V0 = field.NewString(table, "v0")
 	s.V1 = field.NewString(table, "v1")
@@ -180,6 +180,8 @@ type ISysCasbinRuleDo interface {
 	FirstOrCreate() (*model.SysCasbinRule, error)
 	FindByPage(offset int, limit int) (result []*model.SysCasbinRule, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Rows() (*sql.Rows, error)
+	Row() *sql.Row
 	Scan(result interface{}) (err error)
 	Returning(value interface{}, columns ...string) ISysCasbinRuleDo
 	UnderlyingDB() *gorm.DB

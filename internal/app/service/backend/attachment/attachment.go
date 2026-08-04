@@ -5,12 +5,12 @@ import (
 	"mime/multipart"
 	"strings"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/dao"
 	"github.com/MQEnergy/go-skeleton/internal/app/model"
 	"github.com/MQEnergy/go-skeleton/internal/app/service"
 	"github.com/MQEnergy/go-skeleton/internal/types/attachment"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
+	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/MQEnergy/go-skeleton/pkg/upload"
 	"github.com/gofiber/fiber/v3"
 	"github.com/spf13/cast"
@@ -39,6 +39,7 @@ func (s *AttachmentService) Upload(ctx fiber.Ctx, params attachment.UploadReq) (
 		}
 	}
 	attachmentInfo := &model.Attachment{
+		TenantID:         cast.ToUint64(ctx.Locals(tenant.LocalTenantID)),
 		UserID:           cast.ToUint64(ctx.GetRespHeader("uid")),
 		AttachName:       fileHeader.Filename,
 		AttachOriginName: fileHeader.OriginName,
@@ -49,7 +50,8 @@ func (s *AttachmentService) Upload(ctx fiber.Ctx, params attachment.UploadReq) (
 		AttachSize:       cast.ToString(fileHeader.FileSize),
 		Status:           1,
 	}
-	if err := dao.Attachment.Create(attachmentInfo); err != nil {
+	tctx := tenant.TenantCtx(ctx)
+	if err := tenant.Scope(vars.DB, tctx).Create(attachmentInfo).Error; err != nil {
 		return nil, nil, fmt.Errorf("创建附件失败: %v", err)
 	}
 	fileHeader.AttachmentId = attachmentInfo.ID

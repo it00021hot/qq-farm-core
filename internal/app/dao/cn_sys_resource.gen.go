@@ -6,6 +6,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -27,65 +28,44 @@ func newSysResource(db *gorm.DB, opts ...gen.DOOption) sysResource {
 
 	tableName := _sysResource.sysResourceDo.TableName()
 	_sysResource.ALL = field.NewAsterisk(tableName)
-	_sysResource.ID = field.NewUint64(tableName, "id")
+	_sysResource.ID = field.NewInt64(tableName, "id")
 	_sysResource.Name = field.NewString(tableName, "name")
 	_sysResource.Alias_ = field.NewString(tableName, "alias")
 	_sysResource.Desc = field.NewString(tableName, "desc")
 	_sysResource.FURL = field.NewString(tableName, "f_url")
 	_sysResource.BURL = field.NewString(tableName, "b_url")
-	_sysResource.Redirect = field.NewString(tableName, "redirect")
-	_sysResource.CompPath = field.NewString(tableName, "comp_path")
 	_sysResource.Icon = field.NewString(tableName, "icon")
-	_sysResource.CIcon = field.NewString(tableName, "c_icon")
-	_sysResource.ParentID = field.NewUint64(tableName, "parent_id")
+	_sysResource.ParentID = field.NewInt64(tableName, "parent_id")
 	_sysResource.Path = field.NewString(tableName, "path")
-	_sysResource.ResourceType = field.NewUint8(tableName, "resource_type")
-	_sysResource.IsHidden = field.NewUint8(tableName, "is_hidden")
-	_sysResource.IsCache = field.NewUint8(tableName, "is_cache")
-	_sysResource.IsExternal = field.NewUint8(tableName, "is_external")
-	_sysResource.AlwaysShow = field.NewUint8(tableName, "always_show")
-	_sysResource.BreadcrumbShow = field.NewUint8(tableName, "breadcrumb_show")
-	_sysResource.IsAffix = field.NewUint8(tableName, "is_affix")
-	_sysResource.ResType = field.NewUint8(tableName, "res_type")
-	_sysResource.Status = field.NewUint8(tableName, "status")
-	_sysResource.SortOrder = field.NewUint16(tableName, "sort_order")
-	_sysResource.CreatedAt = field.NewUint64(tableName, "created_at")
-	_sysResource.UpdatedAt = field.NewUint64(tableName, "updated_at")
+	_sysResource.ResourceType = field.NewInt16(tableName, "resource_type")
+	_sysResource.Status = field.NewInt16(tableName, "status")
+	_sysResource.SortOrder = field.NewInt32(tableName, "sort_order")
+	_sysResource.CreatedAt = field.NewInt64(tableName, "created_at")
+	_sysResource.UpdatedAt = field.NewInt64(tableName, "updated_at")
 
 	_sysResource.fillFieldMap()
 
 	return _sysResource
 }
 
-// sysResource 后台配置资源菜单表
 type sysResource struct {
 	sysResourceDo
 
-	ALL            field.Asterisk
-	ID             field.Uint64
-	Name           field.String // 名称
-	Alias_         field.String // 别名
-	Desc           field.String // 描述
-	FURL           field.String // 前端路由
-	BURL           field.String // 后端接口
-	Redirect       field.String // 重定向地址
-	CompPath       field.String // 组件路径
-	Icon           field.String // 菜单icon
-	CIcon          field.String // 自定义icon(优先)
-	ParentID       field.Uint64 // 父级ID
-	Path           field.String // ID路径 1-2-3...
-	ResourceType   field.Uint8  // 类型 1：目录 2：菜单 3：操作
-	IsHidden       field.Uint8  // 是否隐藏 1:是 0：不是
-	IsCache        field.Uint8  // 是否缓存 1:是 0：不是
-	IsExternal     field.Uint8  // 是否外链 1:是 0:不是
-	AlwaysShow     field.Uint8  // 总是显示 1:是 0:不是
-	BreadcrumbShow field.Uint8  // 面包屑显示 1:是 0:不是
-	IsAffix        field.Uint8  // 是否固定在tab栏 1：是 0：不是
-	ResType        field.Uint8  // 资源类型：1：平台型 2：商家型 3：代理商型 4：通用型
-	Status         field.Uint8  // 状态：1：正常 2：停用
-	SortOrder      field.Uint16 // 排序
-	CreatedAt      field.Uint64
-	UpdatedAt      field.Uint64
+	ALL          field.Asterisk
+	ID           field.Int64  // 主键ID
+	Name         field.String // 名称
+	Alias_       field.String // 别名
+	Desc         field.String // 描述
+	FURL         field.String // 前端路由
+	BURL         field.String // 后端接口
+	Icon         field.String // 菜单icon
+	ParentID     field.Int64  // 父级ID
+	Path         field.String // ID路径 1-2-3...
+	ResourceType field.Int16  // 类型 1：目录 2：菜单 3：操作/按钮
+	Status       field.Int16  // 状态：1：正常 2：停用
+	SortOrder    field.Int32  // 排序
+	CreatedAt    field.Int64  // 创建时间
+	UpdatedAt    field.Int64  // 更新时间
 
 	fieldMap map[string]field.Expr
 }
@@ -102,30 +82,20 @@ func (s sysResource) As(alias string) *sysResource {
 
 func (s *sysResource) updateTableName(table string) *sysResource {
 	s.ALL = field.NewAsterisk(table)
-	s.ID = field.NewUint64(table, "id")
+	s.ID = field.NewInt64(table, "id")
 	s.Name = field.NewString(table, "name")
 	s.Alias_ = field.NewString(table, "alias")
 	s.Desc = field.NewString(table, "desc")
 	s.FURL = field.NewString(table, "f_url")
 	s.BURL = field.NewString(table, "b_url")
-	s.Redirect = field.NewString(table, "redirect")
-	s.CompPath = field.NewString(table, "comp_path")
 	s.Icon = field.NewString(table, "icon")
-	s.CIcon = field.NewString(table, "c_icon")
-	s.ParentID = field.NewUint64(table, "parent_id")
+	s.ParentID = field.NewInt64(table, "parent_id")
 	s.Path = field.NewString(table, "path")
-	s.ResourceType = field.NewUint8(table, "resource_type")
-	s.IsHidden = field.NewUint8(table, "is_hidden")
-	s.IsCache = field.NewUint8(table, "is_cache")
-	s.IsExternal = field.NewUint8(table, "is_external")
-	s.AlwaysShow = field.NewUint8(table, "always_show")
-	s.BreadcrumbShow = field.NewUint8(table, "breadcrumb_show")
-	s.IsAffix = field.NewUint8(table, "is_affix")
-	s.ResType = field.NewUint8(table, "res_type")
-	s.Status = field.NewUint8(table, "status")
-	s.SortOrder = field.NewUint16(table, "sort_order")
-	s.CreatedAt = field.NewUint64(table, "created_at")
-	s.UpdatedAt = field.NewUint64(table, "updated_at")
+	s.ResourceType = field.NewInt16(table, "resource_type")
+	s.Status = field.NewInt16(table, "status")
+	s.SortOrder = field.NewInt32(table, "sort_order")
+	s.CreatedAt = field.NewInt64(table, "created_at")
+	s.UpdatedAt = field.NewInt64(table, "updated_at")
 
 	s.fillFieldMap()
 
@@ -142,27 +112,17 @@ func (s *sysResource) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *sysResource) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 24)
+	s.fieldMap = make(map[string]field.Expr, 14)
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["name"] = s.Name
 	s.fieldMap["alias"] = s.Alias_
 	s.fieldMap["desc"] = s.Desc
 	s.fieldMap["f_url"] = s.FURL
 	s.fieldMap["b_url"] = s.BURL
-	s.fieldMap["redirect"] = s.Redirect
-	s.fieldMap["comp_path"] = s.CompPath
 	s.fieldMap["icon"] = s.Icon
-	s.fieldMap["c_icon"] = s.CIcon
 	s.fieldMap["parent_id"] = s.ParentID
 	s.fieldMap["path"] = s.Path
 	s.fieldMap["resource_type"] = s.ResourceType
-	s.fieldMap["is_hidden"] = s.IsHidden
-	s.fieldMap["is_cache"] = s.IsCache
-	s.fieldMap["is_external"] = s.IsExternal
-	s.fieldMap["always_show"] = s.AlwaysShow
-	s.fieldMap["breadcrumb_show"] = s.BreadcrumbShow
-	s.fieldMap["is_affix"] = s.IsAffix
-	s.fieldMap["res_type"] = s.ResType
 	s.fieldMap["status"] = s.Status
 	s.fieldMap["sort_order"] = s.SortOrder
 	s.fieldMap["created_at"] = s.CreatedAt
@@ -236,6 +196,8 @@ type ISysResourceDo interface {
 	FirstOrCreate() (*model.SysResource, error)
 	FindByPage(offset int, limit int) (result []*model.SysResource, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Rows() (*sql.Rows, error)
+	Row() *sql.Row
 	Scan(result interface{}) (err error)
 	Returning(value interface{}, columns ...string) ISysResourceDo
 	UnderlyingDB() *gorm.DB

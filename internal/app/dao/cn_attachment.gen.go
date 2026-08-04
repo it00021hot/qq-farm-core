@@ -6,6 +6,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -27,41 +28,42 @@ func newAttachment(db *gorm.DB, opts ...gen.DOOption) attachment {
 
 	tableName := _attachment.attachmentDo.TableName()
 	_attachment.ALL = field.NewAsterisk(tableName)
-	_attachment.ID = field.NewUint64(tableName, "id")
-	_attachment.UserID = field.NewUint64(tableName, "user_id")
+	_attachment.ID = field.NewInt64(tableName, "id")
+	_attachment.TenantID = field.NewInt64(tableName, "tenant_id")
+	_attachment.UserID = field.NewInt64(tableName, "user_id")
 	_attachment.AttachName = field.NewString(tableName, "attach_name")
 	_attachment.AttachOriginName = field.NewString(tableName, "attach_origin_name")
 	_attachment.AttachURL = field.NewString(tableName, "attach_url")
-	_attachment.AttachType = field.NewUint8(tableName, "attach_type")
+	_attachment.AttachType = field.NewInt16(tableName, "attach_type")
 	_attachment.AttachMimetype = field.NewString(tableName, "attach_mimetype")
 	_attachment.AttachExtension = field.NewString(tableName, "attach_extension")
 	_attachment.AttachSize = field.NewString(tableName, "attach_size")
-	_attachment.Status = field.NewUint8(tableName, "status")
-	_attachment.CreatedAt = field.NewUint(tableName, "created_at")
-	_attachment.UpdatedAt = field.NewUint(tableName, "updated_at")
+	_attachment.Status = field.NewInt16(tableName, "status")
+	_attachment.CreatedAt = field.NewInt64(tableName, "created_at")
+	_attachment.UpdatedAt = field.NewInt64(tableName, "updated_at")
 
 	_attachment.fillFieldMap()
 
 	return _attachment
 }
 
-// attachment 附件表
 type attachment struct {
 	attachmentDo
 
 	ALL              field.Asterisk
-	ID               field.Uint64
-	UserID           field.Uint64 // 附件上传的用户id
+	ID               field.Int64  // 主键ID
+	TenantID         field.Int64  // 租户ID 0：平台
+	UserID           field.Int64  // 附件上传的用户id
 	AttachName       field.String // 附件新名称
 	AttachOriginName field.String // 附件原名称
 	AttachURL        field.String // 附件地址
-	AttachType       field.Uint8  // 附件类型 1：图片 2：视频 3：文件
+	AttachType       field.Int16  // 附件类型 1：图片 2：视频 3：文件
 	AttachMimetype   field.String // 附件mime类型
 	AttachExtension  field.String // 附件后缀名
 	AttachSize       field.String // 附件大小
-	Status           field.Uint8  // 状态 1：正常 0：删除
-	CreatedAt        field.Uint
-	UpdatedAt        field.Uint
+	Status           field.Int16  // 状态 1：正常 0：删除
+	CreatedAt        field.Int64  // 创建时间
+	UpdatedAt        field.Int64  // 更新时间
 
 	fieldMap map[string]field.Expr
 }
@@ -78,18 +80,19 @@ func (a attachment) As(alias string) *attachment {
 
 func (a *attachment) updateTableName(table string) *attachment {
 	a.ALL = field.NewAsterisk(table)
-	a.ID = field.NewUint64(table, "id")
-	a.UserID = field.NewUint64(table, "user_id")
+	a.ID = field.NewInt64(table, "id")
+	a.TenantID = field.NewInt64(table, "tenant_id")
+	a.UserID = field.NewInt64(table, "user_id")
 	a.AttachName = field.NewString(table, "attach_name")
 	a.AttachOriginName = field.NewString(table, "attach_origin_name")
 	a.AttachURL = field.NewString(table, "attach_url")
-	a.AttachType = field.NewUint8(table, "attach_type")
+	a.AttachType = field.NewInt16(table, "attach_type")
 	a.AttachMimetype = field.NewString(table, "attach_mimetype")
 	a.AttachExtension = field.NewString(table, "attach_extension")
 	a.AttachSize = field.NewString(table, "attach_size")
-	a.Status = field.NewUint8(table, "status")
-	a.CreatedAt = field.NewUint(table, "created_at")
-	a.UpdatedAt = field.NewUint(table, "updated_at")
+	a.Status = field.NewInt16(table, "status")
+	a.CreatedAt = field.NewInt64(table, "created_at")
+	a.UpdatedAt = field.NewInt64(table, "updated_at")
 
 	a.fillFieldMap()
 
@@ -106,8 +109,9 @@ func (a *attachment) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (a *attachment) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 12)
+	a.fieldMap = make(map[string]field.Expr, 13)
 	a.fieldMap["id"] = a.ID
+	a.fieldMap["tenant_id"] = a.TenantID
 	a.fieldMap["user_id"] = a.UserID
 	a.fieldMap["attach_name"] = a.AttachName
 	a.fieldMap["attach_origin_name"] = a.AttachOriginName
@@ -188,6 +192,8 @@ type IAttachmentDo interface {
 	FirstOrCreate() (*model.Attachment, error)
 	FindByPage(offset int, limit int) (result []*model.Attachment, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Rows() (*sql.Rows, error)
+	Row() *sql.Row
 	Scan(result interface{}) (err error)
 	Returning(value interface{}, columns ...string) IAttachmentDo
 	UnderlyingDB() *gorm.DB

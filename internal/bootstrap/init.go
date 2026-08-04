@@ -53,6 +53,10 @@ func BootService(services ...string) {
 	if err := boots.InitMigrate(); err != nil {
 		panic("Failed to migrate database：" + err.Error())
 	}
+	// tenant plugin
+	if err := boots.InitTenantPlugin(); err != nil {
+		panic("Failed to register tenant plugin：" + err.Error())
+	}
 	// init dao
 	boots.InitDao()
 }

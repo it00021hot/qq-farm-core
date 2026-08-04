@@ -117,14 +117,16 @@ func handleGenModel(alias, models string) error {
 				return "int"
 			},
 			"bigint": func(columnType gorm.ColumnType) (dataType string) {
-				_columnType, ok := columnType.ColumnType()
-				if !ok {
-					return "int64"
-				}
-				if _columnType == "bigint unsigned" {
-					return "uint64"
-				}
-				return "int64"
+				return "uint64"
+			},
+			"int8": func(columnType gorm.ColumnType) (dataType string) { // PG bigint
+				return "uint64"
+			},
+			"int2": func(columnType gorm.ColumnType) (dataType string) { // PG smallint
+				return "uint8"
+			},
+			"int4": func(columnType gorm.ColumnType) (dataType string) { // PG integer
+				return "uint"
 			},
 			"tinyint": func(columnType gorm.ColumnType) (dataType string) {
 				_columnType, ok := columnType.ColumnType()
@@ -137,14 +139,8 @@ func handleGenModel(alias, models string) error {
 				return "int8"
 			},
 			"smallint": func(columnType gorm.ColumnType) (dataType string) {
-				_columnType, ok := columnType.ColumnType()
-				if !ok {
-					return "int16"
-				}
-				if _columnType == "smallint unsigned" {
-					return "uint16"
-				}
-				return "int16"
+				// status 等字段用 uint8
+				return "uint8"
 			},
 			"mediumint": func(columnType gorm.ColumnType) (dataType string) {
 				_columnType, ok := columnType.ColumnType()
@@ -156,6 +152,7 @@ func handleGenModel(alias, models string) error {
 				}
 				return "int32"
 			},
+			"integer": func(columnType gorm.ColumnType) (dataType string) { return "uint" },
 			"decimal":   func(columnType gorm.ColumnType) (dataType string) { return "float64" },
 			"timestamp": func(detailType gorm.ColumnType) (dataType string) { return "time.Time" },
 		}),

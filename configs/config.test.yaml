@@ -10,6 +10,7 @@ server:
   originList: '*' # cors地址列表以逗号相隔 默认* 按需配置如：https://example1.com,https://example2.com,
   uploadType: 2 # 上传类型 1:阿里云OSS 2:S3兼容
   signExpireSeconds: 3600 # 私有对象预签名 GET 有效秒数
+  superRoleId: '1' # 超级管理员角色ID，跳过 casbin 校验
 swagger:
   enabled: true
   basePath: '/'
@@ -74,7 +75,7 @@ oss:
   endPoint: 'oss-cn-shenzhen.aliyuncs.com'
   accessKeyId: ''
   accessKeySecret: ''
-  bucketName: 'huahao-crm'
+  bucketName: 'huahao-base'
 s3:
   endPoint: '192.168.1.52:9000'
   useSSL: false

@@ -68,6 +68,7 @@
 - [X] 实现 [wecom](https://github.com/MQEnergy/go-skeleton/tree/main/pkg/wecom/wecom.go) 企业微信组件
 - [X] 实现 [oss](https://github.com/MQEnergy/go-skeleton/tree/main/pkg/oss/oss.go) 阿里云oss组件
 - [X] 增加swagger文档支持
+- [X] 轻量多租户：共享库 + `tenant_id` 行级隔离；平台维护角色/菜单/权限；租户仅用户与角色分配
 
 #### 下一步计划：
 
@@ -351,6 +352,10 @@ nilaway ./...
 ```
 
 ### 八、注意
+
+#### 0、多租户
+
+详见 [database/README.md](database/README.md)「多租户约定」。平台业务请求需带请求头 `X-Tenant-ID`；租户用户由 JWT 固定归属。
 
 #### 1、air配置文件 .air.toml在不同环境下需要修改
 

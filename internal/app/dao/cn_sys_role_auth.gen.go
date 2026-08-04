@@ -6,6 +6,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -27,8 +28,8 @@ func newSysRoleAuth(db *gorm.DB, opts ...gen.DOOption) sysRoleAuth {
 
 	tableName := _sysRoleAuth.sysRoleAuthDo.TableName()
 	_sysRoleAuth.ALL = field.NewAsterisk(tableName)
-	_sysRoleAuth.ID = field.NewUint64(tableName, "id")
-	_sysRoleAuth.RoleID = field.NewUint64(tableName, "role_id")
+	_sysRoleAuth.ID = field.NewInt64(tableName, "id")
+	_sysRoleAuth.RoleID = field.NewInt64(tableName, "role_id")
 	_sysRoleAuth.ResourceIds = field.NewString(tableName, "resource_ids")
 
 	_sysRoleAuth.fillFieldMap()
@@ -36,13 +37,12 @@ func newSysRoleAuth(db *gorm.DB, opts ...gen.DOOption) sysRoleAuth {
 	return _sysRoleAuth
 }
 
-// sysRoleAuth 角色权限表
 type sysRoleAuth struct {
 	sysRoleAuthDo
 
 	ALL         field.Asterisk
-	ID          field.Uint64
-	RoleID      field.Uint64 // 角色ID
+	ID          field.Int64  // 主键ID
+	RoleID      field.Int64  // 角色ID
 	ResourceIds field.String // 菜单id列表 1,2,3...
 
 	fieldMap map[string]field.Expr
@@ -60,8 +60,8 @@ func (s sysRoleAuth) As(alias string) *sysRoleAuth {
 
 func (s *sysRoleAuth) updateTableName(table string) *sysRoleAuth {
 	s.ALL = field.NewAsterisk(table)
-	s.ID = field.NewUint64(table, "id")
-	s.RoleID = field.NewUint64(table, "role_id")
+	s.ID = field.NewInt64(table, "id")
+	s.RoleID = field.NewInt64(table, "role_id")
 	s.ResourceIds = field.NewString(table, "resource_ids")
 
 	s.fillFieldMap()
@@ -152,6 +152,8 @@ type ISysRoleAuthDo interface {
 	FirstOrCreate() (*model.SysRoleAuth, error)
 	FindByPage(offset int, limit int) (result []*model.SysRoleAuth, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Rows() (*sql.Rows, error)
+	Row() *sql.Row
 	Scan(result interface{}) (err error)
 	Returning(value interface{}, columns ...string) ISysRoleAuthDo
 	UnderlyingDB() *gorm.DB

@@ -48,6 +48,13 @@ func NewGenCommand(db *gorm.DB, config gen.Config, options ...Options) (*GormGen
 	return g, nil
 }
 
+
+// modelNameFromTable 去掉表前缀 cn_ 后转 PascalCase：cn_sys_admin -> SysAdmin
+func modelNameFromTable(table string) string {
+	name := strings.TrimPrefix(table, "cn_")
+	return strings.Title(helper.ToCamelCase(name))
+}
+
 // GenModels 生成模型和dao
 func (c *GormGenCommand) GenModels() {
 	if c.dataTypeMap != nil {
@@ -64,17 +71,18 @@ func (c *GormGenCommand) GenModels() {
 		return columnName
 	})
 	models := make([]interface{}, 0)
-	if len(c.tables) > 0 {
-		for _, table := range c.tables {
-			model := c.generator.GenerateModelAs(table, strings.Title(helper.ToCamelCase(table)), jsonTagWithNS)
-			models = append(models, model)
+	tables := c.tables
+	if len(tables) == 0 {
+		var err error
+		tables, err = c.db.Migrator().GetTables()
+		if err != nil {
+			panic(fmt.Errorf("get all tables fail: %w", err))
 		}
-	} else {
-		models = c.generator.GenerateAllTable(jsonTagWithNS)
 	}
-	tables, err := c.db.Migrator().GetTables()
-	if err != nil {
-		panic(fmt.Errorf("get all tables fail: %w", err))
+	for _, table := range tables {
+		modelName := modelNameFromTable(table)
+		model := c.generator.GenerateModelAs(table, modelName, jsonTagWithNS)
+		models = append(models, model)
 	}
 	c.generator.ApplyBasic(models...)
 	c.genModelsInterface(tables)

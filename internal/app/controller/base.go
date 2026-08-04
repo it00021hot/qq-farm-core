@@ -52,7 +52,8 @@ func (c *Controller) Validate(ctx fiber.Ctx, param any) error {
 		return fmt.Errorf("路由参数解析失败: %v", err)
 	}
 
-	if ctx.Method() == fiber.MethodPost {
+	method := ctx.Method()
+	if method == fiber.MethodPost || method == fiber.MethodPut || method == fiber.MethodPatch {
 		contentType := string(ctx.Request().Header.ContentType())
 		contentType = utils.ParseVendorSpecificContentType(contentType)
 		ctypeEnd := strings.IndexByte(contentType, ';')

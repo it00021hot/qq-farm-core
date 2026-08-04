@@ -6,6 +6,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -27,37 +28,38 @@ func newSysRole(db *gorm.DB, opts ...gen.DOOption) sysRole {
 
 	tableName := _sysRole.sysRoleDo.TableName()
 	_sysRole.ALL = field.NewAsterisk(tableName)
-	_sysRole.ID = field.NewUint64(tableName, "id")
-	_sysRole.MchID = field.NewUint64(tableName, "mch_id")
+	_sysRole.ID = field.NewInt64(tableName, "id")
+	_sysRole.ParentID = field.NewInt64(tableName, "parent_id")
+	_sysRole.Level = field.NewInt32(tableName, "level")
 	_sysRole.Name = field.NewString(tableName, "name")
 	_sysRole.Code = field.NewString(tableName, "code")
 	_sysRole.Desc = field.NewString(tableName, "desc")
-	_sysRole.IsSys = field.NewUint8(tableName, "is_sys")
-	_sysRole.RoleType = field.NewUint8(tableName, "role_type")
-	_sysRole.Status = field.NewUint8(tableName, "status")
-	_sysRole.CreatedAt = field.NewUint(tableName, "created_at")
-	_sysRole.UpdatedAt = field.NewUint(tableName, "updated_at")
+	_sysRole.IsSys = field.NewInt16(tableName, "is_sys")
+	_sysRole.RoleType = field.NewInt16(tableName, "role_type")
+	_sysRole.Status = field.NewInt16(tableName, "status")
+	_sysRole.CreatedAt = field.NewInt64(tableName, "created_at")
+	_sysRole.UpdatedAt = field.NewInt64(tableName, "updated_at")
 
 	_sysRole.fillFieldMap()
 
 	return _sysRole
 }
 
-// sysRole 角色表
 type sysRole struct {
 	sysRoleDo
 
 	ALL       field.Asterisk
-	ID        field.Uint64
-	MchID     field.Uint64 // 商家ID 0:非商家
+	ID        field.Int64  // 主键ID
+	ParentID  field.Int64  // 上级角色ID 0为根
+	Level     field.Int32  // 角色层级深度 根为0
 	Name      field.String // 角色名称
 	Code      field.String // 角色唯一code
 	Desc      field.String // 角色描述
-	IsSys     field.Uint8  // 是否系统角色 1：是 0：否
-	RoleType  field.Uint8  // 角色类型：1：平台类型 2：商家类型 3：代理商类型
-	Status    field.Uint8  // 状态：1正常(默认) 2停用
-	CreatedAt field.Uint
-	UpdatedAt field.Uint
+	IsSys     field.Int16  // 是否系统角色 1：是 0：否
+	RoleType  field.Int16  // 角色类型 1：平台专用 2：可赋给租户用户
+	Status    field.Int16  // 状态：1正常(默认) 2停用
+	CreatedAt field.Int64  // 创建时间
+	UpdatedAt field.Int64  // 更新时间
 
 	fieldMap map[string]field.Expr
 }
@@ -74,16 +76,17 @@ func (s sysRole) As(alias string) *sysRole {
 
 func (s *sysRole) updateTableName(table string) *sysRole {
 	s.ALL = field.NewAsterisk(table)
-	s.ID = field.NewUint64(table, "id")
-	s.MchID = field.NewUint64(table, "mch_id")
+	s.ID = field.NewInt64(table, "id")
+	s.ParentID = field.NewInt64(table, "parent_id")
+	s.Level = field.NewInt32(table, "level")
 	s.Name = field.NewString(table, "name")
 	s.Code = field.NewString(table, "code")
 	s.Desc = field.NewString(table, "desc")
-	s.IsSys = field.NewUint8(table, "is_sys")
-	s.RoleType = field.NewUint8(table, "role_type")
-	s.Status = field.NewUint8(table, "status")
-	s.CreatedAt = field.NewUint(table, "created_at")
-	s.UpdatedAt = field.NewUint(table, "updated_at")
+	s.IsSys = field.NewInt16(table, "is_sys")
+	s.RoleType = field.NewInt16(table, "role_type")
+	s.Status = field.NewInt16(table, "status")
+	s.CreatedAt = field.NewInt64(table, "created_at")
+	s.UpdatedAt = field.NewInt64(table, "updated_at")
 
 	s.fillFieldMap()
 
@@ -100,9 +103,10 @@ func (s *sysRole) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *sysRole) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 10)
+	s.fieldMap = make(map[string]field.Expr, 11)
 	s.fieldMap["id"] = s.ID
-	s.fieldMap["mch_id"] = s.MchID
+	s.fieldMap["parent_id"] = s.ParentID
+	s.fieldMap["level"] = s.Level
 	s.fieldMap["name"] = s.Name
 	s.fieldMap["code"] = s.Code
 	s.fieldMap["desc"] = s.Desc
@@ -180,6 +184,8 @@ type ISysRoleDo interface {
 	FirstOrCreate() (*model.SysRole, error)
 	FindByPage(offset int, limit int) (result []*model.SysRole, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
+	Rows() (*sql.Rows, error)
+	Row() *sql.Row
 	Scan(result interface{}) (err error)
 	Returning(value interface{}, columns ...string) ISysRoleDo
 	UnderlyingDB() *gorm.DB
