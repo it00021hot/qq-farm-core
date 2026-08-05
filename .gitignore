@@ -1,5 +1,6 @@
 /.idea/
 /releases/
+/bin/
 /runtime/logs/
 /tmp/
 /go.sum

@@ -18,14 +18,10 @@ import (
 
 // 不需要选定业务租户上下文的平台配置类路径前缀
 var platformConfigPrefixes = []string{
-	"/backend/tenant",
-	"/backend/role",
-	"/backend/menu",
-	"/backend/permission",
-	"/backend/platform-user",
-	"/backend/auth/routes",
-	"/backend/auth/logout",
-	"/backend/ping",
+	"/platform",
+	"/auth",
+	"/system/ping",
+	"/system/platform-user",
 }
 
 // TenantMiddleware 解析租户上下文：校验过期/禁用，平台多租户切换

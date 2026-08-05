@@ -152,7 +152,7 @@ func handleGenModel(alias, models string) error {
 				}
 				return "int32"
 			},
-			"integer": func(columnType gorm.ColumnType) (dataType string) { return "uint" },
+			"integer":   func(columnType gorm.ColumnType) (dataType string) { return "uint" },
 			"decimal":   func(columnType gorm.ColumnType) (dataType string) { return "float64" },
 			"timestamp": func(detailType gorm.ColumnType) (dataType string) { return "time.Time" },
 		}),

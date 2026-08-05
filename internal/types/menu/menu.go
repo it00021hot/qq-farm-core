@@ -4,14 +4,16 @@ type CreateReq struct {
 	Name         string `json:"name" validate:"required"`
 	Alias        string `json:"alias" validate:"required"`
 	Desc         string `json:"desc"`
-	FURL         string `json:"f_url"`
-	BURL         string `json:"b_url"`
-	ParentID     uint64 `json:"parent_id"`
+	FURL         string `json:"fUrl"`
+	BURL         string `json:"bUrl"`
+	Methods      string `json:"methods"`
+	ParentID     uint64 `json:"parentId"`
 	Path         string `json:"path"`
-	ResourceType uint8  `json:"resource_type" validate:"required,oneof=1 2 3"`
+	ResourceType uint8  `json:"resourceType" validate:"required,oneof=1 2 3"`
 	Icon         string `json:"icon"`
+	HideInMenu   uint8  `json:"hideInMenu" validate:"required,oneof=1 2"`
 	Status       uint8  `json:"status" validate:"required,oneof=1 2"`
-	SortOrder    uint16 `json:"sort_order"`
+	SortOrder    uint16 `json:"sortOrder"`
 }
 
 type UpdateReq struct {
@@ -19,14 +21,16 @@ type UpdateReq struct {
 	Name         string `json:"name" validate:"required"`
 	Alias        string `json:"alias" validate:"required"`
 	Desc         string `json:"desc"`
-	FURL         string `json:"f_url"`
-	BURL         string `json:"b_url"`
-	ParentID     uint64 `json:"parent_id"`
+	FURL         string `json:"fUrl"`
+	BURL         string `json:"bUrl"`
+	Methods      string `json:"methods"`
+	ParentID     uint64 `json:"parentId"`
 	Path         string `json:"path"`
-	ResourceType uint8  `json:"resource_type" validate:"required,oneof=1 2 3"`
+	ResourceType uint8  `json:"resourceType" validate:"required,oneof=1 2 3"`
 	Icon         string `json:"icon"`
+	HideInMenu   uint8  `json:"hideInMenu" validate:"required,oneof=1 2"`
 	Status       uint8  `json:"status" validate:"required,oneof=1 2"`
-	SortOrder    uint16 `json:"sort_order"`
+	SortOrder    uint16 `json:"sortOrder"`
 }
 
 type IDReq struct {

@@ -5,10 +5,10 @@
 package boots
 
 import (
-    "sync"
-    
-    "github.com/MQEnergy/go-skeleton/internal/app/dao"
-    "github.com/MQEnergy/go-skeleton/internal/vars"
+	"sync"
+
+	"github.com/MQEnergy/go-skeleton/internal/app/dao"
+	"github.com/MQEnergy/go-skeleton/internal/vars"
 )
 
 var once sync.Once
@@ -16,9 +16,9 @@ var once sync.Once
 // InitDao ...
 func InitDao() {
 	once.Do(func() {
-        // dao default set
-        if vars.MDB["default"] != nil {
-            dao.SetDefault(vars.MDB["default"])
-        }
+		// dao default set
+		if vars.MDB["default"] != nil {
+			dao.SetDefault(vars.MDB["default"])
+		}
 	})
 }

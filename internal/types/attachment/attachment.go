@@ -4,7 +4,7 @@ import "github.com/MQEnergy/go-skeleton/pkg/upload"
 
 type UploadReq struct {
 	upload.File
-	FilePath string `form:"file_path"`
+	FilePath string `form:"filePath" json:"filePath"`
 }
 
 type TplDownloadReq struct {
@@ -12,23 +12,42 @@ type TplDownloadReq struct {
 }
 
 type TplImportReq struct {
-	AttachmentID uint64 `json:"attachment_id" validate:"required"` // 附件ID
-	SheetName    string `json:"sheet_name"`                        // excel文件的sheet名称
+	AttachmentID uint64 `json:"attachmentId" validate:"required"`
+	SheetName    string `json:"sheetName"`
 }
 
 type ReadFileReq struct {
-	FilePath    string `uri:"file_path" query:"file_path" validate:"required"` // 文件路径
-	XOssProcess string `uri:"x-oss-process" query:"x-oss-process"`             // x-oss-process 图片适用 示例：image/resize,m_lfit,h_200,w_200 image/resize,m_fixed,w_200,h_100
+	FilePath    string `uri:"file_path" query:"filePath" json:"filePath" validate:"required"`
+	XOssProcess string `uri:"x-oss-process" query:"xOssProcess" json:"xOssProcess"`
 }
 
-// AccessURLReq 置换私有对象临时访问地址
 type AccessURLReq struct {
-	FilePath string `json:"file_path" form:"file_path" validate:"required"` // 附件 attach_url / file_path
+	FilePath string `json:"filePath" form:"filePath" validate:"required"`
 }
 
-// AccessURLResp 临时访问地址响应
 type AccessURLResp struct {
-	FilePath  string `json:"file_path"`
-	SignedURL string `json:"signed_url"`
+	FilePath  string `json:"filePath"`
+	SignedURL string `json:"signedUrl"`
 	Expire    int64  `json:"expire"`
+}
+
+type ListReq struct {
+	Current    int    `json:"current" query:"current"`
+	Size       int    `json:"size" query:"size"`
+	Keyword    string `json:"keyword" query:"keyword"`
+	AttachType uint8  `json:"attachType" query:"attachType"`
+	Status     uint8  `json:"status" query:"status"`
+}
+
+type IDReq struct {
+	ID uint64 `json:"id" query:"id" validate:"required"`
+}
+
+type StatusReq struct {
+	ID     uint64 `json:"id" validate:"required"`
+	Status uint8  `json:"status" validate:"required,oneof=0 1"`
+}
+
+type DeleteReq struct {
+	ID uint64 `json:"id" validate:"required"`
 }

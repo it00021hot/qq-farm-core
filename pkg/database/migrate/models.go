@@ -68,11 +68,13 @@ type sysResource struct {
 	Alias_       string `gorm:"column:alias;size:64;not null;uniqueIndex:backend_menu_alias_title_unique;comment:别名"`
 	Desc         string `gorm:"column:desc;size:64;not null;comment:描述"`
 	FURL         string `gorm:"column:f_url;size:64;not null;default:'';comment:前端路由"`
-	BURL         string `gorm:"column:b_url;size:64;not null;comment:后端接口"`
-	Icon         string `gorm:"column:icon;size:32;not null;default:'';comment:菜单icon"`
+	BURL         string `gorm:"column:b_url;size:128;not null;default:'';comment:后端接口路径模式"`
+	Methods      string `gorm:"column:methods;size:64;not null;default:'';comment:HTTP方法 GET,POST"`
+	Icon         string `gorm:"column:icon;size:64;not null;default:'';comment:菜单icon"`
 	ParentID     uint64 `gorm:"column:parent_id;not null;default:0;comment:父级ID"`
 	Path         string `gorm:"column:path;size:64;not null;default:'';comment:ID路径 1-2-3..."`
 	ResourceType uint8  `gorm:"column:resource_type;not null;default:1;comment:类型 1：目录 2：菜单 3：操作/按钮"`
+	HideInMenu   uint8  `gorm:"column:hide_in_menu;not null;default:1;comment:侧栏显示：1显示 2隐藏"`
 	Status       uint8  `gorm:"column:status;not null;comment:状态：1：正常 2：停用"`
 	SortOrder    uint16 `gorm:"column:sort_order;not null;default:50;comment:排序"`
 	CreatedAt    uint64 `gorm:"column:created_at;not null;comment:创建时间"`

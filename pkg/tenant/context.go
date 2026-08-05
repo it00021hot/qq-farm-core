@@ -4,8 +4,10 @@ import (
 	"context"
 )
 
-type ctxKey struct{}
-type skipKey struct{}
+type (
+	ctxKey  struct{}
+	skipKey struct{}
+)
 
 // WithTenantID 将租户 ID 写入 context
 func WithTenantID(ctx context.Context, id uint64) context.Context {

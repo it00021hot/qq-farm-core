@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -94,9 +96,13 @@ func (s *S3) EnsureReady(ctx context.Context) error {
 }
 
 // PutObject 上传对象
-func (s *S3) PutObject(object string, content []byte) error {
+func (s *S3) PutObject(object string, content []byte, contentType string) error {
 	object = normalizeKey(object)
-	_, err := s.client.PutObject(context.Background(), s.bucket, object, bytes.NewReader(content), int64(len(content)), minio.PutObjectOptions{})
+	opts := minio.PutObjectOptions{}
+	if strings.TrimSpace(contentType) != "" {
+		opts.ContentType = contentType
+	}
+	_, err := s.client.PutObject(context.Background(), s.bucket, object, bytes.NewReader(content), int64(len(content)), opts)
 	if err != nil {
 		return fmt.Errorf("S3 上传失败: %w", err)
 	}
@@ -117,13 +123,18 @@ func (s *S3) GetObject(object string) ([]byte, error) {
 	return io.ReadAll(obj)
 }
 
-// SignGetURL 生成短期预签名 GET URL
+// SignGetURL 生成短期预签名 GET URL（强制 inline，便于浏览器直接预览图片等）
 func (s *S3) SignGetURL(object string, expire time.Duration) (string, error) {
 	object = normalizeKey(object)
 	if expire <= 0 {
 		expire = time.Hour
 	}
-	u, err := s.client.PresignedGetObject(context.Background(), s.bucket, object, expire, nil)
+	reqParams := make(url.Values)
+	reqParams.Set("response-content-disposition", "inline")
+	if ct := mimeByExt(object); ct != "" {
+		reqParams.Set("response-content-type", ct)
+	}
+	u, err := s.client.PresignedGetObject(context.Background(), s.bucket, object, expire, reqParams)
 	if err != nil {
 		return "", fmt.Errorf("S3 预签名失败: %w", err)
 	}
@@ -137,4 +148,26 @@ func (s *S3) URL(object string) string {
 
 func normalizeKey(key string) string {
 	return strings.TrimPrefix(strings.ReplaceAll(key, "\\", "/"), "/")
+}
+
+func mimeByExt(object string) string {
+	ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(object), "."))
+	switch ext {
+	case "jpg", "jpeg":
+		return "image/jpeg"
+	case "png":
+		return "image/png"
+	case "gif":
+		return "image/gif"
+	case "bmp":
+		return "image/bmp"
+	case "webp":
+		return "image/webp"
+	case "svg":
+		return "image/svg+xml"
+	case "pdf":
+		return "application/pdf"
+	default:
+		return ""
+	}
 }

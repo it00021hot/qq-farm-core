@@ -6,6 +6,16 @@ const (
 	RoleTypeTenant   uint8 = 2 // 可赋给租户用户
 )
 
+// Resource type constants (cn_sys_resource.resource_type)
+const (
+	ResourceTypeDir    uint8 = 1 // 目录
+	ResourceTypeMenu   uint8 = 2 // 菜单
+	ResourceTypeButton uint8 = 3 // 操作/按钮
+)
+
+// CasbinSyncMarker 写入 cn_sys_casbin_rule.v3，标识由资源授权同步产生的策略
+const CasbinSyncMarker = "resource_sync"
+
 // Tenant / admin status
 const (
 	StatusNormal   uint8 = 1

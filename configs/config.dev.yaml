@@ -18,7 +18,9 @@ swagger:
   path: 'docs'
   title: 'Go-skeleton API Docs'
 jwt:
-  expire: 864000   # token过期时间 单位：s
+  expire: 7200          # 兼容旧配置：access 默认秒数
+  accessExpire: 7200    # access token 过期时间（秒）2h
+  refreshExpire: 864000 # refresh token 过期时间（秒）10d
   issuer: 'go-skeleton'                   #【需修改】
   secret: '3jQSRZXeXzr09hq0GrZuL9Dgtk2XV9Ax' #【需修改】
 log:

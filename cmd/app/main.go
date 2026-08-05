@@ -88,13 +88,13 @@ func Stack() *cli.App {
 //	@license.name	Apache 2.0
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-//	@host		localhost:9527
+//	@host		localhost:9528
 //	@BasePath	/
 
-//	@securityDefinitions.apikey	ApiKeyAuth
-//	@in							header
-//	@name						Authorization
-//	@description				JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"
+// @securityDefinitions.apikey	ApiKeyAuth
+// @in							header
+// @name						Authorization
+// @description				JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"
 func main() {
 	if err := Stack().Run(os.Args); err != nil {
 		panic(err)

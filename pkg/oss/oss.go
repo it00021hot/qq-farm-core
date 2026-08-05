@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
@@ -37,8 +39,12 @@ func New(config *Config, options ...oss.ClientOption) (*Oss, error) {
 }
 
 // PutObject 上传字符串
-func (o *Oss) PutObject(object string, content []byte) error {
-	return o.bucket.PutObject(object, bytes.NewReader(content))
+func (o *Oss) PutObject(object string, content []byte, contentType string) error {
+	opts := make([]oss.Option, 0, 1)
+	if strings.TrimSpace(contentType) != "" {
+		opts = append(opts, oss.ContentType(contentType))
+	}
+	return o.bucket.PutObject(object, bytes.NewReader(content), opts...)
 }
 
 // PutObjectFromFile 上传文件
@@ -56,14 +62,42 @@ func (o *Oss) GetObject(object string) ([]byte, error) {
 	return ioutil.ReadAll(body)
 }
 
-// SignGetURL 生成短期预签名 GET URL
+// SignGetURL 生成短期预签名 GET URL（强制 inline，便于浏览器直接预览）
 func (o *Oss) SignGetURL(object string, expire time.Duration) (string, error) {
 	if expire <= 0 {
 		expire = time.Hour
 	}
-	signed, err := o.bucket.SignURL(object, oss.HTTPGet, int64(expire/time.Second))
+	opts := []oss.Option{
+		oss.ResponseContentDisposition("inline"),
+	}
+	if ct := mimeByExt(object); ct != "" {
+		opts = append(opts, oss.ResponseContentType(ct))
+	}
+	signed, err := o.bucket.SignURL(object, oss.HTTPGet, int64(expire/time.Second), opts...)
 	if err != nil {
 		return "", fmt.Errorf("OSS 预签名失败: %w", err)
 	}
 	return signed, nil
+}
+
+func mimeByExt(object string) string {
+	ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(object), "."))
+	switch ext {
+	case "jpg", "jpeg":
+		return "image/jpeg"
+	case "png":
+		return "image/png"
+	case "gif":
+		return "image/gif"
+	case "bmp":
+		return "image/bmp"
+	case "webp":
+		return "image/webp"
+	case "svg":
+		return "image/svg+xml"
+	case "pdf":
+		return "application/pdf"
+	default:
+		return ""
+	}
 }

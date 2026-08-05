@@ -79,15 +79,15 @@ type Upload struct {
 
 // FileHeader 文件参数
 type FileHeader struct {
-	AttachmentId uint64 `json:"attachment_id"`
-	Filename     string `json:"file_name"`   // 图片新名称
-	FileSize     int64  `json:"file_size"`   // 图片大小
-	FilePath     string `json:"file_path"`   // 相对路径地址（DB 存的 canonical key）
-	OriginName   string `json:"origin_name"` // 图片原名称
-	MimeType     string `json:"mime_type"`   // 附件mime类型
-	Extension    string `json:"extension"`   // 附件后缀名
-	SignedURL    string `json:"signed_url"`  // 短期预签名访问地址
-	Expire       int64  `json:"expire"`      // 预签名有效秒数
+	AttachmentId uint64 `json:"attachmentId"`
+	Filename     string `json:"fileName"`   // 图片新名称
+	FileSize     int64  `json:"fileSize"`   // 图片大小
+	FilePath     string `json:"filePath"`   // 相对路径地址（DB 存的 canonical key）
+	OriginName   string `json:"originName"` // 图片原名称
+	MimeType     string `json:"mimeType"`   // 附件mime类型
+	Extension    string `json:"extension"`  // 附件后缀名
+	SignedURL    string `json:"signedUrl"`  // 短期预签名访问地址
+	Expire       int64  `json:"expire"`     // 预签名有效秒数
 }
 
 // New 创建一个新的上传实例
@@ -146,7 +146,7 @@ func (u *Upload) uploadToOss(fileBytes []byte, header *FileHeader, uploadDir str
 	}
 
 	filePath := filepath.ToSlash(filepath.Join(uploadDir, header.Filename))
-	if err := o.PutObject(filePath, fileBytes); err != nil {
+	if err := o.PutObject(filePath, fileBytes, header.MimeType); err != nil {
 		return nil, err
 	}
 	header.FilePath = toStorageKey(filePath)
@@ -161,7 +161,7 @@ func (u *Upload) uploadToS3(fileBytes []byte, header *FileHeader, uploadDir stri
 	}
 
 	filePath := filepath.ToSlash(filepath.Join(uploadDir, header.Filename))
-	if err := o.PutObject(filePath, fileBytes); err != nil {
+	if err := o.PutObject(filePath, fileBytes, header.MimeType); err != nil {
 		return nil, err
 	}
 	header.FilePath = toStorageKey(filePath)
@@ -323,7 +323,18 @@ func (u *Upload) validate(file *multipart.FileHeader) (*FileHeader, error) {
 		FileSize:   file.Size,
 		FilePath:   "",
 		OriginName: file.Filename,
-		MimeType:   contentType,
+		MimeType:   normalizeMime(contentType, filePrefix),
 		Extension:  filePrefix,
 	}, nil
+}
+
+func normalizeMime(contentType, ext string) string {
+	ct := strings.TrimSpace(contentType)
+	if ct == "image/jpg" || (ct == "" && (ext == "jpg" || ext == "jpeg")) {
+		return "image/jpeg"
+	}
+	if ct == "image/svg" {
+		return "image/svg+xml"
+	}
+	return ct
 }

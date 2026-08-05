@@ -44,6 +44,27 @@ func Del(ctx context.Context, key string) *redis.IntCmd {
 	return vars.Redis.Del(ctx, rKey)
 }
 
+// DelRaw 删除已带完整前缀的 key（例如 Keys 返回值）
+func DelRaw(ctx context.Context, keys ...string) *redis.IntCmd {
+	if len(keys) == 0 {
+		return vars.Redis.Del(ctx)
+	}
+	return vars.Redis.Del(ctx, keys...)
+}
+
+// InvalidatePermsCache 清除全部用户前端权限缓存
+func InvalidatePermsCache(ctx context.Context) {
+	if vars.Redis == nil {
+		return
+	}
+	keys, err := Keys(ctx, "perms:*").Result()
+	if err != nil || len(keys) == 0 {
+		return
+	}
+	_ = DelRaw(ctx, keys...).Err()
+	_ = Del(ctx, ResFmt).Err()
+}
+
 func Get(ctx context.Context, key string) *redis.StringCmd {
 	rKey := BuildAuthRedisKey(key)
 	return vars.Redis.Get(ctx, rKey)

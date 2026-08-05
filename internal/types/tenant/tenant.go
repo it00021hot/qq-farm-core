@@ -2,27 +2,26 @@ package tenant
 
 // CreateReq 创建租户
 type CreateReq struct {
-	Code         string `json:"code" validate:"required,max=64"`
-	Name         string `json:"name" validate:"required,max=128"`
-	MaxUsers     uint   `json:"max_users"`
-	ExpireAt     uint   `json:"expire_at"`
-	ContactName  string `json:"contact_name"`
-	ContactPhone string `json:"contact_phone"`
-	Remark       string `json:"remark"`
-	// 可选开户主账号
-	AdminAccount  string `json:"admin_account"`
-	AdminPassword string `json:"admin_password"`
-	AdminNickName string `json:"admin_nick_name"`
+	Code          string `json:"code" validate:"required,max=64"`
+	Name          string `json:"name" validate:"required,max=128"`
+	MaxUsers      uint   `json:"maxUsers"`
+	ExpireAt      uint   `json:"expireAt"`
+	ContactName   string `json:"contactName"`
+	ContactPhone  string `json:"contactPhone"`
+	Remark        string `json:"remark"`
+	AdminAccount  string `json:"adminAccount"`
+	AdminPassword string `json:"adminPassword"`
+	AdminNickName string `json:"adminNickName"`
 }
 
 // UpdateReq 更新租户
 type UpdateReq struct {
 	ID           uint64 `json:"id" validate:"required"`
 	Name         string `json:"name" validate:"required,max=128"`
-	MaxUsers     uint   `json:"max_users"`
-	ExpireAt     uint   `json:"expire_at"`
-	ContactName  string `json:"contact_name"`
-	ContactPhone string `json:"contact_phone"`
+	MaxUsers     uint   `json:"maxUsers"`
+	ExpireAt     uint   `json:"expireAt"`
+	ContactName  string `json:"contactName"`
+	ContactPhone string `json:"contactPhone"`
 	Remark       string `json:"remark"`
 	Status       uint8  `json:"status" validate:"required,oneof=1 2"`
 }
@@ -48,6 +47,6 @@ type IDReq struct {
 
 // BindTenantReq 平台用户绑定租户
 type BindTenantReq struct {
-	AdminID   uint64   `json:"admin_id" validate:"required"`
-	TenantIDs []uint64 `json:"tenant_ids" validate:"required"`
+	AdminID   uint64   `json:"adminId" validate:"required"`
+	TenantIDs []uint64 `json:"tenantIds" validate:"required"`
 }

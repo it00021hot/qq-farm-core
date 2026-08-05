@@ -5,10 +5,29 @@ import (
 )
 
 type JSONResponse struct {
-	ErrCode   Code        `json:"errcode"`
-	RequestID string      `json:"requestid"`
-	Message   string      `json:"message"`
+	Code      Code        `json:"code"`
+	RequestID string      `json:"requestId"`
+	Msg       string      `json:"msg"`
 	Data      interface{} `json:"data"`
+}
+
+// PageData soybean 对齐的分页结构
+type PageData struct {
+	Records any   `json:"records"`
+	Current int   `json:"current"`
+	Size    int   `json:"size"`
+	Total   int64 `json:"total"`
+}
+
+// NewPageData 构造分页 data
+func NewPageData(records any, current, size int, total int64) PageData {
+	if current <= 0 {
+		current = 1
+	}
+	if size <= 0 {
+		size = 10
+	}
+	return PageData{Records: records, Current: current, Size: size, Total: total}
 }
 
 // JSON 基础返回
@@ -17,8 +36,8 @@ func JSON(ctx fiber.Ctx, status int, errcode Code, message string, data interfac
 		message = CodeMap[errcode]
 	}
 	return ctx.Status(status).JSON(JSONResponse{
-		ErrCode:   errcode,
-		Message:   message,
+		Code:      errcode,
+		Msg:       message,
 		RequestID: ctx.GetRespHeader("X-Request-Id"),
 		Data:      data,
 	})
@@ -32,20 +51,28 @@ func SuccessJSON(ctx fiber.Ctx, message string, data interface{}) error {
 	return JSON(ctx, fiber.StatusOK, Success, message, data)
 }
 
-// BadRequestException 400错误
+// BadRequestException 业务失败（HTTP 200 + 业务码，对齐 soybean 前端拦截器）
 func BadRequestException(ctx fiber.Ctx, message string) error {
 	if message == "" {
 		message = CodeMap[RequestParamErr]
 	}
-	return JSON(ctx, fiber.StatusBadRequest, RequestParamErr, message, nil)
+	return JSON(ctx, fiber.StatusOK, RequestParamErr, message, nil)
 }
 
-// UnauthorizedException 401错误
+// UnauthorizedException 未认证（HTTP 200 + 业务码，便于前端 logoutCodes 拦截）
 func UnauthorizedException(ctx fiber.Ctx, message string) error {
 	if message == "" {
 		message = CodeMap[UnAuthed]
 	}
-	return JSON(ctx, fiber.StatusUnauthorized, UnAuthed, message, nil)
+	return JSON(ctx, fiber.StatusOK, UnAuthed, message, nil)
+}
+
+// AuthExpiredException 会话过期（HTTP 200 + code，便于前端 refresh 流程）
+func AuthExpiredException(ctx fiber.Ctx, message string) error {
+	if message == "" {
+		message = CodeMap[AuthExpired]
+	}
+	return JSON(ctx, fiber.StatusOK, AuthExpired, message, nil)
 }
 
 // ForbiddenException 403错误

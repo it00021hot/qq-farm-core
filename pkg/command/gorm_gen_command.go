@@ -48,7 +48,6 @@ func NewGenCommand(db *gorm.DB, config gen.Config, options ...Options) (*GormGen
 	return g, nil
 }
 
-
 // modelNameFromTable 去掉表前缀 cn_ 后转 PascalCase：cn_sys_admin -> SysAdmin
 func modelNameFromTable(table string) string {
 	name := strings.TrimPrefix(table, "cn_")

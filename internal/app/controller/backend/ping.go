@@ -19,7 +19,7 @@ var Backend = &Controller{}
 //	@Security		ApiKeyAuth
 //	@Success		200	{object}	response.JSONResponse	"成功"
 //	@Failure		401	{object}	response.JSONResponse	"未认证"
-//	@Router			/backend/ping [get]
+//	@Router			/system/ping [get]
 func (c *Controller) Ping(ctx fiber.Ctx) error {
 	return response.SuccessJSON(ctx, "", "backend pong")
 }

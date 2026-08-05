@@ -29,11 +29,11 @@ func Register(appName string) *fiber.App {
 		ErrorHandler: func(c fiber.Ctx, err error) error {
 			return response.NotFoundException(c, err.Error())
 		},
-		BodyLimit:       100 * 1024 * 1024, // Set the body limit to 100MB
-		AppName:         appName,           // This allows to setup app name for the app
-		JSONEncoder:     json.Marshal,      // If you're not happy with the performance of encoding/json, we recommend you to use these libraries
-		JSONDecoder:     json.Unmarshal,
-		ReadBufferSize:  vars.Config.GetInt("server.bufferSize"), // fix: Request Header Fields Too Large
+		BodyLimit:      100 * 1024 * 1024, // Set the body limit to 100MB
+		AppName:        appName,           // This allows to setup app name for the app
+		JSONEncoder:    json.Marshal,      // If you're not happy with the performance of encoding/json, we recommend you to use these libraries
+		JSONDecoder:    json.Unmarshal,
+		ReadBufferSize: vars.Config.GetInt("server.bufferSize"), // fix: Request Header Fields Too Large
 	})
 	// middleware cors, compress, cache, X-Request-Id
 	r.Use(
@@ -71,21 +71,22 @@ func Register(appName string) *fiber.App {
 
 	prefix := vars.Config.GetString("database.pgsql.sources." + database.DefaultAlias + ".prefix")
 
-	// backend
-	routes.InitBackendGroup(r,
-		append(publicMiddleware,
-			middleware.AuthMiddleware(),                    // jwt
-			middleware.TenantMiddleware(vars.DB),           // 租户上下文 / 过期校验 / 多租户切换
-			middleware.CacheMiddleware(),                   // http cache（按需）
-			middleware.CasbinMiddleware(vars.DB, prefix, "sys_casbin_rule"),
-		)...,
+	protected := append(publicMiddleware,
+		middleware.AuthMiddleware(),
+		middleware.TenantMiddleware(vars.DB),
+		middleware.CacheMiddleware(),
+		middleware.CasbinMiddleware(vars.DB, prefix, "sys_casbin_rule"),
 	)
+
+	routes.InitAuthGroup(r, protected...)
+	routes.InitPlatformGroup(r, protected...)
+	routes.InitSystemGroup(r, protected...)
 
 	// frontend
 	routes.InitFrontendGroup(r,
 		append(publicMiddleware,
 			middleware.AuthMiddleware(),
-			middleware.CacheMiddleware(), // http cache middleware 按需使用
+			middleware.CacheMiddleware(),
 		)...,
 	)
 

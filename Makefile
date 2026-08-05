@@ -1,9 +1,21 @@
 APP=skeleton
+DEV_BIN=bin/app
+PORT?=9528
+ENV?=dev
 
 .PHONY: build
 build:
 	@go build -o releases/${APP} ./cmd/app
 	@go build -o releases/${APP}-cli ./cmd/cli
+
+# Agent 终端下未签名 Go 二进制无法访问局域网；增量 build + ad-hoc 签名后启动。
+# 源码未改时 go build 几乎秒回，不必每次全量重编。
+.PHONY: run
+run:
+	@mkdir -p bin
+	@go build -o ${DEV_BIN} ./cmd/app
+	@codesign -s - --force ${DEV_BIN} >/dev/null 2>&1
+	@exec ./${DEV_BIN} -e=${ENV} -p=${PORT}
 
 .PHONY: windows
 windows:
@@ -35,7 +47,7 @@ generate:
 .PHONY: clean
 clean:
 	@go clean -i .
-	@rm -rf releases
+	@rm -rf releases bin
 
 .PHONY: docs
 docs:
@@ -48,10 +60,12 @@ docs:
 .PHONY: help
 help:
 	@echo "1. make build - [go build]"
-	@echo "2. make windows - [make window package]"
-	@echo "3. make linux - [make linux package]"
-	@echo "4. make darwin - [make darwin package]"
-	@echo "5. make lint - [gofumpt -l -w .]"
-	@echo "6. make generate - [go generate -x]"
-	@echo "7. make clean - [remove releases files and cached files]"
-	@echo "8. make docs - [generate swagger docs]"
+	@echo "2. make run - [incremental build + codesign + start, Agent/局域网可用]"
+	@echo "3. make windows - [make window package]"
+	@echo "4. make linux - [make linux package]"
+	@echo "5. make darwin - [make darwin package]"
+	@echo "6. make lint - [gofumpt -l -w .]"
+	@echo "7. make generate - [go generate -x]"
+	@echo "8. make clean - [remove releases/bin and cached files]"
+	@echo "9. make docs - [generate swagger docs]"
+	@echo "   PORT=9528 ENV=dev make run"

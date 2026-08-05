@@ -75,6 +75,253 @@ const docTemplate = `{
                 }
             }
         },
+        "/backend/admin": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "更新用户资料与角色。平台用户必须传 X-Tenant-ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户管理"
+                ],
+                "summary": "更新租户用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "平台用户操作目标租户ID",
+                        "name": "X-Tenant-ID",
+                        "in": "header"
+                    },
+                    {
+                        "description": "更新参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.UpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "在当前租户上下文创建用户并分配角色（不高于操作者）。平台用户必须传 X-Tenant-ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户管理"
+                ],
+                "summary": "创建租户用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "平台用户操作目标租户ID",
+                        "name": "X-Tenant-ID",
+                        "in": "header"
+                    },
+                    {
+                        "description": "创建参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.CreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/admin/list": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "租户上下文下列出用户。平台用户必须传 Header X-Tenant-ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户管理"
+                ],
+                "summary": "用户列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "平台用户操作目标租户ID",
+                        "name": "X-Tenant-ID",
+                        "in": "header"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "current",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "账号/昵称关键词",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "状态 1正常 2禁用",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/admin/status": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "启用或禁用用户。平台用户必须传 X-Tenant-ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户管理"
+                ],
+                "summary": "启停租户用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "平台用户操作目标租户ID",
+                        "name": "X-Tenant-ID",
+                        "in": "header"
+                    },
+                    {
+                        "description": "启停参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.StatusReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/backend/attachment/access-url": {
             "post": {
                 "security": [
@@ -100,7 +347,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_backend_attachment.AccessURLReq"
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_system_attachment.AccessURLReq"
                         }
                     }
                 ],
@@ -118,6 +365,34 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/backend/attachment/delete": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "附件管理"
+                ],
+                "summary": "删除附件",
+                "responses": {}
+            }
+        },
+        "/backend/attachment/detail": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "附件管理"
+                ],
+                "summary": "附件详情",
+                "responses": {}
             }
         },
         "/backend/attachment/file/{file_path}": {
@@ -157,6 +432,34 @@ const docTemplate = `{
                 }
             }
         },
+        "/backend/attachment/list": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "附件管理"
+                ],
+                "summary": "附件列表",
+                "responses": {}
+            }
+        },
+        "/backend/attachment/status": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "附件管理"
+                ],
+                "summary": "附件启停",
+                "responses": {}
+            }
+        },
         "/backend/attachment/upload": {
             "post": {
                 "security": [
@@ -194,9 +497,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/backend/auth/info": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "鉴权管理"
+                ],
+                "summary": "当前用户信息与权限",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/backend/auth/login": {
             "post": {
-                "description": "用户登录接口",
                 "consumes": [
                     "application/json"
                 ],
@@ -214,7 +543,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_backend_user_auth.LoginReq"
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_auth.LoginReq"
                         }
                     }
                 ],
@@ -241,7 +570,6 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "用户退出登录",
                 "consumes": [
                     "application/json"
                 ],
@@ -251,7 +579,313 @@ const docTemplate = `{
                 "tags": [
                     "鉴权管理"
                 ],
-                "summary": "退出登录",
+                "summary": "用户退出登录",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/auth/refresh": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "鉴权管理"
+                ],
+                "summary": "刷新访问令牌",
+                "parameters": [
+                    {
+                        "description": "refreshToken",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_auth.RefreshReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/auth/routes": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "鉴权管理"
+                ],
+                "summary": "获取所有后端路由",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/auth/user-routes": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "鉴权管理"
+                ],
+                "summary": "获取当前用户前端路由",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/menu": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "更新菜单/按钮",
+                "parameters": [
+                    {
+                        "description": "更新参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_menu.UpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户；resource_type 1目录 2菜单 3操作",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "创建菜单/按钮",
+                "parameters": [
+                    {
+                        "description": "创建参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_menu.CreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/menu/delete": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户；有子节点时不可删",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "删除菜单/按钮",
+                "parameters": [
+                    {
+                        "description": "资源ID",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_menu.IDReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/menu/tree": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "菜单管理"
+                ],
+                "summary": "菜单树",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/permission/apis": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户；供菜单/按钮配置 b_url 与 methods",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "权限管理"
+                ],
+                "summary": "可绑定后端 API 列表",
                 "responses": {
                     "200": {
                         "description": "成功",
@@ -268,14 +902,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/backend/auth/routes": {
-            "get": {
+        "/backend/permission/reload": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "获取所有后端路由接口",
+                "description": "仅平台用户",
                 "consumes": [
                     "application/json"
                 ],
@@ -283,9 +917,52 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "鉴权管理"
+                    "权限管理"
                 ],
-                "summary": "获取所有后端路由",
+                "summary": "重载 Casbin 策略",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/permission/role/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户；排障用",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "权限管理"
+                ],
+                "summary": "角色 Casbin 策略",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "成功",
@@ -326,6 +1003,695 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "未认证",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/platform-user": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台超管；可同时绑定可管理租户。无需 X-Tenant-ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户管理"
+                ],
+                "summary": "创建平台用户",
+                "parameters": [
+                    {
+                        "description": "创建参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.PlatformCreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/role": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "更新角色",
+                "parameters": [
+                    {
+                        "description": "更新参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_role.UpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户；role_type=1 平台专用，=2 可赋给租户用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "创建角色",
+                "parameters": [
+                    {
+                        "description": "创建参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_role.CreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/role/assignable": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "按操作者角色子树裁剪，且仅返回 role_type=租户 的角色。租户与平台均可调用",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "可分配角色列表",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/role/auth": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "查询角色菜单授权",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "role_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户；resource_ids 为逗号分隔菜单ID；同步写入 Casbin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "角色菜单授权",
+                "parameters": [
+                    {
+                        "description": "授权参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_role.AuthReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/role/delete": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户；系统角色不可删",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "删除角色",
+                "parameters": [
+                    {
+                        "description": "角色ID",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_role.IDReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/role/tree": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "仅平台用户可查看完整角色树",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "角色树",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/tenant": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "平台用户分页查询租户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "租户列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "current",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "编码/名称关键词",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "状态 1正常 2禁用",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "平台用户更新租户信息（含配额/过期/状态）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "更新租户",
+                "parameters": [
+                    {
+                        "description": "更新参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_tenant.UpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "平台用户创建租户；可选同时创建主账号。无需 X-Tenant-ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "创建租户",
+                "parameters": [
+                    {
+                        "description": "创建参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_tenant.CreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/tenant/bind": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "为平台账号设置可管理的租户列表（全量覆盖）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "平台用户绑定租户",
+                "parameters": [
+                    {
+                        "description": "绑定参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_tenant.BindTenantReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/tenant/detail": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "含 used_users / expired",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "租户详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "租户ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/backend/tenant/status": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "平台用户启用或禁用租户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "租户管理"
+                ],
+                "summary": "启停租户",
+                "parameters": [
+                    {
+                        "description": "启停参数",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_platform_tenant.StatusReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.JSONResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
                         "schema": {
                             "$ref": "#/definitions/response.JSONResponse"
                         }
@@ -436,29 +1802,532 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_MQEnergy_go-skeleton_internal_app_controller_backend_attachment.AccessURLReq": {
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_auth.LoginReq": {
             "type": "object",
             "required": [
-                "file_path"
+                "password",
+                "userName"
             ],
             "properties": {
-                "file_path": {
-                    "description": "附件 attach_url / file_path",
+                "password": {
+                    "type": "string"
+                },
+                "userName": {
                     "type": "string"
                 }
             }
         },
-        "github_com_MQEnergy_go-skeleton_internal_app_controller_backend_user_auth.LoginReq": {
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_auth.RefreshReq": {
+            "type": "object",
+            "required": [
+                "refreshToken"
+            ],
+            "properties": {
+                "refreshToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_menu.CreateReq": {
+            "type": "object",
+            "required": [
+                "alias",
+                "name",
+                "resourceType",
+                "status"
+            ],
+            "properties": {
+                "alias": {
+                    "type": "string"
+                },
+                "bUrl": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "fUrl": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "methods": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "resourceType": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        3
+                    ]
+                },
+                "sortOrder": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_menu.IDReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_menu.UpdateReq": {
+            "type": "object",
+            "required": [
+                "alias",
+                "id",
+                "name",
+                "resourceType",
+                "status"
+            ],
+            "properties": {
+                "alias": {
+                    "type": "string"
+                },
+                "bUrl": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "fUrl": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "methods": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "resourceType": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        3
+                    ]
+                },
+                "sortOrder": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_role.AuthReq": {
+            "type": "object",
+            "required": [
+                "roleId"
+            ],
+            "properties": {
+                "resourceIds": {
+                    "type": "string"
+                },
+                "roleId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_role.CreateReq": {
+            "type": "object",
+            "required": [
+                "code",
+                "name",
+                "roleType",
+                "status"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 32
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "roleType": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_role.IDReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_role.UpdateReq": {
+            "type": "object",
+            "required": [
+                "code",
+                "id",
+                "name",
+                "roleType",
+                "status"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 32
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "roleType": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_tenant.BindTenantReq": {
+            "type": "object",
+            "required": [
+                "adminId",
+                "tenantIds"
+            ],
+            "properties": {
+                "adminId": {
+                    "type": "integer"
+                },
+                "tenantIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_tenant.CreateReq": {
+            "type": "object",
+            "required": [
+                "code",
+                "name"
+            ],
+            "properties": {
+                "adminAccount": {
+                    "type": "string"
+                },
+                "adminNickName": {
+                    "type": "string"
+                },
+                "adminPassword": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "contactName": {
+                    "type": "string"
+                },
+                "contactPhone": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "integer"
+                },
+                "maxUsers": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 128
+                },
+                "remark": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_tenant.StatusReq": {
+            "type": "object",
+            "required": [
+                "id",
+                "status"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_platform_tenant.UpdateReq": {
+            "type": "object",
+            "required": [
+                "id",
+                "name",
+                "status"
+            ],
+            "properties": {
+                "contactName": {
+                    "type": "string"
+                },
+                "contactPhone": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "maxUsers": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 128
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.CreateReq": {
             "type": "object",
             "required": [
                 "account",
-                "password"
+                "nickName",
+                "password",
+                "roleIds",
+                "status"
             ],
             "properties": {
                 "account": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "email": {
                     "type": "string"
                 },
+                "nickName": {
+                    "type": "string",
+                    "maxLength": 64
+                },
                 "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "realName": {
+                    "type": "string"
+                },
+                "roleIds": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.PlatformCreateReq": {
+            "type": "object",
+            "required": [
+                "account",
+                "nickName",
+                "password",
+                "roleIds",
+                "status"
+            ],
+            "properties": {
+                "account": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "nickName": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "roleIds": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                },
+                "tenantIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.StatusReq": {
+            "type": "object",
+            "required": [
+                "id",
+                "status"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.UpdateReq": {
+            "type": "object",
+            "required": [
+                "id",
+                "nickName",
+                "roleIds",
+                "status"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "nickName": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "realName": {
+                    "type": "string"
+                },
+                "roleIds": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "github_com_MQEnergy_go-skeleton_internal_app_controller_system_attachment.AccessURLReq": {
+            "type": "object",
+            "required": [
+                "filePath"
+            ],
+            "properties": {
+                "filePath": {
                     "type": "string"
                 }
             }
@@ -491,14 +2360,14 @@ const docTemplate = `{
         "response.JSONResponse": {
             "type": "object",
             "properties": {
-                "data": {},
-                "errcode": {
+                "code": {
                     "$ref": "#/definitions/response.Code"
                 },
-                "message": {
+                "data": {},
+                "msg": {
                     "type": "string"
                 },
-                "requestid": {
+                "requestId": {
                     "type": "string"
                 }
             }
@@ -517,7 +2386,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:9527",
+	Host:             "localhost:9528",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Go-skeleton API Docs",
