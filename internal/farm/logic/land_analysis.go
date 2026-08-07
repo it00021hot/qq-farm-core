@@ -417,6 +417,40 @@ func AnalyzeLands(lands []LandInfo) LandAnalysis {
 	return result
 }
 
+// AnalyzeFriendHelpLands mirrors bot visit-strategy help filters: dry_num / weed_owners /
+// insect_owners only (no dry_time / weeds_time / insect_time due checks).
+func AnalyzeFriendHelpLands(lands []LandInfo) (needWater, needWeed, needBug []int64) {
+	landsMap := BuildLandMap(lands)
+	for i := range lands {
+		land := &lands[i]
+		if IsOccupiedSlaveLand(land, landsMap) {
+			continue
+		}
+		plant := land.Plant
+		if plant == nil || len(plant.Phases) == 0 {
+			continue
+		}
+		current := GetCurrentPhase(plant.Phases)
+		if current == nil {
+			continue
+		}
+		phaseVal := current.Phase
+		if phaseVal == PhaseMature || phaseVal == PhaseDead {
+			continue
+		}
+		if plant.DryNum > 0 {
+			needWater = append(needWater, land.ID)
+		}
+		if len(plant.WeedOwners) > 0 {
+			needWeed = append(needWeed, land.ID)
+		}
+		if len(plant.InsectOwners) > 0 {
+			needBug = append(needBug, land.ID)
+		}
+	}
+	return needWater, needWeed, needBug
+}
+
 // SummarizeLandsPush builds a short LandsNotify summary string.
 func SummarizeLandsPush(lands []LandInfo) string {
 	if len(lands) == 0 {

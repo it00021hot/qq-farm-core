@@ -369,7 +369,7 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 	go s.aceLoop(ctx)
 	go s.friendLoop(ctx, "steal")
 	go s.friendLoop(ctx, "help")
-	go s.runFriendBadOnce(ctx)
+	go s.friendLoop(ctx, "bad")
 	go s.runAcceptFriendsBootstrap(ctx)
 	go s.dailyLoop(ctx)
 	go s.runDailyBootstrap(ctx)
@@ -646,6 +646,7 @@ func (s *Session) RunFarmOp(ctx context.Context, op string) (hadWork bool, actio
 		ctx, api, cfg, op,
 		WithStatsAccount(parseAccountID(s.id), 0),
 		WithPlayerState(playerLevel, gold),
+		WithOperationLimitsSink(s.ensureHelpState().updateLimits),
 	)
 	s.mu.Lock()
 	s.isFirstFarmCheck = false
@@ -698,9 +699,12 @@ func (s *Session) GetLands(ctx context.Context) ([]logic.LandInfo, error) {
 	if api == nil {
 		return nil, fmt.Errorf("farm session is not connected")
 	}
-	lands, _, err := api.AllLands(ctx)
+	lands, reply, err := api.AllLands(ctx)
 	if err == nil {
 		s.setLandCount(len(lands))
+		if reply != nil {
+			s.ensureHelpState().updateLimits(reply.OperationLimits)
+		}
 	}
 	return lands, err
 }
@@ -789,6 +793,28 @@ func (s *Session) SellBagItems(ctx context.Context, items []corepb.Item) error {
 	}
 	_, err := api.Sell(ctx, items)
 	return err
+}
+
+// UseBagItem uses one bag item via ItemService.Use, falling back to BatchUse.
+func (s *Session) UseBagItem(ctx context.Context, itemID, count int64) error {
+	s.mu.Lock()
+	api := s.gameAPI
+	s.mu.Unlock()
+	if api == nil {
+		return fmt.Errorf("farm session is not connected")
+	}
+	if itemID <= 0 || count <= 0 {
+		return fmt.Errorf("invalid item")
+	}
+	if _, err := api.Use(ctx, itemID, count, nil); err == nil {
+		return nil
+	} else {
+		useErr := err
+		if _, batchErr := api.BatchUse(ctx, []corepb.Item{{Id: itemID, Count: count}}); batchErr != nil {
+			return useErr
+		}
+		return nil
+	}
 }
 
 // Friends returns the live game friend list for this session.
@@ -1446,9 +1472,10 @@ func (s *Session) farmTick(ctx context.Context) {
 func (s *Session) friendLoop(ctx context.Context, kind string) {
 	for {
 		cfg := s.Config()
-		enabled := cfg.Automation.Friend &&
-			((kind == "steal" && cfg.Automation.FriendSteal) ||
-				(kind == "help" && cfg.Automation.FriendHelp))
+	enabled := cfg.Automation.Friend &&
+		((kind == "steal" && cfg.Automation.FriendSteal) ||
+			(kind == "help" && cfg.Automation.FriendHelp) ||
+			(kind == "bad" && cfg.Automation.FriendBad))
 		if enabled {
 			s.runFriendTick(ctx, kind)
 		}
@@ -1506,6 +1533,8 @@ func (s *Session) runFriendTick(ctx context.Context, kind string) {
 			s.helpPatrolVisited = make(map[int64]struct{})
 		}
 		_, err = RunHelpTick(ctx, s, s.helpPatrolVisited)
+	case "bad":
+		_, err = RunBadOnce(ctx, s)
 	}
 	if err != nil {
 		slog.Warn("friend tick failed", "account", s.id, "kind", kind, "err", err)
@@ -1536,33 +1565,13 @@ func (s *Session) runAcceptFriendsBootstrap(ctx context.Context) {
 	}
 }
 
-func (s *Session) runFriendBadOnce(ctx context.Context) {
-	for {
-		cfg := s.Config()
-		if !cfg.Automation.Friend || !cfg.Automation.FriendBad {
-			return
-		}
-		if !logic.InQuietHours(cfg.FriendQuietHours.Enabled, cfg.FriendQuietHours.Start, cfg.FriendQuietHours.End, time.Now().Format("15:04")) {
-			s.farmOpMu.Lock()
-			if _, err := RunBadOnce(ctx, s); err != nil {
-				slog.Warn("friend startup bad tick failed", "account", s.id, "err", err)
-			}
-			s.farmOpMu.Unlock()
-			return
-		}
-		timer := time.NewTimer(time.Minute)
-		select {
-		case <-ctx.Done():
-			timer.Stop()
-			return
-		case <-timer.C:
-		}
-	}
-}
-
 func (s *Session) nextFriendDelay(cfg logic.AccountConfig, kind string) time.Duration {
 	min, max := cfg.Intervals.StealMin, cfg.Intervals.StealMax
-	if kind == "help" {
+	switch kind {
+	case "help":
+		min, max = cfg.Intervals.HelpMin, cfg.Intervals.HelpMax
+	case "bad":
+		// Bad visits up to 20 friends; use help interval so it is less frequent than steal.
 		min, max = cfg.Intervals.HelpMin, cfg.Intervals.HelpMax
 	}
 	if min <= 0 {

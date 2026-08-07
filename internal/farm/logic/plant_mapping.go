@@ -23,21 +23,25 @@ func LandsFromPlantPB(lands []*plantpb.LandInfo) []LandInfo {
 		}
 		if l.Plant != nil {
 			p := l.Plant
-			v := p.LeftInorcFertTimes
 			pi := PlantInfo{
-				ID:                 p.Id,
-				Name:               p.Name,
-				Season:             p.Season,
-				DryNum:             p.DryNum,
-				FruitID:            p.FruitId,
-				FruitNum:           p.FruitNum,
-				WeedOwners:         append([]int64(nil), p.WeedOwners...),
-				InsectOwners:       append([]int64(nil), p.InsectOwners...),
-				Stealers:           append([]byte(nil), p.Stealers...),
-				Stealable:          p.Stealable,
-				LeftInorcFertTimes: &v,
-				LeftFruitNum:       p.LeftFruitNum,
-				MutantConfigIDs:    append([]int64(nil), p.MutantConfigIds...),
+				ID:           p.Id,
+				Name:         p.Name,
+				Season:       p.Season,
+				DryNum:       p.DryNum,
+				FruitID:      p.FruitId,
+				FruitNum:     p.FruitNum,
+				WeedOwners:   append([]int64(nil), p.WeedOwners...),
+				InsectOwners: append([]int64(nil), p.InsectOwners...),
+				Stealers:     append([]byte(nil), p.Stealers...),
+				Stealable:    p.Stealable,
+				LeftFruitNum: p.LeftFruitNum,
+				MutantConfigIDs: append([]int64(nil), p.MutantConfigIds...),
+			}
+			// Bot only enforces left_inorc when the field is present. Proto3 omits zero on the
+			// wire, so a zero value means "absent" → leave nil (eligible). Positive values set.
+			if p.LeftInorcFertTimes > 0 {
+				v := p.LeftInorcFertTimes
+				pi.LeftInorcFertTimes = &v
 			}
 			if p.Field_36 != nil {
 				pi.Activity = &PlantActivityInfo{

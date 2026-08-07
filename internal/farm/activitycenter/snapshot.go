@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/MQEnergy/go-skeleton/internal/farm/game"
+	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/activitypb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/seasonpb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/solartermspb"
@@ -520,6 +521,9 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 	affordable := 0
 	exchangeable := 0
 	categories := map[string]struct{}{}
+	currencyOrder := make([]int64, 0, 4)
+	currencySeen := map[int64]struct{}{}
+	balanceKnown := balances != nil
 	for _, g := range goods {
 		costID := int64(0)
 		costCount := int64(0)
@@ -527,12 +531,17 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 			costID = g.Cost.ItemId
 			costCount = g.Cost.Count
 		}
+		if costID > 0 {
+			if _, ok := currencySeen[costID]; !ok {
+				currencySeen[costID] = struct{}{}
+				currencyOrder = append(currencyOrder, costID)
+			}
+		}
 		canExchange := costID != 0 && costCount > 0
 		if canExchange {
 			exchangeable++
 		}
 		maxCount := "0"
-		balanceKnown := balances != nil
 		if canExchange && balanceKnown {
 			bal := balances[costID]
 			if bal >= costCount {
@@ -546,17 +555,11 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 		}
 		itemDTO := map[string]any{"id": "0", "count": "0"}
 		if g.Item != nil {
-			itemDTO = map[string]any{
-				"id":    strconv.FormatInt(g.Item.ItemId, 10),
-				"count": strconv.FormatInt(g.Item.Count, 10),
-			}
+			itemDTO = activityItemDTO(g.Item.ItemId, g.Item.Count)
 		}
 		costDTO := map[string]any{"id": "0", "count": "0"}
 		if g.Cost != nil {
-			costDTO = map[string]any{
-				"id":    strconv.FormatInt(g.Cost.ItemId, 10),
-				"count": strconv.FormatInt(g.Cost.Count, 10),
-			}
+			costDTO = activityItemDTO(g.Cost.ItemId, g.Cost.Count)
 		}
 		category := bytesText(g.Category)
 		if category != "" {
@@ -583,6 +586,30 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 	for c := range categories {
 		categoryList = append(categoryList, c)
 	}
+	currencies := make([]map[string]any, 0, len(currencyOrder))
+	for _, id := range currencyOrder {
+		count := "0"
+		var bal any
+		if balanceKnown {
+			count = strconv.FormatInt(balances[id], 10)
+			bal = count
+		}
+		item := activityItemDTO(id, 0)
+		item["count"] = count
+		item["balance"] = bal
+		item["balanceKnown"] = balanceKnown
+		currencies = append(currencies, item)
+	}
+	var balance any
+	var currency map[string]any
+	if len(currencies) > 0 {
+		currency = currencies[0]
+		if balanceKnown {
+			balance = currencies[0]["balance"]
+		}
+	} else if balanceKnown {
+		balance = "0"
+	}
 	action := map[string]any{
 		"supported":         true,
 		"enabled":           affordable > 0,
@@ -601,11 +628,28 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 		"startTime":    strconv.FormatInt(shopAct.BeginTime, 10),
 		"endTime":      strconv.FormatInt(shopAct.EndTime, 10),
 		"serverTime":   strconv.FormatInt(season.ServerTime, 10),
-		"balanceKnown": balances != nil,
+		"balance":      balance,
+		"balanceKnown": balanceKnown,
+		"currency":     currency,
+		"currencies":   currencies,
 		"categories":   categoryList,
 		"goods":        goodsDTOs,
 		"action":       action,
 	}
+}
+
+func activityItemDTO(id, count int64) map[string]any {
+	dto := map[string]any{
+		"id":    strconv.FormatInt(id, 10),
+		"count": strconv.FormatInt(count, 10),
+		"name":  "",
+		"image": "",
+	}
+	if info := logic.GetItemByID(id); info != nil {
+		dto["name"] = info.Name
+		dto["rarity"] = info.Rarity
+	}
+	return dto
 }
 
 func buildConstellation(act *seasonpb.SeasonActivity, serverTime int64, dynamic *activitypb.ConstellationData, confirmed *constellationConfirmed) map[string]any {

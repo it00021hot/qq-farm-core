@@ -305,6 +305,8 @@ func seedResources(db *gorm.DB) error {
 		{ID: 101, Name: "农场操作", Alias: "farm-operate:post", BURL: "/farm/operate", Methods: "POST", ParentID: 99, Path: "60-99-101", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
 		{ID: 102, Name: "背包列表", Alias: "farm-bag:get", BURL: "/farm/bag", Methods: "GET", ParentID: 99, Path: "60-99-102", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
 		{ID: 103, Name: "背包出售", Alias: "farm-bag:sell", BURL: "/farm/bag/sell", Methods: "POST", ParentID: 99, Path: "60-99-103", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
+		{ID: 123, Name: "每日礼包任务", Alias: "farm-daily-gifts:get", BURL: "/farm/daily-gifts", Methods: "GET", ParentID: 99, Path: "60-99-123", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
+		{ID: 124, Name: "背包使用", Alias: "farm-bag:use", BURL: "/farm/bag/use", Methods: "POST", ParentID: 99, Path: "60-99-124", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 45, CreatedAt: now, UpdatedAt: now},
 
 		{ID: 117, Name: "游戏商城", Alias: "farm_game-mall", Desc: "游戏商城商品与购买", FURL: "/farm/game-mall", Icon: "mdi:storefront", ParentID: 60, Path: "60-117", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 18, CreatedAt: now, UpdatedAt: now},
 		{ID: 118, Name: "商城商品", Alias: "farm-game-mall:get", BURL: "/farm/game-mall", Methods: "GET", ParentID: 117, Path: "60-117-118", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
@@ -372,7 +374,7 @@ func seedRoleAuth(db *gorm.DB) error {
 	farmSettings := "70,71,72,107"
 	farmGameCfg := "96,97,98"
 	farmCardAll := "80,81,82,83,84"
-	farmPersonal := "99,100,101,102,103"
+	farmPersonal := "99,100,101,102,103,123,124"
 	farmCommerce := "117,118,119,120,121,122"
 	// 租户仅保留兑换按钮权限，不授卡密管理菜单(80)与列表(81)
 	farmCardRedeem := "83"

@@ -12,6 +12,7 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/itempb"
+	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/shoppb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/stats"
 )
@@ -24,6 +25,7 @@ type farmOperationOptions struct {
 	tenantID    uint64
 	playerLevel int64
 	gold        int64
+	limitsSink  func([]*plantpb.OperationLimit)
 }
 
 // WithStatsAccount enables daily cn_farm_stats increments for this operation.
@@ -40,6 +42,21 @@ func WithPlayerState(level, gold int64) FarmOperationOption {
 		o.playerLevel = level
 		o.gold = gold
 	}
+}
+
+// WithOperationLimitsSink feeds AllLands (and other) OperationLimits into friend help/steal state,
+// matching bot setOperationLimitsCallback from farm AllLands.
+func WithOperationLimitsSink(sink func([]*plantpb.OperationLimit)) FarmOperationOption {
+	return func(o *farmOperationOptions) {
+		o.limitsSink = sink
+	}
+}
+
+func feedOperationLimits(opts farmOperationOptions, limits []*plantpb.OperationLimit) {
+	if opts.limitsSink == nil || len(limits) == 0 {
+		return
+	}
+	opts.limitsSink(limits)
 }
 
 // RunFarmOperation performs a manual or automated own-farm operation.
@@ -60,9 +77,12 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 		return false, nil, nil, fmt.Errorf("unsupported farm operation %q", op)
 	}
 
-	lands, _, err = api.AllLands(ctx)
+	lands, allLandsReply, err := api.AllLands(ctx)
 	if err != nil {
 		return false, nil, nil, fmt.Errorf("load lands: %w", err)
+	}
+	if allLandsReply != nil {
+		feedOperationLimits(options, allLandsReply.OperationLimits)
 	}
 	if len(lands) == 0 {
 		return false, nil, lands, nil
@@ -152,7 +172,8 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 				opErrs = append(opErrs, callErr)
 			} else {
 				var refreshed []logic.LandInfo
-				refreshed, _, refreshErr := api.AllLands(ctx)
+				var refreshReply *plantpb.AllLandsReply
+				refreshed, refreshReply, refreshErr := api.AllLands(ctx)
 				if refreshErr != nil {
 					opErrs = append(opErrs, fmt.Errorf("refresh harvested lands: %w", refreshErr))
 					// Classify from harvest reply only — never shovel all harvested on refresh fail.
@@ -160,6 +181,9 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 					removable = uniqueLandIDs(removable, resolved.Removable)
 					postHarvestGrowing = resolved.Growing
 				} else {
+					if refreshReply != nil {
+						feedOperationLimits(options, refreshReply.OperationLimits)
+					}
 					lands = refreshed
 					resolved := logic.ResolveRemovableHarvestedLandsPure(harvested, harvestReplyLands, refreshed)
 					removable = uniqueLandIDs(removable, resolved.Removable)
@@ -176,9 +200,20 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 			return nil
 		})
 
+		// Bot autoPlantEmptyLands: after shovel, re-fetch AllLands and plant analyze.empty only.
+		// On refresh fail keep original empties and do NOT plant former dead/removable IDs.
 		available := uniqueLandIDs(analysis.Empty)
-		if removed {
-			available = uniqueLandIDs(available, removable)
+		if removed && len(removable) > 0 {
+			refreshed, reply, refreshErr := api.AllLands(ctx)
+			if refreshErr != nil {
+				opErrs = append(opErrs, fmt.Errorf("铲除后确认土地: %w", refreshErr))
+			} else {
+				if reply != nil {
+					feedOperationLimits(options, reply.OperationLimits)
+				}
+				lands = refreshed
+				available = uniqueLandIDs(logic.AnalyzeLands(refreshed).Empty)
+			}
 		}
 		if len(available) > 0 {
 			plantedIDs, plantErrs := plantAvailableLands(ctx, api, cfg, available, options.playerLevel, options.gold)
@@ -408,11 +443,14 @@ func runFertilizerByConfig(ctx context.Context, api *game.API, cfg logic.Account
 	}
 
 	var latestLands []logic.LandInfo
-	refreshed, _, refreshErr := api.AllLands(ctx)
+	refreshed, reply, refreshErr := api.AllLands(ctx)
 	if refreshErr != nil {
 		*errs = append(*errs, fmt.Errorf("施肥刷新土地: %w", refreshErr))
 	} else {
 		latestLands = refreshed
+		if reply != nil {
+			feedOperationLimits(opts, reply.OperationLimits)
+		}
 	}
 	types := landTypes(latestLands)
 	allSelected := len(selectedTypes) == len(logic.AllFertilizerLandTypes)
@@ -440,9 +478,18 @@ func runFertilizerByConfig(ctx context.Context, api *game.API, cfg logic.Account
 		}
 		fertilizeOrganic(ctx, api, organicTargets, actions, errs, opts)
 	case logic.FertilizerSmart:
-		// Bot smart organic: no land-type filter; also runs after post-plant normal fert.
+		// Bot smart organic: re-fetch after normal fert so shortened mature times are visible.
 		threshold := int64(cfg.Automation.FertilizerSmartSeconds)
-		organicTargets := logic.GetFastMatureLands(latestLands, threshold)
+		smartLands := latestLands
+		if !skipNormal && len(normalTargets) > 0 {
+			if again, againReply, againErr := api.AllLands(ctx); againErr == nil {
+				smartLands = again
+				if againReply != nil {
+					feedOperationLimits(opts, againReply.OperationLimits)
+				}
+			}
+		}
+		organicTargets := logic.GetFastMatureLands(smartLands, threshold)
 		fertilizeOrganic(ctx, api, organicTargets, actions, errs, opts)
 	}
 }

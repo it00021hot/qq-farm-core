@@ -8,6 +8,7 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/bag"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/card"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/commerce"
+	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/dailygifts"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/friend"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/gameconfig"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/lands"
@@ -49,6 +50,8 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Get("/bag", bag.Bag.Get).Name("农场背包")
 		router.Get("/seeds", bag.Bag.Seeds).Name("可用种子列表")
 		router.Post("/bag/sell", bag.Bag.Sell).Name("出售背包物品")
+		router.Post("/bag/use", bag.Bag.Use).Name("使用背包物品")
+		router.Get("/daily-gifts", dailygifts.DailyGifts.Get).Name("每日礼包与任务总览")
 		router.Get("/game-mall", commerce.Commerce.Mall).Name("游戏商城")
 		router.Post("/game-mall/purchase", commerce.Commerce.Purchase).Name("购买商城商品")
 		router.Get("/mystery-shop", commerce.Commerce.MysteryShop).Name("神秘商人")

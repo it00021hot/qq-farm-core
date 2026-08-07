@@ -8,6 +8,7 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/friendpb"
+	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
 )
 
 func TestSummarizeHarvestRewards(t *testing.T) {
@@ -191,5 +192,36 @@ func TestIsActivityPlant(t *testing.T) {
 	}
 	if logic.IsActivityPlant(&logic.PlantInfo{Activity: &logic.PlantActivityInfo{ActivityID: 1019}}) {
 		t.Fatal("id alone is not activity")
+	}
+}
+
+func TestFriendHelpStateLimitsAndBadCap(t *testing.T) {
+	logic.SyncServerTime(1_700_000_000_000)
+	s := newFriendHelpState()
+	if s.canGetExp(friendOpWeed) {
+		t.Fatal("no limits yet → canGetExp should be false")
+	}
+	if !s.canOperate(friendOpSteal) {
+		t.Fatal("no limits → canOperate true")
+	}
+	s.updateLimits([]*plantpb.OperationLimit{
+		{Id: friendOpSteal, DayTimes: 5, DayTimesLt: 5},
+		{Id: friendOpPutBug, DayTimes: 1, DayTimesLt: 3},
+		{Id: friendOpWeed, DayTimes: 0, DayTimesLt: 10, DayExpTimes: 0, DayExTimesLt: 10},
+	})
+	if s.canOperate(friendOpSteal) {
+		t.Fatal("steal times exhausted")
+	}
+	if s.getRemainingTimes(friendOpPutBug) != 2 {
+		t.Fatalf("put bug remaining=%d", s.getRemainingTimes(friendOpPutBug))
+	}
+	if !s.canGetExp(friendOpWeed) {
+		t.Fatal("weed exp available")
+	}
+	if !s.markBadOperationLimitReached() {
+		t.Fatal("first mark should succeed")
+	}
+	if s.getRemainingTimes(friendOpPutWeed) != 0 {
+		t.Fatal("bad limit → weed remaining 0")
 	}
 }

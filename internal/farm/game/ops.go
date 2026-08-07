@@ -150,15 +150,31 @@ func (a *API) UpgradeLand(ctx context.Context, landID int64) error {
 }
 
 // PutInsects puts insects on the given lands (own or friend farm via HostGID).
-func (a *API) PutInsects(ctx context.Context, hostGID int64, landIDs []int64) error {
+func (a *API) PutInsects(ctx context.Context, hostGID int64, landIDs []int64) (*plantpb.PutInsectsReply, error) {
 	req := &plantpb.PutInsectsRequest{HostGid: hostGID, LandIds: landIDs}
-	return a.send(ctx, "PutInsects", marshalMessage(req))
+	raw, err := a.sendPlant(ctx, "PutInsects", marshalMessage(req))
+	if err != nil {
+		return nil, err
+	}
+	reply := &plantpb.PutInsectsReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
 }
 
 // PutWeeds puts weeds on the given lands (own or friend farm via HostGID).
-func (a *API) PutWeeds(ctx context.Context, hostGID int64, landIDs []int64) error {
+func (a *API) PutWeeds(ctx context.Context, hostGID int64, landIDs []int64) (*plantpb.PutWeedsReply, error) {
 	req := &plantpb.PutWeedsRequest{HostGid: hostGID, LandIds: landIDs}
-	return a.send(ctx, "PutWeeds", marshalMessage(req))
+	raw, err := a.sendPlant(ctx, "PutWeeds", marshalMessage(req))
+	if err != nil {
+		return nil, err
+	}
+	reply := &plantpb.PutWeedsReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
 }
 
 // CheckCanOperate checks whether an operation is allowed on a farm.

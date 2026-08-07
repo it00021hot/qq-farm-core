@@ -115,8 +115,12 @@ func RunStealTick(ctx context.Context, s *Session, visited map[int64]struct{}) (
 		visited = make(map[int64]struct{})
 	}
 	targets := buildStealPatrolTargets(friends, myGID, blacklist, visited)
+	helpState := s.ensureHelpState()
 	for _, gid := range targets {
 		if shouldAbortFriendPatrol(ctx, s) {
+			break
+		}
+		if !helpState.canOperate(friendOpSteal) {
 			break
 		}
 		outcome, visitErr := stealFriend(ctx, s, api, cfg, myGID, gid)
@@ -252,8 +256,15 @@ func RunBadOnce(ctx context.Context, s *Session) (actions int, err error) {
 	SyncFriendsToDB(accountID, 0, friends)
 	blacklist := makeIDSet(cfg.FriendBlacklist)
 	targets := buildBadFriendTargets(friends, myGID, blacklist, badFriendTopN)
+	helpState := s.ensureHelpState()
 	for _, gid := range targets {
 		if shouldAbortFriendPatrol(ctx, s) {
+			break
+		}
+		if helpState.isBadOperationLimitReached() {
+			break
+		}
+		if !helpState.canOperate(friendOpPutBug) && !helpState.canOperate(friendOpPutWeed) {
 			break
 		}
 		outcome, visitErr := badFriend(ctx, s, api, myGID, gid)
@@ -717,6 +728,9 @@ func friendHarvestWithFallback(ctx context.Context, s *Session, api *game.API, g
 	acc := &harvestRewardAccum{}
 	reply, batchErr := api.FriendHarvest(ctx, gid, targets)
 	if batchErr == nil {
+		if s != nil && reply != nil {
+			s.ensureHelpState().updateLimits(reply.OperationLimits)
+		}
 		applyHarvestReply(acc, targets, reply)
 		return acc.stolenIDs, acc.items, nil
 	}
@@ -739,6 +753,9 @@ func friendHarvestWithFallback(ctx context.Context, s *Session, api *game.API, g
 				break
 			}
 			continue
+		}
+		if s != nil && one != nil {
+			s.ensureHelpState().updateLimits(one.OperationLimits)
 		}
 		applyHarvestReply(acc, []int64{landID}, one)
 		_ = waitFarmDelay(ctx, 100*time.Millisecond)
@@ -881,11 +898,11 @@ func helpFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accoun
 			err = leaveErr
 		}
 	}()
-	analysis := logic.AnalyzeLands(lands)
-	out.Weed = len(analysis.NeedWeed)
-	out.Bug = len(analysis.NeedBug)
-	out.Water = len(analysis.NeedWater)
-	allHelp := uniqueLandIDs(analysis.NeedWeed, analysis.NeedBug, analysis.NeedWater)
+	analysisWater, analysisWeed, analysisBug := logic.AnalyzeFriendHelpLands(lands)
+	out.Weed = len(analysisWeed)
+	out.Bug = len(analysisBug)
+	out.Water = len(analysisWater)
+	allHelp := uniqueLandIDs(analysisWeed, analysisBug, analysisWater)
 	if len(allHelp) == 0 {
 		return out, false, nil
 	}
@@ -1240,13 +1257,13 @@ func manualHelpFriend(ctx context.Context, s *Session, api *game.API, gid int64,
 			err = leaveErr
 		}
 	}()
-	analysis := logic.AnalyzeLands(lands)
-	out.Weed = len(analysis.NeedWeed)
-	out.Bug = len(analysis.NeedBug)
-	out.Water = len(analysis.NeedWater)
+	needWater, needWeed, needBug := logic.AnalyzeFriendHelpLands(lands)
+	out.Weed = len(needWeed)
+	out.Bug = len(needBug)
+	out.Water = len(needWater)
 	switch op {
 	case "help":
-		allHelp := uniqueLandIDs(analysis.NeedWeed, analysis.NeedBug, analysis.NeedWater)
+		allHelp := uniqueLandIDs(needWeed, needBug, needWater)
 		if len(allHelp) == 0 {
 			return out, false, nil
 		}
@@ -1270,24 +1287,24 @@ func manualHelpFriend(ctx context.Context, s *Session, api *game.API, gid int64,
 		out.Summary = formatHelpSummary(count, out.Weed, out.Bug, out.Water)
 		return out, false, nil
 	case "water":
-		if len(analysis.NeedWater) == 0 {
+		if len(needWater) == 0 {
 			return out, false, nil
 		}
-		reply, waterErr := api.FriendWater(ctx, gid, analysis.NeedWater)
+		reply, waterErr := api.FriendWater(ctx, gid, needWater)
 		if waterErr != nil {
 			return out, false, waterErr
 		}
 		if s != nil && reply != nil {
 			s.ensureHelpState().updateLimits(reply.OperationLimits)
 		}
-		out.Count = len(analysis.NeedWater)
+		out.Count = len(needWater)
 		out.Summary = fmt.Sprintf("浇水%d", out.Count)
 		return out, false, nil
 	case "weed":
-		if len(analysis.NeedWeed) == 0 {
+		if len(needWeed) == 0 {
 			return out, false, nil
 		}
-		reply, farmErr := api.FriendFarming(ctx, gid, analysis.NeedWeed)
+		reply, farmErr := api.FriendFarming(ctx, gid, needWeed)
 		if farmErr != nil {
 			if isFarmingNoopError(farmErr) {
 				return out, false, nil
@@ -1297,14 +1314,14 @@ func manualHelpFriend(ctx context.Context, s *Session, api *game.API, gid int64,
 		if s != nil && reply != nil {
 			s.ensureHelpState().updateLimits(reply.OperationLimits)
 		}
-		out.Count = len(analysis.NeedWeed)
+		out.Count = len(needWeed)
 		out.Summary = fmt.Sprintf("除草%d", out.Count)
 		return out, false, nil
 	case "bug":
-		if len(analysis.NeedBug) == 0 {
+		if len(needBug) == 0 {
 			return out, false, nil
 		}
-		reply, farmErr := api.FriendFarming(ctx, gid, analysis.NeedBug)
+		reply, farmErr := api.FriendFarming(ctx, gid, needBug)
 		if farmErr != nil {
 			if isFarmingNoopError(farmErr) {
 				return out, false, nil
@@ -1314,7 +1331,7 @@ func manualHelpFriend(ctx context.Context, s *Session, api *game.API, gid int64,
 		if s != nil && reply != nil {
 			s.ensureHelpState().updateLimits(reply.OperationLimits)
 		}
-		out.Count = len(analysis.NeedBug)
+		out.Count = len(needBug)
 		out.Summary = fmt.Sprintf("除虫%d", out.Count)
 		return out, false, nil
 	default:
@@ -1324,6 +1341,10 @@ func manualHelpFriend(ctx context.Context, s *Session, api *game.API, gid int64,
 
 func badFriend(ctx context.Context, s *Session, api *game.API, myGID, gid int64) (friendVisitOutcome, error) {
 	var out friendVisitOutcome
+	helpState := s.ensureHelpState()
+	if helpState.isBadOperationLimitReached() {
+		return out, nil
+	}
 	lands, err := api.VisitEnter(ctx, gid, enterReasonFriend)
 	if err != nil {
 		if handleFriendEnterError(s, gid, err) {
@@ -1337,30 +1358,76 @@ func badFriend(ctx context.Context, s *Session, api *game.API, myGID, gid int64)
 		}
 	}()
 	weedTargets, bugTargets := collectBadLandTargets(lands, myGID)
-	if len(bugTargets) > 0 {
-		canOperate, _, checkErr := api.CheckCanOperate(ctx, gid, friendOpPutBug)
-		if checkErr != nil || canOperate {
-			if err := api.PutInsects(ctx, gid, bugTargets); err != nil {
-				return out, err
+
+	// Bot: slice by remaining times; insect failure must not block weeds; 1001046 marks day limit.
+	if len(bugTargets) > 0 && helpState.canOperate(friendOpPutBug) {
+		remaining := helpState.getRemainingTimes(friendOpPutBug)
+		if remaining > 0 {
+			if remaining < len(bugTargets) {
+				bugTargets = bugTargets[:remaining]
 			}
-			out.PutBug = len(bugTargets)
-			out.Count += out.PutBug
+			canOperate, _, checkErr := api.CheckCanOperate(ctx, gid, friendOpPutBug)
+			if checkErr != nil || canOperate {
+				reply, putErr := api.PutInsects(ctx, gid, bugTargets)
+				if putErr != nil {
+					if isBadOpLimitError(putErr) {
+						helpState.markBadOperationLimitReached()
+					} else {
+						slog.Debug("put insects failed", "account", sessionID(s), "friend_gid", gid, "err", putErr)
+					}
+				} else {
+					if reply != nil {
+						helpState.updateLimits(reply.OperationLimits)
+					}
+					out.PutBug = len(bugTargets)
+					out.Count += out.PutBug
+				}
+			}
 		}
 	}
-	if len(weedTargets) > 0 {
-		canOperate, _, checkErr := api.CheckCanOperate(ctx, gid, friendOpPutWeed)
-		if checkErr != nil || canOperate {
-			if err := api.PutWeeds(ctx, gid, weedTargets); err != nil {
-				return out, err
+	if helpState.isBadOperationLimitReached() {
+		if out.Count > 0 {
+			out.Summary = formatBadSummary(out.PutBug, out.PutWeed)
+		}
+		return out, nil
+	}
+	if len(weedTargets) > 0 && helpState.canOperate(friendOpPutWeed) {
+		remaining := helpState.getRemainingTimes(friendOpPutWeed)
+		if remaining > 0 {
+			if remaining < len(weedTargets) {
+				weedTargets = weedTargets[:remaining]
 			}
-			out.PutWeed = len(weedTargets)
-			out.Count += out.PutWeed
+			canOperate, _, checkErr := api.CheckCanOperate(ctx, gid, friendOpPutWeed)
+			if checkErr != nil || canOperate {
+				reply, putErr := api.PutWeeds(ctx, gid, weedTargets)
+				if putErr != nil {
+					if isBadOpLimitError(putErr) {
+						helpState.markBadOperationLimitReached()
+					} else {
+						slog.Debug("put weeds failed", "account", sessionID(s), "friend_gid", gid, "err", putErr)
+					}
+				} else {
+					if reply != nil {
+						helpState.updateLimits(reply.OperationLimits)
+					}
+					out.PutWeed = len(weedTargets)
+					out.Count += out.PutWeed
+				}
+			}
 		}
 	}
 	if out.Count > 0 {
 		out.Summary = formatBadSummary(out.PutBug, out.PutWeed)
 	}
 	return out, nil
+}
+
+func isBadOpLimitError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "code=1001046") || strings.Contains(msg, "1001046")
 }
 
 func formatBadSummary(putBug, putWeed int) string {

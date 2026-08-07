@@ -68,6 +68,18 @@ type BagSellReq struct {
 	Items     []BagSellItem `json:"items" validate:"required,min=1,dive"`
 }
 
+// BagUseReq uses one bag item.
+type BagUseReq struct {
+	AccountID uint64 `json:"accountId" validate:"required"`
+	ItemID    int64  `json:"itemId" validate:"required"`
+	Count     int64  `json:"count" validate:"required,min=1"`
+}
+
+// DailyGiftsReq requests personal daily-gift / task overview.
+type DailyGiftsReq struct {
+	AccountID uint64 `json:"accountId" query:"accountId" validate:"required"`
+}
+
 // AccountDeleteReq 删除账号
 type AccountDeleteReq struct {
 	ID uint64 `json:"id" validate:"required"`

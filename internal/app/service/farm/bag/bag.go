@@ -68,6 +68,24 @@ func (s *Service) Sell(ctx fiber.Ctx, req farmtypes.BagSellReq) (map[string]any,
 	}, nil
 }
 
+func (s *Service) Use(ctx fiber.Ctx, req farmtypes.BagUseReq) (map[string]any, error) {
+	session, err := s.session(ctx, req.AccountID)
+	if err != nil {
+		return nil, friendlyFarmErr(err)
+	}
+	callCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	if err := session.UseBagItem(callCtx, req.ItemID, req.Count); err != nil {
+		return nil, friendlyFarmErr(err)
+	}
+	return map[string]any{
+		"accountId": req.AccountID,
+		"itemId":    req.ItemID,
+		"count":     req.Count,
+		"ok":        true,
+	}, nil
+}
+
 func (s *Service) Get(ctx fiber.Ctx, req farmtypes.BagReq) (logic.BagUIResponse, error) {
 	session, err := s.session(ctx, req.AccountID)
 	if err != nil {

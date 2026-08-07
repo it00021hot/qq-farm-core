@@ -49,3 +49,15 @@ func (c *Controller) Sell(ctx fiber.Ctx) error {
 	}
 	return response.SuccessJSON(ctx, "", result)
 }
+
+func (c *Controller) Use(ctx fiber.Ctx) error {
+	var req farmtypes.BagUseReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	result, err := bagsvc.Bag.Use(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", result)
+}

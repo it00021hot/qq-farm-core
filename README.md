@@ -1,368 +1,127 @@
-# go-skeleton
+# QQ 农场 · 后端（go-framework）
 
-基于Go语言（版本：>=v1.26.0）和fiber框架的高性能高并发的Web项目骨架
+QQ 农场智能助手后端：多账号托管、自动化种地/好友互动、活动与商城，以及管理端 API。
 
-# 持续更新中...
+基于 [go-skeleton](https://github.com/MQEnergy/go-skeleton)（Go ≥ 1.26 + Fiber）改造；业务核心在 `internal/farm`。
 
-基于go-skeleton + Reactjs + shadcn-ui 开发的面向出海的插件化电商系统 敬请期待~
+配套前端：[`../vue-framework`](../vue-framework)。
 
-项目地址：[https://github.com/MQEnergy/mqshop](https://github.com/MQEnergy/mqshop)
+## 功能概览
 
-[![GoDoc](https://pkg.go.dev/badge/github.com/MQEnergy/go-skeleton)](https://github.com/MQEnergy/go-skeleton)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue?link=MQEnergy%2Fgo-skeleton)](https://github.com/MQEnergy/go-skeleton/blob/main/LICENSE)
-[![codebeat badge](https://codebeat.co/badges/09ce2b03-b0b1-40eb-9ac7-b91bccdb8c0d)](https://codebeat.co/projects/github-com-mqenergy-go-skeleton-main)
+| 模块 | 说明 |
+|------|------|
+| 账号 | 多农场账号 CRUD、启停；微信扫码登录 |
+| 运行时 | 巡田、种植、施肥、偷菜、帮忙、捣乱；可配置间隔与静默时段 |
+| 个人面板 | 土地 / 背包（卖、用）/ 每日礼包与任务 |
+| 好友 | 同步、土地查看、互动记录与访客 |
+| 活动中心 | 千星游记、观星、星砂商店、节令 |
+| 商城 | 游戏商城、神秘商人、钻石余额 |
+| 配置 | 自动化开关、种植策略、游戏静态配置（种子/果实/道具） |
+| 卡密 | 生成、兑换、作废 |
+| 实时 | WebSocket 推送运行状态；可选异常 Webhook |
+| 权限 | JWT + Casbin RBAC；轻量多租户（`tenant_id` 行级隔离） |
 
-## 一、项目结构
+默认开发库为 **SQLite**（`runtime/data/qq-farm.db`），Redis / 对象存储默认关闭，可单机启动。
 
-```
-├── LICENSE
-├── Makefile          # 构建
-├── README.md
-├── benchmark         # benchmark
-├── cmd
-│   ├── app           # 接口运行命令
-│   └── cli           # 命令行运行命令
-├── configs           # 配置文件
-├── database          # 数据表文件
-├── go.mod
-├── go.sum
-├── internal
-│   ├── app           # 模块目录
-│   ├── bootstrap     # 服务启动
-│   ├── command       # 命令行
-│   ├── middleware    # 中间件
-│   ├── request       # 请求参数绑定的结构体目录
-│   ├── router        # 路由
-│   └── vars          # 全局变量
-└── pkg
-    ├── cache         # 缓存类 redis sync.Map
-    ├── command       # 命令行接口定义
-    ├── config        # 配置加载类
-    ├── crontab       # 定时任务
-    ├── database      # 数据库类
-    ├── helper        # 帮助函数
-    ├── jwtauth       # jwt类
-    ├── logger        # 日志类
-    ├── oss           # aliyun oss上传
-    ├── response      # 接口返回类
-    ├── restyHttp     # 网络请求类
-    ├── upload        # 上传类
-    └── wecom         # 企业微信
+## 目录结构
 
 ```
+cmd/
+  app/                 # HTTP 服务入口
+  cli/                 # 代码生成等 CLI
+configs/               # config.{dev,test,prod}.yaml
+database/              # 多租户与权限约定说明
+internal/
+  app/                 # controller / service / model
+  farm/                # 农场核心
+    game/              # 游戏网关 RPC
+    runtime/           # 账号会话与自动化循环
+    logic/             # 土地/背包/配置等领域逻辑
+    activitycenter/    # 活动快照
+    proto/             # 游戏协议
+    tsdk/              # WASM / TSDK
+  middleware/          # Auth / Tenant / Casbin 等
+  router/routes/       # auth / farm / system / platform
+pkg/                   # 配置、DB 迁移、RBAC、响应等
+resource/farm/         # gameConfig、tsdk.wasm
+runtime/               # 日志、SQLite、tsdk 工作目录
+scripts/               # proto 生成、安全检查等
+```
 
-#### 目前已集成和实现：
-
-- [X] 支持 [jwt](https://github.com/golang/jwt-go) Authorization token验证组件
-- [X] 支持 [cors](https://github.com/gofiber/contrib/cors) 跨域组件
-- [X] 支持 [gorm](https://gorm.io) 数据库操作组件
-- [X] 支持 [redis](https://github.com/go-redis/redis) cache组件
-- [X] 支持 [slog](https://github.com/samber/slog-fiber) 日志组件
-- [X] 支持 [controller、service、model、middleware、command](https://github.com/MQEnergy/go-skeleton/tree/main/internal/command) 命令行方式生成代码工具
-- [X] 支持 [casbin](https://github.com/casbin/casbin) rbac权限 集成于中间件中 [casbin.go](https://github.com/MQEnergy/go-skeleton/blob/main/internal/middleware/casbin.go)
-- [X] 支持 [viper](https://github.com/spf13/viper) yaml、json、toml等配置文件解析组件
-- [X] 支持 [validator](https://github.com/go-playground/validator) 数据字段验证器组件，同时支持中文
-- [X] 支持 [snowflake](https://github.com/bwmarrin/snowflake) 生成雪花算法全局唯一ID
-- [X] 实现 ip白名单配置 集成于中间件中 [whitelist.go](https://github.com/MQEnergy/go-skeleton/blob/main/internal/middleware/whitelist.go)
-- [X] 实现 [code](https://github.com/MQEnergy/go-skeleton/tree/main/pkg/response/code.go) 统一定义的返回码，[exception](https://github.com/MQEnergy/go-skeleton/tree/main/pkg/response/response.go) 统一错误返回处理组件
-- [X] 实现 [wecom](https://github.com/MQEnergy/go-skeleton/tree/main/pkg/wecom/wecom.go) 企业微信组件
-- [X] 实现 [oss](https://github.com/MQEnergy/go-skeleton/tree/main/pkg/oss/oss.go) 阿里云oss组件
-- [X] 增加swagger文档支持
-- [X] 轻量多租户：共享库 + `tenant_id` 行级隔离；平台维护角色/菜单/权限；租户仅用户与角色分配
-
-#### 下一步计划：
-
-- [ ] 支持 cron 定时任务
-- [ ] 支持 pprof 性能剖析组件
-- [ ] 支持 trace 项目内部链路追踪
-- [ ] 支持 [rate](https://pkg.go.dev/golang.org/x/time/rate) 接口限流组件
-- [ ] 支持 [grpc](https://github.com/grpc/grpc-go) rpc组件
-- [ ] 支持 [go-rabbitmq](https://github.com/MQEnergy/go-rabbitmq) 消息队列组件 基于rabbitmq官方 [amqp](https://github.com/streadway/amqp) 组件封装实现的消费者和生产者
-- [ ] 实现 ticker 定时器组件
-- [ ] 实现 mongodb 数据库连接
-
-## 二、运行项目
+## 快速开始
 
 ```shell
-# 安装依赖
 go mod tidy
 
-# web命令 e: 支持三种环境变量 p: 端口号（默认9527）
-go run cmd/app/main.go [-e=dev|test|prod] [-p=9527...]
+# 推荐：增量编译 + 签名后启动（默认端口 9528）
+make run
 
-# 查看帮助
-go run cmd/app/main.go -h
-go run cmd/cli/main.go -h
-
-# cli命令
-go run cmd/cli/main.go [-e=dev|test|prod]
-
-# 热更新
-# 安装热更新
-go install github.com/cosmtrek/air@latest
-air
-
-# 查看帮助
-make help
-
-# 格式化代码
-make lint
-
-# 打包成window
-make windows
-
-# 打包成linux
-make linux
-
-# 打包成macos
-make darwin
-
-# 生成swagger文档
-make docs
-# 访问文档
-http://127.0.0.1:9527/docs
+# 或直接
+go run ./cmd/app -e=dev -p=9528
 ```
 
-## 三、基础功能
+- 配置：`configs/config.dev.yaml`（网关、`farm.*`、JWT 密钥等按需修改）
+- 默认管理员：`admin` / `admin888`（启动时 Seed）
+- Swagger：`http://127.0.0.1:9528/docs`（`swagger.enabled`）
+- 多租户与权限：见 [`database/README.md`](database/README.md)
 
-配置文件存在于[configs](configs)
+前端默认代理到 `http://127.0.0.1:9528`（见 vue-framework `.env.test`）。
 
-### 1、全局变量
-
-在internal/vars目录中可查看全局可用的参数
-
-```go
-var (
-    BasePath string              // 根目录
-    DB       *gorm.DB            // Mysql数据库
-    MDB      map[string]*gorm.DB // mysql多数据库操作
-    Redis    *redis.Client       // redis连接池
-    Router   *fiber.Router       // 路由
-    Config   config.Config      // 配置
-	Once     sync.Once
-)
-```
-
-### 2、基于gorm/gen生成model和dao
+### 常用 Makefile
 
 ```shell
-# 查看帮助
-go run cmd/cli/main.go genModel -h
-
-# 命令示例：
-# -m: 数据表名称(不填是生成别名为default的数据库的全部模型)
-# -e: dev、test、prod(默认环境：dev) 
-# -a: 数据库别名（在yaml配置文件中database.mysql.sources.alias里面配置）(默认：default)
-go run cmd/cli/main.go genModel [-m=foo] [-e=prod] [-a=demo]
+make help      # 查看目标
+make run       # 本地启动（端口可用 PORT=9528）
+make lint      # gofumpt
+make proto     # 重新生成农场 protobuf
+make docs      # swagger
+make linux     # 交叉编译
 ```
 
-命令使用-a参数 会生成新的dao目录，
+热更新可用 [air](https://github.com/air-verse/air)：`air`（注意 `.air.toml` 按环境调整）。
 
-参考文档：[https://gorm.io/zh_CN/gen/dynamic_sql.html](https://gorm.io/zh_CN/gen/dynamic_sql.html)
-
-1、在entity目录中定义模型的查询接口（按需使用）
-
-参考：[internal/app/entity/admin/admin.go](./internal/app/entity/admin/admin.go)
-
-代码如下：
-
-```go
-type Querier interface {
-	// SELECT * FROM @@table WHERE id = @id
-	GetByID(id int) (gen.T, error)
-
-	// SELECT * FROM @@table WHERE account = @account
-	GetByAccount(account string) (*gen.T, error)
-}
-```
-
-2、在entity.go文件中引入数据表的相关接口，
-
-参考：[internal/app/entity/entity.go](./internal/app/entity/entity.go)
-
-代码如下：
-
-```go
-var methodMaps = MethodMaps{
-    "cn_admin": { // 表名称
-        func(Querier) {}, // 扩展的查询接口 可多个
-        func(admin.Querier) {},
-    },
-    // ...
-}
-```
-
-### 3、创建command命令
+### CLI（可选）
 
 ```shell
-# 查看帮助
-go run cmd/cli/main.go genCommand -h
-
-# 命令示例 
-# -n: 命令行名称 
-# -d: 命令存放目录 支持无限极子目录 如：foo/foo 
-# -s: 加载已经存在的服务 如：mysql,redis 格式：多个服务以英文逗号相隔 如：mysql,redis
-go run cmd/cli/main.go genCommand -n=foo [-d=foo] [-s=mysql,redis]
+go run ./cmd/cli -h
+go run ./cmd/cli genModel -h
+go run ./cmd/cli genController -n=foo -d=backend
 ```
 
-### 4、创建controller
+## 配置要点（`farm`）
+
+```yaml
+farm:
+  gatewayUrl: 'wss://...'          # 游戏网关
+  wasmPath: 'resource/farm/tsdk.wasm'
+  gameConfigDir: 'resource/farm/gameConfig'
+  clientVersion: '...'
+  pushWebhook: ''                  # 可选：Bark / 企微机器人等
+```
+
+数据库：`database.sqlite.enabled: true` 为默认；`pgsql` 段保留便于回退。
+
+## API 入口
+
+农场业务挂在 `/farm/*`（需登录 + Casbin），例如：
+
+- `GET /farm/status/detail`、`GET /farm/ws`
+- `GET /farm/lands`、`POST /farm/operate`
+- `GET /farm/bag`、`POST /farm/bag/sell|use`、`GET /farm/daily-gifts`
+- `GET /farm/activity/snapshot`、活动领取/兑换
+- `GET|POST /farm/automation/*`、`/farm/account/*`、`/farm/friend/*`
+
+系统与平台：`/backend/*`、`/auth/*`（菜单、角色、租户、附件等）。
+
+平台操作租户业务数据时需请求头 `X-Tenant-ID`（约定见 `database/README.md`）。
+
+## 安全自检
 
 ```shell
-# 查看帮助
-go run cmd/cli/main.go genController -h
-
-# 命令示例 -n: 命令行名称 -d: 命令存放目录 支持无限极子目录 如：foo/foo
-go run cmd/cli/main.go genController -n=foo [-d=foo]
+go run ./cmd/app -e=dev -p=9528
+bash scripts/api_security_check.sh
 ```
 
-### 5、创建service
+## License
 
-```shell
-# 查看帮助
-go run cmd/cli/main.go genService -h
-
-# 命令示例 -n: 命令行名称 -d: 命令存放目录 支持无限极子目录 如：foo/foo
-go run cmd/cli/main.go genService -n=foo [-d=foo]
-```
-
-### 6、中间件
-
-1、通过命令创建中间件
-
-```shell
-# 查看帮助
-go run cmd/cli/main.go genMiddleware -h
-
-# 命令示例 -n: 命令行名称
-go run cmd/cli/main.go genMiddleware -n=foo
-```
-
-### 7、日志
-
-```go
-import "log/slog"
-
-slog.Info("Info")
-slog.Error("Error")
-slog.Warning("Warning")
-slog.Debug("Debug")
-```
-
-### 8、验证器
-
-在controller中文件中直接调用Validate方法
-示例如下：
-
-```go
-package backend
-
-import (
-	"github.com/MQEnergy/go-skeleton/pkg/response"
-	"github.com/MQEnergy/go-skeleton/internal/app/controller"
-)
-type FooController struct {
-	controller.Controller
-} 
-// IndexReq 请求参数绑定
-type IndexReq struct {
-	Name string `form:"name" query:"name" json:"name" xml:"name" validate:"required"`
-	Id   int    `form:"id" query:"id" xml:"id" validate:"required"`
-}
-
-// Index ...
-func (c *FooController) Index(ctx *fiber.Ctx) error {
-    var params IndexReq
-    if err := c.Validate(ctx, &params); err != nil {
-    return response.BadRequestException(ctx, err.Error())
-    }
-    return response.SuccessJSON(ctx, "", "index")
-}
-```
-
-### 9、响应体
-
-在[pkg/response/response.go](./pkg/response/response.go)文件中
-
-```go
-// 基础返回
-response.JSON(ctx *fiber.Ctx, status int, errcode Code, message string, data interface{})
-
-// 成功返回
-response.SuccessJSON(ctx *fiber.Ctx, message string, data interface{})
-// ...
-```
-
-### 10、数据迁移 migrate
-
-### 11、上传类
-
-参考：
-
-1、调用
-[internal/app/controller/backend/attachment.go](./internal/app/controller/backend/attachment.go)
-
-2、组件
-[pkg/upload/upload.go](./pkg/upload/upload.go)
-
-### 12、service查询数据
-
-查看[service/backend/auth.go](./internal/app/service/backend/auth.go)
-
-```go
-var (
-    u         = dao.YfoAdmin
-)
-adminInfo, err = u.GetByAccount(reqParams.Account) // 这个是entity暴露的查询方法 可查看entity/admin/admin.go文件
-```
-
-```
-dao.{数据模型}.{查询方法}
-```
-
-### 四、单元测试
-
-### 五、格式化代码
-
-```shell
-# install
-go install mvdan.cc/gofumpt@latest
-
-# run 
-gofumpt -l -w .   
-```
-
-### 六、检查shadow变量
-
-```shell
-# install
-go install golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
-
-# run path为shadow所在目录
-go vet -vettool={path}/shadow ./cmd/app/main.go 
-```
-
-### 七、静态分析
-
-```shell
-# install
-go install go.uber.org/nilaway/cmd/nilaway@latest
-
-# run 根目录
-nilaway ./...
-```
-
-### 八、注意
-
-#### 0、多租户
-
-详见 [database/README.md](database/README.md)「多租户约定」。平台业务请求需带请求头 `X-Tenant-ID`；租户用户由 JWT 固定归属。
-
-#### 1、air配置文件 .air.toml在不同环境下需要修改
-
-注意查看[.air.toml](.air.toml)文件
-
-### benchmark (Todo)
-
-```bash
-wrk -t12 -c1000 -d30s --script=benchmark/login.lua --latency http://127.0.0.1:9527/backend/auth/login
-```
+MIT（上游 go-skeleton LICENSE 仍适用）。

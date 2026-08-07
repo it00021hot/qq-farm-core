@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
+	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
 )
 
 func TestAnalyzeLandsEmptyAndMature(t *testing.T) {
@@ -180,5 +181,86 @@ func TestDefaultAccountConfig(t *testing.T) {
 	}
 	if len(cfg.Automation.FertilizerLandTypes) != 5 {
 		t.Fatalf("land types=%v", cfg.Automation.FertilizerLandTypes)
+	}
+}
+
+func TestAnalyzeFriendHelpLandsIgnoresDueTimes(t *testing.T) {
+	logic.SyncServerTime(1_700_000_000_000)
+	now := logic.GetServerTimeSec()
+	lands := []logic.LandInfo{
+		{
+			ID: 1, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID: 1, DryNum: 1,
+				Phases: []logic.PlantPhaseInfo{
+					{Phase: logic.PhaseSmallLeaves, BeginTime: now - 20},
+					{Phase: logic.PhaseMature, BeginTime: now + 400},
+				},
+			},
+		},
+		{
+			ID: 2, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID: 2, WeedOwners: []int64{9}, InsectOwners: []int64{8},
+				Phases: []logic.PlantPhaseInfo{
+					{Phase: logic.PhaseLargeLeaves, BeginTime: now - 20},
+					{Phase: logic.PhaseMature, BeginTime: now + 400},
+				},
+			},
+		},
+		{
+			// Due times only — own-farm AnalyzeLands would flag these; friend help must not.
+			ID: 3, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID: 3,
+				Phases: []logic.PlantPhaseInfo{
+					{
+						Phase: logic.PhaseBlooming, BeginTime: now - 20,
+						DryTime: now - 5, WeedsTime: now - 3, InsectTime: now - 1,
+					},
+					{Phase: logic.PhaseMature, BeginTime: now + 400},
+				},
+			},
+		},
+	}
+	water, weed, bug := logic.AnalyzeFriendHelpLands(lands)
+	if len(water) != 1 || water[0] != 1 {
+		t.Fatalf("needWater=%v want [1]", water)
+	}
+	if len(weed) != 1 || weed[0] != 2 {
+		t.Fatalf("needWeed=%v want [2]", weed)
+	}
+	if len(bug) != 1 || bug[0] != 2 {
+		t.Fatalf("needBug=%v want [2]", bug)
+	}
+}
+
+func TestLandsFromPlantPBLeftInorcAbsentWhenZero(t *testing.T) {
+	lands := logic.LandsFromPlantPB([]*plantpb.LandInfo{
+		{
+			Id: 1, Unlocked: true,
+			Plant: &plantpb.PlantInfo{
+				Id:                 10,
+				LeftInorcFertTimes: 0,
+				Phases:             []*plantpb.PlantPhaseInfo{{Phase: int32(plantpb.PlantPhase_SEED), BeginTime: 1}},
+			},
+		},
+		{
+			Id: 2, Unlocked: true,
+			Plant: &plantpb.PlantInfo{
+				Id:                 11,
+				LeftInorcFertTimes: 3,
+				Phases:             []*plantpb.PlantPhaseInfo{{Phase: int32(plantpb.PlantPhase_SEED), BeginTime: 1}},
+			},
+		},
+	})
+	if len(lands) != 2 {
+		t.Fatalf("lands=%d", len(lands))
+	}
+	if lands[0].Plant.LeftInorcFertTimes != nil {
+		t.Fatalf("zero should map to nil, got %v", *lands[0].Plant.LeftInorcFertTimes)
+	}
+	if lands[1].Plant.LeftInorcFertTimes == nil || *lands[1].Plant.LeftInorcFertTimes != 3 {
+		t.Fatalf("positive left_inorc=%v", lands[1].Plant.LeftInorcFertTimes)
 	}
 }
