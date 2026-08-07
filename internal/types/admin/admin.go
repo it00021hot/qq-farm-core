@@ -7,7 +7,7 @@ type CreateReq struct {
 	RealName string `json:"realName"`
 	Phone    string `json:"phone"`
 	Email    string `json:"email"`
-	RoleIDs  string `json:"roleIds" validate:"required"`
+	RoleIDs  string `json:"roleIds"`
 	Status   uint8  `json:"status" validate:"required,oneof=1 2"`
 }
 
@@ -17,7 +17,7 @@ type UpdateReq struct {
 	RealName string `json:"realName"`
 	Phone    string `json:"phone"`
 	Email    string `json:"email"`
-	RoleIDs  string `json:"roleIds" validate:"required"`
+	RoleIDs  string `json:"roleIds"`
 	Status   uint8  `json:"status" validate:"required,oneof=1 2"`
 	Password string `json:"password"`
 }
@@ -36,14 +36,4 @@ type IDReq struct {
 type StatusReq struct {
 	ID     uint64 `json:"id" validate:"required"`
 	Status uint8  `json:"status" validate:"required,oneof=1 2"`
-}
-
-// PlatformCreateReq 创建平台用户（tenant_id=0）
-type PlatformCreateReq struct {
-	Account   string   `json:"account" validate:"required,max=64"`
-	Password  string   `json:"password" validate:"required,min=6"`
-	NickName  string   `json:"nickName" validate:"required,max=64"`
-	RoleIDs   string   `json:"roleIds" validate:"required"`
-	TenantIDs []uint64 `json:"tenantIds"`
-	Status    uint8    `json:"status" validate:"required,oneof=1 2"`
 }

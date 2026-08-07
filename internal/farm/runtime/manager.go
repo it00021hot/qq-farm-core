@@ -134,7 +134,7 @@ func (s *Session) setStatus(st AccountStatus, detail string) {
 	accountID := s.id
 	s.mu.Unlock()
 	if s.hub != nil {
-		s.hub.PublishJSON("account_status", 0, parseAccountID(accountID), map[string]any{
+		s.hub.PublishJSON("account_status", parseAccountID(accountID), map[string]any{
 			"status": string(st),
 			"detail": detail,
 		})
@@ -163,7 +163,7 @@ func (s *Session) ApplyConfig(cfg logic.AccountConfig) {
 	s.cfg.AccountConfig = cfg
 	s.mu.Unlock()
 	if s.hub != nil {
-		s.hub.PublishJSON("account_config", 0, parseAccountID(s.id), cfg)
+		s.hub.PublishJSON("account_config", parseAccountID(s.id), cfg)
 	}
 }
 
@@ -644,7 +644,7 @@ func (s *Session) RunFarmOp(ctx context.Context, op string) (hadWork bool, actio
 	}
 	hadWork, actions, lands, err := RunFarmOperation(
 		ctx, api, cfg, op,
-		WithStatsAccount(parseAccountID(s.id), 0),
+		WithStatsAccount(parseAccountID(s.id)),
 		WithPlayerState(playerLevel, gold),
 		WithOperationLimitsSink(s.ensureHelpState().updateLimits),
 	)
@@ -677,7 +677,7 @@ func (s *Session) RunFarmOp(ctx context.Context, op string) (hadWork bool, actio
 				msg = msg + " · " + err.Error()
 			}
 		}
-		s.hub.PublishJSON("farm_operation", 0, parseAccountID(s.id), map[string]any{
+		s.hub.PublishJSON("farm_operation", parseAccountID(s.id), map[string]any{
 			"op":      op,
 			"hadWork": hadWork,
 			"actions": actions,
@@ -1128,7 +1128,7 @@ func (s *Session) publishStatusSnapshotThrottled(force bool) {
 	s.lastStatusPushAt = time.Now()
 	s.mu.Unlock()
 	snap := s.Snapshot()
-	s.hub.PublishJSON("status", 0, snap.AccountID, snap)
+	s.hub.PublishJSON("status", snap.AccountID, snap)
 }
 
 func (s *Session) setLandCount(n int) {
@@ -1455,7 +1455,7 @@ func (s *Session) farmTick(ctx context.Context) {
 				msg = msg + " · " + err.Error()
 			}
 		}
-		s.hub.PublishJSON("farm_tick", 0, parseAccountID(s.id), map[string]any{
+		s.hub.PublishJSON("farm_tick", parseAccountID(s.id), map[string]any{
 			"hadWork": hadWork,
 			"actions": actions,
 			"error":   errorText(err),
@@ -1472,10 +1472,10 @@ func (s *Session) farmTick(ctx context.Context) {
 func (s *Session) friendLoop(ctx context.Context, kind string) {
 	for {
 		cfg := s.Config()
-	enabled := cfg.Automation.Friend &&
-		((kind == "steal" && cfg.Automation.FriendSteal) ||
-			(kind == "help" && cfg.Automation.FriendHelp) ||
-			(kind == "bad" && cfg.Automation.FriendBad))
+		enabled := cfg.Automation.Friend &&
+			((kind == "steal" && cfg.Automation.FriendSteal) ||
+				(kind == "help" && cfg.Automation.FriendHelp) ||
+				(kind == "bad" && cfg.Automation.FriendBad))
 		if enabled {
 			s.runFriendTick(ctx, kind)
 		}

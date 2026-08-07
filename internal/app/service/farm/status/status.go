@@ -10,7 +10,6 @@ import (
 	farmstats "github.com/MQEnergy/go-skeleton/internal/farm/stats"
 	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -21,7 +20,7 @@ type Service struct {
 var Status = &Service{}
 
 func (s *Service) Detail(ctx fiber.Ctx, req farmtypes.StatusDetailReq) (map[string]any, error) {
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	var acc model.FarmAccount
 	if err := db.Where("id = ?", req.AccountID).First(&acc).Error; err != nil {
 		return nil, err
@@ -93,7 +92,7 @@ func (s *Service) Detail(ctx fiber.Ctx, req farmtypes.StatusDetailReq) (map[stri
 }
 
 func (s *Service) List(ctx fiber.Ctx, req farmtypes.StatusListReq) (map[string]any, error) {
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx)).Model(&model.FarmAccount{})
+	db := vars.DB.Model(&model.FarmAccount{})
 	if req.Keyword != "" {
 		kw := "%" + req.Keyword + "%"
 		db = db.Where("name LIKE ? OR code LIKE ?", kw, kw)

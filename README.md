@@ -17,11 +17,10 @@ QQ 农场智能助手后端：多账号托管、自动化种地/好友互动、�
 | 活动中心 | 千星游记、观星、星砂商店、节令 |
 | 商城 | 游戏商城、神秘商人、钻石余额 |
 | 配置 | 自动化开关、种植策略、游戏静态配置（种子/果实/道具） |
-| 卡密 | 生成、兑换、作废 |
 | 实时 | WebSocket 推送运行状态；可选异常 Webhook |
-| 权限 | JWT + Casbin RBAC；轻量多租户（`tenant_id` 行级隔离） |
+| 权限 | JWT 登录即可（单机自用，无 Casbin 菜单矩阵） |
 
-默认开发库为 **SQLite**（`runtime/data/qq-farm.db`），Redis / 对象存储默认关闭，可单机启动。
+默认开发库为 **SQLite**（`runtime/data/qq-farm.db`），Redis 默认关闭，可单机启动。
 
 ## 目录结构
 
@@ -30,7 +29,7 @@ cmd/
   app/                 # HTTP 服务入口
   cli/                 # 代码生成等 CLI
 configs/               # config.{dev,test,prod}.yaml
-database/              # 多租户与权限约定说明
+database/              # 库表与权限约定说明
 internal/
   app/                 # controller / service / model
   farm/                # 农场核心
@@ -40,9 +39,9 @@ internal/
     activitycenter/    # 活动快照
     proto/             # 游戏协议
     tsdk/              # WASM / TSDK
-  middleware/          # Auth / Tenant / Casbin 等
-  router/routes/       # auth / farm / system / platform
-pkg/                   # 配置、DB 迁移、RBAC、响应等
+  middleware/          # Auth 等
+  router/routes/       # auth / farm / system
+pkg/                   # 配置、DB 迁移、响应等
 resource/farm/         # gameConfig、tsdk.wasm
 runtime/               # 日志、SQLite、tsdk 工作目录
 scripts/               # proto 生成、安全检查等
@@ -63,7 +62,7 @@ go run ./cmd/app -e=dev -p=9528
 - 配置：`configs/config.dev.yaml`（网关、`farm.*`、JWT 密钥等按需修改）
 - 默认管理员：`admin` / `admin888`（启动时 Seed）
 - Swagger：`http://127.0.0.1:9528/docs`（`swagger.enabled`）
-- 多租户与权限：见 [`database/README.md`](database/README.md)
+- 权限约定（登录即全权限 + 前端静态菜单）：见 [`database/README.md`](database/README.md)
 
 前端默认代理到 `http://127.0.0.1:9528`（见 vue-framework `.env.test`）。
 
@@ -103,7 +102,7 @@ farm:
 
 ## API 入口
 
-农场业务挂在 `/farm/*`（需登录 + Casbin），例如：
+农场业务挂在 `/farm/*`（需登录），例如：
 
 - `GET /farm/status/detail`、`GET /farm/ws`
 - `GET /farm/lands`、`POST /farm/operate`
@@ -111,9 +110,7 @@ farm:
 - `GET /farm/activity/snapshot`、活动领取/兑换
 - `GET|POST /farm/automation/*`、`/farm/account/*`、`/farm/friend/*`
 
-系统与平台：`/backend/*`、`/auth/*`（菜单、角色、租户、附件等）。
-
-平台操作租户业务数据时需请求头 `X-Tenant-ID`（约定见 `database/README.md`）。
+系统：`/system/admin`（用户）、`/auth/*`（登录改密）。
 
 ## 安全自检
 

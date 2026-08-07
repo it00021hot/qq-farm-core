@@ -10,10 +10,10 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/app/service"
 	"github.com/MQEnergy/go-skeleton/internal/farm/activitycenter"
 	"github.com/MQEnergy/go-skeleton/internal/farm/game"
+	"github.com/MQEnergy/go-skeleton/internal/farm/proto/activitypb"
 	farmruntime "github.com/MQEnergy/go-skeleton/internal/farm/runtime"
 	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 )
@@ -28,7 +28,7 @@ func (s *Service) Snapshot(ctx fiber.Ctx, req farmtypes.ActivitySnapshotReq) (ma
 	if req.AccountID == 0 {
 		return nil, errors.New("accountId 必填")
 	}
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	var states []model.FarmActivityState
 	_ = db.Where("account_id = ?", req.AccountID).Find(&states).Error
 	hydrateConstellationFromStates(states)
@@ -92,9 +92,19 @@ func (s *Service) ClaimPass(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map
 	if reply != nil && reply.Pass != nil {
 		activitycenter.ApplySeasonPassNotify(reply.Pass)
 	}
+	var rewardPairs [][2]int64
+	if reply != nil {
+		for _, r := range reply.Rewards {
+			if r == nil || r.ItemId <= 0 {
+				continue
+			}
+			rewardPairs = append(rewardPairs, [2]int64{r.ItemId, r.Count})
+		}
+	}
 	snap := activitycenter.BuildSnapshot(callCtx, api)
 	return s.attachSnapshot(ctx, req.AccountID, snap, map[string]any{
-		"pass": snap.Season["pass"],
+		"pass":    snap.Season["pass"],
+		"rewards": activitycenter.RewardDTOsFromPairs(rewardPairs),
 	})
 }
 
@@ -121,17 +131,25 @@ func (s *Service) LightConstellation(ctx fiber.Ctx, req farmtypes.ActivityAction
 				"outcome":     "nothingToClaim",
 				"noClaimable": true,
 				"message":     "今日星宿奖励已经领取，无需重复操作",
+				"rewards":     []map[string]any{},
 			})
 		}
 		return nil, err
 	}
+	var dynamic *activitypb.ConstellationData
 	if reply != nil && reply.Data != nil && reply.Data.Constellation != nil {
-		activitycenter.RememberConstellationNodes(act.ActivityId, reply.Data.Constellation)
+		dynamic = reply.Data.Constellation
+		activitycenter.RememberConstellationNodes(act.ActivityId, dynamic)
+	}
+	serverTime := int64(0)
+	if season.SeasonInfo != nil {
+		serverTime = season.SeasonInfo.ServerTime
 	}
 	snap := activitycenter.BuildSnapshot(callCtx, api)
 	return s.attachSnapshot(ctx, req.AccountID, snap, map[string]any{
 		"outcome":       "lighted",
 		"constellation": snap.Constellation,
+		"rewards":       activitycenter.ConstellationClaimRewardDTOs(act, serverTime, dynamic),
 	})
 }
 
@@ -167,7 +185,8 @@ func (s *Service) ShopExchange(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (
 	}
 	snap := activitycenter.BuildSnapshot(callCtx, api)
 	return s.attachSnapshot(ctx, req.AccountID, snap, map[string]any{
-		"shop": snap.Shop,
+		"shop":    snap.Shop,
+		"rewards": activitycenter.ShopExchangeRewardDTOs(snap.Shop, req.ItemID, count),
 	})
 }
 
@@ -203,12 +222,23 @@ func (s *Service) ClaimSolarTerm(ctx fiber.Ctx, req farmtypes.ActivityActionReq)
 	if found == nil {
 		return nil, errors.New("服务端未发现指定节令")
 	}
-	if _, err := api.ClaimSolarTerms(callCtx, termID); err != nil {
+	reply, err := api.ClaimSolarTerms(callCtx, termID)
+	if err != nil {
 		return nil, err
+	}
+	var rewardPairs [][2]int64
+	if reply != nil {
+		for _, r := range reply.Rewards {
+			if r == nil || r.ItemId <= 0 {
+				continue
+			}
+			rewardPairs = append(rewardPairs, [2]int64{r.ItemId, r.Count})
+		}
 	}
 	snap := activitycenter.BuildSnapshot(callCtx, api)
 	return s.attachSnapshot(ctx, req.AccountID, snap, map[string]any{
-		"termId": req.TermID,
+		"termId":  req.TermID,
+		"rewards": activitycenter.RewardDTOsFromPairs(rewardPairs),
 	})
 }
 
@@ -272,7 +302,7 @@ func (s *Service) ClaimGift(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map
 }
 
 func (s *Service) attachSnapshot(ctx fiber.Ctx, accountID uint64, snap activitycenter.Snapshot, extra map[string]any) (map[string]any, error) {
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	now := uint(time.Now().Unix())
 	_ = s.persistSnapshotStates(db, accountID, snap, now)
 
@@ -332,7 +362,7 @@ func (s *Service) liveAPI(ctx fiber.Ctx, accountID uint64) (*farmruntime.Session
 
 func (s *Service) session(ctx fiber.Ctx, accountID uint64) (*farmruntime.Session, error) {
 	var account model.FarmAccount
-	if err := tenant.Scope(vars.DB, tenant.TenantCtx(ctx)).Where("id = ?", accountID).First(&account).Error; err != nil {
+	if err := vars.DB.Where("id = ?", accountID).First(&account).Error; err != nil {
 		return nil, errors.New("账号不存在")
 	}
 	session, ok := farmruntime.Default.Session(accountID)
@@ -382,7 +412,7 @@ func (s *Service) touchState(ctx fiber.Ctx, accountID uint64, activityID, stateJ
 	if accountID == 0 {
 		return errors.New("accountId 必填")
 	}
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	now := uint(time.Now().Unix())
 	return upsertState(db, accountID, activityID, stateJSON, now)
 }

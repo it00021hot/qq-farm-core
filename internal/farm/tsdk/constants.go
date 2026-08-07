@@ -8,12 +8,12 @@ import (
 
 // Runtime constants — see qq-farm-bot/core/docs/tsdk-runtime.md
 const (
-	TSDKVersion       = "v3.8.6.1785239995"
-	TSDKSHA256        = "14754428297ee0d5aa6cceee76e6ef076bdac31ceda0ea2e2bf4a0472c8e717f"
-	MiniProgramAppID  = "wx5306c5978fdb76e4"
-	TSDKGameID        = 3167
-	TSDKAppKey        = "0"
-	MergedDataKey     = 1871261153
+	TSDKVersion      = "v3.8.6.1785239995"
+	TSDKSHA256       = "14754428297ee0d5aa6cceee76e6ef076bdac31ceda0ea2e2bf4a0472c8e717f"
+	MiniProgramAppID = "wx5306c5978fdb76e4"
+	TSDKGameID       = 3167
+	TSDKAppKey       = "0"
+	MergedDataKey    = 1871261153
 )
 
 // RuntimeTable is the fixed host table written by import a.k.

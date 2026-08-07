@@ -10,7 +10,6 @@ import (
 	farmstats "github.com/MQEnergy/go-skeleton/internal/farm/stats"
 	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -29,7 +28,7 @@ func (s *Service) Detail(ctx fiber.Ctx, req farmtypes.AnalyticsDetailReq) (map[s
 		days = 7
 	}
 	since := time.Now().AddDate(0, 0, -days).Format("2006-01-02")
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	var stats []model.FarmStats
 	_ = db.Where("account_id = ? AND stat_date >= ?", req.AccountID, since).Order("stat_date asc").Find(&stats).Error
 	todayExp, todayGold := farmstats.TodayExpGold(req.AccountID, 0)

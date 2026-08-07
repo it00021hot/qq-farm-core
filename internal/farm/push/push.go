@@ -15,9 +15,9 @@ func Notify(webhookURL, title, body string) error {
 		return nil
 	}
 	payload, _ := json.Marshal(map[string]any{
-		"title": title,
-		"body":  body,
-		"text":  fmt.Sprintf("%s\n%s", title, body),
+		"title":   title,
+		"body":    body,
+		"text":    fmt.Sprintf("%s\n%s", title, body),
 		"msgtype": "text",
 		"markdown": map[string]string{
 			"content": fmt.Sprintf("**%s**\n%s", title, body),

@@ -3,11 +3,9 @@ package router
 import (
 	"strings"
 
-	"github.com/MQEnergy/go-skeleton/internal/bootstrap/boots"
 	"github.com/MQEnergy/go-skeleton/internal/middleware"
 	"github.com/MQEnergy/go-skeleton/internal/router/routes"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/database"
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
 	"github.com/goccy/go-json"
@@ -78,20 +76,12 @@ func Register(appName string) *fiber.App {
 	}
 	r.Get("/game-config/*", static.New(gameConfigDir))
 
-	prefix := boots.TablePrefix()
-	if prefix == "" {
-		prefix = vars.Config.GetString("database.pgsql.sources." + database.DefaultAlias + ".prefix")
-	}
-
 	protected := append(publicMiddleware,
 		middleware.AuthMiddleware(),
-		middleware.TenantMiddleware(vars.DB),
 		middleware.CacheMiddleware(),
-		middleware.CasbinMiddleware(vars.DB, prefix, "sys_casbin_rule"),
 	)
 
 	routes.InitAuthGroup(r, protected...)
-	routes.InitPlatformGroup(r, protected...)
 	routes.InitSystemGroup(r, protected...)
 	routes.InitFarmGroup(r, protected...)
 

@@ -45,7 +45,7 @@ type Runtime struct {
 	mod       api.Module
 	ready     bool
 	destroyed bool
-	userBound  bool
+	userBound bool
 	host      *host
 }
 

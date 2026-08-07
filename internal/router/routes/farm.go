@@ -6,7 +6,6 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/analytics"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/automation"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/bag"
-	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/card"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/commerce"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/dailygifts"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/friend"
@@ -56,11 +55,6 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Post("/game-mall/purchase", commerce.Commerce.Purchase).Name("购买商城商品")
 		router.Get("/mystery-shop", commerce.Commerce.MysteryShop).Name("神秘商人")
 		router.Get("/diamond", commerce.Commerce.Diamond).Name("钻石余额")
-
-		router.Get("/card/list", card.Card.List).Name("卡密列表")
-		router.Post("/card/add", card.Card.Generate).Name("生成卡密")
-		router.Post("/card/redeem", card.Card.Redeem).Name("兑换卡密")
-		router.Post("/card/status", card.Card.Status).Name("作废卡密")
 
 		router.Get("/friend/list", friend.Friend.List).Name("好友列表")
 		router.Post("/friend/sync", friend.Friend.Sync).Name("同步好友列表")

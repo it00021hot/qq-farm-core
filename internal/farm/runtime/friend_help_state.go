@@ -13,11 +13,11 @@ import (
 type friendHelpState struct {
 	mu sync.Mutex
 
-	limits                 map[int64]opLimitEntry
-	canGetHelp             bool
-	autoDisabled           bool
+	limits                   map[int64]opLimitEntry
+	canGetHelp               bool
+	autoDisabled             bool
 	badOperationLimitReached bool
-	lastResetDay           string
+	lastResetDay             string
 }
 
 type opLimitEntry struct {

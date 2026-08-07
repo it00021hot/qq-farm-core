@@ -22,17 +22,15 @@ type FarmOperationOption func(*farmOperationOptions)
 
 type farmOperationOptions struct {
 	accountID   uint64
-	tenantID    uint64
 	playerLevel int64
 	gold        int64
 	limitsSink  func([]*plantpb.OperationLimit)
 }
 
 // WithStatsAccount enables daily cn_farm_stats increments for this operation.
-func WithStatsAccount(accountID, tenantID uint64) FarmOperationOption {
+func WithStatsAccount(accountID uint64) FarmOperationOption {
 	return func(o *farmOperationOptions) {
 		o.accountID = accountID
-		o.tenantID = tenantID
 	}
 }
 
@@ -155,7 +153,7 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 				actions = append(actions, fmt.Sprintf("出售%d(+%d金)", sold, gold))
 				recordOpCount(options, "sell", 1)
 				if options.accountID > 0 {
-					stats.RecordExpGold(options.accountID, options.tenantID, 0, gold)
+					stats.RecordExpGold(options.accountID, 0, 0, gold)
 				}
 			} else {
 				actions = append(actions, fmt.Sprintf("出售%d", sold))
@@ -675,7 +673,7 @@ func recordOpCount(opts farmOperationOptions, label string, count int) {
 	if op == "" {
 		return
 	}
-	stats.RecordOp(opts.accountID, opts.tenantID, op, count)
+	stats.RecordOp(opts.accountID, 0, op, count)
 }
 
 func statsOpFromLabel(label string) string {

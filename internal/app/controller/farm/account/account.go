@@ -25,12 +25,10 @@ type (
 // List 农场账号列表
 //
 //	@Summary		农场账号列表
-//	@Description	租户上下文下列出农场账号。平台用户需传 X-Tenant-ID
 //	@Tags			农场账号
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			current		query		int						false	"页码"
 //	@Param			size		query		int						false	"每页条数"
 //	@Param			keyword		query		string					false	"名称/编码/QQ关键词"
@@ -56,7 +54,6 @@ func (c *Controller) List(ctx fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			id			query		int						true	"账号ID"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"
@@ -80,7 +77,6 @@ func (c *Controller) Detail(ctx fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			payload		body		AccountCreateReq		true	"创建参数"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"
@@ -104,7 +100,6 @@ func (c *Controller) Create(ctx fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			payload		body		AccountUpdateReq		true	"更新参数"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"
@@ -127,7 +122,6 @@ func (c *Controller) Update(ctx fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			payload		body		AccountDeleteReq		true	"删除参数"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"
@@ -150,7 +144,6 @@ func (c *Controller) Delete(ctx fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			payload		body		AccountIDReq			true	"账号ID"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"
@@ -173,7 +166,6 @@ func (c *Controller) Start(ctx fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			payload		body		AccountIDReq			true	"账号ID"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"

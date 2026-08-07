@@ -4,13 +4,8 @@ server:
   bufferSize: 8192
   defaultPageSize: 10
   maxPageSize: 500
-  fileUploadPath: 'upload'
-  fileHostUrl: 'http://127.0.0.1:9527/'
   whiteList: '*'
   originList: '*'
-  uploadType: 0
-  signExpireSeconds: 3600
-  superRoleId: '1'
 swagger:
   enabled: true
   basePath: '/'
@@ -90,19 +85,6 @@ farm:
   tsdkGameId: 3167
   tsdkAppKey: '0'
   pushWebhook: ''
-oss:
-  endPoint: 'oss-cn-shenzhen.aliyuncs.com'
-  accessKeyId: ''
-  accessKeySecret: ''
-  bucketName: 'huahao-base'
-s3:
-  endPoint: '127.0.0.1:9000'
-  useSSL: false
-  accessKeyId: ''
-  accessKeySecret: ''
-  bucketName: 'go-skeleton'
-  baseUrl: ''
-  region: 'us-east-1'
 wecom:
   corpId: ''
   corpSecret: ''

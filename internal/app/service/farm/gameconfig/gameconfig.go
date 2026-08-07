@@ -10,7 +10,6 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
 	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -21,7 +20,7 @@ type Service struct {
 var GameConfig = &Service{}
 
 func (s *Service) List(ctx fiber.Ctx, req farmtypes.GameConfigListReq) (map[string]any, error) {
-	db := tenant.Global(vars.DB, ctx.Context()).Model(&model.FarmGameConfig{})
+	db := vars.DB.Model(&model.FarmGameConfig{})
 	if req.Category != "" {
 		db = db.Where("category = ?", req.Category)
 	}
@@ -39,7 +38,7 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.GameConfigListReq) (map[stri
 }
 
 func (s *Service) Modify(ctx fiber.Ctx, req farmtypes.GameConfigModifyReq) error {
-	db := tenant.Global(vars.DB, ctx.Context())
+	db := vars.DB
 	var row model.FarmGameConfig
 	if err := db.Where("id = ?", req.ID).First(&row).Error; err != nil {
 		return errors.New("配置不存在")

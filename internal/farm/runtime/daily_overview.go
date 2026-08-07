@@ -51,9 +51,9 @@ type GrowthTaskOverview struct {
 
 // DailyGiftOverview mirrors bot GET /api/daily-gifts payload.
 type DailyGiftOverview struct {
-	Date   string              `json:"date"`
-	Growth GrowthTaskOverview  `json:"growth"`
-	Gifts  []DailyGiftCard     `json:"gifts"`
+	Date   string             `json:"date"`
+	Growth GrowthTaskOverview `json:"growth"`
+	Gifts  []DailyGiftCard    `json:"gifts"`
 }
 
 // DailyGiftOverview builds the personal task-panel payload (bot getDailyGiftOverview).

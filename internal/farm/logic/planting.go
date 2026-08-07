@@ -225,8 +225,8 @@ func ComputeShopPurchaseLayouts(
 
 // RemovableHarvestResult is the pure classify result (network refresh is caller's job).
 type RemovableHarvestResult struct {
-	Removable      []int64
-	Growing        []int64
+	Removable       []int64
+	Growing         []int64
 	FallbackRemoved int
 }
 

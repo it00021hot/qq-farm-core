@@ -11,7 +11,6 @@ import (
 	farmruntime "github.com/MQEnergy/go-skeleton/internal/farm/runtime"
 	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -51,7 +50,7 @@ func friendlyFarmErr(err error) error {
 
 func (s *Service) session(ctx fiber.Ctx, accountID uint64) (*farmruntime.Session, error) {
 	var account model.FarmAccount
-	if err := tenant.Scope(vars.DB, tenant.TenantCtx(ctx)).Where("id = ?", accountID).First(&account).Error; err != nil {
+	if err := vars.DB.Where("id = ?", accountID).First(&account).Error; err != nil {
 		return nil, errors.New("账号不存在")
 	}
 	session, ok := farmruntime.Default.Session(accountID)

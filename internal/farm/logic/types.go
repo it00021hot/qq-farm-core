@@ -69,21 +69,21 @@ func IsActivityPlant(plant *PlantInfo) bool {
 
 // LandInfo is one farmland plot.
 type LandInfo struct {
-	ID            int64      `json:"id"`
-	Unlocked      bool       `json:"unlocked"`
-	Level         int64      `json:"level"`
-	MaxLevel      int64      `json:"max_level"`
-	CouldUnlock   bool       `json:"could_unlock"`
-	CouldUpgrade  bool       `json:"could_upgrade"`
-	Plant         *PlantInfo `json:"plant"`
-	MasterLandID  int64      `json:"master_land_id"`
-	SlaveLandIDs  []int64    `json:"slave_land_ids"`
-	LandSize      int64      `json:"land_size"`
-	LandsLevel    int64      `json:"lands_level"`
-	Status        string     `json:"status,omitempty"` // UI summary fields
-	NeedWater     bool       `json:"needWater,omitempty"`
-	NeedWeed      bool       `json:"needWeed,omitempty"`
-	NeedBug       bool       `json:"needBug,omitempty"`
+	ID           int64      `json:"id"`
+	Unlocked     bool       `json:"unlocked"`
+	Level        int64      `json:"level"`
+	MaxLevel     int64      `json:"max_level"`
+	CouldUnlock  bool       `json:"could_unlock"`
+	CouldUpgrade bool       `json:"could_upgrade"`
+	Plant        *PlantInfo `json:"plant"`
+	MasterLandID int64      `json:"master_land_id"`
+	SlaveLandIDs []int64    `json:"slave_land_ids"`
+	LandSize     int64      `json:"land_size"`
+	LandsLevel   int64      `json:"lands_level"`
+	Status       string     `json:"status,omitempty"` // UI summary fields
+	NeedWater    bool       `json:"needWater,omitempty"`
+	NeedWeed     bool       `json:"needWeed,omitempty"`
+	NeedBug      bool       `json:"needBug,omitempty"`
 }
 
 // HarvestableInfo is attached to AnalyzeLands result.

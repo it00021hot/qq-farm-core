@@ -21,7 +21,6 @@ var Logs = &Controller{}
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			accountId	query		int						false	"账号ID"
 //	@Param			module		query		string					false	"模块 farm|friend|system"
 //	@Param			keyword		query		string					false	"关键词"
@@ -46,7 +45,6 @@ func (c *Controller) List(ctx fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			accountId	query		int						false	"账号ID（空则清空全部）"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"

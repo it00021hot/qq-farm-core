@@ -164,10 +164,10 @@ func GetLinkedMasterLand(land *LandInfo, landsMap map[int64]*LandInfo) *LandInfo
 
 // DisplayLandContext is the display source for multi-cell plants.
 type DisplayLandContext struct {
-	SourceLand      *LandInfo
+	SourceLand       *LandInfo
 	OccupiedByMaster bool
-	MasterLandID    int64
-	OccupiedLandIDs []int64
+	MasterLandID     int64
+	OccupiedLandIDs  []int64
 }
 
 // GetDisplayLandContext resolves display plant source for a land.

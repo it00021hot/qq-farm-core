@@ -18,9 +18,7 @@ import (
 	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
-	"github.com/spf13/cast"
 )
 
 type Service struct {
@@ -91,7 +89,6 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.FriendListReq) (response.Pag
 	if req.AccountID == 0 {
 		return response.PageData{}, errors.New("accountId 必填")
 	}
-	tid := cast.ToUint64(ctx.Locals(tenant.LocalTenantID))
 
 	liveMap := map[int64]friendpb.GameFriend{}
 	if session, err := s.session(ctx, req.AccountID); err == nil {
@@ -99,7 +96,7 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.FriendListReq) (response.Pag
 		friends, loadErr := session.Friends(callCtx)
 		cancel()
 		if loadErr == nil {
-			farmruntime.SyncFriendsToDB(req.AccountID, tid, friends)
+			farmruntime.SyncFriendsToDB(req.AccountID, 0, friends)
 			for _, f := range friends {
 				if f.Gid > 0 {
 					liveMap[f.Gid] = f
@@ -108,7 +105,7 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.FriendListReq) (response.Pag
 		}
 	}
 
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx)).Model(&model.FarmFriendGid{}).Where("account_id = ?", req.AccountID)
+	db := vars.DB.Model(&model.FarmFriendGid{}).Where("account_id = ?", req.AccountID)
 	if req.Keyword != "" {
 		db = db.Where("nickname LIKE ?", "%"+req.Keyword+"%")
 	}
@@ -146,8 +143,7 @@ func (s *Service) Sync(ctx fiber.Ctx, req farmtypes.FriendSyncReq) (map[string]a
 	if err != nil {
 		return nil, err
 	}
-	tid := cast.ToUint64(ctx.Locals(tenant.LocalTenantID))
-	farmruntime.SyncFriendsToDB(req.AccountID, tid, friends)
+	farmruntime.SyncFriendsToDB(req.AccountID, 0, friends)
 	return map[string]any{
 		"accountId": req.AccountID,
 		"count":     len(friends),
@@ -188,7 +184,7 @@ func (s *Service) Op(ctx fiber.Ctx, req farmtypes.FriendOpReq) (map[string]any, 
 }
 
 func (s *Service) InteractLogs(ctx fiber.Ctx, req farmtypes.FriendListReq) (response.PageData, error) {
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx)).Model(&model.FarmInteractLog{})
+	db := vars.DB.Model(&model.FarmInteractLog{})
 	if req.AccountID > 0 {
 		db = db.Where("account_id = ?", req.AccountID)
 	}
@@ -371,7 +367,7 @@ func buildInteractActionDetail(row map[string]any) string {
 
 func (s *Service) session(ctx fiber.Ctx, accountID uint64) (*farmruntime.Session, error) {
 	var account model.FarmAccount
-	if err := tenant.Scope(vars.DB, tenant.TenantCtx(ctx)).Where("id = ?", accountID).First(&account).Error; err != nil {
+	if err := vars.DB.Where("id = ?", accountID).First(&account).Error; err != nil {
 		return nil, errors.New("账号不存在")
 	}
 	session, ok := farmruntime.Default.Session(accountID)

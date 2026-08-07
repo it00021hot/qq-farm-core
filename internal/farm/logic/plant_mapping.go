@@ -24,17 +24,17 @@ func LandsFromPlantPB(lands []*plantpb.LandInfo) []LandInfo {
 		if l.Plant != nil {
 			p := l.Plant
 			pi := PlantInfo{
-				ID:           p.Id,
-				Name:         p.Name,
-				Season:       p.Season,
-				DryNum:       p.DryNum,
-				FruitID:      p.FruitId,
-				FruitNum:     p.FruitNum,
-				WeedOwners:   append([]int64(nil), p.WeedOwners...),
-				InsectOwners: append([]int64(nil), p.InsectOwners...),
-				Stealers:     append([]byte(nil), p.Stealers...),
-				Stealable:    p.Stealable,
-				LeftFruitNum: p.LeftFruitNum,
+				ID:              p.Id,
+				Name:            p.Name,
+				Season:          p.Season,
+				DryNum:          p.DryNum,
+				FruitID:         p.FruitId,
+				FruitNum:        p.FruitNum,
+				WeedOwners:      append([]int64(nil), p.WeedOwners...),
+				InsectOwners:    append([]int64(nil), p.InsectOwners...),
+				Stealers:        append([]byte(nil), p.Stealers...),
+				Stealable:       p.Stealable,
+				LeftFruitNum:    p.LeftFruitNum,
 				MutantConfigIDs: append([]int64(nil), p.MutantConfigIds...),
 			}
 			// Bot only enforces left_inorc when the field is present. Proto3 omits zero on the

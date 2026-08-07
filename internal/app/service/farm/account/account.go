@@ -16,9 +16,7 @@ import (
 	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
-	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
 
@@ -55,10 +53,7 @@ func normalizeLoginInput(rawCode, rawPlatform string) (code, platform, loginOS, 
 }
 
 func (s *Service) List(ctx fiber.Ctx, req farmtypes.AccountListReq) (response.PageData, error) {
-	if cast.ToUint64(ctx.Locals(tenant.LocalTenantID)) == 0 {
-		return response.PageData{}, errors.New("缺少租户上下文")
-	}
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx)).Model(&model.FarmAccount{})
+	db := vars.DB.Model(&model.FarmAccount{})
 	if req.Keyword != "" {
 		kw := "%" + req.Keyword + "%"
 		db = db.Where("name LIKE ? OR code LIKE ? OR qq LIKE ? OR uin LIKE ?", kw, kw, kw, kw)
@@ -90,25 +85,14 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.AccountListReq) (response.Pa
 }
 
 func (s *Service) Detail(ctx fiber.Ctx, id uint64) (*model.FarmAccount, error) {
-	if cast.ToUint64(ctx.Locals(tenant.LocalTenantID)) == 0 {
-		return nil, errors.New("缺少租户上下文")
-	}
 	var acc model.FarmAccount
-	if err := tenant.Scope(vars.DB, tenant.TenantCtx(ctx)).Where("id = ?", id).First(&acc).Error; err != nil {
+	if err := vars.DB.Where("id = ?", id).First(&acc).Error; err != nil {
 		return nil, errors.New("账号不存在")
 	}
 	return &acc, nil
 }
 
 func (s *Service) Create(ctx fiber.Ctx, req farmtypes.AccountCreateReq) (*model.FarmAccount, error) {
-	tid := cast.ToUint64(ctx.Locals(tenant.LocalTenantID))
-	if err := farmruntime.EnsureTenantActive(tid); err != nil {
-		return nil, err
-	}
-	if err := farmruntime.EnsureAccountQuota(tid); err != nil {
-		return nil, err
-	}
-
 	code, platform, loginOS, clientVer, err := normalizeLoginInput(req.Code, req.Platform)
 	if err != nil {
 		return nil, err
@@ -121,7 +105,6 @@ func (s *Service) Create(ctx fiber.Ctx, req farmtypes.AccountCreateReq) (*model.
 	name := strings.TrimSpace(req.Name)
 	now := uint(time.Now().Unix())
 	acc := &model.FarmAccount{
-		TenantID:  tid,
 		Name:      name,
 		Code:      code,
 		Platform:  platform,
@@ -136,7 +119,7 @@ func (s *Service) Create(ctx fiber.Ctx, req farmtypes.AccountCreateReq) (*model.
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	if err := db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(acc).Error; err != nil {
 			return err
@@ -149,7 +132,6 @@ func (s *Service) Create(ctx fiber.Ctx, req farmtypes.AccountCreateReq) (*model.
 		}
 		cfgJSON, _ := json.Marshal(logic.DefaultAccountConfig())
 		cfg := &model.FarmAccountConfig{
-			TenantID:   tid,
 			AccountID:  acc.ID,
 			ConfigJSON: string(cfgJSON),
 			CreatedAt:  now,
@@ -163,7 +145,7 @@ func (s *Service) Create(ctx fiber.Ctx, req farmtypes.AccountCreateReq) (*model.
 }
 
 func (s *Service) Update(ctx fiber.Ctx, req farmtypes.AccountUpdateReq) error {
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	var acc model.FarmAccount
 	if err := db.Where("id = ?", req.ID).First(&acc).Error; err != nil {
 		return errors.New("账号不存在")
@@ -215,7 +197,7 @@ func (s *Service) Update(ctx fiber.Ctx, req farmtypes.AccountUpdateReq) error {
 
 func (s *Service) Delete(ctx fiber.Ctx, id uint64) error {
 	_ = farmruntime.Default.Stop(id)
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	var acc model.FarmAccount
 	if err := db.Where("id = ?", id).First(&acc).Error; err != nil {
 		return errors.New("账号不存在")
@@ -229,11 +211,7 @@ func (s *Service) Delete(ctx fiber.Ctx, id uint64) error {
 }
 
 func (s *Service) Start(ctx fiber.Ctx, id uint64) error {
-	tid := cast.ToUint64(ctx.Locals(tenant.LocalTenantID))
-	if err := farmruntime.EnsureTenantActive(tid); err != nil {
-		return err
-	}
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	var acc model.FarmAccount
 	if err := db.Where("id = ?", id).First(&acc).Error; err != nil {
 		return errors.New("账号不存在")
@@ -252,7 +230,7 @@ func (s *Service) Start(ctx fiber.Ctx, id uint64) error {
 }
 
 func (s *Service) Stop(ctx fiber.Ctx, id uint64) error {
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	var acc model.FarmAccount
 	if err := db.Where("id = ?", id).First(&acc).Error; err != nil {
 		return errors.New("账号不存在")

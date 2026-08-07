@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 // IsPathExist 判断所给路径文件/文件夹是否存在
@@ -63,27 +62,6 @@ func ReadLocalFile(filePath string) ([]byte, error) {
 	return content, nil
 }
 
-// GetUploadFileBytes 获取上传文件的数据流
-func GetUploadFileBytes(file *multipart.FileHeader) ([]byte, error) {
-	// 打开文件
-	open, err := file.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer open.Close()
-
-	// 预分配合适大小的buffer以减少内存分配
-	buffer := make([]byte, file.Size)
-
-	// 直接读取到预分配的buffer中
-	_, err = io.ReadFull(open, buffer)
-	if err != nil {
-		return nil, err
-	}
-
-	return buffer, nil
-}
-
 // WriteBytesToFile 将字节数组数据写入本地文件
 func WriteBytesToFile(data []byte, filePath string) error {
 	// 确保目标目录存在
@@ -133,24 +111,6 @@ func WriteContentToFile(file *multipart.FileHeader, filePath string) error {
 	}
 
 	return nil
-}
-
-// MakeTimeFormatDir 创建时间格式的目录 如：upload/{path}/2023-01-07/
-//
-//	rootPath	根目录   pathName	子目录名称  timeFormat	时间格式	如：2006-01-02、20060102
-func MakeTimeFormatDir(rootPath, pathName, timeFormat string) (string, error) {
-	filePath := ""
-	if pathName != "" {
-		filePath = filepath.Join(filePath, pathName)
-	}
-	if timeFormat == "" {
-		timeFormat = time.DateOnly
-	}
-	filePath = filepath.Join(rootPath, filePath, time.Now().Format(timeFormat))
-	if err := MakeMultiDir(filePath); err != nil {
-		return "", err
-	}
-	return filePath, nil
 }
 
 // GetFileNamesByDirPath 获取当前文件夹下的所有文件和文件夹名称（包括子文件夹和文件）

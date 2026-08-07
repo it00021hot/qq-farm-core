@@ -410,10 +410,10 @@ func passDTO(pass *seasonpb.SeasonPass) map[string]any {
 		}
 		rewards := make([]map[string]any, 0, len(node.Rewards))
 		for _, r := range node.Rewards {
-			rewards = append(rewards, map[string]any{
-				"id":    strconv.FormatInt(r.ItemId, 10),
-				"count": strconv.FormatInt(r.Count, 10),
-			})
+			if r == nil {
+				continue
+			}
+			rewards = append(rewards, activityItemDTO(r.ItemId, r.Count))
 		}
 		nodes = append(nodes, map[string]any{
 			"id":        strconv.FormatInt(node.NodeId, 10),
@@ -498,10 +498,10 @@ func normalizeSolarTerms(reply *solartermspb.GetSolarTermsReply) map[string]any 
 func solarTermDTO(term *solartermspb.SolarTermInfo) map[string]any {
 	rewards := make([]map[string]any, 0, len(term.Rewards))
 	for _, r := range term.Rewards {
-		rewards = append(rewards, map[string]any{
-			"id":    strconv.FormatInt(r.ItemId, 10),
-			"count": strconv.FormatInt(r.Count, 10),
-		})
+		if r == nil {
+			continue
+		}
+		rewards = append(rewards, activityItemDTO(r.ItemId, r.Count))
 	}
 	status := strconv.FormatInt(term.Status, 10)
 	return map[string]any{
@@ -537,12 +537,15 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 				currencyOrder = append(currencyOrder, costID)
 			}
 		}
-		canExchange := costID != 0 && costCount > 0
+		owned := g.Owned
+		canExchange := !owned && costID != 0 && costCount > 0
 		if canExchange {
 			exchangeable++
 		}
 		maxCount := "0"
-		if canExchange && balanceKnown {
+		if owned {
+			maxCount = "0"
+		} else if canExchange && balanceKnown {
 			bal := balances[costID]
 			if bal >= costCount {
 				maxCount = strconv.FormatInt(bal/costCount, 10)
@@ -574,9 +577,9 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 			"cost":                  costDTO,
 			"sortOrder":             strconv.FormatInt(g.SortOrder, 10),
 			"statusCode":            strconv.FormatInt(g.Status, 10),
-			"owned":                 g.Owned,
+			"owned":                 owned,
 			"exchangeable":          canExchange,
-			"soldOut":               false,
+			"soldOut":               owned,
 			"balanceKnown":          balanceKnown,
 			"maxExchangeCount":      maxCount,
 			"maxExchangeCountKnown": balanceKnown,
@@ -649,7 +652,164 @@ func activityItemDTO(id, count int64) map[string]any {
 		dto["name"] = info.Name
 		dto["rarity"] = info.Rarity
 	}
+	dto["image"] = logic.SeedImagePath(id)
 	return dto
+}
+
+// RewardDTOsFromPairs builds UI reward rows from item id/count pairs.
+func RewardDTOsFromPairs(pairs [][2]int64) []map[string]any {
+	out := make([]map[string]any, 0, len(pairs))
+	for _, p := range pairs {
+		if p[0] <= 0 {
+			continue
+		}
+		out = append(out, activityItemDTO(p[0], p[1]))
+	}
+	return out
+}
+
+// MergeRewardDTOs merges duplicate item ids by summing counts.
+func MergeRewardDTOs(items []map[string]any) []map[string]any {
+	if len(items) == 0 {
+		return []map[string]any{}
+	}
+	order := make([]string, 0, len(items))
+	merged := map[string]map[string]any{}
+	for _, item := range items {
+		id := fmt.Sprint(item["id"])
+		if id == "" || id == "0" {
+			continue
+		}
+		count := parseInt64Any(item["count"])
+		if prev, ok := merged[id]; ok {
+			prev["count"] = strconv.FormatInt(parseInt64Any(prev["count"])+count, 10)
+			continue
+		}
+		cp := make(map[string]any, len(item))
+		for k, v := range item {
+			cp[k] = v
+		}
+		merged[id] = cp
+		order = append(order, id)
+	}
+	out := make([]map[string]any, 0, len(order))
+	for _, id := range order {
+		out = append(out, merged[id])
+	}
+	return out
+}
+
+// ShopExchangeRewardDTOs looks up exchanged goods and scales item count.
+func ShopExchangeRewardDTOs(shop map[string]any, goodsID string, count int64) []map[string]any {
+	if count <= 0 {
+		count = 1
+	}
+	for _, g := range shopGoodsMaps(shop["goods"]) {
+		if fmt.Sprint(g["id"]) != goodsID {
+			continue
+		}
+		item := asStringAnyMap(g["item"])
+		if item == nil {
+			id := parseInt64Any(g["id"])
+			return []map[string]any{activityItemDTO(id, count)}
+		}
+		id := parseInt64Any(item["id"])
+		base := parseInt64Any(item["count"])
+		if base <= 0 {
+			base = 1
+		}
+		dto := activityItemDTO(id, base*count)
+		if name, _ := item["name"].(string); name != "" {
+			dto["name"] = name
+		}
+		if name, _ := g["name"].(string); name != "" && (dto["name"] == "" || dto["name"] == nil) {
+			dto["name"] = name
+		}
+		return []map[string]any{dto}
+	}
+	return nil
+}
+
+func shopGoodsMaps(v any) []map[string]any {
+	switch t := v.(type) {
+	case []map[string]any:
+		return t
+	case []any:
+		out := make([]map[string]any, 0, len(t))
+		for _, item := range t {
+			if m := asStringAnyMap(item); m != nil {
+				out = append(out, m)
+			}
+		}
+		return out
+	default:
+		return nil
+	}
+}
+
+func asStringAnyMap(v any) map[string]any {
+	switch t := v.(type) {
+	case map[string]any:
+		return t
+	default:
+		return nil
+	}
+}
+
+// ConstellationClaimRewardDTOs returns today's catalog rewards after a successful light.
+func ConstellationClaimRewardDTOs(act *seasonpb.SeasonActivity, serverTime int64, dynamic *activitypb.ConstellationData) []map[string]any {
+	if act != nil {
+		catalog := LoadConstellationCatalog()
+		if catalog != nil && catalog.ActivityID == strconv.FormatInt(act.ActivityId, 10) {
+			day := constellationDay(act.BeginTime, serverTime)
+			for _, g := range catalog.Groups {
+				if g.Order == day {
+					return normalizeConstellationRewards(g.Rewards)
+				}
+			}
+		}
+	}
+	if dynamic == nil {
+		return nil
+	}
+	var rows []map[string]any
+	for _, n := range dynamic.Nodes {
+		if n == nil || !n.Field_3 || len(n.Rewards) == 0 {
+			continue
+		}
+		for _, r := range n.Rewards {
+			if r == nil || r.ItemId <= 0 {
+				continue
+			}
+			rows = append(rows, activityItemDTO(r.ItemId, r.Count))
+		}
+	}
+	return MergeRewardDTOs(rows)
+}
+
+func normalizeConstellationRewards(rewards []map[string]any) []map[string]any {
+	if len(rewards) == 0 {
+		return []map[string]any{}
+	}
+	out := make([]map[string]any, 0, len(rewards))
+	for _, raw := range rewards {
+		id := parseInt64Any(raw["itemId"])
+		if id == 0 {
+			id = parseInt64Any(raw["id"])
+		}
+		count := parseInt64Any(raw["count"])
+		dto := activityItemDTO(id, count)
+		if name, _ := raw["name"].(string); name != "" {
+			dto["name"] = name
+		}
+		if idStr, ok := raw["itemId"].(string); ok && idStr != "" {
+			dto["itemId"] = idStr
+		} else if id > 0 {
+			dto["itemId"] = strconv.FormatInt(id, 10)
+		}
+		out = append(out, dto)
+	}
+	return out
 }
 
 func buildConstellation(act *seasonpb.SeasonActivity, serverTime int64, dynamic *activitypb.ConstellationData, confirmed *constellationConfirmed) map[string]any {
@@ -694,14 +854,15 @@ func buildConstellation(act *seasonpb.SeasonActivity, serverTime int64, dynamic 
 	}
 	groups := make([]map[string]any, 0, len(catalog.Groups))
 	for _, g := range catalog.Groups {
-		nodeID, _ := strconv.ParseInt(g.NodeID, 10, 64)
+		nodeID, _ := strconv.ParseInt(g.NodeID.String(), 10, 64)
 		dn := dynamicNodes[nodeID]
 		confirmedOpened := false
 		confirmedLit := false
-		if _, ok := openedSet[g.NodeID]; ok {
+		nodeKey := g.NodeID.String()
+		if _, ok := openedSet[nodeKey]; ok {
 			confirmedOpened = true
 		}
-		if _, ok := litSet[g.NodeID]; ok {
+		if _, ok := litSet[nodeKey]; ok {
 			confirmedLit = true
 		}
 		dynamicOpened := dn != nil && dn.Field_2
@@ -772,7 +933,7 @@ func buildConstellation(act *seasonpb.SeasonActivity, serverTime int64, dynamic 
 		}
 		groups = append(groups, map[string]any{
 			"id":           g.ID,
-			"nodeId":       g.NodeID,
+			"nodeId":       g.NodeID.String(),
 			"name":         g.Name,
 			"category":     g.Category,
 			"order":        g.Order,
@@ -781,7 +942,7 @@ func buildConstellation(act *seasonpb.SeasonActivity, serverTime int64, dynamic 
 			"lit":          lit,
 			"stateKnown":   stateKnown,
 			"statusSource": statusSource,
-			"rewards":      g.Rewards,
+			"rewards":      normalizeConstellationRewards(g.Rewards),
 		})
 	}
 	base["displayName"] = catalog.DisplayName

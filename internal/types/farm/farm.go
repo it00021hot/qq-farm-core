@@ -120,25 +120,25 @@ type AutomationDetailReq struct {
 
 // AutomationModifyReq 修改自动化配置（结构化，对齐 AccountConfig）
 type AutomationModifyReq struct {
-	AccountID                           uint64          `json:"accountId" validate:"required"`
-	Automation                          *map[string]any `json:"automation"`
-	Intervals                           *map[string]any `json:"intervals"`
-	PlantingStrategy                    *string         `json:"plantingStrategy"`
-	PreferredSeedID                     *int64          `json:"preferredSeedId"`
-	BagSeedPriority                     []int64         `json:"bagSeedPriority"`
-	BagSeedFallbackStrategy             *string         `json:"bagSeedFallbackStrategy"`
-	PlantOrderRandom                    *bool           `json:"plantOrderRandom"`
-	PlantDelaySeconds                   *int            `json:"plantDelaySeconds"`
-	StealDelaySeconds                   *int            `json:"stealDelaySeconds"`
-	FriendQuietHours                    *map[string]any `json:"friendQuietHours"`
-	FriendBlacklist                     []int64         `json:"friendBlacklist"`
-	PlantBlacklist                      []int64         `json:"plantBlacklist"`
-	FertilizerBuyOrganicCount           *int            `json:"fertilizerBuyOrganicCount"`
-	FertilizerBuyOrganicThresholdHours  *int            `json:"fertilizerBuyOrganicThresholdHours"`
-	FertilizerBuyNormalCount            *int            `json:"fertilizerBuyNormalCount"`
-	FertilizerBuyNormalThresholdHours   *int            `json:"fertilizerBuyNormalThresholdHours"`
-	FertilizerBuyCheckIntervalMinutes   *int            `json:"fertilizerBuyCheckIntervalMinutes"`
-	ConfigJSON                          string          `json:"configJson"` // 兼容旧客户端
+	AccountID                          uint64          `json:"accountId" validate:"required"`
+	Automation                         *map[string]any `json:"automation"`
+	Intervals                          *map[string]any `json:"intervals"`
+	PlantingStrategy                   *string         `json:"plantingStrategy"`
+	PreferredSeedID                    *int64          `json:"preferredSeedId"`
+	BagSeedPriority                    []int64         `json:"bagSeedPriority"`
+	BagSeedFallbackStrategy            *string         `json:"bagSeedFallbackStrategy"`
+	PlantOrderRandom                   *bool           `json:"plantOrderRandom"`
+	PlantDelaySeconds                  *int            `json:"plantDelaySeconds"`
+	StealDelaySeconds                  *int            `json:"stealDelaySeconds"`
+	FriendQuietHours                   *map[string]any `json:"friendQuietHours"`
+	FriendBlacklist                    []int64         `json:"friendBlacklist"`
+	PlantBlacklist                     []int64         `json:"plantBlacklist"`
+	FertilizerBuyOrganicCount          *int            `json:"fertilizerBuyOrganicCount"`
+	FertilizerBuyOrganicThresholdHours *int            `json:"fertilizerBuyOrganicThresholdHours"`
+	FertilizerBuyNormalCount           *int            `json:"fertilizerBuyNormalCount"`
+	FertilizerBuyNormalThresholdHours  *int            `json:"fertilizerBuyNormalThresholdHours"`
+	FertilizerBuyCheckIntervalMinutes  *int            `json:"fertilizerBuyCheckIntervalMinutes"`
+	ConfigJSON                         string          `json:"configJson"` // 兼容旧客户端
 }
 
 // StatusDetailReq 运行状态详情

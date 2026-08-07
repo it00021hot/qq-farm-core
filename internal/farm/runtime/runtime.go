@@ -13,7 +13,6 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/userpb"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 )
 
 // DB run_status
@@ -54,7 +53,7 @@ func (f *Facade) Start(accountID uint64) error {
 		return nil
 	}
 
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	var acc model.FarmAccount
 	if err := db.Where("id = ?", accountID).First(&acc).Error; err != nil {
 		return errors.New("账号不存在")
@@ -151,7 +150,7 @@ func (f *Facade) Session(accountID uint64) (*Session, bool) {
 // ResetPersistedRunStatus clears stale DB run_status after process boot
 // (no in-memory sessions exist yet).
 func ResetPersistedRunStatus() {
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	now := uint(time.Now().Unix())
 	res := db.Model(&model.FarmAccount{}).
 		Where("run_status <> ?", RunStopped).
@@ -171,7 +170,7 @@ func persistRunStatus(accountID uint64, status uint8, online bool) {
 	if accountID == 0 {
 		return
 	}
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	now := uint(time.Now().Unix())
 	updates := map[string]any{
 		"run_status": status,
@@ -187,7 +186,7 @@ func persistAccountProfile(accountID uint64, basic *userpb.BasicInfo) {
 	if accountID == 0 || basic == nil {
 		return
 	}
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	var acc model.FarmAccount
 	if err := db.Where("id = ?", accountID).First(&acc).Error; err != nil {
 		return
@@ -204,43 +203,4 @@ func persistAccountProfile(accountID uint64, basic *userpb.BasicInfo) {
 		updates["name"] = basic.Name
 	}
 	_ = db.Model(&acc).Updates(updates).Error
-}
-
-// EnsureTenantActive 校验租户可用且未过期。
-func EnsureTenantActive(tid uint64) error {
-	if tid == 0 {
-		return errors.New("缺少租户上下文")
-	}
-	db := tenant.Global(vars.DB, context.Background())
-	var t model.SysTenant
-	if err := db.Where("id = ?", tid).First(&t).Error; err != nil {
-		return errors.New("租户不存在")
-	}
-	if t.Status != vars.StatusNormal {
-		return errors.New("租户已禁用")
-	}
-	if t.ExpireAt > 0 && uint64(t.ExpireAt) < uint64(time.Now().Unix()) {
-		return errors.New("租户已过期")
-	}
-	return nil
-}
-
-// EnsureAccountQuota 校验农场账号配额。
-func EnsureAccountQuota(tid uint64) error {
-	db := tenant.Global(vars.DB, context.Background())
-	var t model.SysTenant
-	if err := db.Where("id = ?", tid).First(&t).Error; err != nil {
-		return errors.New("租户不存在")
-	}
-	if t.MaxAccounts == 0 {
-		return nil
-	}
-	var used int64
-	if err := db.Model(&model.FarmAccount{}).Where("tenant_id = ?", tid).Count(&used).Error; err != nil {
-		return err
-	}
-	if uint(used) >= t.MaxAccounts {
-		return errors.New("已达到农场账号上限")
-	}
-	return nil
 }

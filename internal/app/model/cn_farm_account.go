@@ -5,7 +5,6 @@ const TableNameFarmAccount = "cn_farm_account"
 // FarmAccount 农场挂机账号
 type FarmAccount struct {
 	ID           uint64 `gorm:"column:id;primaryKey;autoIncrement;comment:主键ID" json:"id"`
-	TenantID     uint64 `gorm:"column:tenant_id;not null;default:0;index;uniqueIndex:uk_farm_account_code;comment:租户ID" json:"tenantId"`
 	Name         string `gorm:"column:name;size:64;not null;default:'';comment:显示名称" json:"name"`
 	Code         string `gorm:"column:code;size:512;not null;default:'';uniqueIndex:uk_farm_account_code;comment:网关登录Code(一次性)" json:"code"`
 	Platform     string `gorm:"column:platform;size:32;not null;default:'qq';comment:平台 qq/wx" json:"platform"`
@@ -24,6 +23,3 @@ type FarmAccount struct {
 }
 
 func (*FarmAccount) TableName() string { return TableNameFarmAccount }
-
-func (m *FarmAccount) GetTenantID() uint64   { return m.TenantID }
-func (m *FarmAccount) SetTenantID(id uint64) { m.TenantID = id }

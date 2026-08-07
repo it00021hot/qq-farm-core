@@ -15,22 +15,19 @@ type Controller struct {
 var Admin = &Controller{}
 
 type (
-	CreateReq         = admintypes.CreateReq
-	UpdateReq         = admintypes.UpdateReq
-	ListReq           = admintypes.ListReq
-	StatusReq         = admintypes.StatusReq
-	PlatformCreateReq = admintypes.PlatformCreateReq
+	CreateReq = admintypes.CreateReq
+	UpdateReq = admintypes.UpdateReq
+	ListReq   = admintypes.ListReq
+	StatusReq = admintypes.StatusReq
 )
 
 // List 用户列表
 //
 //	@Summary		用户列表
-//	@Description	租户上下文下列出用户。平台用户必须传 Header X-Tenant-ID
 //	@Tags			用户管理
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			current		query		int						false	"页码"
 //	@Param			size		query		int						false	"每页条数"
 //	@Param			keyword		query		string					false	"账号/昵称关键词"
@@ -53,12 +50,10 @@ func (c *Controller) List(ctx fiber.Ctx) error {
 // Create 创建用户
 //
 //	@Summary		创建租户用户
-//	@Description	在当前租户上下文创建用户并分配角色（不高于操作者）。平台用户必须传 X-Tenant-ID
 //	@Tags			用户管理
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			payload		body		CreateReq				true	"创建参数"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"
@@ -79,12 +74,10 @@ func (c *Controller) Create(ctx fiber.Ctx) error {
 // Update 更新用户
 //
 //	@Summary		更新租户用户
-//	@Description	更新用户资料与角色。平台用户必须传 X-Tenant-ID
 //	@Tags			用户管理
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			payload		body		UpdateReq				true	"更新参数"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"
@@ -104,12 +97,10 @@ func (c *Controller) Update(ctx fiber.Ctx) error {
 // Status 启停用户
 //
 //	@Summary		启停租户用户
-//	@Description	启用或禁用用户。平台用户必须传 X-Tenant-ID
 //	@Tags			用户管理
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			payload		body		StatusReq				true	"启停参数"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"
@@ -124,29 +115,4 @@ func (c *Controller) Status(ctx fiber.Ctx) error {
 		return response.BadRequestException(ctx, err.Error())
 	}
 	return response.SuccessJSON(ctx, "", nil)
-}
-
-// CreatePlatform 创建平台用户
-//
-//	@Summary		创建平台用户
-//	@Description	仅平台超管；可同时绑定可管理租户。无需 X-Tenant-ID
-//	@Tags			用户管理
-//	@Accept			json
-//	@Produce		json
-//	@Security		ApiKeyAuth
-//	@Param			payload	body		PlatformCreateReq		true	"创建参数"
-//	@Success		200		{object}	response.JSONResponse	"成功"
-//	@Failure		400		{object}	response.JSONResponse	"请求错误"
-//	@Failure		403		{object}	response.JSONResponse	"无权限"
-//	@Router			/system/platform-user/add [post]
-func (c *Controller) CreatePlatform(ctx fiber.Ctx) error {
-	var req admintypes.PlatformCreateReq
-	if err := c.Validate(ctx, &req); err != nil {
-		return response.BadRequestException(ctx, err.Error())
-	}
-	info, err := adminsvc.Admin.CreatePlatform(ctx, req)
-	if err != nil {
-		return response.BadRequestException(ctx, err.Error())
-	}
-	return response.SuccessJSON(ctx, "", info)
 }

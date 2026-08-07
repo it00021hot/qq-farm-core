@@ -4,13 +4,8 @@ server:
   bufferSize: 8192 # cookie缓冲区大小 默认是4096
   defaultPageSize: 10 # 默认分页条数
   maxPageSize: 500    # 最大分页条数
-  fileUploadPath: 'upload' # 文件上传路径
-  fileHostUrl: 'http://127.0.0.1:9527/' # 文件访问域名 【需修改】
   whiteList: '*' # 白名单
   originList: '*' # cors地址列表以逗号相隔 默认* 按需配置如：https://example1.com,https://example2.com,
-  uploadType: 0 # 上传类型 0:本地 1:阿里云OSS 2:S3兼容（农场单机不依赖对象存储）
-  signExpireSeconds: 3600 # 私有对象预签名 GET 有效秒数
-  superRoleId: '1' # 超级管理员角色ID，跳过 casbin 校验
 swagger:
   enabled: true
   basePath: '/'
@@ -92,19 +87,7 @@ farm:
   clientVersion: '1.13.0.5_20260723'
   os: 'Windows'
   pushWebhook: '' # Bark / 企业微信机器人等；账号异常时推送
-oss:
-  endPoint: 'oss-cn-shenzhen.aliyuncs.com'
-  accessKeyId: ''
-  accessKeySecret: ''
-  bucketName: 'huahao-base'
-s3:
-  endPoint: '192.168.1.52:9000'
-  useSSL: false
-  accessKeyId: 'rustfsadmin'
-  accessKeySecret: 'rustfsadmin'
-  bucketName: 'go-skeleton'
-  baseUrl: 'http://192.168.1.52:9000/go-skeleton'
-  region: 'us-east-1'
+
 wecom: # 企业微信
   corpId: ''  # 企业ID
   corpSecret: '' # 企业微信应用密钥

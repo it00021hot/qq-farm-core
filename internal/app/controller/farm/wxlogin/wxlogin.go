@@ -4,7 +4,6 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/app/controller"
 	farmwx "github.com/MQEnergy/go-skeleton/internal/farm/wxlogin"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
 	"github.com/spf13/cast"
 )
@@ -23,7 +22,7 @@ type createTaskReq struct {
 }
 
 func ownerKey(ctx fiber.Ctx) string {
-	uid := cast.ToString(ctx.Locals(tenant.LocalUID))
+	uid := cast.ToString(ctx.Locals("uid"))
 	if uid == "" {
 		uid = cast.ToString(ctx.Get("uid"))
 	}

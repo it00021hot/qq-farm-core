@@ -13,8 +13,8 @@ import (
 var ErrNil = errors.New("memcache: nil")
 
 const (
-	AuthFmt  = "auth:%s"  // 授权信息key
-	PermsFmt = "perms:%s" // 用户详细信息 (基于用户的菜单权限 包含用户前端权限 alias)
+	AuthFmt  = "auth:%s"   // 授权信息key
+	PermsFmt = "perms:%s"  // 用户详细信息 (基于用户的菜单权限 包含用户前端权限 alias)
 	ResFmt   = "resources" // 资源列表
 )
 
@@ -42,7 +42,7 @@ type StringCmd struct {
 }
 
 func (c *StringCmd) Result() (string, error) { return c.val, c.err }
-func (c *StringCmd) Err() error               { return c.err }
+func (c *StringCmd) Err() error              { return c.err }
 
 type IntCmd struct {
 	val int64

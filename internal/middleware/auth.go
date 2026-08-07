@@ -8,7 +8,6 @@ import (
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/MQEnergy/go-skeleton/pkg/jwtauth"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/spf13/cast"
 
 	jwtware "github.com/gofiber/contrib/v3/jwt"
@@ -48,18 +47,14 @@ func AuthMiddleware() fiber.Handler {
 						uid := cast.ToString(sub["id"])
 						uuid := cast.ToString(sub["uuid"])
 						roleIDs := cast.ToString(sub["role_ids"])
-						tenantID := cast.ToUint64(sub["tenant_id"])
 
-						ctx.Locals(tenant.LocalUID, cast.ToUint64(uid))
-						ctx.Locals(tenant.LocalUUID, uuid)
-						ctx.Locals(tenant.LocalRoleIDs, roleIDs)
-						ctx.Locals(tenant.LocalTenantID, tenantID)
-						ctx.Locals(tenant.LocalIsPlatform, tenantID == 0)
+						ctx.Locals("uid", cast.ToUint64(uid))
+						ctx.Locals("uuid", uuid)
+						ctx.Locals("role_ids", roleIDs)
 
 						ctx.Set("uuid", uuid)
 						ctx.Set("uid", uid)
 						ctx.Set("role_ids", roleIDs)
-						ctx.Set("tenant_id", cast.ToString(tenantID))
 						return ctx.Next()
 					}
 				}

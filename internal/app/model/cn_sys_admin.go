@@ -6,10 +6,9 @@ const TableNameSysAdmin = "cn_sys_admin"
 type SysAdmin struct {
 	ID        uint64 `gorm:"column:id;primaryKey;autoIncrement;comment:主键ID" json:"id"`
 	UUID      string `gorm:"column:uuid;size:32;not null;comment:唯一id号" json:"uuid"`
-	TenantID  uint64 `gorm:"column:tenant_id;not null;default:0;index;uniqueIndex:uk_tenant_account;comment:租户ID 0：平台账号" json:"tenantId"`
 	NickName  string `gorm:"column:nick_name;size:64;not null;comment:昵称" json:"nickName"`
 	RealName  string `gorm:"column:real_name;size:64;not null;default:'';comment:真实姓名" json:"realName"`
-	Account   string `gorm:"column:account;size:64;not null;uniqueIndex:uk_tenant_account;comment:账号" json:"account"`
+	Account   string `gorm:"column:account;size:64;not null;uniqueIndex:uk_admin_account;comment:账号" json:"account"`
 	Password  string `gorm:"column:password;size:64;not null;default:'';comment:密码" json:"password"`
 	Phone     string `gorm:"column:phone;size:16;not null;default:'';comment:手机号" json:"phone"`
 	Email     string `gorm:"column:email;size:128;not null;default:'';comment:邮箱" json:"email"`
@@ -21,6 +20,3 @@ type SysAdmin struct {
 }
 
 func (*SysAdmin) TableName() string { return TableNameSysAdmin }
-
-func (m *SysAdmin) GetTenantID() uint64   { return m.TenantID }
-func (m *SysAdmin) SetTenantID(id uint64) { m.TenantID = id }

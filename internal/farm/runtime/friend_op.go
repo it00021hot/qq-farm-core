@@ -18,7 +18,6 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/stats"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"gorm.io/gorm/clause"
 )
 
@@ -33,11 +32,11 @@ const (
 )
 
 // SyncFriendsToDB persists the game friend list used by the friend HTTP views.
-func SyncFriendsToDB(accountID, tenantID uint64, friends []friendpb.GameFriend) {
+func SyncFriendsToDB(accountID uint64, _ uint64, friends []friendpb.GameFriend) {
 	if accountID == 0 || len(friends) == 0 {
 		return
 	}
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	if db == nil {
 		return
 	}
@@ -51,11 +50,11 @@ func SyncFriendsToDB(accountID, tenantID uint64, friends []friendpb.GameFriend) 
 			nickname = friend.Name
 		}
 		row := model.FarmFriendGid{
-			TenantID: tenantID, AccountID: accountID, Gid: friend.Gid,
+			AccountID: accountID, Gid: friend.Gid,
 			Nickname: nickname, SyncedAt: now, CreatedAt: now, UpdatedAt: now,
 		}
 		if err := db.Clauses(clause.OnConflict{
-			Columns: []clause.Column{{Name: "tenant_id"}, {Name: "account_id"}, {Name: "gid"}},
+			Columns: []clause.Column{{Name: "account_id"}, {Name: "gid"}},
 			DoUpdates: clause.Assignments(map[string]any{
 				"nickname": nickname, "synced_at": now, "updated_at": now,
 			}),
@@ -870,10 +869,10 @@ func logSellFruits(s *Session, accountID uint64, names []string, gold int64, sol
 		"count":   soldKinds,
 	}
 	if s != nil && s.hub != nil {
-		s.hub.PublishJSON("farm_operation", 0, accountID, payload)
+		s.hub.PublishJSON("farm_operation", accountID, payload)
 		return
 	}
-	hub.Default.PublishJSON("farm_operation", 0, accountID, payload)
+	hub.Default.PublishJSON("farm_operation", accountID, payload)
 }
 
 func helpFriend(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig, gid int64) (friendVisitOutcome, bool, error) {
@@ -1123,7 +1122,7 @@ func abortFriendPatrol(s *Session, accountID uint64, kind string, err error) {
 	if s == nil || s.hub == nil || accountID == 0 {
 		return
 	}
-	s.hub.PublishJSON("friend_interact", 0, accountID, map[string]any{
+	s.hub.PublishJSON("friend_interact", accountID, map[string]any{
 		"action":  kind,
 		"result":  "error",
 		"event":   "好友巡查中断",
@@ -1185,7 +1184,7 @@ func persistKnownFriendGIDs(accountID uint64, cfg logic.AccountConfig) {
 	if accountID == 0 {
 		return
 	}
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	if db == nil {
 		return
 	}
@@ -1226,7 +1225,7 @@ func persistFriendBlacklist(accountID uint64, cfg logic.AccountConfig) {
 	if accountID == 0 {
 		return
 	}
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	if db == nil {
 		return
 	}
@@ -1511,11 +1510,11 @@ func containsID(ids []int64, id int64) bool {
 	return false
 }
 
-func writeInteractLog(accountID, tenantID uint64, targetGID int64, action, result string, detail any) {
+func writeInteractLog(accountID uint64, _ uint64, targetGID int64, action, result string, detail any) {
 	if accountID == 0 {
 		return
 	}
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	if db == nil {
 		return
 	}
@@ -1525,7 +1524,7 @@ func writeInteractLog(accountID, tenantID uint64, targetGID int64, action, resul
 		payload = []byte(`{}`)
 	}
 	row := model.FarmInteractLog{
-		TenantID: tenantID, AccountID: accountID, TargetGid: targetGID,
+		AccountID: accountID, TargetGid: targetGID,
 		Action: action, Result: result, DetailJSON: string(payload), CreatedAt: uint(time.Now().Unix()),
 	}
 	if err := db.Create(&row).Error; err != nil {
@@ -1545,7 +1544,7 @@ func writeInteractLog(accountID, tenantID uint64, targetGID int64, action, resul
 	errText, _ := detailMap["error"].(string)
 	message := formatFriendInteractMessage(friendName, targetGID, action, result, count, errText, detailMap)
 	event := friendActionEvent(action)
-	hub.Default.PublishJSON("friend_interact", tenantID, accountID, map[string]any{
+	hub.Default.PublishJSON("friend_interact", accountID, map[string]any{
 		"targetGid":  targetGID,
 		"friendName": friendName,
 		"action":     action,
@@ -1562,7 +1561,7 @@ func lookupFriendNickname(accountID uint64, gid int64) string {
 	if accountID == 0 || gid <= 0 {
 		return ""
 	}
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	if db == nil {
 		return ""
 	}

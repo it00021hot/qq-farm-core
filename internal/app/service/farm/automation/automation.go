@@ -11,7 +11,6 @@ import (
 	farmruntime "github.com/MQEnergy/go-skeleton/internal/farm/runtime"
 	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -26,7 +25,7 @@ func parseAccountConfig(raw string) logic.AccountConfig {
 }
 
 func (s *Service) Detail(ctx fiber.Ctx, req farmtypes.AutomationDetailReq) (map[string]any, error) {
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	var row model.FarmAccountConfig
 	if err := db.Where("account_id = ?", req.AccountID).First(&row).Error; err != nil {
 		// 无配置时返回默认
@@ -39,25 +38,25 @@ func (s *Service) Detail(ctx fiber.Ctx, req farmtypes.AutomationDetailReq) (map[
 
 func detailMap(accountID uint64, cfg logic.AccountConfig, configJSON string) map[string]any {
 	return map[string]any{
-		"accountId":                           accountID,
-		"automation":                          cfg.Automation,
-		"intervals":                           cfg.Intervals,
-		"plantingStrategy":                    cfg.PlantingStrategy,
-		"preferredSeedId":                     cfg.PreferredSeedID,
-		"bagSeedPriority":                     cfg.BagSeedPriority,
-		"bagSeedFallbackStrategy":             cfg.BagSeedFallbackStrategy,
-		"plantOrderRandom":                    cfg.PlantOrderRandom,
-		"plantDelaySeconds":                   cfg.PlantDelaySeconds,
-		"stealDelaySeconds":                   cfg.StealDelaySeconds,
-		"friendQuietHours":                    cfg.FriendQuietHours,
-		"friendBlacklist":                     cfg.FriendBlacklist,
-		"plantBlacklist":                      cfg.PlantBlacklist,
-		"fertilizerBuyOrganicCount":           cfg.FertilizerBuyOrganicCount,
-		"fertilizerBuyOrganicThresholdHours":  cfg.FertilizerBuyOrganicThresholdHours,
-		"fertilizerBuyNormalCount":            cfg.FertilizerBuyNormalCount,
-		"fertilizerBuyNormalThresholdHours":   cfg.FertilizerBuyNormalThresholdHours,
-		"fertilizerBuyCheckIntervalMinutes":   cfg.FertilizerBuyCheckIntervalMinutes,
-		"configJson":                          configJSON,
+		"accountId":                          accountID,
+		"automation":                         cfg.Automation,
+		"intervals":                          cfg.Intervals,
+		"plantingStrategy":                   cfg.PlantingStrategy,
+		"preferredSeedId":                    cfg.PreferredSeedID,
+		"bagSeedPriority":                    cfg.BagSeedPriority,
+		"bagSeedFallbackStrategy":            cfg.BagSeedFallbackStrategy,
+		"plantOrderRandom":                   cfg.PlantOrderRandom,
+		"plantDelaySeconds":                  cfg.PlantDelaySeconds,
+		"stealDelaySeconds":                  cfg.StealDelaySeconds,
+		"friendQuietHours":                   cfg.FriendQuietHours,
+		"friendBlacklist":                    cfg.FriendBlacklist,
+		"plantBlacklist":                     cfg.PlantBlacklist,
+		"fertilizerBuyOrganicCount":          cfg.FertilizerBuyOrganicCount,
+		"fertilizerBuyOrganicThresholdHours": cfg.FertilizerBuyOrganicThresholdHours,
+		"fertilizerBuyNormalCount":           cfg.FertilizerBuyNormalCount,
+		"fertilizerBuyNormalThresholdHours":  cfg.FertilizerBuyNormalThresholdHours,
+		"fertilizerBuyCheckIntervalMinutes":  cfg.FertilizerBuyCheckIntervalMinutes,
+		"configJson":                         configJSON,
 	}
 }
 
@@ -67,7 +66,7 @@ func mustJSON(v any) string {
 }
 
 func (s *Service) Modify(ctx fiber.Ctx, req farmtypes.AutomationModifyReq) error {
-	db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+	db := vars.DB
 	var row model.FarmAccountConfig
 	err := db.Where("account_id = ?", req.AccountID).First(&row).Error
 	cfg := logic.DefaultAccountConfig()

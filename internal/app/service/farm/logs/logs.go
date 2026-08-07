@@ -6,7 +6,6 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/farm/hub"
 	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -18,7 +17,7 @@ var Logs = &Service{}
 
 func (s *Service) List(ctx fiber.Ctx, req farmtypes.LogsListReq) ([]hub.LogEntry, error) {
 	if req.AccountID != 0 {
-		db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+		db := vars.DB
 		var acc model.FarmAccount
 		if err := db.Where("id = ?", req.AccountID).First(&acc).Error; err != nil {
 			return nil, err
@@ -29,7 +28,7 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.LogsListReq) ([]hub.LogEntry
 
 func (s *Service) Clear(ctx fiber.Ctx, req farmtypes.LogsClearReq) (map[string]any, error) {
 	if req.AccountID != 0 {
-		db := tenant.Scope(vars.DB, tenant.TenantCtx(ctx))
+		db := vars.DB
 		var acc model.FarmAccount
 		if err := db.Where("id = ?", req.AccountID).First(&acc).Error; err != nil {
 			return nil, err

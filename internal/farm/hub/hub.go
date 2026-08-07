@@ -9,37 +9,31 @@ import (
 type Event struct {
 	Type      string          `json:"type"`
 	AccountID uint64          `json:"accountId,omitempty"`
-	TenantID  uint64          `json:"tenantId,omitempty"`
 	Payload   json.RawMessage `json:"payload,omitempty"`
 }
 
-type client struct {
-	tenantID uint64
-	ch       chan []byte
-}
+type client struct{ ch chan []byte }
 
 // Hub is an in-process pub/sub for farm realtime events.
 type Hub struct {
 	mu      sync.RWMutex
-	clients map[uint64]*client // id -> client
+	clients map[uint64]*client
 	nextID  uint64
 }
 
 // Default global hub.
 var Default = New()
 
-func New() *Hub {
-	return &Hub{clients: make(map[uint64]*client)}
-}
+func New() *Hub { return &Hub{clients: make(map[uint64]*client)} }
 
-// Subscribe registers a tenant-scoped listener; returns id and receive channel.
-func (h *Hub) Subscribe(tenantID uint64) (uint64, <-chan []byte) {
+// Subscribe registers a listener; returns id and receive channel.
+func (h *Hub) Subscribe() (uint64, <-chan []byte) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.nextID++
 	id := h.nextID
 	ch := make(chan []byte, 64)
-	h.clients[id] = &client{tenantID: tenantID, ch: ch}
+	h.clients[id] = &client{ch: ch}
 	return id, ch
 }
 
@@ -53,7 +47,7 @@ func (h *Hub) Unsubscribe(id uint64) {
 	}
 }
 
-// Broadcast sends an event to matching tenants (0 = all).
+// Broadcast sends an event to all listeners.
 func (h *Hub) Broadcast(ev Event) {
 	b, err := json.Marshal(ev)
 	if err != nil {
@@ -62,20 +56,16 @@ func (h *Hub) Broadcast(ev Event) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	for _, c := range h.clients {
-		if ev.TenantID != 0 && c.tenantID != 0 && c.tenantID != ev.TenantID {
-			continue
-		}
 		select {
 		case c.ch <- b:
 		default:
-			// drop if slow consumer
 		}
 	}
 }
 
 // PublishJSON helpers. Log-worthy types are also appended to the run-log ring.
-func (h *Hub) PublishJSON(typ string, tenantID, accountID uint64, payload any) {
+func (h *Hub) PublishJSON(typ string, accountID uint64, payload any) {
 	AppendFromEvent(typ, accountID, payload)
 	raw, _ := json.Marshal(payload)
-	h.Broadcast(Event{Type: typ, TenantID: tenantID, AccountID: accountID, Payload: raw})
+	h.Broadcast(Event{Type: typ, AccountID: accountID, Payload: raw})
 }

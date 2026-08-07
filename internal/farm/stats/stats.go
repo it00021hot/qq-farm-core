@@ -2,20 +2,18 @@
 package stats
 
 import (
-	"context"
 	"encoding/json"
 	"log/slog"
 	"time"
 
 	"github.com/MQEnergy/go-skeleton/internal/app/model"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 // RecordExpGold upserts today's cn_farm_stats row and increments exp/gold columns.
-func RecordExpGold(accountID, tenantID uint64, expDelta, goldDelta int64) {
+func RecordExpGold(accountID uint64, _ uint64, expDelta, goldDelta int64) {
 	if accountID == 0 {
 		return
 	}
@@ -26,7 +24,6 @@ func RecordExpGold(accountID, tenantID uint64, expDelta, goldDelta int64) {
 	now := uint(time.Now().Unix())
 
 	row := model.FarmStats{
-		TenantID:  tenantID,
 		AccountID: accountID,
 		StatDate:  today,
 		ExtraJSON: "{}",
@@ -43,13 +40,12 @@ func RecordExpGold(accountID, tenantID uint64, expDelta, goldDelta int64) {
 		assigns["gold"] = gorm.Expr("gold + ?", goldDelta)
 	}
 
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	if db == nil {
 		return
 	}
 	if err := db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{
-			{Name: "tenant_id"},
 			{Name: "account_id"},
 			{Name: "stat_date"},
 		},
@@ -62,7 +58,7 @@ func RecordExpGold(accountID, tenantID uint64, expDelta, goldDelta int64) {
 // RecordOp upserts today's cn_farm_stats row and increments the op counter.
 // Known ops: harvest, plant, farming, steal, help, sell, upgrade, fertilize, taskClaim, levelUp, ...
 // Unknown ops are stored in extra_json.operations.
-func RecordOp(accountID, tenantID uint64, op string, count int) {
+func RecordOp(accountID uint64, _ uint64, op string, count int) {
 	if accountID == 0 || count <= 0 || op == "" {
 		return
 	}
@@ -70,7 +66,6 @@ func RecordOp(accountID, tenantID uint64, op string, count int) {
 	now := uint(time.Now().Unix())
 
 	row := model.FarmStats{
-		TenantID:  tenantID,
 		AccountID: accountID,
 		StatDate:  today,
 		ExtraJSON: "{}",
@@ -78,7 +73,7 @@ func RecordOp(accountID, tenantID uint64, op string, count int) {
 		UpdatedAt: now,
 	}
 
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	if db == nil {
 		return
 	}
@@ -97,7 +92,6 @@ func RecordOp(accountID, tenantID uint64, op string, count int) {
 		}
 		if err := db.Clauses(clause.OnConflict{
 			Columns: []clause.Column{
-				{Name: "tenant_id"},
 				{Name: "account_id"},
 				{Name: "stat_date"},
 			},
@@ -115,7 +109,7 @@ func RecordOp(accountID, tenantID uint64, op string, count int) {
 		extraKey = op
 	}
 	var existing model.FarmStats
-	err := db.Where("tenant_id = ? AND account_id = ? AND stat_date = ?", tenantID, accountID, today).
+	err := db.Where("account_id = ? AND stat_date = ?", accountID, today).
 		First(&existing).Error
 	if err != nil {
 		if err := db.Create(&row).Error; err != nil {
@@ -160,7 +154,7 @@ func opColumn(op string) (column, extraKey string) {
 }
 
 // TodayOperations returns today's op counters for the dashboard (bot status.operations).
-func TodayOperations(accountID, tenantID uint64) map[string]int {
+func TodayOperations(accountID uint64, _ uint64) map[string]int {
 	out := map[string]int{
 		"harvest": 0, "farming": 0, "fertilize": 0, "plant": 0,
 		"steal": 0, "helpFarming": 0, "taskClaim": 0, "sell": 0,
@@ -170,15 +164,12 @@ func TodayOperations(accountID, tenantID uint64) map[string]int {
 		return out
 	}
 	today := time.Now().Format("2006-01-02")
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	if db == nil {
 		return out
 	}
 	var row model.FarmStats
 	q := db.Where("account_id = ? AND stat_date = ?", accountID, today)
-	if tenantID > 0 {
-		q = q.Where("tenant_id = ?", tenantID)
-	}
 	if err := q.First(&row).Error; err != nil {
 		return out
 	}
@@ -204,20 +195,17 @@ func TodayOperations(accountID, tenantID uint64) map[string]int {
 }
 
 // TodayExpGold returns today's recorded exp/gold deltas from cn_farm_stats.
-func TodayExpGold(accountID, tenantID uint64) (exp, gold int64) {
+func TodayExpGold(accountID uint64, _ uint64) (exp, gold int64) {
 	if accountID == 0 {
 		return 0, 0
 	}
 	today := time.Now().Format("2006-01-02")
-	db := tenant.Global(vars.DB, context.Background())
+	db := vars.DB
 	if db == nil {
 		return 0, 0
 	}
 	var row model.FarmStats
 	q := db.Where("account_id = ? AND stat_date = ?", accountID, today)
-	if tenantID > 0 {
-		q = q.Where("tenant_id = ?", tenantID)
-	}
 	if err := q.First(&row).Error; err != nil {
 		return 0, 0
 	}

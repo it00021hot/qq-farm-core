@@ -17,9 +17,9 @@ type AuthController struct {
 var Auth = &AuthController{}
 
 type (
-	LoginReq           = auth.LoginReq
-	RefreshReq         = auth.RefreshReq
-	ChangePasswordReq  = auth.ChangePasswordReq
+	LoginReq          = auth.LoginReq
+	RefreshReq        = auth.RefreshReq
+	ChangePasswordReq = auth.ChangePasswordReq
 )
 
 // Login 用户登录
@@ -114,23 +114,6 @@ func (c *AuthController) ChangePassword(ctx fiber.Ctx) error {
 //	@Router			/auth/info [get]
 func (c *AuthController) Info(ctx fiber.Ctx) error {
 	info, err := auth2.Auth.Info(ctx)
-	if err != nil {
-		return response.BadRequestException(ctx, err.Error())
-	}
-	return response.SuccessJSON(ctx, "", info)
-}
-
-// UserRoutes soybean 动态路由
-//
-//	@Summary		获取当前用户前端路由
-//	@Tags			鉴权管理
-//	@Accept			json
-//	@Produce		json
-//	@Security		ApiKeyAuth
-//	@Success		200	{object}	response.JSONResponse	"成功"
-//	@Router			/auth/user-routes [get]
-func (c *AuthController) UserRoutes(ctx fiber.Ctx) error {
-	info, err := auth2.Auth.UserRoutes(ctx)
 	if err != nil {
 		return response.BadRequestException(ctx, err.Error())
 	}

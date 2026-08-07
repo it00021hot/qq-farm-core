@@ -26,7 +26,6 @@ type (
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			accountId	query		int						true	"账号ID"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"
@@ -50,7 +49,6 @@ func (c *Controller) Detail(ctx fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			X-Tenant-ID	header		string					false	"平台用户操作目标租户ID"
 //	@Param			payload		body		AutomationModifyReq		true	"配置参数"
 //	@Success		200			{object}	response.JSONResponse	"成功"
 //	@Failure		400			{object}	response.JSONResponse	"请求错误"
