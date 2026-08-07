@@ -16,12 +16,12 @@ func (a *API) sendAvatarFrame(ctx context.Context, method string, body []byte) (
 
 // AvatarFramesOwned fetches owned avatar frames.
 func (a *API) AvatarFramesOwned(ctx context.Context) (*avatarframepb.AvatarFramesOwnedReply, error) {
-	raw, err := a.sendAvatarFrame(ctx, "AvatarFramesOwned", (&avatarframepb.AvatarFramesOwnedRequest{}).Marshal())
+	raw, err := a.sendAvatarFrame(ctx, "AvatarFramesOwned", marshalMessage(&avatarframepb.AvatarFramesOwnedRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &avatarframepb.AvatarFramesOwnedReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

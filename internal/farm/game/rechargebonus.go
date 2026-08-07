@@ -16,12 +16,12 @@ func (a *API) sendRechargeBonus(ctx context.Context, method string, body []byte)
 
 // GetConfig fetches recharge-bonus configuration.
 func (a *API) GetConfig(ctx context.Context) (*rechargebonuspb.GetConfigReply, error) {
-	raw, err := a.sendRechargeBonus(ctx, "GetConfig", (&rechargebonuspb.GetConfigRequest{}).Marshal())
+	raw, err := a.sendRechargeBonus(ctx, "GetConfig", marshalMessage(&rechargebonuspb.GetConfigRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &rechargebonuspb.GetConfigReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

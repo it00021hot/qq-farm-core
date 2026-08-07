@@ -26,12 +26,12 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/seasonpb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/userpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/visitpb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/protocol"
 	"github.com/MQEnergy/go-skeleton/internal/farm/push"
 	"github.com/MQEnergy/go-skeleton/internal/farm/stats"
 	"github.com/MQEnergy/go-skeleton/internal/farm/tsdk"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"google.golang.org/protobuf/proto"
 )
 
 // AccountStatus is broadcast on the hub.
@@ -399,7 +399,7 @@ func (s *Session) doLogin(ctx context.Context, client *protocol.Client, ver stri
 		sysSoft = "Windows"
 	}
 	req := &userpb.LoginRequest{
-		SceneID: "1234567",
+		SceneId: "1234567",
 		DeviceInfo: &userpb.DeviceInfo{
 			ClientVersion: ver,
 			SysSoftware:   sysSoft,
@@ -407,26 +407,30 @@ func (s *Session) doLogin(ctx context.Context, client *protocol.Client, ver stri
 		},
 		ReportData: &userpb.ReportData{
 			MinigameChannel: "other-qq",
-			MinigamePlatID:  2,
+			MinigamePlatid:  2,
 		},
 	}
 	loginCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
-	body, _, err := client.Send(loginCtx, "gamepb.userpb.UserService", "Login", req.Marshal())
+	requestBody, err := proto.Marshal(req)
+	if err != nil {
+		return fmt.Errorf("登录请求编码失败: %w", err)
+	}
+	body, _, err := client.Send(loginCtx, "gamepb.userpb.UserService", "Login", requestBody)
 	if err != nil {
 		return fmt.Errorf("登录失败: %w", err)
 	}
 	var reply userpb.LoginReply
-	if err := reply.Unmarshal(body); err != nil {
+	if err := proto.Unmarshal(body, &reply); err != nil {
 		return fmt.Errorf("登录响应解析失败: %w", err)
 	}
-	if reply.Basic == nil || reply.Basic.GID == 0 {
+	if reply.Basic == nil || reply.Basic.Gid == 0 {
 		return fmt.Errorf("登录失败: 响应缺少账号信息（Code 可能已失效）")
 	}
 
 	s.mu.Lock()
-	s.gid = reply.Basic.GID
-	s.openID = reply.Basic.OpenID
+	s.gid = reply.Basic.Gid
+	s.openID = reply.Basic.OpenId
 	s.playerLevel = reply.Basic.Level
 	s.playerExp = reply.Basic.Exp
 	s.gold = reply.Basic.Gold
@@ -435,23 +439,23 @@ func (s *Session) doLogin(ctx context.Context, client *protocol.Client, ver stri
 	s.sessionExpGained = 0
 	s.sessionGoldGained = 0
 	s.nick = reply.Basic.Name
-	s.avatar = reply.Basic.AvatarURL
+	s.avatar = reply.Basic.AvatarUrl
 	rt := s.tsdk
 	if s.gameAPI != nil {
-		s.gameAPI.GID = reply.Basic.GID
+		s.gameAPI.GID = reply.Basic.Gid
 	}
 	s.mu.Unlock()
 
 	// bindUser(openId) BEFORE heartbeat / ACE (network.ts login success order).
-	if rt != nil && reply.Basic.OpenID != "" {
-		if err := rt.BindUser(reply.Basic.OpenID); err != nil {
+	if rt != nil && reply.Basic.OpenId != "" {
+		if err := rt.BindUser(reply.Basic.OpenId); err != nil {
 			slog.Warn("tsdk bindUser failed", "account", s.id, "err", err)
 		}
 	}
 
 	slog.Info("farm login ok",
 		"account", s.id,
-		"gid", reply.Basic.GID,
+		"gid", reply.Basic.Gid,
 		"name", reply.Basic.Name,
 		"level", reply.Basic.Level,
 	)
@@ -516,8 +520,12 @@ func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 			if ver == "" {
 				ver = "1.13.0.5_20260723"
 			}
+			heartbeatBody, marshalErr := proto.Marshal(&userpb.HeartbeatRequest{Gid: gid, ClientVersion: ver})
+			if marshalErr != nil {
+				continue
+			}
 			hbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-			_, _, err := client.Send(hbCtx, "gamepb.userpb.UserService", "Heartbeat", userpb.MarshalHeartbeatRequest(gid, ver))
+			_, _, err := client.Send(hbCtx, "gamepb.userpb.UserService", "Heartbeat", heartbeatBody)
 			cancel()
 			if err != nil {
 				slog.Warn("farm heartbeat failed", "account", s.id, "err", err)
@@ -600,14 +608,19 @@ func (s *Session) sendAntiData(ctx context.Context) {
 	}
 	req := &acepb.AntiDataRequest{Data: data}
 	cctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	body, _, err := client.Send(cctx, "gamepb.acepb.AceService", "AntiData", req.Marshal())
+	requestBody, marshalErr := proto.Marshal(req)
+	if marshalErr != nil {
+		cancel()
+		return
+	}
+	body, _, err := client.Send(cctx, "gamepb.acepb.AceService", "AntiData", requestBody)
 	cancel()
 	if err != nil {
 		slog.Warn("ACE AntiData failed", "account", s.id, "err", err)
 		return
 	}
 	var reply acepb.AntiDataReply
-	if err := reply.Unmarshal(body); err != nil {
+	if err := proto.Unmarshal(body, &reply); err != nil {
 		return
 	}
 	if len(reply.Result) > 0 {
@@ -720,7 +733,7 @@ func (s *Session) GetAvailableSeeds(ctx context.Context) ([]logic.AvailableShopS
 		shop, err := api.ShopInfo(ctx, 2)
 		if err == nil && shop != nil {
 			for _, goods := range shop.GoodsList {
-				if goods.ItemID <= 0 {
+				if goods == nil || goods.ItemId <= 0 {
 					continue
 				}
 				requiredLevel := int64(0)
@@ -733,12 +746,12 @@ func (s *Session) GetAvailableSeeds(ctx context.Context) ([]logic.AvailableShopS
 				price := goods.Price
 				reqLv := requiredLevel
 				list = append(list, logic.AvailableShopSeed{
-					SeedID:        goods.ItemID,
-					GoodsID:       goods.ID,
-					Name:          logic.GetPlantNameBySeedID(goods.ItemID),
+					SeedID:        goods.ItemId,
+					GoodsID:       goods.Id,
+					Name:          logic.GetPlantNameBySeedID(goods.ItemId),
 					Price:         &price,
 					RequiredLevel: &reqLv,
-					Size:          logic.GetPlantSizeBySeedID(goods.ItemID),
+					Size:          logic.GetPlantSizeBySeedID(goods.ItemId),
 					Locked:        !goods.Unlocked || (playerLevel > 0 && requiredLevel > playerLevel),
 					SoldOut:       soldOut,
 				})
@@ -912,7 +925,7 @@ func (s *Session) FriendLands(ctx context.Context, gid int64) ([]logic.LandInfo,
 	if api == nil {
 		return nil, fmt.Errorf("farm session is not connected")
 	}
-	lands, err := api.VisitEnter(ctx, gid, visitpb.EnterReasonFriend)
+	lands, err := api.VisitEnter(ctx, gid, enterReasonFriend)
 	if err != nil {
 		if handleFriendEnterError(s, gid, err) {
 			return nil, fmt.Errorf("friend blacklisted after enter error: %w", err)
@@ -1118,7 +1131,7 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 	var event gatepb.EventMessage
 	eventBody := body
 	messageType := ""
-	if err := event.Unmarshal(body); err == nil && event.MessageType != "" {
+	if err := proto.Unmarshal(body, &event); err == nil && event.MessageType != "" {
 		messageType = event.MessageType
 		eventBody = event.Body
 	}
@@ -1130,7 +1143,7 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 	if strings.Contains(messageType, "Kickout") {
 		reason := "未知"
 		var notify gatepb.KickoutNotify
-		if err := notify.Unmarshal(eventBody); err == nil {
+		if err := proto.Unmarshal(eventBody, &notify); err == nil {
 			if notify.ReasonMessage != "" {
 				reason = notify.ReasonMessage
 			}
@@ -1150,13 +1163,13 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 	// P1: auto-accept friend applications pushed by the gate.
 	if strings.Contains(messageType, "FriendApplicationReceivedNotify") {
 		var notify friendpb.FriendApplicationReceivedNotify
-		if err := notify.Unmarshal(eventBody); err != nil {
+		if err := proto.Unmarshal(eventBody, &notify); err != nil {
 			return
 		}
 		gids := make([]int64, 0, len(notify.Applications))
 		for _, app := range notify.Applications {
-			if app.GID > 0 {
-				gids = append(gids, app.GID)
+			if app != nil && app.Gid > 0 {
+				gids = append(gids, app.Gid)
 			}
 		}
 		if len(gids) == 0 {
@@ -1198,7 +1211,7 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 	}
 
 	var notify plantpb.LandsNotify
-	if err := notify.Unmarshal(eventBody); err != nil {
+	if err := proto.Unmarshal(eventBody, &notify); err != nil {
 		return
 	}
 	if len(notify.Lands) == 0 {
@@ -1218,7 +1231,7 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 		s.mu.Unlock()
 		return
 	}
-	hostGID := notify.HostGID
+	hostGID := notify.HostGid
 	if hostGID != 0 && myGID > 0 && hostGID != myGID {
 		s.mu.Unlock()
 		return
@@ -1242,7 +1255,7 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 
 func (s *Session) applyItemNotify(body []byte) {
 	var notify itempb.ItemNotify
-	if err := notify.Unmarshal(body); err != nil {
+	if err := proto.Unmarshal(body, &notify); err != nil {
 		return
 	}
 	var expDelta, goldDelta int64
@@ -1252,7 +1265,7 @@ func (s *Session) applyItemNotify(body []byte) {
 		if chg == nil || chg.Item == nil {
 			continue
 		}
-		id := chg.Item.ID
+		id := chg.Item.Id
 		count := chg.Item.Count
 		delta := chg.Delta
 		switch id {
@@ -1311,7 +1324,7 @@ func (s *Session) applyItemNotify(body []byte) {
 
 func (s *Session) applyBattlePassNotify(body []byte) {
 	var notify seasonpb.BattlePassChangeNotify
-	if err := notify.Unmarshal(body); err != nil {
+	if err := proto.Unmarshal(body, &notify); err != nil {
 		slog.Debug("BattlePassChangeNotify decode failed", "account", s.id, "err", err)
 		return
 	}
@@ -1334,22 +1347,22 @@ func (s *Session) applyBattlePassNotify(body []byte) {
 
 func (s *Session) applyBasicNotify(body []byte) {
 	var notify userpb.BasicNotify
-	if err := notify.Unmarshal(body); err != nil || notify.Basic == nil {
+	if err := proto.Unmarshal(body, &notify); err != nil || notify.Basic == nil {
 		return
 	}
 	leveledUp := false
 	s.mu.Lock()
 	changed := false
-	if notify.Basic.HasLevel && notify.Basic.Level > 0 && s.playerLevel != notify.Basic.Level {
+	if notify.Basic.Level > 0 && s.playerLevel != notify.Basic.Level {
 		s.playerLevel = notify.Basic.Level
 		leveledUp = true
 		changed = true
 	}
-	if notify.Basic.HasExp && notify.Basic.Exp >= 0 && s.playerExp != notify.Basic.Exp {
+	if notify.Basic.Exp > 0 && s.playerExp != notify.Basic.Exp {
 		s.playerExp = notify.Basic.Exp
 		changed = true
 	}
-	if notify.Basic.HasGold && notify.Basic.Gold >= 0 && s.gold != notify.Basic.Gold {
+	if notify.Basic.Gold > 0 && s.gold != notify.Basic.Gold {
 		s.gold = notify.Basic.Gold
 		changed = true
 	}
@@ -1357,8 +1370,8 @@ func (s *Session) applyBasicNotify(body []byte) {
 		s.nick = notify.Basic.Name
 		changed = true
 	}
-	if notify.Basic.AvatarURL != "" && s.avatar != notify.Basic.AvatarURL {
-		s.avatar = notify.Basic.AvatarURL
+	if notify.Basic.AvatarUrl != "" && s.avatar != notify.Basic.AvatarUrl {
+		s.avatar = notify.Basic.AvatarUrl
 		changed = true
 	}
 	s.mu.Unlock()
@@ -1617,7 +1630,7 @@ func (s *Session) runBagMaintenance(ctx context.Context, cfg logic.AccountConfig
 
 func fertilizerContainerHours(items []corepb.Item) (normal, organic float64) {
 	for _, item := range items {
-		switch item.ID {
+		switch item.Id {
 		case game.NormalFertilizerID:
 			normal = float64(item.Count) / 3600
 		case game.OrganicFertilizerID:
@@ -1683,10 +1696,10 @@ func fertilizerItemTypeAndHours(itemID int64) (kind string, perItemHours float64
 func openFertilizerGiftPacks(ctx context.Context, api *game.API, items []corepb.Item) (opened int, err error) {
 	merged := map[int64]int64{}
 	for _, item := range items {
-		if !isFertilizerRelatedItem(item.ID) || item.Count <= 0 {
+		if !isFertilizerRelatedItem(item.Id) || item.Count <= 0 {
 			continue
 		}
-		merged[item.ID] += item.Count
+		merged[item.Id] += item.Count
 	}
 	if len(merged) == 0 {
 		return 0, nil
@@ -1714,7 +1727,7 @@ func openFertilizerGiftPacks(ctx context.Context, api *game.API, items []corepb.
 				}
 			}
 		}
-		if _, useErr := api.BatchUse(ctx, []corepb.Item{{ID: id, Count: useCount}}); useErr != nil {
+		if _, useErr := api.BatchUse(ctx, []corepb.Item{{Id: id, Count: useCount}}); useErr != nil {
 			continue
 		}
 		opened += int(useCount)

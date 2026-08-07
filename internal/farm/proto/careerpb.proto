@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.careerpb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/careerpb;careerpb";
 // ============ 职业/生涯服务 ============
 
 message CareerInfo {

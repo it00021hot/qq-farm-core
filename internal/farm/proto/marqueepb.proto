@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.marqueepb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/marqueepb;marqueepb";
 // ============ 跑马灯/滚动消息 ============
 message GetMarqueeRequest {}
 

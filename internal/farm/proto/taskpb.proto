@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.taskpb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/taskpb;taskpb";
 import "corepb.proto";
 
 // ============ 任务类型 ============

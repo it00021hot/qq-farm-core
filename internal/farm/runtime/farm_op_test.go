@@ -10,6 +10,7 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/gatepb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
+	"google.golang.org/protobuf/proto"
 )
 
 type farmOpSender struct {
@@ -96,24 +97,27 @@ func (s *farmOpSender) methodCount(method string) int {
 }
 
 func TestRunFarmOperationCallsFarmingAndHarvest(t *testing.T) {
-	reply := (&plantpb.AllLandsReply{Lands: []*plantpb.LandInfo{
+	reply, err := proto.Marshal(&plantpb.AllLandsReply{Lands: []*plantpb.LandInfo{
 		{
-			ID:       1,
+			Id:       1,
 			Unlocked: true,
-			Plant: &plantpb.PlantInfo{Phases: []plantpb.PlantPhaseInfo{
+			Plant: &plantpb.PlantInfo{Phases: []*plantpb.PlantPhaseInfo{
 				{Phase: 1, BeginTime: 1},
 				{Phase: 6, BeginTime: 2},
 			}},
 		},
 		{
-			ID:       2,
+			Id:       2,
 			Unlocked: true,
 			Plant: &plantpb.PlantInfo{
 				WeedOwners: []int64{99},
-				Phases:     []plantpb.PlantPhaseInfo{{Phase: 1, BeginTime: 1}},
+				Phases:     []*plantpb.PlantPhaseInfo{{Phase: 1, BeginTime: 1}},
 			},
 		},
-	}}).Marshal()
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
 	sender := &farmOpSender{lands: reply}
 	api := &game.API{Sender: sender, GID: 42}
 	cfg := logic.DefaultAccountConfig()
@@ -131,17 +135,17 @@ func TestRunFarmOperationCallsFarmingAndHarvest(t *testing.T) {
 		t.Fatalf("expected Farming and Harvest, methods=%v", sender.methods)
 	}
 	var farming plantpb.FarmingRequest
-	if err := farming.Unmarshal(sender.body("Farming")); err != nil {
+	if err := proto.Unmarshal(sender.body("Farming"), &farming); err != nil {
 		t.Fatalf("decode Farming request: %v", err)
 	}
-	if farming.HostGID != 42 || len(farming.LandIDs) != 1 || farming.LandIDs[0] != 2 {
+	if farming.HostGid != 42 || len(farming.LandIds) != 1 || farming.LandIds[0] != 2 {
 		t.Fatalf("unexpected Farming request: %+v", farming)
 	}
 	var harvest plantpb.HarvestRequest
-	if err := harvest.Unmarshal(sender.body("Harvest")); err != nil {
+	if err := proto.Unmarshal(sender.body("Harvest"), &harvest); err != nil {
 		t.Fatalf("decode Harvest request: %v", err)
 	}
-	if harvest.HostGID != 42 || len(harvest.LandIDs) != 1 || harvest.LandIDs[0] != 1 {
+	if harvest.HostGid != 42 || len(harvest.LandIds) != 1 || harvest.LandIds[0] != 1 {
 		t.Fatalf("unexpected Harvest request: %+v", harvest)
 	}
 }
@@ -164,7 +168,7 @@ func TestResolveRemovableUsesReplyOnRefreshFail(t *testing.T) {
 
 func TestHarvestDecodesReplyLands(t *testing.T) {
 	sender := &harvestDecodeSender{reply: mustMarshalHarvestReply(t, []*plantpb.LandInfo{
-		{ID: 7, Unlocked: true, Plant: &plantpb.PlantInfo{Phases: []plantpb.PlantPhaseInfo{{Phase: 1, BeginTime: 1}}}},
+		{Id: 7, Unlocked: true, Plant: &plantpb.PlantInfo{Phases: []*plantpb.PlantPhaseInfo{{Phase: 1, BeginTime: 1}}}},
 	})}
 	api := &game.API{Sender: sender, GID: 1}
 	lands, err := api.Harvest(context.Background(), []int64{7})
@@ -189,8 +193,11 @@ func (s *harvestDecodeSender) Send(_ context.Context, _ string, method string, _
 
 func mustMarshalHarvestReply(t *testing.T, lands []*plantpb.LandInfo) []byte {
 	t.Helper()
-	// HarvestReply has Unmarshal but no Marshal; reuse AllLandsReply field-1 encoding.
-	return (&plantpb.AllLandsReply{Lands: lands}).Marshal()
+	body, err := proto.Marshal(&plantpb.HarvestReply{Land: lands})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return body
 }
 
 func TestConfirmsPlantedFootprintHelper(t *testing.T) {

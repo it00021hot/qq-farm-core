@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.acepb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/acepb;acepb";
 // ============ 反作弊服务 ============
 
 message AntiDataRequest {

@@ -16,12 +16,12 @@ func (a *API) sendRandomDrop(ctx context.Context, method string, body []byte) ([
 
 // GetRandomDropActivityInfo fetches random-drop activity info.
 func (a *API) GetRandomDropActivityInfo(ctx context.Context) (*randomdroppb.GetActivityInfoReply, error) {
-	raw, err := a.sendRandomDrop(ctx, "GetActivityInfo", (&randomdroppb.GetActivityInfoRequest{}).Marshal())
+	raw, err := a.sendRandomDrop(ctx, "GetActivityInfo", marshalMessage(&randomdroppb.GetActivityInfoRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &randomdroppb.GetActivityInfoReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

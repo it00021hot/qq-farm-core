@@ -5,6 +5,8 @@ syntax = "proto3";
 
 package gatepb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/gatepb;gatepb";
 // Meta.Type 枚举
 enum MessageType {
     None = 0;

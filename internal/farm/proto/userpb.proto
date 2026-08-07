@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.userpb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/userpb;userpb";
 // ============ 登录请求 ============
 message LoginRequest {
     // 字段 1,2 保留未使用

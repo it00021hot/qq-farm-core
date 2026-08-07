@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.shoppb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/shoppb;shoppb";
 import "corepb.proto";
 
 // ============ 商店类型: 1=道具商店, 2=种子商店, 3=宠物商店 ============

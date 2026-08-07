@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/gatepb"
+	"google.golang.org/protobuf/proto"
 )
 
 const plantService = "gamepb.plantpb.PlantService"
@@ -30,6 +31,7 @@ const marqueeService = "gamepb.marqueepb.MarqueeService"
 const payService = "gamepb.paypb.PayService"
 const rechargeBonusService = "gamepb.rechargebonuspb.RechargeBonusService"
 const uicProxyService = "gamepb.uicproxypb.UicProxyService"
+const mysteryShopService = "gamepb.mysteryshoppb.MysteryShopService"
 
 const (
 	NormalFertilizerID  int64 = 1011
@@ -52,4 +54,13 @@ func (a *API) requireSender() error {
 		return fmt.Errorf("game: sender nil")
 	}
 	return nil
+}
+
+func marshalMessage(message proto.Message) []byte {
+	body, _ := proto.Marshal(message)
+	return body
+}
+
+func unmarshalMessage(body []byte, message proto.Message) error {
+	return proto.Unmarshal(body, message)
 }

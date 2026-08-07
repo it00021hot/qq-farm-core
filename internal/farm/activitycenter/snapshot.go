@@ -68,18 +68,18 @@ func BuildSnapshot(ctx context.Context, api *game.API) Snapshot {
 		constellationAct := game.FindSeasonActivity(seasonReply.SeasonInfo, game.ConstellationActivityType())
 		if constellationAct != nil {
 			var nodes *activitypb.ConstellationData
-			if v, ok := lastConstellationNodes.Load(strconv.FormatInt(constellationAct.ActivityID, 10)); ok {
+			if v, ok := lastConstellationNodes.Load(strconv.FormatInt(constellationAct.ActivityId, 10)); ok {
 				nodes, _ = v.(*activitypb.ConstellationData)
 			}
 			var confirmed *constellationConfirmed
-			if v, ok := lastConstellationConfirmed.Load(strconv.FormatInt(constellationAct.ActivityID, 10)); ok {
+			if v, ok := lastConstellationConfirmed.Load(strconv.FormatInt(constellationAct.ActivityId, 10)); ok {
 				confirmed, _ = v.(*constellationConfirmed)
 			}
 			out.Constellation = buildConstellation(constellationAct, seasonReply.SeasonInfo.ServerTime, nodes, confirmed)
 		}
 		shopAct := game.FindSeasonActivity(seasonReply.SeasonInfo, game.ShopActivityType())
 		if shopAct != nil {
-			shopReply, shopErr := api.QueryActivityShop(ctx, shopAct.ActivityID)
+			shopReply, shopErr := api.QueryActivityShop(ctx, shopAct.ActivityId)
 			if shopErr != nil {
 				out.Errors["shop"] = shopErr.Error()
 			} else {
@@ -227,18 +227,21 @@ func HydrateConstellationConfirmedFromStateJSON(activityID string, stateJSON str
 }
 
 // ConfirmedFromDynamicNodes extracts opened/lit node IDs from operate reply nodes.
-func ConfirmedFromDynamicNodes(nodes []activitypb.ConstellationNode) (opened, lit []string) {
+func ConfirmedFromDynamicNodes(nodes []*activitypb.ConstellationNode) (opened, lit []string) {
 	openedSet := map[string]struct{}{}
 	litSet := map[string]struct{}{}
 	for _, node := range nodes {
-		id := strconv.FormatInt(node.NodeID, 10)
+		if node == nil {
+			continue
+		}
+		id := strconv.FormatInt(node.NodeId, 10)
 		if id == "0" {
 			continue
 		}
-		if node.Field2 {
+		if node.Field_2 {
 			openedSet[id] = struct{}{}
 		}
-		if node.Field3 {
+		if node.Field_3 {
 			openedSet[id] = struct{}{}
 			litSet[id] = struct{}{}
 		}
@@ -361,10 +364,10 @@ func normalizeSeason(season *seasonpb.SeasonInfo) map[string]any {
 	}
 	activities := make([]map[string]any, 0, len(season.Activities))
 	for i := range season.Activities {
-		activities = append(activities, activityDTO(&season.Activities[i]))
+		activities = append(activities, activityDTO(season.Activities[i]))
 	}
 	result := map[string]any{
-		"id":         strconv.FormatInt(season.SeasonID, 10),
+		"id":         strconv.FormatInt(season.SeasonId, 10),
 		"title":      bytesText(season.Name),
 		"statusCode": strconv.FormatInt(season.Status, 10),
 		"startTime":  strconv.FormatInt(season.BeginTime, 10),
@@ -395,8 +398,11 @@ func passDTO(pass *seasonpb.SeasonPass) map[string]any {
 	nodes := make([]map[string]any, 0, len(pass.Nodes))
 	claimableCount := 0
 	for _, node := range pass.Nodes {
-		claimed := node.NodeID <= claimedThrough
-		locked := node.NodeID > currentLevel
+		if node == nil {
+			continue
+		}
+		claimed := node.NodeId <= claimedThrough
+		locked := node.NodeId > currentLevel
 		claimable := !locked && !claimed
 		if claimable {
 			claimableCount++
@@ -404,30 +410,30 @@ func passDTO(pass *seasonpb.SeasonPass) map[string]any {
 		rewards := make([]map[string]any, 0, len(node.Rewards))
 		for _, r := range node.Rewards {
 			rewards = append(rewards, map[string]any{
-				"id":    strconv.FormatInt(r.ItemID, 10),
+				"id":    strconv.FormatInt(r.ItemId, 10),
 				"count": strconv.FormatInt(r.Count, 10),
 			})
 		}
 		nodes = append(nodes, map[string]any{
-			"id":        strconv.FormatInt(node.NodeID, 10),
-			"level":     strconv.FormatInt(node.NodeID, 10),
+			"id":        strconv.FormatInt(node.NodeId, 10),
+			"level":     strconv.FormatInt(node.NodeId, 10),
 			"keyLevel":  node.IsKeyLevel,
 			"locked":    locked,
 			"claimed":   claimed,
 			"claimable": claimable,
-			"current":   node.NodeID != 0 && node.NodeID == currentLevel,
+			"current":   node.NodeId != 0 && node.NodeId == currentLevel,
 			"rewards":   rewards,
 		})
 	}
 	return map[string]any{
-		"activityId":          strconv.FormatInt(pass.ActivityID, 10),
+		"activityId":          strconv.FormatInt(pass.ActivityId, 10),
 		"title":               bytesText(pass.Title),
 		"level":               strconv.FormatInt(currentLevel, 10),
 		"progress":            strconv.FormatInt(pass.CurrentProgress, 10),
 		"progressMax":         strconv.FormatInt(pass.ProgressTarget, 10),
 		"claimedThroughLevel": strconv.FormatInt(claimedThrough, 10),
 		"nodeCount":           strconv.FormatInt(pass.NodeCount, 10),
-		"rules":               bytesText(pass.RulesJSON),
+		"rules":               bytesText(pass.RulesJson),
 		"nodes":               nodes,
 		"claimableCount":      claimableCount,
 	}
@@ -456,7 +462,7 @@ func recomputePassNodeFlags(pass map[string]any) {
 
 func activityDTO(act *seasonpb.SeasonActivity) map[string]any {
 	return map[string]any{
-		"id":        strconv.FormatInt(act.ActivityID, 10),
+		"id":        strconv.FormatInt(act.ActivityId, 10),
 		"typeCode":  strconv.FormatInt(act.Type, 10),
 		"name":      bytesText(act.Name),
 		"startTime": strconv.FormatInt(act.BeginTime, 10),
@@ -469,7 +475,7 @@ func normalizeSolarTerms(reply *solartermspb.GetSolarTermsReply) map[string]any 
 	terms := make([]map[string]any, 0, len(reply.Terms))
 	var currentTermID string
 	for _, term := range reply.Terms {
-		dto := solarTermDTO(&term)
+		dto := solarTermDTO(term)
 		terms = append(terms, dto)
 		start, _ := strconv.ParseInt(dto["startTime"].(string), 10, 64)
 		end, _ := strconv.ParseInt(dto["endTime"].(string), 10, 64)
@@ -492,13 +498,13 @@ func solarTermDTO(term *solartermspb.SolarTermInfo) map[string]any {
 	rewards := make([]map[string]any, 0, len(term.Rewards))
 	for _, r := range term.Rewards {
 		rewards = append(rewards, map[string]any{
-			"id":    strconv.FormatInt(r.ItemID, 10),
+			"id":    strconv.FormatInt(r.ItemId, 10),
 			"count": strconv.FormatInt(r.Count, 10),
 		})
 	}
 	status := strconv.FormatInt(term.Status, 10)
 	return map[string]any{
-		"id":         strconv.FormatInt(term.TermID, 10),
+		"id":         strconv.FormatInt(term.TermId, 10),
 		"name":       bytesText(term.Name),
 		"statusCode": status,
 		"canClaim":   term.Status == 2,
@@ -518,7 +524,7 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 		costID := int64(0)
 		costCount := int64(0)
 		if g.Cost != nil {
-			costID = g.Cost.ItemID
+			costID = g.Cost.ItemId
 			costCount = g.Cost.Count
 		}
 		canExchange := costID != 0 && costCount > 0
@@ -541,14 +547,14 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 		itemDTO := map[string]any{"id": "0", "count": "0"}
 		if g.Item != nil {
 			itemDTO = map[string]any{
-				"id":    strconv.FormatInt(g.Item.ItemID, 10),
+				"id":    strconv.FormatInt(g.Item.ItemId, 10),
 				"count": strconv.FormatInt(g.Item.Count, 10),
 			}
 		}
 		costDTO := map[string]any{"id": "0", "count": "0"}
 		if g.Cost != nil {
 			costDTO = map[string]any{
-				"id":    strconv.FormatInt(g.Cost.ItemID, 10),
+				"id":    strconv.FormatInt(g.Cost.ItemId, 10),
 				"count": strconv.FormatInt(g.Cost.Count, 10),
 			}
 		}
@@ -557,8 +563,8 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 			categories[category] = struct{}{}
 		}
 		goodsDTOs = append(goodsDTOs, map[string]any{
-			"id":                    strconv.FormatInt(g.GoodsID, 10),
-			"activityId":            strconv.FormatInt(reply.ActivityID, 10),
+			"id":                    strconv.FormatInt(g.GoodsId, 10),
+			"activityId":            strconv.FormatInt(reply.ActivityId, 10),
 			"name":                  bytesText(g.Name),
 			"category":              category,
 			"item":                  itemDTO,
@@ -590,7 +596,7 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 		action["reason"] = "当前余额不足以兑换目录商品"
 	}
 	return map[string]any{
-		"activityId":   strconv.FormatInt(reply.ActivityID, 10),
+		"activityId":   strconv.FormatInt(reply.ActivityId, 10),
 		"name":         bytesText(shopAct.Name),
 		"startTime":    strconv.FormatInt(shopAct.BeginTime, 10),
 		"endTime":      strconv.FormatInt(shopAct.EndTime, 10),
@@ -604,7 +610,7 @@ func normalizeShop(season *seasonpb.SeasonInfo, shopAct *seasonpb.SeasonActivity
 
 func buildConstellation(act *seasonpb.SeasonActivity, serverTime int64, dynamic *activitypb.ConstellationData, confirmed *constellationConfirmed) map[string]any {
 	catalog := LoadConstellationCatalog()
-	activityID := strconv.FormatInt(act.ActivityID, 10)
+	activityID := strconv.FormatInt(act.ActivityId, 10)
 	base := map[string]any{
 		"activityId":  activityID,
 		"typeCode":    strconv.FormatInt(act.Type, 10),
@@ -625,8 +631,10 @@ func buildConstellation(act *seasonpb.SeasonActivity, serverTime int64, dynamic 
 	dynamicNodes := map[int64]*activitypb.ConstellationNode{}
 	if dynamic != nil {
 		for i := range dynamic.Nodes {
-			n := &dynamic.Nodes[i]
-			dynamicNodes[n.NodeID] = n
+			n := dynamic.Nodes[i]
+			if n != nil {
+				dynamicNodes[n.NodeId] = n
+			}
 		}
 	}
 	openedSet := map[string]struct{}{}
@@ -652,9 +660,9 @@ func buildConstellation(act *seasonpb.SeasonActivity, serverTime int64, dynamic 
 		if _, ok := litSet[g.NodeID]; ok {
 			confirmedLit = true
 		}
-		dynamicOpened := dn != nil && dn.Field2
-		dynamicLit := dn != nil && dn.Field3
-		dynamicLightable := dynamicOpened && dn != nil && !dn.Field3
+		dynamicOpened := dn != nil && dn.Field_2
+		dynamicLit := dn != nil && dn.Field_3
+		dynamicLightable := dynamicOpened && dn != nil && !dn.Field_3
 
 		var (
 			opened       any
@@ -767,8 +775,8 @@ func apiBagBalances(ctx context.Context, api *game.API, shopReply *activitypb.Ac
 	}
 	currencyIDs := map[int64]struct{}{}
 	for _, g := range shopReply.Data.Catalog.Goods {
-		if g.Cost != nil && g.Cost.ItemID > 0 {
-			currencyIDs[g.Cost.ItemID] = struct{}{}
+		if g.Cost != nil && g.Cost.ItemId > 0 {
+			currencyIDs[g.Cost.ItemId] = struct{}{}
 		}
 	}
 	if len(currencyIDs) == 0 {
@@ -781,8 +789,8 @@ func apiBagBalances(ctx context.Context, api *game.API, shopReply *activitypb.Ac
 	items := game.GetBagItems(bag)
 	out := map[int64]int64{}
 	for _, item := range items {
-		if _, ok := currencyIDs[item.ID]; ok {
-			out[item.ID] += item.Count
+		if _, ok := currencyIDs[item.Id]; ok {
+			out[item.Id] += item.Count
 		}
 	}
 	return out

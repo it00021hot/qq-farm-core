@@ -16,13 +16,13 @@ func (a *API) sendGuide(ctx context.Context, method string, body []byte) ([]byte
 
 // SetWeakGuideNodeComplete marks a weak-guide node complete.
 func (a *API) SetWeakGuideNodeComplete(ctx context.Context, nodeID int64) (*guidepb.SetWeakGuideNodeCompleteReply, error) {
-	req := &guidepb.SetWeakGuideNodeCompleteRequest{NodeID: nodeID}
-	raw, err := a.sendGuide(ctx, "SetWeakGuideNodeComplete", req.Marshal())
+	req := &guidepb.SetWeakGuideNodeCompleteRequest{NodeId: nodeID}
+	raw, err := a.sendGuide(ctx, "SetWeakGuideNodeComplete", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &guidepb.SetWeakGuideNodeCompleteReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -30,13 +30,13 @@ func (a *API) SetWeakGuideNodeComplete(ctx context.Context, nodeID int64) (*guid
 
 // ClaimWeakGuideReward claims a weak-guide reward for the given node.
 func (a *API) ClaimWeakGuideReward(ctx context.Context, nodeID int64) (*guidepb.ClaimWeakGuideRewardReply, error) {
-	req := &guidepb.ClaimWeakGuideRewardRequest{NodeID: nodeID}
-	raw, err := a.sendGuide(ctx, "ClaimWeakGuideReward", req.Marshal())
+	req := &guidepb.ClaimWeakGuideRewardRequest{NodeId: nodeID}
+	raw, err := a.sendGuide(ctx, "ClaimWeakGuideReward", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &guidepb.ClaimWeakGuideRewardReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

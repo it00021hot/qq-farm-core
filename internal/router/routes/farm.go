@@ -7,12 +7,14 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/automation"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/bag"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/card"
+	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/commerce"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/friend"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/gameconfig"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/lands"
 	farmlogs "github.com/MQEnergy/go-skeleton/internal/app/controller/farm/logs"
 	"github.com/MQEnergy/go-skeleton/internal/app/controller/farm/status"
 	farmws "github.com/MQEnergy/go-skeleton/internal/app/controller/farm/ws"
+	farmwxlogin "github.com/MQEnergy/go-skeleton/internal/app/controller/farm/wxlogin"
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
 )
@@ -29,6 +31,12 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Post("/account/start", account.Account.Start).Name("启动农场账号")
 		router.Post("/account/stop", account.Account.Stop).Name("停止农场账号")
 
+		router.Post("/wx-login/tasks", farmwxlogin.WXLogin.CreateTask).Name("创建微信扫码登录任务")
+		router.Get("/wx-login/tasks/:taskId/qr", farmwxlogin.WXLogin.QRImage).Name("微信扫码登录二维码")
+		router.Get("/wx-login/tasks/:taskId/status", farmwxlogin.WXLogin.Status).Name("微信扫码登录状态")
+		router.Post("/wx-login/tasks/:taskId/confirm", farmwxlogin.WXLogin.Confirm).Name("确认微信扫码登录")
+		router.Post("/wx-login/tasks/:taskId/code", farmwxlogin.WXLogin.Code).Name("获取微信登录code")
+
 		router.Get("/automation/detail", automation.Automation.Detail).Name("自动化配置详情")
 		router.Post("/automation/modify", automation.Automation.Modify).Name("修改自动化配置")
 
@@ -41,6 +49,10 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Get("/bag", bag.Bag.Get).Name("农场背包")
 		router.Get("/seeds", bag.Bag.Seeds).Name("可用种子列表")
 		router.Post("/bag/sell", bag.Bag.Sell).Name("出售背包物品")
+		router.Get("/game-mall", commerce.Commerce.Mall).Name("游戏商城")
+		router.Post("/game-mall/purchase", commerce.Commerce.Purchase).Name("购买商城商品")
+		router.Get("/mystery-shop", commerce.Commerce.MysteryShop).Name("神秘商人")
+		router.Get("/diamond", commerce.Commerce.Diamond).Name("钻石余额")
 
 		router.Get("/card/list", card.Card.List).Name("卡密列表")
 		router.Post("/card/add", card.Card.Generate).Name("生成卡密")

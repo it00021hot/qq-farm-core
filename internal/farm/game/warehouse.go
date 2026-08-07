@@ -18,12 +18,12 @@ func (a *API) sendItem(ctx context.Context, method string, body []byte) ([]byte,
 
 // Bag fetches the player bag.
 func (a *API) Bag(ctx context.Context) (*itempb.BagReply, error) {
-	raw, err := a.sendItem(ctx, "Bag", (&itempb.BagRequest{}).Marshal())
+	raw, err := a.sendItem(ctx, "Bag", marshalMessage(&itempb.BagRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &itempb.BagReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -31,12 +31,12 @@ func (a *API) Bag(ctx context.Context) (*itempb.BagReply, error) {
 
 // Sell sells items from the bag.
 func (a *API) Sell(ctx context.Context, items []corepb.Item) (*itempb.SellReply, error) {
-	raw, err := a.sendItem(ctx, "Sell", (&itempb.SellRequest{Items: items}).Marshal())
+	raw, err := a.sendItem(ctx, "Sell", marshalMessage(&itempb.SellRequest{Items: itemPointers(items)}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &itempb.SellReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -44,13 +44,13 @@ func (a *API) Sell(ctx context.Context, items []corepb.Item) (*itempb.SellReply,
 
 // Use uses a single item.
 func (a *API) Use(ctx context.Context, itemID, count int64, landIDs []int64) (*itempb.UseReply, error) {
-	req := &itempb.UseRequest{ItemID: itemID, Count: count, LandIDs: landIDs}
-	raw, err := a.sendItem(ctx, "Use", req.Marshal())
+	req := &itempb.UseRequest{ItemId: itemID, Count: count, LandIds: landIDs}
+	raw, err := a.sendItem(ctx, "Use", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &itempb.UseReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -58,12 +58,12 @@ func (a *API) Use(ctx context.Context, itemID, count int64, landIDs []int64) (*i
 
 // BatchUse uses multiple items at once.
 func (a *API) BatchUse(ctx context.Context, items []corepb.Item) (*itempb.BatchUseReply, error) {
-	raw, err := a.sendItem(ctx, "BatchUse", (&itempb.BatchUseRequest{Items: items}).Marshal())
+	raw, err := a.sendItem(ctx, "BatchUse", marshalMessage(&itempb.BatchUseRequest{Items: itemPointers(items)}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &itempb.BatchUseReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -76,7 +76,7 @@ func GetBagItems(reply *itempb.BagReply) []corepb.Item {
 	}
 	out := make([]corepb.Item, 0, len(reply.ItemBag.Items))
 	for _, item := range reply.ItemBag.Items {
-		if item == nil || item.ID <= 0 || item.Count <= 0 {
+		if item == nil || item.Id <= 0 || item.Count <= 0 {
 			continue
 		}
 		out = append(out, *item)
@@ -96,11 +96,20 @@ func ItemsFromPointers(items []*corepb.Item) []corepb.Item {
 	return out
 }
 
+func itemPointers(items []corepb.Item) []*corepb.Item {
+	out := make([]*corepb.Item, len(items))
+	for i := range items {
+		item := items[i]
+		out[i] = &item
+	}
+	return out
+}
+
 // ExtractBagSeeds builds seed entries from bag items using game config.
 func ExtractBagSeeds(items []corepb.Item) []logic.BagSeed {
 	merged := make(map[int64]*logic.BagSeed)
 	for _, item := range items {
-		seedID := item.ID
+		seedID := item.Id
 		count := item.Count
 		if seedID <= 0 || count <= 0 {
 			continue

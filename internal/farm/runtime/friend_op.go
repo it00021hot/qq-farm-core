@@ -16,7 +16,6 @@ import (
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/friendpb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/visitpb"
 	"github.com/MQEnergy/go-skeleton/internal/farm/stats"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
 	"github.com/MQEnergy/go-skeleton/pkg/tenant"
@@ -24,12 +23,13 @@ import (
 )
 
 const (
-	friendOpPutWeed int64 = 10003
-	friendOpPutBug  int64 = 10004
-	friendOpWeed    int64 = 10005
-	friendOpBug     int64 = 10006
-	friendOpWater   int64 = 10007
-	friendOpSteal   int64 = 10008
+	friendOpPutWeed   int64 = 10003
+	friendOpPutBug    int64 = 10004
+	friendOpWeed      int64 = 10005
+	friendOpBug       int64 = 10006
+	friendOpWater     int64 = 10007
+	friendOpSteal     int64 = 10008
+	enterReasonFriend int32 = 2
 )
 
 // SyncFriendsToDB persists the game friend list used by the friend HTTP views.
@@ -43,7 +43,7 @@ func SyncFriendsToDB(accountID, tenantID uint64, friends []friendpb.GameFriend) 
 	}
 	now := uint(time.Now().Unix())
 	for _, friend := range friends {
-		if friend.GID <= 0 {
+		if friend.Gid <= 0 {
 			continue
 		}
 		nickname := friend.Remark
@@ -51,7 +51,7 @@ func SyncFriendsToDB(accountID, tenantID uint64, friends []friendpb.GameFriend) 
 			nickname = friend.Name
 		}
 		row := model.FarmFriendGid{
-			TenantID: tenantID, AccountID: accountID, Gid: friend.GID,
+			TenantID: tenantID, AccountID: accountID, Gid: friend.Gid,
 			Nickname: nickname, SyncedAt: now, CreatedAt: now, UpdatedAt: now,
 		}
 		if err := db.Clauses(clause.OnConflict{
@@ -60,7 +60,7 @@ func SyncFriendsToDB(accountID, tenantID uint64, friends []friendpb.GameFriend) 
 				"nickname": nickname, "synced_at": now, "updated_at": now,
 			}),
 		}).Create(&row).Error; err != nil {
-			slog.Warn("farm friend gid sync failed", "account", accountID, "gid", friend.GID, "err", err)
+			slog.Warn("farm friend gid sync failed", "account", accountID, "gid", friend.Gid, "err", err)
 		}
 	}
 }
@@ -76,8 +76,8 @@ func AcceptPendingFriends(ctx context.Context, api *game.API) (accepted int, err
 	}
 	gids := make([]int64, 0, len(reply.Applications))
 	for _, app := range reply.Applications {
-		if app.GID > 0 {
-			gids = append(gids, app.GID)
+		if app != nil && app.Gid > 0 {
+			gids = append(gids, app.Gid)
 		}
 	}
 	if len(gids) == 0 {
@@ -340,13 +340,13 @@ func mergeVisitorGIDsFromInteract(ctx context.Context, s *Session, api *game.API
 	}
 	visitorGIDs := make([]int64, 0, len(reply.Records))
 	for _, rec := range reply.Records {
-		if rec == nil || rec.VisitorGID <= 0 {
+		if rec == nil || rec.VisitorGid <= 0 {
 			continue
 		}
-		if _, blocked := blacklist[rec.VisitorGID]; blocked {
+		if _, blocked := blacklist[rec.VisitorGid]; blocked {
 			continue
 		}
-		visitorGIDs = append(visitorGIDs, rec.VisitorGID)
+		visitorGIDs = append(visitorGIDs, rec.VisitorGid)
 	}
 	merged := normalizeFriendGIDs(append(append([]int64(nil), known...), visitorGIDs...))
 	if added := len(merged) - len(known); added > 0 {
@@ -360,7 +360,7 @@ func fetchQQFriendsByKnownGIDs(ctx context.Context, api *game.API, known []int64
 	if len(known) == 0 {
 		return nil
 	}
-	all := make([]friendpb.GameFriend, 0, len(known))
+	all := make([]*friendpb.GameFriend, 0, len(known))
 	for i := 0; i < len(known); i += qqFriendListBatchSize {
 		end := i + qqFriendListBatchSize
 		if end > len(known) {
@@ -459,25 +459,25 @@ func filterBlacklistedGIDs(gids []int64, blacklist map[int64]struct{}) []int64 {
 func friendGIDs(friends []friendpb.GameFriend) []int64 {
 	out := make([]int64, 0, len(friends))
 	for _, f := range friends {
-		if f.GID > 0 {
-			out = append(out, f.GID)
+		if f.Gid > 0 {
+			out = append(out, f.Gid)
 		}
 	}
 	return out
 }
 
-func dedupeFriendsByGID(friends []friendpb.GameFriend) []friendpb.GameFriend {
+func dedupeFriendsByGID(friends []*friendpb.GameFriend) []friendpb.GameFriend {
 	out := make([]friendpb.GameFriend, 0, len(friends))
 	seen := make(map[int64]struct{}, len(friends))
 	for _, f := range friends {
-		if f.GID <= 0 {
+		if f == nil || f.Gid <= 0 {
 			continue
 		}
-		if _, ok := seen[f.GID]; ok {
+		if _, ok := seen[f.Gid]; ok {
 			continue
 		}
-		seen[f.GID] = struct{}{}
-		out = append(out, f)
+		seen[f.Gid] = struct{}{}
+		out = append(out, *f)
 	}
 	return out
 }
@@ -505,7 +505,7 @@ type friendVisitOutcome struct {
 
 func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig, myGID, gid int64) (friendVisitOutcome, error) {
 	var out friendVisitOutcome
-	lands, err := api.VisitEnter(ctx, gid, visitpb.EnterReasonFriend)
+	lands, err := api.VisitEnter(ctx, gid, enterReasonFriend)
 	if err != nil {
 		if handleFriendEnterError(s, gid, err) {
 			return out, nil
@@ -635,18 +635,18 @@ func plantNamesFromHarvestItems(items []*corepb.Item) []string {
 	out := make([]string, 0)
 	seen := map[string]struct{}{}
 	for _, it := range items {
-		if it == nil || it.ID <= 0 || it.Count <= 0 {
+		if it == nil || it.Id <= 0 || it.Count <= 0 {
 			continue
 		}
-		if isActivityScoreItemID(it.ID) {
+		if isActivityScoreItemID(it.Id) {
 			continue
 		}
 		name := ""
-		if p := logic.GetPlantByFruitID(it.ID); p != nil {
+		if p := logic.GetPlantByFruitID(it.Id); p != nil {
 			name = strings.TrimSpace(p.Name)
 		}
 		if name == "" {
-			if info := logic.GetItemByID(it.ID); info != nil {
+			if info := logic.GetItemByID(it.Id); info != nil {
 				name = strings.TrimSpace(info.Name)
 			}
 		}
@@ -758,11 +758,11 @@ func applyHarvestReply(acc *harvestRewardAccum, requested []int64, reply *plantp
 		}
 		succeeded = succeeded[:0]
 		for _, land := range reply.Land {
-			if land == nil || land.ID <= 0 {
+			if land == nil || land.Id <= 0 {
 				continue
 			}
-			if _, ok := reqSet[land.ID]; ok {
-				succeeded = append(succeeded, land.ID)
+			if _, ok := reqSet[land.Id]; ok {
+				succeeded = append(succeeded, land.Id)
 			}
 		}
 		if len(succeeded) == 0 {
@@ -782,7 +782,7 @@ func applyHarvestReply(acc *harvestRewardAccum, requested []int64, reply *plantp
 	}
 	if reply != nil {
 		for _, it := range reply.Items {
-			if it == nil || it.ID <= 0 || it.Count <= 0 {
+			if it == nil || it.Id <= 0 || it.Count <= 0 {
 				continue
 			}
 			cp := *it
@@ -816,14 +816,14 @@ func summarizeHarvestRewards(items []*corepb.Item) (score, fruitValue int64) {
 		if it == nil || it.Count <= 0 {
 			continue
 		}
-		if isActivityScoreItemID(it.ID) {
+		if isActivityScoreItemID(it.Id) {
 			score += it.Count
 			continue
 		}
-		if logic.GetPlantByFruitID(it.ID) == nil {
+		if logic.GetPlantByFruitID(it.Id) == nil {
 			continue
 		}
-		price := logic.GlobalGameConfig.GetFruitPrice(it.ID)
+		price := logic.GlobalGameConfig.GetFruitPrice(it.Id)
 		if price > 0 {
 			fruitValue += price * it.Count
 		}
@@ -869,7 +869,7 @@ func helpFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accoun
 		return out, true, nil
 	}
 
-	lands, err := api.VisitEnter(ctx, gid, visitpb.EnterReasonFriend)
+	lands, err := api.VisitEnter(ctx, gid, enterReasonFriend)
 	if err != nil {
 		if handleFriendEnterError(s, gid, err) {
 			return out, false, nil
@@ -962,14 +962,14 @@ func farmingResultLandIDs(results []*plantpb.FarmingResult) []int64 {
 	seen := make(map[int64]struct{}, len(results))
 	out := make([]int64, 0, len(results))
 	for _, r := range results {
-		if r == nil || r.LandID <= 0 {
+		if r == nil || r.LandId <= 0 {
 			continue
 		}
-		if _, ok := seen[r.LandID]; ok {
+		if _, ok := seen[r.LandId]; ok {
 			continue
 		}
-		seen[r.LandID] = struct{}{}
-		out = append(out, r.LandID)
+		seen[r.LandId] = struct{}{}
+		out = append(out, r.LandId)
 	}
 	return out
 }
@@ -1228,7 +1228,7 @@ func persistFriendBlacklist(accountID uint64, cfg logic.AccountConfig) {
 
 func manualHelpFriend(ctx context.Context, s *Session, api *game.API, gid int64, op string) (friendVisitOutcome, bool, error) {
 	var out friendVisitOutcome
-	lands, err := api.VisitEnter(ctx, gid, visitpb.EnterReasonFriend)
+	lands, err := api.VisitEnter(ctx, gid, enterReasonFriend)
 	if err != nil {
 		if handleFriendEnterError(s, gid, err) {
 			return out, false, nil
@@ -1324,7 +1324,7 @@ func manualHelpFriend(ctx context.Context, s *Session, api *game.API, gid int64,
 
 func badFriend(ctx context.Context, s *Session, api *game.API, myGID, gid int64) (friendVisitOutcome, error) {
 	var out friendVisitOutcome
-	lands, err := api.VisitEnter(ctx, gid, visitpb.EnterReasonFriend)
+	lands, err := api.VisitEnter(ctx, gid, enterReasonFriend)
 	if err != nil {
 		if handleFriendEnterError(s, gid, err) {
 			return out, nil

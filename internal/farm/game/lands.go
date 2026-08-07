@@ -20,7 +20,7 @@ func (a *API) AllLands(ctx context.Context) ([]logic.LandInfo, *plantpb.AllLands
 	if err != nil {
 		return nil, nil, err
 	}
-	return plantpb.LandsToLogic(reply.Lands), reply, nil
+	return logic.LandsFromPlantPB(reply.Lands), reply, nil
 }
 
 // AllLandsRaw returns the decoded reply and raw response body.
@@ -32,14 +32,14 @@ func (a *API) allLands(ctx context.Context) (*plantpb.AllLandsReply, []byte, err
 	if err := a.requireSender(); err != nil {
 		return nil, nil, err
 	}
-	req := &plantpb.AllLandsRequest{HostGID: a.GID}
-	body := nonNilBody(req.Marshal())
+	req := &plantpb.AllLandsRequest{HostGid: a.GID}
+	body := nonNilBody(marshalMessage(req))
 	raw, _, err := a.Sender.Send(ctx, plantService, "AllLands", body)
 	if err != nil {
 		return nil, nil, err
 	}
 	reply := &plantpb.AllLandsReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, raw, err
 	}
 	return reply, raw, nil

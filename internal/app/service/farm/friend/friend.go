@@ -71,8 +71,8 @@ func enrichFromLive(row model.FarmFriendGid, live *friendpb.GameFriend) friendVi
 		if live.Gold > 0 {
 			view.Gold = live.Gold
 		}
-		if live.AvatarURL != "" {
-			view.Avatar = live.AvatarURL
+		if live.AvatarUrl != "" {
+			view.Avatar = live.AvatarUrl
 		}
 		if live.Plant != nil {
 			view.Plant = &friendPlantSummary{
@@ -101,8 +101,8 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.FriendListReq) (response.Pag
 		if loadErr == nil {
 			farmruntime.SyncFriendsToDB(req.AccountID, tid, friends)
 			for _, f := range friends {
-				if f.GID > 0 {
-					liveMap[f.GID] = f
+				if f.Gid > 0 {
+					liveMap[f.Gid] = f
 				}
 			}
 		}
@@ -249,8 +249,8 @@ func (s *Service) InteractRecords(ctx fiber.Ctx, req farmtypes.FriendInteractRec
 
 func formatInteractRecord(rec *interactpb.InteractRecord, index int) map[string]any {
 	actionType := rec.ActionType
-	visitorGID := rec.VisitorGID
-	cropID := int64(rec.CropID)
+	visitorGID := rec.VisitorGid
+	cropID := int64(rec.CropId)
 	cropCount := int64(rec.CropCount)
 	times := int64(rec.Times)
 	level := int64(rec.Level)
@@ -263,7 +263,7 @@ func formatInteractRecord(rec *interactpb.InteractRecord, index int) map[string]
 	flag1 := int64(0)
 	flag2 := int64(0)
 	if rec.Extra != nil {
-		landID = int64(rec.Extra.LandID)
+		landID = int64(rec.Extra.LandId)
 		flag1 = int64(rec.Extra.Flag1)
 		flag2 = int64(rec.Extra.Flag2)
 	}
@@ -281,7 +281,7 @@ func formatInteractRecord(rec *interactpb.InteractRecord, index int) map[string]
 		"actionLabel":   actionLabel,
 		"visitorGid":    visitorGID,
 		"nick":          nick,
-		"avatarUrl":     strings.TrimSpace(rec.AvatarURL),
+		"avatarUrl":     strings.TrimSpace(rec.AvatarUrl),
 		"cropId":        cropID,
 		"cropName":      cropName,
 		"cropCount":     cropCount,

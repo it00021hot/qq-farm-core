@@ -29,12 +29,12 @@ func (a *API) sendIllustrated(ctx context.Context, method string, body []byte) (
 
 // TaskInfo fetches task lists and active rewards.
 func (a *API) TaskInfo(ctx context.Context) (*taskpb.TaskInfoReply, error) {
-	raw, err := a.sendTask(ctx, "TaskInfo", (&taskpb.TaskInfoRequest{}).Marshal())
+	raw, err := a.sendTask(ctx, "TaskInfo", marshalMessage(&taskpb.TaskInfoRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &taskpb.TaskInfoReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -42,13 +42,13 @@ func (a *API) TaskInfo(ctx context.Context) (*taskpb.TaskInfoReply, error) {
 
 // ClaimTaskReward claims one task reward.
 func (a *API) ClaimTaskReward(ctx context.Context, taskID int64, doShared bool) (*taskpb.ClaimTaskRewardReply, error) {
-	req := &taskpb.ClaimTaskRewardRequest{ID: taskID, DoShared: doShared}
-	raw, err := a.sendTask(ctx, "ClaimTaskReward", req.Marshal())
+	req := &taskpb.ClaimTaskRewardRequest{Id: taskID, DoShared: doShared}
+	raw, err := a.sendTask(ctx, "ClaimTaskReward", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &taskpb.ClaimTaskRewardReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -59,13 +59,13 @@ func (a *API) BatchClaimTaskReward(ctx context.Context, ids []int64) (*taskpb.Ba
 	if len(ids) == 0 {
 		return nil, fmt.Errorf("no task ids")
 	}
-	req := &taskpb.BatchClaimTaskRewardRequest{IDs: ids}
-	raw, err := a.sendTask(ctx, "BatchClaimTaskReward", req.Marshal())
+	req := &taskpb.BatchClaimTaskRewardRequest{Ids: ids}
+	raw, err := a.sendTask(ctx, "BatchClaimTaskReward", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &taskpb.BatchClaimTaskRewardReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -76,13 +76,13 @@ func (a *API) ClaimDailyReward(ctx context.Context, activeType int32, pointIDs [
 	if len(pointIDs) == 0 {
 		return nil, fmt.Errorf("no point ids")
 	}
-	req := &taskpb.ClaimDailyRewardRequest{Type: activeType, PointIDs: pointIDs}
-	raw, err := a.sendTask(ctx, "ClaimDailyReward", req.Marshal())
+	req := &taskpb.ClaimDailyRewardRequest{Type: activeType, PointIds: pointIDs}
+	raw, err := a.sendTask(ctx, "ClaimDailyReward", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &taskpb.ClaimDailyRewardReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -91,12 +91,12 @@ func (a *API) ClaimDailyReward(ctx context.Context, activeType int32, pointIDs [
 // ClaimAllIllustratedRewards claims all illustrated rewards (V2).
 func (a *API) ClaimAllIllustratedRewards(ctx context.Context, onlyClaimable bool) (*illustratedpb.ClaimAllRewardsV2Reply, error) {
 	req := &illustratedpb.ClaimAllRewardsV2Request{OnlyClaimable: onlyClaimable}
-	raw, err := a.sendIllustrated(ctx, "ClaimAllRewardsV2", req.Marshal())
+	raw, err := a.sendIllustrated(ctx, "ClaimAllRewardsV2", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &illustratedpb.ClaimAllRewardsV2Reply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -114,8 +114,8 @@ func (a *API) ClaimAllTasks(ctx context.Context) (claimedTasks int, claimedActiv
 	info := reply.TaskInfo
 	var ids []int64
 	for _, t := range append(append(info.GrowthTasks, info.DailyTasks...), info.Tasks...) {
-		if t.Claimable() {
-			ids = append(ids, t.ID)
+		if t != nil && t.IsUnlocked && !t.IsClaimed && t.Progress >= t.TotalProgress && t.TotalProgress > 0 {
+			ids = append(ids, t.Id)
 		}
 	}
 	if len(ids) > 0 {
@@ -130,7 +130,15 @@ func (a *API) ClaimAllTasks(ctx context.Context) (claimedTasks int, claimedActiv
 		}
 	}
 	for _, active := range info.Actives {
-		pointIDs := active.ClaimablePointIDs()
+		if active == nil {
+			continue
+		}
+		var pointIDs []int64
+		for _, point := range active.Rewards {
+			if point != nil && point.Status == 2 {
+				pointIDs = append(pointIDs, point.PointId)
+			}
+		}
 		if len(pointIDs) == 0 {
 			continue
 		}

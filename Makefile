@@ -49,6 +49,10 @@ clean:
 	@go clean -i .
 	@rm -rf releases bin
 
+.PHONY: proto
+proto:
+	@./scripts/gen-farm-proto.sh
+
 .PHONY: docs
 docs:
 	@if ! command -v swag &> /dev/null; then \
@@ -68,4 +72,5 @@ help:
 	@echo "7. make generate - [go generate -x]"
 	@echo "8. make clean - [remove releases/bin and cached files]"
 	@echo "9. make docs - [generate swagger docs]"
+	@echo "10. make proto - [protoc + protoc-gen-go for internal/farm/proto]"
 	@echo "   PORT=9528 ENV=dev make run"

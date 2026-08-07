@@ -13,16 +13,16 @@ func TestApplySeasonPassNotifyPreservesNodes(t *testing.T) {
 	liveTravelPassMu.Unlock()
 
 	full := &seasonpb.SeasonPass{
-		ActivityID:          100,
+		ActivityId:          100,
 		CurrentLevel:        2,
 		CurrentProgress:     3,
 		ProgressTarget:      10,
 		ClaimedThroughLevel: 1,
 		Title:               []byte("游记"),
-		Nodes: []seasonpb.SeasonRewardNode{
-			{NodeID: 1, IsKeyLevel: false},
-			{NodeID: 2, IsKeyLevel: true},
-			{NodeID: 3, IsKeyLevel: false},
+		Nodes: []*seasonpb.SeasonRewardNode{
+			{NodeId: 1, IsKeyLevel: false},
+			{NodeId: 2, IsKeyLevel: true},
+			{NodeId: 3, IsKeyLevel: false},
 		},
 	}
 	first := ApplySeasonPassNotify(full)
@@ -38,7 +38,7 @@ func TestApplySeasonPassNotifyPreservesNodes(t *testing.T) {
 	}
 
 	push := &seasonpb.SeasonPass{
-		ActivityID:          0,
+		ActivityId:          0,
 		CurrentLevel:        3,
 		CurrentProgress:     1,
 		ProgressTarget:      10,
@@ -65,13 +65,13 @@ func TestApplySeasonPassNotifyPreservesNodes(t *testing.T) {
 func TestRememberConstellationNodesMonotonic(t *testing.T) {
 	activityID := int64(9001)
 	RememberConstellationNodes(activityID, &activitypb.ConstellationData{
-		Nodes: []activitypb.ConstellationNode{
-			{NodeID: 1, Field2: true, Field3: false},
+		Nodes: []*activitypb.ConstellationNode{
+			{NodeId: 1, Field_2: true, Field_3: false},
 		},
 	})
 	RememberConstellationNodes(activityID, &activitypb.ConstellationData{
-		Nodes: []activitypb.ConstellationNode{
-			{NodeID: 2, Field2: true, Field3: true},
+		Nodes: []*activitypb.ConstellationNode{
+			{NodeId: 2, Field_2: true, Field_3: true},
 		},
 	})
 	v, ok := lastConstellationConfirmed.Load("9001")

@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	ticketItemID           int64 = 1002
-	emailCheckCooldown     = 5 * time.Minute
-	dailyCheckCooldown     = 10 * time.Minute
+	ticketItemID             int64 = 1002
+	emailCheckCooldown             = 5 * time.Minute
+	dailyCheckCooldown             = 10 * time.Minute
 	illustratedMinTicketGain int64 = 200
 )
 
@@ -124,10 +124,10 @@ func RunTaskClaims(ctx context.Context, api *game.API, cfg logic.AccountConfig, 
 }
 
 type normalizedTaskInfo struct {
-	growthTasks []taskpb.Task
-	dailyTasks  []taskpb.Task
-	otherTasks  []taskpb.Task
-	actives     []taskpb.Active
+	growthTasks []*taskpb.Task
+	dailyTasks  []*taskpb.Task
+	otherTasks  []*taskpb.Task
+	actives     []*taskpb.Active
 }
 
 type claimableTask struct {
@@ -144,12 +144,15 @@ func normalizeTaskInfo(info *taskpb.TaskInfo) normalizedTaskInfo {
 	}
 	seen := make(map[int64]struct{})
 
-	appendTask := func(task taskpb.Task, target *[]taskpb.Task) {
-		if task.ID > 0 {
-			if _, ok := seen[task.ID]; ok {
+	appendTask := func(task *taskpb.Task, target *[]*taskpb.Task) {
+		if task == nil {
+			return
+		}
+		if task.Id > 0 {
+			if _, ok := seen[task.Id]; ok {
 				return
 			}
-			seen[task.ID] = struct{}{}
+			seen[task.Id] = struct{}{}
 		}
 		*target = append(*target, task)
 	}
@@ -174,10 +177,10 @@ func normalizeTaskInfo(info *taskpb.TaskInfo) normalizedTaskInfo {
 	return out
 }
 
-func analyzeTaskList(tasks []taskpb.Task, category string) []claimableTask {
+func analyzeTaskList(tasks []*taskpb.Task, category string) []claimableTask {
 	out := make([]claimableTask, 0)
 	for _, task := range tasks {
-		if task.ID <= 0 {
+		if task == nil || task.Id <= 0 {
 			continue
 		}
 		if !task.IsUnlocked || task.IsClaimed {
@@ -191,7 +194,7 @@ func analyzeTaskList(tasks []taskpb.Task, category string) []claimableTask {
 			desc = "任务"
 		}
 		out = append(out, claimableTask{
-			ID:            task.ID,
+			ID:            task.Id,
 			Desc:          desc,
 			Category:      category,
 			ShareMultiple: task.ShareMultiple,
@@ -200,12 +203,15 @@ func analyzeTaskList(tasks []taskpb.Task, category string) []claimableTask {
 	return out
 }
 
-func claimActives(ctx context.Context, api *game.API, actives []taskpb.Active) {
+func claimActives(ctx context.Context, api *game.API, actives []*taskpb.Active) {
 	for _, active := range actives {
+		if active == nil {
+			continue
+		}
 		pointIDs := make([]int64, 0)
 		for _, reward := range active.Rewards {
-			if reward.Status == 2 && reward.PointID > 0 {
-				pointIDs = append(pointIDs, reward.PointID)
+			if reward != nil && reward.Status == 2 && reward.PointId > 0 {
+				pointIDs = append(pointIDs, reward.PointId)
 			}
 		}
 		if len(pointIDs) == 0 {
@@ -242,7 +248,7 @@ func ticketBalance(ctx context.Context, api *game.API) int64 {
 		return 0
 	}
 	for _, item := range game.GetBagItems(bag) {
-		if item.ID == ticketItemID {
+		if item.Id == ticketItemID {
 			return item.Count
 		}
 	}
@@ -308,20 +314,20 @@ func mergeClaimableEmails(box1, box2 *emailpb.GetEmailListReply) []emailEntry {
 		claimable bool
 	}
 	merged := map[string]keyed{}
-	add := func(items []emailpb.EmailItem, boxType int32) {
+	add := func(items []*emailpb.EmailItem, boxType int32) {
 		for _, item := range items {
-			if item.ID == "" {
+			if item == nil || item.Id == "" {
 				continue
 			}
-			entry := emailEntry{id: item.ID, boxType: boxType}
+			entry := emailEntry{id: item.Id, boxType: boxType}
 			claimable := item.HasReward && !item.Claimed
 			if !claimable {
 				continue
 			}
-			if old, ok := merged[item.ID]; !ok {
-				merged[item.ID] = keyed{entry: entry, claimable: true}
+			if old, ok := merged[item.Id]; !ok {
+				merged[item.Id] = keyed{entry: entry, claimable: true}
 			} else if !old.claimable {
-				merged[item.ID] = keyed{entry: entry, claimable: true}
+				merged[item.Id] = keyed{entry: entry, claimable: true}
 			}
 		}
 	}
@@ -414,10 +420,10 @@ func runMonthCardClaim(ctx context.Context, api *game.API, state *DailyState, fo
 	}
 	claimed := 0
 	for _, info := range rep.Infos {
-		if !info.CanClaim || info.GoodsID <= 0 {
+		if info == nil || !info.CanClaim || info.GoodsId <= 0 {
 			continue
 		}
-		if _, err := api.ClaimMonthCardReward(ctx, info.GoodsID); err != nil {
+		if _, err := api.ClaimMonthCardReward(ctx, info.GoodsId); err != nil {
 			continue
 		}
 		claimed++

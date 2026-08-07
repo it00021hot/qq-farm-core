@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.dogpb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/dogpb;dogpb";
 // ============ 狗狗信息 ============
 message DogInfo {
     int64 id = 1;

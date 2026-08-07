@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.redpacketpb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/redpacketpb;redpacketpb";
 import "corepb.proto";
 
 service RedPacketService {

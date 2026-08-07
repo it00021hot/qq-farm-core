@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.plantpb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb;plantpb";
 import "corepb.proto";
 
 // ============ 生长阶段枚举 ============

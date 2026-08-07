@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.skinpb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/skinpb;skinpb";
 // ============ 皮肤信息 ============
 message SkinItem {
     int64 skin_id = 1;

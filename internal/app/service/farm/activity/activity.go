@@ -74,10 +74,10 @@ func (s *Service) ClaimPass(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map
 	pass := season.SeasonInfo.Pass
 	claimable := false
 	for _, node := range pass.Nodes {
-		if node.NodeID <= pass.ClaimedThroughLevel {
+		if node.NodeId <= pass.ClaimedThroughLevel {
 			continue
 		}
-		if node.NodeID <= pass.CurrentLevel {
+		if node.NodeId <= pass.CurrentLevel {
 			claimable = true
 			break
 		}
@@ -113,7 +113,7 @@ func (s *Service) LightConstellation(ctx fiber.Ctx, req farmtypes.ActivityAction
 	if act == nil {
 		return nil, errors.New("服务端未发现星座活动")
 	}
-	reply, err := api.LightConstellation(callCtx, act.ActivityID)
+	reply, err := api.LightConstellation(callCtx, act.ActivityId)
 	if err != nil {
 		if game.IsConstellationAlreadyClaimed(err) {
 			snap := activitycenter.BuildSnapshot(callCtx, api)
@@ -126,7 +126,7 @@ func (s *Service) LightConstellation(ctx fiber.Ctx, req farmtypes.ActivityAction
 		return nil, err
 	}
 	if reply != nil && reply.Data != nil && reply.Data.Constellation != nil {
-		activitycenter.RememberConstellationNodes(act.ActivityID, reply.Data.Constellation)
+		activitycenter.RememberConstellationNodes(act.ActivityId, reply.Data.Constellation)
 	}
 	snap := activitycenter.BuildSnapshot(callCtx, api)
 	return s.attachSnapshot(ctx, req.AccountID, snap, map[string]any{
@@ -162,7 +162,7 @@ func (s *Service) ShopExchange(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (
 	if shopAct == nil {
 		return nil, errors.New("当前赛季未发现活动商店")
 	}
-	if _, err := api.ExchangeShopGoods(callCtx, shopAct.ActivityID, goodsID, count); err != nil {
+	if _, err := api.ExchangeShopGoods(callCtx, shopAct.ActivityId, goodsID, count); err != nil {
 		return nil, err
 	}
 	snap := activitycenter.BuildSnapshot(callCtx, api)
@@ -192,7 +192,7 @@ func (s *Service) ClaimSolarTerm(ctx fiber.Ctx, req farmtypes.ActivityActionReq)
 	}
 	var found *int64
 	for i := range solar.Terms {
-		if solar.Terms[i].TermID == termID {
+		if solar.Terms[i].TermId == termID {
 			if solar.Terms[i].Status != 2 {
 				return nil, errors.New("指定节令当前不可领取")
 			}

@@ -27,31 +27,31 @@ func (a *API) sendPlant(ctx context.Context, method string, body []byte) ([]byte
 // Harvest harvests the given land IDs and returns decoded reply lands.
 func (a *API) Harvest(ctx context.Context, landIDs []int64) ([]logic.LandInfo, error) {
 	req := &plantpb.HarvestRequest{
-		LandIDs: landIDs,
-		HostGID: a.GID,
+		LandIds: landIDs,
+		HostGid: a.GID,
 		IsAll:   true,
 	}
-	raw, err := a.sendPlant(ctx, "Harvest", req.Marshal())
+	raw, err := a.sendPlant(ctx, "Harvest", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &plantpb.HarvestReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
-	return plantpb.LandsToLogic(reply.Land), nil
+	return logic.LandsFromPlantPB(reply.Land), nil
 }
 
 // Farming weeds and removes bugs on the given lands.
 func (a *API) Farming(ctx context.Context, landIDs []int64) error {
-	req := &plantpb.FarmingRequest{LandIDs: landIDs, HostGID: a.GID}
-	return a.send(ctx, "Farming", req.Marshal())
+	req := &plantpb.FarmingRequest{LandIds: landIDs, HostGid: a.GID}
+	return a.send(ctx, "Farming", marshalMessage(req))
 }
 
 // WaterLand waters the given lands.
 func (a *API) WaterLand(ctx context.Context, landIDs []int64) error {
-	req := &plantpb.WaterLandRequest{LandIDs: landIDs, HostGID: a.GID}
-	return a.send(ctx, "WaterLand", req.Marshal())
+	req := &plantpb.WaterLandRequest{LandIds: landIDs, HostGid: a.GID}
+	return a.send(ctx, "WaterLand", marshalMessage(req))
 }
 
 // Fertilize applies fertilizer one land at a time with 50ms spacing.
@@ -61,10 +61,10 @@ func (a *API) Fertilize(ctx context.Context, landIDs []int64, fertilizerID int64
 	}
 	for i, landID := range landIDs {
 		req := &plantpb.FertilizeRequest{
-			LandIDs:      []int64{landID},
-			FertilizerID: fertilizerID,
+			LandIds:      []int64{landID},
+			FertilizerId: fertilizerID,
 		}
-		if sendErr := a.send(ctx, "Fertilize", req.Marshal()); sendErr != nil {
+		if sendErr := a.send(ctx, "Fertilize", marshalMessage(req)); sendErr != nil {
 			return successCount, sendErr
 		}
 		successCount++
@@ -99,10 +99,10 @@ func (a *API) FertilizeOrganicLoop(ctx context.Context, landIDs []int64) (int, e
 	idx := 0
 	for {
 		req := &plantpb.FertilizeRequest{
-			LandIDs:      []int64{ids[idx]},
-			FertilizerID: OrganicFertilizerID,
+			LandIds:      []int64{ids[idx]},
+			FertilizerId: OrganicFertilizerID,
 		}
-		if sendErr := a.send(ctx, "Fertilize", req.Marshal()); sendErr != nil {
+		if sendErr := a.send(ctx, "Fertilize", marshalMessage(req)); sendErr != nil {
 			return successCount, nil
 		}
 		successCount++
@@ -118,58 +118,58 @@ func (a *API) FertilizeOrganicLoop(ctx context.Context, landIDs []int64) (int, e
 // Plant sows seedID on the given lands and returns decoded reply lands.
 func (a *API) Plant(ctx context.Context, seedID int64, landIDs []int64) ([]logic.LandInfo, error) {
 	req := &plantpb.PlantRequest{
-		Items: []plantpb.PlantItem{{SeedID: seedID, LandIDs: landIDs}},
+		Items: []*plantpb.PlantItem{{SeedId: seedID, LandIds: landIDs}},
 	}
-	raw, err := a.sendPlant(ctx, "Plant", req.Marshal())
+	raw, err := a.sendPlant(ctx, "Plant", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &plantpb.PlantReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
-	return plantpb.LandsToLogic(reply.Land), nil
+	return logic.LandsFromPlantPB(reply.Land), nil
 }
 
 // RemovePlant removes plants from the given lands.
 func (a *API) RemovePlant(ctx context.Context, landIDs []int64) error {
-	req := &plantpb.RemovePlantRequest{LandIDs: landIDs}
-	return a.send(ctx, "RemovePlant", req.Marshal())
+	req := &plantpb.RemovePlantRequest{LandIds: landIDs}
+	return a.send(ctx, "RemovePlant", marshalMessage(req))
 }
 
 // UnlockLand unlocks a land plot.
 func (a *API) UnlockLand(ctx context.Context, landID int64, doShared bool) error {
-	req := &plantpb.UnlockLandRequest{LandID: landID, DoShared: doShared}
-	return a.send(ctx, "UnlockLand", req.Marshal())
+	req := &plantpb.UnlockLandRequest{LandId: landID, DoShared: doShared}
+	return a.send(ctx, "UnlockLand", marshalMessage(req))
 }
 
 // UpgradeLand upgrades a land plot.
 func (a *API) UpgradeLand(ctx context.Context, landID int64) error {
-	req := &plantpb.UpgradeLandRequest{LandID: landID}
-	return a.send(ctx, "UpgradeLand", req.Marshal())
+	req := &plantpb.UpgradeLandRequest{LandId: landID}
+	return a.send(ctx, "UpgradeLand", marshalMessage(req))
 }
 
 // PutInsects puts insects on the given lands (own or friend farm via HostGID).
 func (a *API) PutInsects(ctx context.Context, hostGID int64, landIDs []int64) error {
-	req := &plantpb.PutInsectsRequest{HostGID: hostGID, LandIDs: landIDs}
-	return a.send(ctx, "PutInsects", req.Marshal())
+	req := &plantpb.PutInsectsRequest{HostGid: hostGID, LandIds: landIDs}
+	return a.send(ctx, "PutInsects", marshalMessage(req))
 }
 
 // PutWeeds puts weeds on the given lands (own or friend farm via HostGID).
 func (a *API) PutWeeds(ctx context.Context, hostGID int64, landIDs []int64) error {
-	req := &plantpb.PutWeedsRequest{HostGID: hostGID, LandIDs: landIDs}
-	return a.send(ctx, "PutWeeds", req.Marshal())
+	req := &plantpb.PutWeedsRequest{HostGid: hostGID, LandIds: landIDs}
+	return a.send(ctx, "PutWeeds", marshalMessage(req))
 }
 
 // CheckCanOperate checks whether an operation is allowed on a farm.
 func (a *API) CheckCanOperate(ctx context.Context, hostGID, operationID int64) (bool, int64, error) {
-	req := &plantpb.CheckCanOperateRequest{HostGID: hostGID, OperationID: operationID}
-	raw, err := a.sendPlant(ctx, "CheckCanOperate", req.Marshal())
+	req := &plantpb.CheckCanOperateRequest{HostGid: hostGID, OperationId: operationID}
+	raw, err := a.sendPlant(ctx, "CheckCanOperate", marshalMessage(req))
 	if err != nil {
 		return false, 0, err
 	}
 	reply := &plantpb.CheckCanOperateReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return false, 0, err
 	}
 	return reply.CanOperate, reply.CanStealNum, nil
@@ -177,13 +177,13 @@ func (a *API) CheckCanOperate(ctx context.Context, hostGID, operationID int64) (
 
 // PutSocialItem places a social item (e.g. friendship fruit) on a friend's land.
 func (a *API) PutSocialItem(ctx context.Context, hostGID, landID, itemID int64) (*plantpb.PutSocialItemReply, error) {
-	req := &plantpb.PutSocialItemRequest{HostGID: hostGID, LandID: landID, ItemID: itemID}
-	raw, err := a.sendPlant(ctx, "PutSocialItem", req.Marshal())
+	req := &plantpb.PutSocialItemRequest{HostGid: hostGID, LandId: landID, ItemId: itemID}
+	raw, err := a.sendPlant(ctx, "PutSocialItem", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &plantpb.PutSocialItemReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

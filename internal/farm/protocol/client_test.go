@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/gatepb"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestClientOnNotify(t *testing.T) {
@@ -26,15 +27,18 @@ func TestClientOnNotify(t *testing.T) {
 		},
 	})
 
-	frame := (&gatepb.Message{
+	frame, err := proto.Marshal(&gatepb.Message{
 		Meta: &gatepb.Meta{
 			ServiceName: "gamepb.plantpb.PlantService",
 			MethodName:  "LandsNotify",
-			MessageType: gatepb.MessageTypeNotify,
+			MessageType: int32(gatepb.MessageType_Notify),
 			ServerSeq:   1,
 		},
 		Body: []byte("push-body"),
-	}).Marshal()
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	client.handleFrame(frame)
 
@@ -58,15 +62,18 @@ func TestClientResponseStillHandled(t *testing.T) {
 	client.pending[7] = ch
 	client.mu.Unlock()
 
-	frame := (&gatepb.Message{
+	frame, err := proto.Marshal(&gatepb.Message{
 		Meta: &gatepb.Meta{
 			ServiceName: "gamepb.userpb.UserService",
 			MethodName:  "Login",
-			MessageType: gatepb.MessageTypeResponse,
+			MessageType: int32(gatepb.MessageType_Response),
 			ClientSeq:   7,
 		},
 		Body: []byte("ok"),
-	}).Marshal()
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	client.handleFrame(frame)
 
 	select {

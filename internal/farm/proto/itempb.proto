@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.itempb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/itempb;itempb";
 import "corepb.proto";
 
 // ============ 背包/仓库 ============

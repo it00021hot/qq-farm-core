@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.interactpb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/interactpb;interactpb";
 message InteractRecord {
     int64 server_time = 1;
     int32 action_type = 2;

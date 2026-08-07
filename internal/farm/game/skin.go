@@ -16,12 +16,12 @@ func (a *API) sendSkin(ctx context.Context, method string, body []byte) ([]byte,
 
 // SkinsOwned fetches owned skins.
 func (a *API) SkinsOwned(ctx context.Context) (*skinpb.SkinsOwnedReply, error) {
-	raw, err := a.sendSkin(ctx, "SkinsOwned", (&skinpb.SkinsOwnedRequest{}).Marshal())
+	raw, err := a.sendSkin(ctx, "SkinsOwned", marshalMessage(&skinpb.SkinsOwnedRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &skinpb.SkinsOwnedReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -29,12 +29,12 @@ func (a *API) SkinsOwned(ctx context.Context) (*skinpb.SkinsOwnedReply, error) {
 
 // SkinsEquipped fetches equipped skins.
 func (a *API) SkinsEquipped(ctx context.Context) (*skinpb.SkinsEquippedReply, error) {
-	raw, err := a.sendSkin(ctx, "SkinsEquipped", (&skinpb.SkinsEquippedRequest{}).Marshal())
+	raw, err := a.sendSkin(ctx, "SkinsEquipped", marshalMessage(&skinpb.SkinsEquippedRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &skinpb.SkinsEquippedReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -42,13 +42,13 @@ func (a *API) SkinsEquipped(ctx context.Context) (*skinpb.SkinsEquippedReply, er
 
 // Equip equips a skin into a slot.
 func (a *API) Equip(ctx context.Context, skinID, slotType int64) (*skinpb.EquipReply, error) {
-	req := &skinpb.EquipRequest{SkinID: skinID, SlotType: slotType}
-	raw, err := a.sendSkin(ctx, "Equip", req.Marshal())
+	req := &skinpb.EquipRequest{SkinId: skinID, SlotType: slotType}
+	raw, err := a.sendSkin(ctx, "Equip", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &skinpb.EquipReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -56,13 +56,13 @@ func (a *API) Equip(ctx context.Context, skinID, slotType int64) (*skinpb.EquipR
 
 // MarkAsViewed marks skins as viewed.
 func (a *API) MarkAsViewed(ctx context.Context, skinIDs []int64) (*skinpb.MarkAsViewedReply, error) {
-	req := &skinpb.MarkAsViewedRequest{SkinIDs: skinIDs}
-	raw, err := a.sendSkin(ctx, "MarkAsViewed", req.Marshal())
+	req := &skinpb.MarkAsViewedRequest{SkinIds: skinIDs}
+	raw, err := a.sendSkin(ctx, "MarkAsViewed", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &skinpb.MarkAsViewedReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

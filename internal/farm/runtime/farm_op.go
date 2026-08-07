@@ -331,8 +331,8 @@ func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountCo
 			break // purchase outcome is unknown; do not risk duplicate buys
 		}
 		seedID := candidate.SeedID
-		if len(reply.GetItems) > 0 && reply.GetItems[0] != nil && reply.GetItems[0].ID > 0 {
-			seedID = reply.GetItems[0].ID
+		if len(reply.GetItems) > 0 && reply.GetItems[0] != nil && reply.GetItems[0].Id > 0 {
+			seedID = reply.GetItems[0].Id
 			if reply.GetItems[0].Count > 0 && reply.GetItems[0].Count < needCount {
 				needCount = reply.GetItems[0].Count
 				layouts = layouts[:needCount]
@@ -453,7 +453,7 @@ func shopSeedCandidates(reply *shoppb.ShopInfoReply, playerLevel int64) []logic.
 	}
 	out := make([]logic.SeedCandidate, 0, len(reply.GoodsList))
 	for _, goods := range reply.GoodsList {
-		if !goods.Unlocked || goods.ID <= 0 || goods.ItemID <= 0 || goods.Price <= 0 {
+		if goods == nil || !goods.Unlocked || goods.Id <= 0 || goods.ItemId <= 0 || goods.Price <= 0 {
 			continue
 		}
 		requiredLevel := int64(0)
@@ -475,7 +475,7 @@ func shopSeedCandidates(reply *shoppb.ShopInfoReply, playerLevel int64) []logic.
 			maxPurchase = math.Inf(1)
 		}
 		out = append(out, logic.SeedCandidate{
-			GoodsID: goods.ID, SeedID: goods.ItemID, Price: goods.Price,
+			GoodsID: goods.Id, SeedID: goods.ItemId, Price: goods.Price,
 			RequiredLevel: requiredLevel, UnitItemCount: max(goods.ItemCount, 1), MaxPurchaseCount: maxPurchase,
 		})
 	}
@@ -517,21 +517,21 @@ func sellAllFruitsDetailed(ctx context.Context, api *game.API) (soldKinds int, g
 	fruits := make([]corepb.Item, 0)
 	nameSet := make(map[string]struct{})
 	for _, item := range items {
-		if logic.GetPlantByFruitID(item.ID) == nil {
+		if logic.GetPlantByFruitID(item.Id) == nil {
 			continue
 		}
 		fruits = append(fruits, item)
 		name := ""
-		if info := logic.GetItemByID(item.ID); info != nil {
+		if info := logic.GetItemByID(item.Id); info != nil {
 			name = strings.TrimSpace(info.Name)
 		}
 		if name == "" {
-			if plant := logic.GetPlantByFruitID(item.ID); plant != nil {
+			if plant := logic.GetPlantByFruitID(item.Id); plant != nil {
 				name = plant.Name
 			}
 		}
 		if name == "" {
-			name = fmt.Sprintf("果实%d", item.ID)
+			name = fmt.Sprintf("果实%d", item.Id)
 		}
 		label := fmt.Sprintf("%sx%d", name, item.Count)
 		if _, ok := nameSet[label]; !ok {
@@ -564,7 +564,7 @@ func goldFromSellReply(reply *itempb.SellReply) int64 {
 			continue
 		}
 		// Gold currency items commonly use id 1 / 1001 (same as ItemNotify).
-		if it.ID == 1 || it.ID == 1001 {
+		if it.Id == 1 || it.Id == 1001 {
 			total += it.Count
 		}
 	}

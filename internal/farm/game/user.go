@@ -16,12 +16,12 @@ func (a *API) sendUser(ctx context.Context, method string, body []byte) ([]byte,
 
 // GetUserSettings fetches user settings.
 func (a *API) GetUserSettings(ctx context.Context) (*userpb.GetUserSettingsReply, error) {
-	raw, err := a.sendUser(ctx, "GetUserSettings", (&userpb.GetUserSettingsRequest{}).Marshal())
+	raw, err := a.sendUser(ctx, "GetUserSettings", marshalMessage(&userpb.GetUserSettingsRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &userpb.GetUserSettingsReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -32,12 +32,12 @@ func (a *API) ReportArkClick(ctx context.Context, req *userpb.ReportArkClickRequ
 	if req == nil {
 		req = &userpb.ReportArkClickRequest{}
 	}
-	raw, err := a.sendUser(ctx, "ReportArkClick", req.Marshal())
+	raw, err := a.sendUser(ctx, "ReportArkClick", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &userpb.ReportArkClickReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -45,13 +45,13 @@ func (a *API) ReportArkClick(ctx context.Context, req *userpb.ReportArkClickRequ
 
 // BatchGetBasicInfo fetches basic info for the given GIDs.
 func (a *API) BatchGetBasicInfo(ctx context.Context, gids []int64) (*userpb.BatchGetBasicInfoReply, error) {
-	req := &userpb.BatchGetBasicInfoRequest{GIDs: gids}
-	raw, err := a.sendUser(ctx, "BatchGetBasicInfo", req.Marshal())
+	req := &userpb.BatchGetBasicInfoRequest{Gids: gids}
+	raw, err := a.sendUser(ctx, "BatchGetBasicInfo", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &userpb.BatchGetBasicInfoReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -62,12 +62,12 @@ func (a *API) SetDisplayInfo(ctx context.Context, req *userpb.SetDisplayInfoRequ
 	if req == nil {
 		req = &userpb.SetDisplayInfoRequest{}
 	}
-	raw, err := a.sendUser(ctx, "SetDisplayInfo", req.Marshal())
+	raw, err := a.sendUser(ctx, "SetDisplayInfo", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &userpb.SetDisplayInfoReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -76,12 +76,12 @@ func (a *API) SetDisplayInfo(ctx context.Context, req *userpb.SetDisplayInfoRequ
 // SetQQFriendRecommendAuthorized sets QQ friend recommend authorization.
 func (a *API) SetQQFriendRecommendAuthorized(ctx context.Context, authorized int64) (*userpb.SetQQFriendRecommendAuthorizedReply, error) {
 	req := &userpb.SetQQFriendRecommendAuthorizedRequest{Authorized: authorized}
-	raw, err := a.sendUser(ctx, "SetQQFriendRecommendAuthorized", req.Marshal())
+	raw, err := a.sendUser(ctx, "SetQQFriendRecommendAuthorized", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &userpb.SetQQFriendRecommendAuthorizedReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -90,12 +90,12 @@ func (a *API) SetQQFriendRecommendAuthorized(ctx context.Context, authorized int
 // BatchClientReportFlow reports client flow events.
 func (a *API) BatchClientReportFlow(ctx context.Context, items []*userpb.ClientFlowItem) (*userpb.BatchClientReportFlowReply, error) {
 	req := &userpb.BatchClientReportFlowRequest{Items: items}
-	raw, err := a.sendUser(ctx, "BatchClientReportFlow", req.Marshal())
+	raw, err := a.sendUser(ctx, "BatchClientReportFlow", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &userpb.BatchClientReportFlowReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

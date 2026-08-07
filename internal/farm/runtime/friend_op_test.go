@@ -12,8 +12,8 @@ import (
 
 func TestSummarizeHarvestRewards(t *testing.T) {
 	score, value := summarizeHarvestRewards([]*corepb.Item{
-		{ID: 1022, Count: 5},
-		{ID: 1019, Count: 3},
+		{Id: 1022, Count: 5},
+		{Id: 1019, Count: 3},
 	})
 	if score != 8 {
 		t.Fatalf("score=%d want 8", score)
@@ -92,13 +92,13 @@ func TestSelectUnvisitedPatrolResetsWhenExhausted(t *testing.T) {
 
 func TestBuildStealPatrolTargetsBubbleThenProbe(t *testing.T) {
 	friends := []friendpb.GameFriend{
-		{GID: 10, Plant: &friendpb.Plant{StealPlantNum: 2}},
-		{GID: 11, Plant: &friendpb.Plant{StealPlantNum: 5}},
-		{GID: 12, Plant: &friendpb.Plant{}},
-		{GID: 13, Plant: &friendpb.Plant{}},
-		{GID: 14, Plant: &friendpb.Plant{}},
-		{GID: 15, Plant: &friendpb.Plant{}},
-		{GID: 99}, // self skipped
+		{Gid: 10, Plant: &friendpb.Plant{StealPlantNum: 2}},
+		{Gid: 11, Plant: &friendpb.Plant{StealPlantNum: 5}},
+		{Gid: 12, Plant: &friendpb.Plant{}},
+		{Gid: 13, Plant: &friendpb.Plant{}},
+		{Gid: 14, Plant: &friendpb.Plant{}},
+		{Gid: 15, Plant: &friendpb.Plant{}},
+		{Gid: 99}, // self skipped
 	}
 	visited := map[int64]struct{}{}
 	targets := buildStealPatrolTargets(friends, 99, nil, visited)
@@ -115,13 +115,13 @@ func TestBuildBadFriendTargetsTopByLevel(t *testing.T) {
 	friends := make([]friendpb.GameFriend, 0, 25)
 	for i := 1; i <= 25; i++ {
 		friends = append(friends, friendpb.GameFriend{
-			GID: int64(i), Level: int64(i),
+			Gid: int64(i), Level: int64(i),
 			Plant: &friendpb.Plant{},
 		})
 	}
 	// friend with steal bubble should be excluded
 	friends = append(friends, friendpb.GameFriend{
-		GID: 100, Level: 999, Plant: &friendpb.Plant{StealPlantNum: 1},
+		Gid: 100, Level: 999, Plant: &friendpb.Plant{StealPlantNum: 1},
 	})
 	got := buildBadFriendTargets(friends, 0, nil, 20)
 	if len(got) != 20 {

@@ -76,14 +76,14 @@ func collectEligibleFriends(friends []friendpb.GameFriend, myGID int64, blacklis
 	seen := make(map[int64]struct{}, len(friends))
 	out := make([]friendBubble, 0, len(friends))
 	for _, f := range friends {
-		if f.GID <= 0 || f.GID == myGID || hasID(blacklist, f.GID) {
+		if f.Gid <= 0 || f.Gid == myGID || hasID(blacklist, f.Gid) {
 			continue
 		}
-		if _, ok := seen[f.GID]; ok {
+		if _, ok := seen[f.Gid]; ok {
 			continue
 		}
-		seen[f.GID] = struct{}{}
-		b := friendBubble{GID: f.GID, Level: f.Level}
+		seen[f.Gid] = struct{}{}
+		b := friendBubble{GID: f.Gid, Level: f.Level}
 		if f.Plant != nil {
 			b.Steal = f.Plant.StealPlantNum
 			b.Help = f.Plant.DryNum + f.Plant.WeedNum + f.Plant.InsectNum

@@ -18,9 +18,9 @@ type friendHelpState struct {
 }
 
 type opLimitEntry struct {
-	dayTimes        int64
-	dayTimesLimit   int64
-	dayExpTimes     int64
+	dayTimes         int64
+	dayTimesLimit    int64
+	dayExpTimes      int64
 	dayExpTimesLimit int64
 }
 
@@ -52,14 +52,14 @@ func (s *friendHelpState) updateLimits(limits []*plantpb.OperationLimit) {
 	defer s.mu.Unlock()
 	s.checkDailyReset()
 	for _, limit := range limits {
-		if limit == nil || limit.ID <= 0 {
+		if limit == nil || limit.Id <= 0 {
 			continue
 		}
-		s.limits[limit.ID] = opLimitEntry{
+		s.limits[limit.Id] = opLimitEntry{
 			dayTimes:         limit.DayTimes,
 			dayTimesLimit:    limit.DayTimesLt,
 			dayExpTimes:      limit.DayExpTimes,
-			dayExpTimesLimit: limit.DayExpTimesLt,
+			dayExpTimesLimit: limit.DayExTimesLt,
 		}
 	}
 }

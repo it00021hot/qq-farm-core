@@ -16,13 +16,13 @@ func (a *API) sendShop(ctx context.Context, method string, body []byte) ([]byte,
 
 // ShopInfo fetches goods for a shop.
 func (a *API) ShopInfo(ctx context.Context, shopID int64) (*shoppb.ShopInfoReply, error) {
-	req := &shoppb.ShopInfoRequest{ShopID: shopID}
-	raw, err := a.sendShop(ctx, "ShopInfo", req.Marshal())
+	req := &shoppb.ShopInfoRequest{ShopId: shopID}
+	raw, err := a.sendShop(ctx, "ShopInfo", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &shoppb.ShopInfoReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -31,16 +31,16 @@ func (a *API) ShopInfo(ctx context.Context, shopID int64) (*shoppb.ShopInfoReply
 // BuyGoods purchases shop goods.
 func (a *API) BuyGoods(ctx context.Context, goodsID, num, price int64) (*shoppb.BuyGoodsReply, error) {
 	req := &shoppb.BuyGoodsRequest{
-		GoodsID: goodsID,
+		GoodsId: goodsID,
 		Num:     num,
 		Price:   price,
 	}
-	raw, err := a.sendShop(ctx, "BuyGoods", req.Marshal())
+	raw, err := a.sendShop(ctx, "BuyGoods", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &shoppb.BuyGoodsReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

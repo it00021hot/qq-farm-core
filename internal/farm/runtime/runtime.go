@@ -195,8 +195,8 @@ func persistAccountProfile(accountID uint64, basic *userpb.BasicInfo) {
 	updates := map[string]any{
 		"updated_at": uint(time.Now().Unix()),
 	}
-	if basic.OpenID != "" {
-		updates["uin"] = basic.OpenID
+	if basic.OpenId != "" {
+		updates["uin"] = basic.OpenId
 	}
 	// Only auto-fill display name when still the placeholder 账号{id}
 	placeholder := "账号" + strconv.FormatUint(accountID, 10)

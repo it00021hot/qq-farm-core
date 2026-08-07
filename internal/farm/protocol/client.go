@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/MQEnergy/go-skeleton/internal/farm/proto/gatepb"
 )
@@ -30,11 +31,11 @@ type NotifyHandler func(service, method string, body []byte)
 
 // Client is a WSS gateway client.
 type Client struct {
-	url           string
-	header        http.Header
-	encryptor     Encryptor
+	url            string
+	header         http.Header
+	encryptor      Encryptor
 	heartbeatEvery time.Duration
-	onNotify      NotifyHandler
+	onNotify       NotifyHandler
 
 	mu         sync.Mutex
 	conn       *websocket.Conn
@@ -169,15 +170,20 @@ func (c *Client) Send(ctx context.Context, service, method string, body []byte) 
 		Meta: &gatepb.Meta{
 			ServiceName: service,
 			MethodName:  method,
-			MessageType: gatepb.MessageTypeRequest,
+			MessageType: int32(gatepb.MessageType_Request),
 			ClientSeq:   seq,
 			ServerSeq:   serverSeq,
 		},
 		Body:  finalBody,
 		Token: CreateGatewayToken(),
 	}
-	frame := msg.Marshal()
-	err := c.conn.WriteMessage(websocket.BinaryMessage, frame)
+	frame, err := proto.Marshal(msg)
+	if err != nil {
+		delete(c.pending, seq)
+		c.mu.Unlock()
+		return nil, nil, fmt.Errorf("protocol: marshal: %w", err)
+	}
+	err = c.conn.WriteMessage(websocket.BinaryMessage, frame)
 	c.mu.Unlock()
 	if err != nil {
 		c.mu.Lock()
@@ -222,7 +228,7 @@ func (c *Client) readLoop(ctx context.Context) {
 
 func (c *Client) handleFrame(data []byte) {
 	var msg gatepb.Message
-	if err := msg.Unmarshal(data); err != nil {
+	if err := proto.Unmarshal(data, &msg); err != nil {
 		return
 	}
 	if msg.Meta == nil {
@@ -241,7 +247,7 @@ func (c *Client) handleFrame(data []byte) {
 	// Only outbound request bodies are ACE-encrypted.
 	body := msg.Body
 
-	if msg.Meta.MessageType == gatepb.MessageTypeResponse {
+	if msg.Meta.MessageType == int32(gatepb.MessageType_Response) {
 		c.mu.Lock()
 		ch, ok := c.pending[msg.Meta.ClientSeq]
 		if ok {
@@ -261,7 +267,7 @@ func (c *Client) handleFrame(data []byte) {
 		return
 	}
 
-	if msg.Meta.MessageType == gatepb.MessageTypeNotify {
+	if msg.Meta.MessageType == int32(gatepb.MessageType_Notify) {
 		c.mu.Lock()
 		handler := c.onNotify
 		c.mu.Unlock()

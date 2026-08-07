@@ -51,7 +51,7 @@ func (s *Service) Sell(ctx fiber.Ctx, req farmtypes.BagSellReq) (map[string]any,
 		if it.ID <= 0 || it.Count <= 0 {
 			continue
 		}
-		sellItems = append(sellItems, corepb.Item{ID: it.ID, Count: it.Count, UID: it.UID})
+		sellItems = append(sellItems, corepb.Item{Id: it.ID, Count: it.Count, Uid: it.UID})
 	}
 	if len(sellItems) == 0 {
 		return nil, errors.New("缺少出售物品")

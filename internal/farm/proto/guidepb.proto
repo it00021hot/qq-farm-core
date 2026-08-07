@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.guidepb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/guidepb;guidepb";
 import "corepb.proto";
 
 // ============ 引导/新手任务服务 ============

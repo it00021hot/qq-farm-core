@@ -10,5 +10,5 @@
 //   - stats: daily operation counters
 //   - push: webhook offline/error notifications
 //   - activitycenter: constellation catalog helpers
-//   - proto/*: hand-written protowire codecs (plantpb, itempb, friendpb, …)
+//   - proto/*: protoc-gen-go codecs (make proto); sources synced from qq-farm-bot
 package farm

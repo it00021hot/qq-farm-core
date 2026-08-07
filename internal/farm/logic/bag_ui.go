@@ -72,21 +72,21 @@ func bagItemName(id int64, info *ItemInfo) (name, category string) {
 func FormatBagResponse(rawItems []corepb.Item) BagUIResponse {
 	original := make([]map[string]any, 0, len(rawItems))
 	for _, it := range rawItems {
-		if it.ID <= 0 || it.Count <= 0 {
+		if it.Id <= 0 || it.Count <= 0 {
 			continue
 		}
 		original = append(original, map[string]any{
-			"id": it.ID, "count": it.Count, "uid": it.UID,
+			"id": it.Id, "count": it.Count, "uid": it.Uid,
 		})
 	}
 
 	merged := map[int64]*UIBagItem{}
 	for _, it := range rawItems {
-		if it.ID <= 0 || it.Count <= 0 {
+		if it.Id <= 0 || it.Count <= 0 {
 			continue
 		}
-		info := GetItemByID(it.ID)
-		name, category := bagItemName(it.ID, info)
+		info := GetItemByID(it.Id)
+		name, category := bagItemName(it.Id, info)
 		sells := []SellEntry{}
 		if info != nil {
 			sells = sellsOrCond(info)
@@ -105,14 +105,14 @@ func FormatBagResponse(rawItems []corepb.Item) BagUIResponse {
 			}
 			interactionType = info.InteractionType
 		}
-		row, ok := merged[it.ID]
+		row, ok := merged[it.Id]
 		if !ok {
 			row = &UIBagItem{
-				ID: it.ID, Name: name, Image: SeedImagePath(it.ID), Category: category,
+				ID: it.Id, Name: name, Image: SeedImagePath(it.Id), Category: category,
 				ItemType: itemType, PriceID: priceID, Price: price, PriceUnit: priceUnit(priceID),
 				Level: level, InteractionType: interactionType,
 			}
-			merged[it.ID] = row
+			merged[it.Id] = row
 		}
 		row.Count += it.Count
 	}

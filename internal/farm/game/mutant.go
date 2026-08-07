@@ -16,12 +16,12 @@ func (a *API) sendMutant(ctx context.Context, method string, body []byte) ([]byt
 
 // ReadMutantBook reads the mutant book (empty request/reply).
 func (a *API) ReadMutantBook(ctx context.Context) (*mutantpb.ReadMutantBookReply, error) {
-	raw, err := a.sendMutant(ctx, "ReadMutantBook", (&mutantpb.ReadMutantBookRequest{}).Marshal())
+	raw, err := a.sendMutant(ctx, "ReadMutantBook", marshalMessage(&mutantpb.ReadMutantBookRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &mutantpb.ReadMutantBookReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

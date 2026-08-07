@@ -16,12 +16,12 @@ func (a *API) sendCareer(ctx context.Context, method string, body []byte) ([]byt
 
 // CareerInfoGet fetches career/lifetime info.
 func (a *API) CareerInfoGet(ctx context.Context) (*careerpb.CareerInfoGetReply, error) {
-	raw, err := a.sendCareer(ctx, "CareerInfoGet", (&careerpb.CareerInfoGetRequest{}).Marshal())
+	raw, err := a.sendCareer(ctx, "CareerInfoGet", marshalMessage(&careerpb.CareerInfoGetRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &careerpb.CareerInfoGetReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

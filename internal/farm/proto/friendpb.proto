@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gamepb.friendpb;
 
+
+option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/friendpb;friendpb";
 // ============ 好友农场摘要信息 ============
 message Plant {
     int64 dry_time_sec = 1;      // 缺水倒计时秒

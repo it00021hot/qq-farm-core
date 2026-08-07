@@ -16,12 +16,12 @@ func (a *API) sendDog(ctx context.Context, method string, body []byte) ([]byte, 
 
 // GetDogInfo fetches dog info and protect items.
 func (a *API) GetDogInfo(ctx context.Context) (*dogpb.GetDogInfoReply, error) {
-	raw, err := a.sendDog(ctx, "GetDogInfo", (&dogpb.GetDogInfoRequest{}).Marshal())
+	raw, err := a.sendDog(ctx, "GetDogInfo", marshalMessage(&dogpb.GetDogInfoRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &dogpb.GetDogInfoReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

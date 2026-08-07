@@ -259,6 +259,11 @@ func seedResources(db *gorm.DB) error {
 		{ID: 66, Name: "账号删除", Alias: "farm-account:delete", BURL: "/farm/account/delete", Methods: "POST", ParentID: 61, Path: "60-61-66", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
 		{ID: 67, Name: "账号启动", Alias: "farm-account:start", BURL: "/farm/account/start", Methods: "POST", ParentID: 61, Path: "60-61-67", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 60, CreatedAt: now, UpdatedAt: now},
 		{ID: 68, Name: "账号停止", Alias: "farm-account:stop", BURL: "/farm/account/stop", Methods: "POST", ParentID: 61, Path: "60-61-68", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 70, CreatedAt: now, UpdatedAt: now},
+		{ID: 112, Name: "微信扫码任务", Alias: "farm-wx-login:tasks", BURL: "/farm/wx-login/tasks", Methods: "POST", ParentID: 61, Path: "60-61-112", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 80, CreatedAt: now, UpdatedAt: now},
+		{ID: 113, Name: "微信扫码二维码", Alias: "farm-wx-login:qr", BURL: "/farm/wx-login/tasks/:taskId/qr", Methods: "GET", ParentID: 61, Path: "60-61-113", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 81, CreatedAt: now, UpdatedAt: now},
+		{ID: 114, Name: "微信扫码状态", Alias: "farm-wx-login:status", BURL: "/farm/wx-login/tasks/:taskId/status", Methods: "GET", ParentID: 61, Path: "60-61-114", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 82, CreatedAt: now, UpdatedAt: now},
+		{ID: 115, Name: "微信扫码确认", Alias: "farm-wx-login:confirm", BURL: "/farm/wx-login/tasks/:taskId/confirm", Methods: "POST", ParentID: 61, Path: "60-61-115", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 83, CreatedAt: now, UpdatedAt: now},
+		{ID: 116, Name: "微信扫码取码", Alias: "farm-wx-login:code", BURL: "/farm/wx-login/tasks/:taskId/code", Methods: "POST", ParentID: 61, Path: "60-61-116", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 84, CreatedAt: now, UpdatedAt: now},
 
 		{ID: 85, Name: "好友", Alias: "farm_friends", Desc: "好友互动", FURL: "/farm/friends", Icon: "mdi:account-group", ParentID: 60, Path: "60-85", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 15, CreatedAt: now, UpdatedAt: now},
 		{ID: 86, Name: "好友列表", Alias: "farm-friend:list", BURL: "/farm/friend/list", Methods: "GET", ParentID: 85, Path: "60-85-86", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
@@ -300,6 +305,14 @@ func seedResources(db *gorm.DB) error {
 		{ID: 101, Name: "农场操作", Alias: "farm-operate:post", BURL: "/farm/operate", Methods: "POST", ParentID: 99, Path: "60-99-101", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
 		{ID: 102, Name: "背包列表", Alias: "farm-bag:get", BURL: "/farm/bag", Methods: "GET", ParentID: 99, Path: "60-99-102", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
 		{ID: 103, Name: "背包出售", Alias: "farm-bag:sell", BURL: "/farm/bag/sell", Methods: "POST", ParentID: 99, Path: "60-99-103", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
+
+		{ID: 117, Name: "游戏商城", Alias: "farm_game-mall", Desc: "游戏商城商品与购买", FURL: "/farm/game-mall", Icon: "mdi:storefront", ParentID: 60, Path: "60-117", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 18, CreatedAt: now, UpdatedAt: now},
+		{ID: 118, Name: "商城商品", Alias: "farm-game-mall:get", BURL: "/farm/game-mall", Methods: "GET", ParentID: 117, Path: "60-117-118", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 119, Name: "购买商品", Alias: "farm-game-mall:purchase", BURL: "/farm/game-mall/purchase", Methods: "POST", ParentID: 117, Path: "60-117-119", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 120, Name: "钻石余额", Alias: "farm-diamond:get", BURL: "/farm/diamond", Methods: "GET", ParentID: 117, Path: "60-117-120", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
+
+		{ID: 121, Name: "神秘商人", Alias: "farm_mystery-shop", Desc: "神秘商人限时商品", FURL: "/farm/mystery-shop", Icon: "mdi:account-question", ParentID: 60, Path: "60-121", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 19, CreatedAt: now, UpdatedAt: now},
+		{ID: 122, Name: "神秘商人商品", Alias: "farm-mystery-shop:get", BURL: "/farm/mystery-shop", Methods: "GET", ParentID: 121, Path: "60-121-122", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
 	}
 
 	for _, row := range resources {
@@ -344,13 +357,15 @@ func seedResources(db *gorm.DB) error {
 
 func seedRoleAuth(db *gorm.DB) error {
 	authBtns := "16,46,47,48,49,50"
-	adminFull := "2,4,21,22,23,13"
+	// 租户用户管理：不含 13(platform-user:add)，该按钮仅平台侧
+	adminTenant := "2,4,21,22,23"
+	adminPlatform := adminTenant + ",13"
 	adminList := "2,4"
 	attachFull := "14,24,25,26,27,28,29"
 	tenantFull := "11,30,31,32,33,34,35"
 	roleRead := "5,6"
 	farmDash := "69,76,77,108,109,110"
-	farmAccount := "61,62,63,64,65,66,67,68"
+	farmAccount := "61,62,63,64,65,66,67,68,112,113,114,115,116"
 	farmFriends := "85,86,87,111,104,105,106"
 	farmActivity := "88,89,90,91,92,93"
 	farmAnalytics := "94,95"
@@ -358,15 +373,16 @@ func seedRoleAuth(db *gorm.DB) error {
 	farmGameCfg := "96,97,98"
 	farmCardAll := "80,81,82,83,84"
 	farmPersonal := "99,100,101,102,103"
+	farmCommerce := "117,118,119,120,121,122"
 	// 租户仅保留兑换按钮权限，不授卡密管理菜单(80)与列表(81)
 	farmCardRedeem := "83"
-	farmCommon := "60," + farmDash + "," + farmAccount + "," + farmFriends + "," + farmActivity + "," + farmAnalytics + "," + farmSettings + "," + farmGameCfg + "," + farmPersonal
+	farmCommon := "60," + farmDash + "," + farmAccount + "," + farmFriends + "," + farmActivity + "," + farmAnalytics + "," + farmSettings + "," + farmGameCfg + "," + farmPersonal + "," + farmCommerce
 	farmTenant := farmCommon + "," + farmCardRedeem
 	farmPlatform := farmCommon + "," + farmCardAll
 
 	auths := []model.SysRoleAuth{
-		{ID: 1, RoleID: 2, ResourceIds: "1,20," + tenantFull + "," + adminFull + "," + attachFull + "," + roleRead + "," + farmPlatform + "," + authBtns},
-		{ID: 2, RoleID: 3, ResourceIds: "20," + adminFull + "," + attachFull + "," + roleRead + "," + farmTenant + "," + authBtns},
+		{ID: 1, RoleID: 2, ResourceIds: "1,20," + tenantFull + "," + adminPlatform + "," + attachFull + "," + roleRead + "," + farmPlatform + "," + authBtns},
+		{ID: 2, RoleID: 3, ResourceIds: "20," + adminTenant + "," + attachFull + "," + roleRead + "," + farmTenant + "," + authBtns},
 		{ID: 3, RoleID: 4, ResourceIds: "20," + adminList + "," + roleRead + "," + farmTenant + "," + authBtns},
 	}
 

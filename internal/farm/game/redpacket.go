@@ -16,12 +16,12 @@ func (a *API) sendRedPacket(ctx context.Context, method string, body []byte) ([]
 
 // GetTodayClaimStatus fetches today's red-packet claim status.
 func (a *API) GetTodayClaimStatus(ctx context.Context) (*redpacketpb.GetTodayClaimStatusReply, error) {
-	raw, err := a.sendRedPacket(ctx, "GetTodayClaimStatus", (&redpacketpb.GetTodayClaimStatusRequest{}).Marshal())
+	raw, err := a.sendRedPacket(ctx, "GetTodayClaimStatus", marshalMessage(&redpacketpb.GetTodayClaimStatusRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &redpacketpb.GetTodayClaimStatusReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -29,13 +29,13 @@ func (a *API) GetTodayClaimStatus(ctx context.Context) (*redpacketpb.GetTodayCla
 
 // ClaimRedPacket claims a red packet by ID.
 func (a *API) ClaimRedPacket(ctx context.Context, id int32) (*redpacketpb.ClaimRedPacketReply, error) {
-	req := &redpacketpb.ClaimRedPacketRequest{ID: id}
-	raw, err := a.sendRedPacket(ctx, "ClaimRedPacket", req.Marshal())
+	req := &redpacketpb.ClaimRedPacketRequest{Id: id}
+	raw, err := a.sendRedPacket(ctx, "ClaimRedPacket", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &redpacketpb.ClaimRedPacketReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

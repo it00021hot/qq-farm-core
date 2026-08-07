@@ -125,10 +125,10 @@ func processInviteCodes(ctx context.Context, api *game.API, dataRoot, shareFile 
 			continue
 		}
 		_, err = api.ReportArkClick(ctx, &userpb.ReportArkClickRequest{
-			SharerID:     sharerID,
-			SharerOpenID: inv.openid,
-			ShareCfgID:   inv.shareCfgID,
-			SceneID:      inviteSceneID,
+			SharerId:     sharerID,
+			SharerOpenId: inv.openid,
+			ShareCfgId:   inv.shareCfgID,
+			SceneId:      inviteSceneID,
 		})
 		if err != nil {
 			fail++

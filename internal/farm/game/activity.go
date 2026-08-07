@@ -18,6 +18,9 @@ const (
 
 	shopActivityType          int64 = 3
 	constellationActivityType int64 = 13
+	operateExchangeShop       int64 = 1
+	operateQueryShop          int64 = 7
+	operateLightConstellation int64 = 21
 )
 
 func ShopActivityType() int64          { return shopActivityType }
@@ -49,12 +52,12 @@ func (a *API) sendSolar(ctx context.Context, method string, body []byte) ([]byte
 
 // GetSeasonInfo fetches current season and pass progress.
 func (a *API) GetSeasonInfo(ctx context.Context) (*seasonpb.GetSeasonInfoReply, error) {
-	raw, err := a.sendSeason(ctx, "GetSeasonInfo", (&seasonpb.GetSeasonInfoRequest{}).Marshal())
+	raw, err := a.sendSeason(ctx, "GetSeasonInfo", marshalMessage(&seasonpb.GetSeasonInfoRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &seasonpb.GetSeasonInfoReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -62,12 +65,12 @@ func (a *API) GetSeasonInfo(ctx context.Context) (*seasonpb.GetSeasonInfoReply, 
 
 // ClaimBattlePassRewards claims all eligible pass nodes.
 func (a *API) ClaimBattlePassRewards(ctx context.Context) (*seasonpb.ClaimBattlePassRewardsReply, error) {
-	raw, err := a.sendSeason(ctx, "ClaimBattlePassRewards", (&seasonpb.ClaimBattlePassRewardsRequest{}).Marshal())
+	raw, err := a.sendSeason(ctx, "ClaimBattlePassRewards", marshalMessage(&seasonpb.ClaimBattlePassRewardsRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &seasonpb.ClaimBattlePassRewardsReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -75,12 +78,12 @@ func (a *API) ClaimBattlePassRewards(ctx context.Context) (*seasonpb.ClaimBattle
 
 // GetSolarTerms fetches solar term list.
 func (a *API) GetSolarTerms(ctx context.Context) (*solartermspb.GetSolarTermsReply, error) {
-	raw, err := a.sendSolar(ctx, "GetSolarTerms", (&solartermspb.GetSolarTermsRequest{}).Marshal())
+	raw, err := a.sendSolar(ctx, "GetSolarTerms", marshalMessage(&solartermspb.GetSolarTermsRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &solartermspb.GetSolarTermsReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -88,13 +91,13 @@ func (a *API) GetSolarTerms(ctx context.Context) (*solartermspb.GetSolarTermsRep
 
 // ClaimSolarTerms claims one solar term reward.
 func (a *API) ClaimSolarTerms(ctx context.Context, termID int64) (*solartermspb.ClaimSolarTermsReply, error) {
-	req := &solartermspb.ClaimSolarTermsRequest{TermID: termID}
-	raw, err := a.sendSolar(ctx, "ClaimSolarTerms", req.Marshal())
+	req := &solartermspb.ClaimSolarTermsRequest{TermId: termID}
+	raw, err := a.sendSolar(ctx, "ClaimSolarTerms", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &solartermspb.ClaimSolarTermsReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
@@ -103,19 +106,19 @@ func (a *API) ClaimSolarTerms(ctx context.Context, termID int64) (*solartermspb.
 // QueryActivityShop loads star-sand shop catalog.
 func (a *API) QueryActivityShop(ctx context.Context, activityID int64) (*activitypb.ActivityOperateReply, error) {
 	req := &activitypb.QueryActivityRequest{
-		ActivityID:  activityID,
-		OperateType: activitypb.OperateQueryShop,
+		ActivityId:  activityID,
+		OperateType: operateQueryShop,
 	}
-	raw, err := a.sendActivity(ctx, "Operate", req.Marshal())
+	raw, err := a.sendActivity(ctx, "Operate", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &activitypb.ActivityOperateReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
-	if reply.ActivityID != activityID || reply.OperateType != activitypb.OperateQueryShop {
-		return nil, fmt.Errorf("activity shop query: unexpected reply activity=%d operate=%d", reply.ActivityID, reply.OperateType)
+	if reply.ActivityId != activityID || reply.OperateType != operateQueryShop {
+		return nil, fmt.Errorf("activity shop query: unexpected reply activity=%d operate=%d", reply.ActivityId, reply.OperateType)
 	}
 	if reply.Data == nil || reply.Data.Catalog == nil {
 		return nil, fmt.Errorf("activity shop query: missing catalog")
@@ -126,23 +129,23 @@ func (a *API) QueryActivityShop(ctx context.Context, activityID int64) (*activit
 // ExchangeShopGoods exchanges star-sand shop goods.
 func (a *API) ExchangeShopGoods(ctx context.Context, activityID, goodsID, count int64) (*activitypb.ActivityOperateReply, error) {
 	req := &activitypb.ExchangeShopRequest{
-		ActivityID:  activityID,
-		OperateType: activitypb.OperateExchangeShop,
+		ActivityId:  activityID,
+		OperateType: operateExchangeShop,
 		ExchangeShopOperate: &activitypb.ExchangeShopOperateParams{
-			GoodsID: goodsID,
+			GoodsId: goodsID,
 			Count:   count,
 		},
 	}
-	raw, err := a.sendActivity(ctx, "Operate", req.Marshal())
+	raw, err := a.sendActivity(ctx, "Operate", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &activitypb.ActivityOperateReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
-	if reply.ActivityID != activityID || reply.OperateType != activitypb.OperateExchangeShop {
-		return nil, fmt.Errorf("activity shop exchange: unexpected reply activity=%d operate=%d", reply.ActivityID, reply.OperateType)
+	if reply.ActivityId != activityID || reply.OperateType != operateExchangeShop {
+		return nil, fmt.Errorf("activity shop exchange: unexpected reply activity=%d operate=%d", reply.ActivityId, reply.OperateType)
 	}
 	if reply.Data == nil || reply.Data.Catalog == nil {
 		return nil, fmt.Errorf("activity shop exchange: missing catalog")
@@ -153,15 +156,16 @@ func (a *API) ExchangeShopGoods(ctx context.Context, activityID, goodsID, count 
 // LightConstellation lights today's constellation node.
 func (a *API) LightConstellation(ctx context.Context, activityID int64) (*activitypb.ActivityOperateReply, error) {
 	req := &activitypb.OperateConstellationRequest{
-		ActivityID:  activityID,
-		OperateType: activitypb.OperateLightConstellation,
+		ActivityId:  activityID,
+		OperateType: operateLightConstellation,
+		Field_119:   &activitypb.OperateConstellationRequest_Empty{},
 	}
-	raw, err := a.sendActivity(ctx, "Operate", req.Marshal())
+	raw, err := a.sendActivity(ctx, "Operate", marshalMessage(req))
 	if err != nil {
 		return nil, err
 	}
 	reply := &activitypb.ActivityOperateReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	if reply.Data == nil || reply.Data.Constellation == nil {
@@ -185,7 +189,7 @@ func FindSeasonActivity(season *seasonpb.SeasonInfo, typeCode int64) *seasonpb.S
 	}
 	for i := range season.Activities {
 		if season.Activities[i].Type == typeCode {
-			return &season.Activities[i]
+			return season.Activities[i]
 		}
 	}
 	return nil

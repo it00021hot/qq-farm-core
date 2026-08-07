@@ -16,12 +16,12 @@ func (a *API) sendMarquee(ctx context.Context, method string, body []byte) ([]by
 
 // GetMarquee fetches marquee / scrolling messages.
 func (a *API) GetMarquee(ctx context.Context) (*marqueepb.GetMarqueeReply, error) {
-	raw, err := a.sendMarquee(ctx, "GetMarquee", (&marqueepb.GetMarqueeRequest{}).Marshal())
+	raw, err := a.sendMarquee(ctx, "GetMarquee", marshalMessage(&marqueepb.GetMarqueeRequest{}))
 	if err != nil {
 		return nil, err
 	}
 	reply := &marqueepb.GetMarqueeReply{}
-	if err := reply.Unmarshal(raw); err != nil {
+	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
