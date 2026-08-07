@@ -2,10 +2,10 @@
 
 QQ 农场智能助手后端：多账号托管、自动化种地/好友互动、活动与商城，以及管理端 API。
 
-基于 [qq-farm-core](https://github.com/it00021hot/qq-farm-core)（Go ≥ 1.26 + Fiber）改造；业务核心在 `internal/farm`。
-
-配套前端：[`../vue-framework`](../vue-framework)。  
-桌面端（Wails）：[`../desktop`](../desktop)（通过 [`pkg/appserver`](pkg/appserver) 进程内启动本服务）。
+- 仓库：[github.com/it00021hot/qq-farm-core](https://github.com/it00021hot/qq-farm-core)
+- Go 模块：`github.com/it00021hot/qq-farm-core`
+- 配套前端：[`../qq-farm-web`](../qq-farm-web) · [GitHub](https://github.com/it00021hot/qq-farm-web)
+- 桌面端（Wails）：[`../qq-farm-desktop`](../qq-farm-desktop) · [GitHub](https://github.com/it00021hot/qq-farm-desktop)（通过 [`pkg/appserver`](pkg/appserver) 进程内启动本服务）
 
 ## 功能概览
 
@@ -30,7 +30,7 @@ cmd/
   app/                 # HTTP 服务入口
   cli/                 # 代码生成等 CLI
 configs/               # config.{dev,test,prod}.yaml
-database/              # 库表与权限约定说明
+database/              # 库表约定说明
 internal/
   app/                 # controller / service / model
   farm/                # 农场核心
@@ -42,7 +42,7 @@ internal/
     tsdk/              # WASM / TSDK
   middleware/          # Auth 等
   router/routes/       # auth / farm / system
-pkg/                   # 配置、DB 迁移、响应等
+pkg/                   # appserver、配置、DB 迁移、响应等
 resource/farm/         # gameConfig、tsdk.wasm
 runtime/               # 日志、SQLite、tsdk 工作目录
 scripts/               # proto 生成、安全检查等
@@ -65,7 +65,21 @@ go run ./cmd/app -e=dev -p=9528
 - Swagger：`http://127.0.0.1:9528/docs`（`swagger.enabled`）
 - 权限约定（登录即全权限 + 前端静态菜单）：见 [`database/README.md`](database/README.md)
 
-前端默认代理到 `http://127.0.0.1:9528`（见 vue-framework `.env.test`）。
+前端默认代理到 `http://127.0.0.1:9528`（见 qq-farm-web `.env.test`）。
+
+### 作为库被桌面端引用
+
+桌面端依赖已发布的模块版本（示例）：
+
+```bash
+go get github.com/it00021hot/qq-farm-core@v0.1.0
+```
+
+本地联调可在 `qq-farm-desktop/go.mod` 临时：
+
+```
+replace github.com/it00021hot/qq-farm-core => ../qq-farm-core
+```
 
 ### 常用 Makefile
 
@@ -122,4 +136,4 @@ bash scripts/api_security_check.sh
 
 ## License
 
-MIT（上游 qq-farm-core LICENSE 仍适用）。
+MIT
