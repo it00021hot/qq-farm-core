@@ -5,6 +5,7 @@ type CreateReq struct {
 	Code          string `json:"code" validate:"required,max=64"`
 	Name          string `json:"name" validate:"required,max=128"`
 	MaxUsers      uint   `json:"maxUsers"`
+	MaxAccounts   uint   `json:"maxAccounts"`
 	ExpireAt      uint   `json:"expireAt"`
 	ContactName   string `json:"contactName"`
 	ContactPhone  string `json:"contactPhone"`
@@ -19,6 +20,7 @@ type UpdateReq struct {
 	ID           uint64 `json:"id" validate:"required"`
 	Name         string `json:"name" validate:"required,max=128"`
 	MaxUsers     uint   `json:"maxUsers"`
+	MaxAccounts  uint   `json:"maxAccounts"`
 	ExpireAt     uint   `json:"expireAt"`
 	ContactName  string `json:"contactName"`
 	ContactPhone string `json:"contactPhone"`

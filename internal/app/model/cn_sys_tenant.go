@@ -9,6 +9,7 @@ type SysTenant struct {
 	Name         string `gorm:"column:name;size:128;not null;comment:租户名称" json:"name"`
 	Status       uint8  `gorm:"column:status;not null;default:1;index;comment:状态 1：正常 2：禁用" json:"status"`
 	MaxUsers     uint   `gorm:"column:max_users;not null;default:0;comment:用户上限 0：不限制" json:"maxUsers"`
+	MaxAccounts  uint   `gorm:"column:max_accounts;not null;default:0;comment:农场账号上限 0：不限制" json:"maxAccounts"`
 	ExpireAt     uint   `gorm:"column:expire_at;not null;default:0;comment:过期时间Unix秒 0：永不过期" json:"expireAt"`
 	ContactName  string `gorm:"column:contact_name;size:64;not null;default:'';comment:联系人" json:"contactName"`
 	ContactPhone string `gorm:"column:contact_phone;size:32;not null;default:'';comment:联系电话" json:"contactPhone"`

@@ -7,7 +7,9 @@ import (
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/MQEnergy/go-skeleton/pkg/rbac"
 	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/MQEnergy/go-skeleton/pkg/tenant"
 	"github.com/gofiber/fiber/v3"
+	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
 
@@ -32,7 +34,10 @@ func CasbinMiddleware(db *gorm.DB, prefix, tableName string) fiber.Handler {
 			return ctx.Next()
 		}
 
-		roleIds := ctx.GetRespHeader("role_ids")
+		roleIds := cast.ToString(ctx.Locals(tenant.LocalRoleIDs))
+		if roleIds == "" {
+			roleIds = ctx.GetRespHeader("role_ids")
+		}
 		if roleIds == "" {
 			return response.UnauthorizedException(ctx, "该用户还未分配角色权限")
 		}

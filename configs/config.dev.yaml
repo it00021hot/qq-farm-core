@@ -8,7 +8,7 @@ server:
   fileHostUrl: 'http://127.0.0.1:9527/' # 文件访问域名 【需修改】
   whiteList: '*' # 白名单
   originList: '*' # cors地址列表以逗号相隔 默认* 按需配置如：https://example1.com,https://example2.com,
-  uploadType: 2 # 上传类型 1:阿里云OSS 2:S3兼容
+  uploadType: 0 # 上传类型 0:本地 1:阿里云OSS 2:S3兼容（农场单机不依赖对象存储）
   signExpireSeconds: 3600 # 私有对象预签名 GET 有效秒数
   superRoleId: '1' # 超级管理员角色ID，跳过 casbin 校验
 swagger:
@@ -33,46 +33,65 @@ log:
   localTime: true # 是否使用本地时间
   compress: true # 是否压缩归档日志
 database:
+  sqlite:
+    enabled: true # 使用 SQLite 单文件（无外部数据库）
+    autoMigrate: true
+    path: 'runtime/data/qq-farm.db'
+    prefix: 'cn_'
+    fileName: 'sqlite-sql'
+    logLevel: 1 # 1:silent 2:error 3:warn 4:info
+    maxIdleConn: 1
+    maxOpenConn: 1
   pgsql:
-    enabled: true # 是否启用pgsql
-    autoMigrate: true # 启动时 AutoMigrate + 初始化数据
-    maxIdleConn: 10 # 设置空闲连接池中连接的最大数量
-    maxOpenConn: 100 # 设置打开数据库连接的最大数量
-    maxLifeTime: 60 # 设置连接可复用的最大时间（分钟）
-    maxIdleTime: 0 # 设置连接池中保持空闲的最长时间（秒）默认是0 意味着连接池中的连接将保持打开状态
-    sources: # 数据库配置 需要配置多个数据库 复制default以下模板
-      default: # 默认数据库 (此名称切勿修改)
-        separation: false # 配置是否使用读写分离，方便改配置切换
-        fileName: 'default-sql' # 日志文件名称 【需修改】
-        logLevel: 1 # 日志模式 1:slient 2:error 3:warn 4:info
-        prefix: "cn_" # casbin adapter 等组件使用的表前缀（model.TableName 已含完整表名）
-        master: 'host=192.168.1.52 user=postgres password=pBcYkeB9g08DWWJ3Evmq dbname=go_skeleton port=5432 sslmode=disable TimeZone=Asia/Shanghai' # 主库链接地址
-        slave:
-          - 'host=192.168.1.52 user=postgres password=pBcYkeB9g08DWWJ3Evmq dbname=go_skeleton port=5432 sslmode=disable TimeZone=Asia/Shanghai' # 从库链接地址
+    enabled: false # 已切 SQLite，保留段便于回退
+    autoMigrate: false
+    maxIdleConn: 10
+    maxOpenConn: 100
+    maxLifeTime: 60
+    maxIdleTime: 0
+    sources:
+      default:
+        separation: false
+        fileName: 'default-sql'
+        logLevel: 1
+        prefix: "cn_"
+        master: 'host=127.0.0.1 user=postgres password= password dbname=go_skeleton port=5432 sslmode=disable TimeZone=Asia/Shanghai'
+        slave: []
   mongo:
     enable: false
     uri:
     minPoolSize: 10
     maxPoolSize: 20
 redis:
-  enabled: true # 是否启用redis
-  host: '192.168.1.52'
+  enabled: false # 不使用 Redis；JWT/权限缓存走进程内 memcache
+  host: '127.0.0.1'
   port: '6379'
-  password: '111111'
-  dbNum: 3
-  prefix: 'go_skeleton:' # 登录用户存入redis键名的前缀
-  poolSize: 20
-  maxIdleConn: 30
-  minIdleConn: 10
-  maxIdleTime: 30   # 单位（分）
-  maxLifeTime: 60   # 单位（秒）
+  password: ''
+  dbNum: 0
+  prefix: 'qq_farm:' # 内存 key 前缀（兼容旧 redis 包 API）
+  poolSize: 0
+  maxIdleConn: 0
+  minIdleConn: 0
+  maxIdleTime: 0
+  maxLifeTime: 0
 amqp:
-  enabled: false # 是否启用rabbitmq
+  enabled: false
   host: '127.0.0.1'
   port: '5672'
   user: 'guest'
   password: ''
   vhost: ''
+farm:
+  gatewayUrl: 'wss://gate-obt.nqf.qq.com/prod/ws'
+  wasmPath: 'resource/farm/tsdk.wasm'
+  tsdkDataDir: 'runtime/tsdk'
+  gameConfigDir: 'resource/farm/gameConfig'
+  appId: 'wx5306c5978fdb76e4'
+  tsdkGameId: 3167
+  tsdkAppKey: '0'
+  clientVersion: '1.13.0.5_20260723'
+  os: 'Windows'
+  pushWebhook: '' # Bark / 企业微信机器人等；账号异常时推送
 oss:
   endPoint: 'oss-cn-shenzhen.aliyuncs.com'
   accessKeyId: ''

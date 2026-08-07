@@ -6,16 +6,16 @@ import (
 
 	"github.com/MQEnergy/go-skeleton/internal/bootstrap/boots"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/database"
 	"github.com/MQEnergy/go-skeleton/pkg/helper"
 	"github.com/MQEnergy/go-skeleton/pkg/rbac"
 )
 
 // Define service list
 const (
-	PgsqlService = `Pgsql`
-	RedisService = `Redis`
-	S3Service    = `S3`
+	PgsqlService  = `Pgsql`
+	SQLiteService = `SQLite`
+	RedisService  = `Redis`
+	S3Service     = `S3`
 )
 
 type bootServiceMap map[string]func() error
@@ -23,9 +23,10 @@ type bootServiceMap map[string]func() error
 var (
 	BootedService []string
 	serviceMap    = bootServiceMap{
-		PgsqlService: boots.InitMultiPgsql,
-		RedisService: boots.InitRedis,
-		S3Service:    boots.InitS3,
+		SQLiteService: boots.InitSQLite,
+		PgsqlService:  boots.InitMultiPgsql,
+		RedisService:  boots.InitRedis,
+		S3Service:     boots.InitS3,
 	}
 )
 
@@ -58,7 +59,7 @@ func BootService(services ...string) {
 	}
 	// casbin singleton（依赖 migrate 后的策略表）
 	if vars.DB != nil {
-		prefix := vars.Config.GetString("database.pgsql.sources." + database.DefaultAlias + ".prefix")
+		prefix := boots.TablePrefix()
 		if err := rbac.InitEnforcer(vars.DB, prefix, "sys_casbin_rule"); err != nil {
 			panic("Failed to init casbin enforcer：" + err.Error())
 		}
@@ -70,6 +71,8 @@ func BootService(services ...string) {
 	}
 	// init dao
 	boots.InitDao()
+	// farm runtime manager (in-process bot sessions)
+	boots.InitFarmRuntime()
 }
 
 // keys ...

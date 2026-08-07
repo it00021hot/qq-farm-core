@@ -1,0 +1,28 @@
+package game
+
+import (
+	"context"
+
+	"github.com/MQEnergy/go-skeleton/internal/farm/proto/avatarframepb"
+)
+
+func (a *API) sendAvatarFrame(ctx context.Context, method string, body []byte) ([]byte, error) {
+	if err := a.requireSender(); err != nil {
+		return nil, err
+	}
+	raw, _, err := a.Sender.Send(ctx, avatarFrameService, method, nonNilBody(body))
+	return raw, err
+}
+
+// AvatarFramesOwned fetches owned avatar frames.
+func (a *API) AvatarFramesOwned(ctx context.Context) (*avatarframepb.AvatarFramesOwnedReply, error) {
+	raw, err := a.sendAvatarFrame(ctx, "AvatarFramesOwned", (&avatarframepb.AvatarFramesOwnedRequest{}).Marshal())
+	if err != nil {
+		return nil, err
+	}
+	reply := &avatarframepb.AvatarFramesOwnedReply{}
+	if err := reply.Unmarshal(raw); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}

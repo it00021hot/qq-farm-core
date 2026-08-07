@@ -15,7 +15,14 @@ import (
 func CacheMiddleware() fiber.Handler {
 	return cache.New(cache.Config{
 		Next: func(c fiber.Ctx) bool {
-			return c.Query("noCache") == "true"
+			if c.Query("noCache") == "true" {
+				return true
+			}
+			// Never cache WebSocket upgrade / realtime channel.
+			if c.Path() == "/farm/ws" || strings.EqualFold(c.Get("Upgrade"), "websocket") {
+				return true
+			}
+			return false
 		},
 		KeyGenerator: func(ctx fiber.Ctx) string {
 			keyG := ctx.IP() + ":" + ctx.Path()

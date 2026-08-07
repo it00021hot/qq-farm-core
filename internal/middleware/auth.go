@@ -13,6 +13,7 @@ import (
 
 	jwtware "github.com/gofiber/contrib/v3/jwt"
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/extractors"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -25,6 +26,11 @@ var NoAuthPaths = []string{
 func AuthMiddleware() fiber.Handler {
 	return jwtware.New(jwtware.Config{
 		SigningKey: jwtware.SigningKey{Key: []byte(vars.Config.GetString("jwt.secret"))},
+		// Browser WebSocket cannot set Authorization; farm UI passes ?token=.
+		Extractor: extractors.Chain(
+			extractors.FromAuthHeader("Bearer"),
+			extractors.FromQuery("token"),
+		),
 		ErrorHandler: func(c fiber.Ctx, err error) error {
 			msg := err.Error()
 			if errors.Is(err, jwt.ErrTokenExpired) || strings.Contains(msg, "token is expired") || strings.Contains(msg, "exp") {

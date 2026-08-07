@@ -2,5 +2,7 @@
 /releases/
 /bin/
 /runtime/logs/
+/runtime/data/
+/runtime/tsdk/
 /tmp/
 /go.sum

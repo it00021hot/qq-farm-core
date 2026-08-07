@@ -63,8 +63,7 @@ func InitMigrate() error {
 	if vars.DB == nil {
 		return nil
 	}
-	// 默认开启；仅当显式配置为 false 时跳过
-	if v := vars.Config.Get("database.pgsql.autoMigrate"); v != nil && !vars.Config.GetBool("database.pgsql.autoMigrate") {
+	if !AutoMigrateEnabled() {
 		slog.Info("Database autoMigrate disabled by config")
 		return nil
 	}

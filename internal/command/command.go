@@ -36,6 +36,7 @@ func (c *Command) WithCommands() []*cli.Command {
 	for _, command := range commands {
 		clis = append(clis, command.Command())
 	}
+	clis = append(clis, FarmImportJSON())
 	return clis
 }
 

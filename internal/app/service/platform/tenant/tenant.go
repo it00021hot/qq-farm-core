@@ -39,6 +39,7 @@ func (s *Service) Create(req tenanttypes.CreateReq) (*model.SysTenant, error) {
 		Name:         req.Name,
 		Status:       vars.StatusNormal,
 		MaxUsers:     req.MaxUsers,
+		MaxAccounts:  req.MaxAccounts,
 		ExpireAt:     req.ExpireAt,
 		ContactName:  req.ContactName,
 		ContactPhone: req.ContactPhone,
@@ -95,9 +96,19 @@ func (s *Service) Update(req tenanttypes.UpdateReq) error {
 			return fmt.Errorf("当前用户数 %d 已超过新配额 %d", used, req.MaxUsers)
 		}
 	}
+	if req.MaxAccounts > 0 {
+		var usedAcc int64
+		if err := db.Model(&model.FarmAccount{}).Where("tenant_id = ?", req.ID).Count(&usedAcc).Error; err != nil {
+			return err
+		}
+		if uint(usedAcc) > req.MaxAccounts {
+			return fmt.Errorf("当前农场账号数 %d 已超过新配额 %d", usedAcc, req.MaxAccounts)
+		}
+	}
 	return db.Model(&t).Updates(map[string]any{
 		"name":          req.Name,
 		"max_users":     req.MaxUsers,
+		"max_accounts":  req.MaxAccounts,
 		"expire_at":     req.ExpireAt,
 		"contact_name":  req.ContactName,
 		"contact_phone": req.ContactPhone,
@@ -130,10 +141,13 @@ func (s *Service) Detail(id uint64) (map[string]any, error) {
 	}
 	var used int64
 	_ = db.Model(&model.SysAdmin{}).Where("tenant_id = ?", id).Count(&used).Error
+	var usedAccounts int64
+	_ = db.Model(&model.FarmAccount{}).Where("tenant_id = ?", id).Count(&usedAccounts).Error
 	return map[string]any{
-		"tenant":     t,
-		"used_users": used,
-		"expired":    t.ExpireAt > 0 && uint64(t.ExpireAt) < uint64(time.Now().Unix()),
+		"tenant":         t,
+		"used_users":     used,
+		"used_accounts":  usedAccounts,
+		"expired":        t.ExpireAt > 0 && uint64(t.ExpireAt) < uint64(time.Now().Unix()),
 	}, nil
 }
 

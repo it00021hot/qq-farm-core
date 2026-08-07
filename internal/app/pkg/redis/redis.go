@@ -2,142 +2,249 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/redis/go-redis/v9"
+	"github.com/MQEnergy/go-skeleton/pkg/memcache"
 )
 
+// ErrNil mimics redis.Nil when key is missing.
+var ErrNil = errors.New("memcache: nil")
+
 const (
-	AuthFmt  = "auth:%s"   // 授权信息key
-	PermsFmt = "perms:%s"  // 用户详细信息 (基于用户的菜单权限 包含用户前端权限 alias)
+	AuthFmt  = "auth:%s"  // 授权信息key
+	PermsFmt = "perms:%s" // 用户详细信息 (基于用户的菜单权限 包含用户前端权限 alias)
 	ResFmt   = "resources" // 资源列表
 )
 
-func BuildAuthRedisKey(key string) string {
-	return vars.Config.GetString("redis.prefix") + key
-}
-
-func Keys(ctx context.Context, key string) *redis.StringSliceCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.Keys(ctx, rKey)
-}
-
-func Set(ctx context.Context, key string, value string) *redis.StatusCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.Set(ctx, rKey, value, vars.Config.GetDuration("jwt.expire")*time.Second)
-}
-
-func SetEx(ctx context.Context, key string, value string, expireAt time.Duration) *redis.StatusCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.Set(ctx, rKey, value, expireAt)
-}
-
-// SetNX 设置key 如果不存在 则设置 过期时间 返回bool值 true 表示设置成功 false 表示设置失败 幂等性操作
-func SetNX(ctx context.Context, key string, value string) *redis.BoolCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.SetNX(ctx, rKey, value, 0)
-}
-
-func Del(ctx context.Context, key string) *redis.IntCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.Del(ctx, rKey)
-}
-
-// DelRaw 删除已带完整前缀的 key（例如 Keys 返回值）
-func DelRaw(ctx context.Context, keys ...string) *redis.IntCmd {
-	if len(keys) == 0 {
-		return vars.Redis.Del(ctx)
+func prefix() string {
+	p := vars.Config.GetString("redis.prefix")
+	if p == "" {
+		p = vars.Config.GetString("cache.prefix")
 	}
-	return vars.Redis.Del(ctx, keys...)
+	return p
+}
+
+func BuildAuthRedisKey(key string) string {
+	return prefix() + key
+}
+
+// ---- compatible command wrappers (Result / Err) ----
+
+type StatusCmd struct{ err error }
+
+func (c *StatusCmd) Err() error { return c.err }
+
+type StringCmd struct {
+	val string
+	err error
+}
+
+func (c *StringCmd) Result() (string, error) { return c.val, c.err }
+func (c *StringCmd) Err() error               { return c.err }
+
+type IntCmd struct {
+	val int64
+	err error
+}
+
+func (c *IntCmd) Result() (int64, error) { return c.val, c.err }
+func (c *IntCmd) Err() error             { return c.err }
+
+type StringSliceCmd struct {
+	val []string
+	err error
+}
+
+func (c *StringSliceCmd) Result() ([]string, error) { return c.val, c.err }
+func (c *StringSliceCmd) Err() error                { return c.err }
+
+type BoolCmd struct {
+	val bool
+	err error
+}
+
+func (c *BoolCmd) Result() (bool, error) { return c.val, c.err }
+func (c *BoolCmd) Err() error            { return c.err }
+
+type DurationCmd struct {
+	val time.Duration
+	err error
+}
+
+func (c *DurationCmd) Result() (time.Duration, error) { return c.val, c.err }
+func (c *DurationCmd) Err() error                     { return c.err }
+
+type MapStringStringCmd struct {
+	val map[string]string
+	err error
+}
+
+func (c *MapStringStringCmd) Result() (map[string]string, error) { return c.val, c.err }
+func (c *MapStringStringCmd) Err() error                         { return c.err }
+
+func Keys(ctx context.Context, key string) *StringSliceCmd {
+	_ = ctx
+	rKey := BuildAuthRedisKey(key)
+	return &StringSliceCmd{val: memcache.Default.Keys(rKey)}
+}
+
+func Set(ctx context.Context, key string, value string) *StatusCmd {
+	_ = ctx
+	ttl := vars.Config.GetDuration("jwt.expire") * time.Second
+	memcache.Default.Set(BuildAuthRedisKey(key), value, ttl)
+	return &StatusCmd{}
+}
+
+func SetEx(ctx context.Context, key string, value string, expireAt time.Duration) *StatusCmd {
+	_ = ctx
+	memcache.Default.Set(BuildAuthRedisKey(key), value, expireAt)
+	return &StatusCmd{}
+}
+
+func SetNX(ctx context.Context, key string, value string) *BoolCmd {
+	_ = ctx
+	rKey := BuildAuthRedisKey(key)
+	if _, ok := memcache.Default.Get(rKey); ok {
+		return &BoolCmd{val: false}
+	}
+	memcache.Default.Set(rKey, value, 0)
+	return &BoolCmd{val: true}
+}
+
+func Del(ctx context.Context, key string) *IntCmd {
+	_ = ctx
+	n := memcache.Default.Del(BuildAuthRedisKey(key))
+	return &IntCmd{val: n}
+}
+
+func DelRaw(ctx context.Context, keys ...string) *IntCmd {
+	_ = ctx
+	if len(keys) == 0 {
+		return &IntCmd{val: 0}
+	}
+	return &IntCmd{val: memcache.Default.Del(keys...)}
 }
 
 // InvalidatePermsCache 清除全部用户前端权限缓存
 func InvalidatePermsCache(ctx context.Context) {
-	if vars.Redis == nil {
-		return
-	}
 	keys, err := Keys(ctx, "perms:*").Result()
 	if err != nil || len(keys) == 0 {
+		_ = Del(ctx, ResFmt).Err()
 		return
 	}
 	_ = DelRaw(ctx, keys...).Err()
 	_ = Del(ctx, ResFmt).Err()
 }
 
-func Get(ctx context.Context, key string) *redis.StringCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.Get(ctx, rKey)
+func Get(ctx context.Context, key string) *StringCmd {
+	_ = ctx
+	val, ok := memcache.Default.Get(BuildAuthRedisKey(key))
+	if !ok {
+		return &StringCmd{err: ErrNil}
+	}
+	return &StringCmd{val: val}
 }
 
-func Exists(ctx context.Context, key string) *redis.IntCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.Exists(ctx, rKey)
+func Exists(ctx context.Context, key string) *IntCmd {
+	_ = ctx
+	if _, ok := memcache.Default.Get(BuildAuthRedisKey(key)); ok {
+		return &IntCmd{val: 1}
+	}
+	return &IntCmd{val: 0}
 }
 
-func LRange(ctx context.Context, key string, start, stop int64) *redis.StringSliceCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.LRange(ctx, rKey, start, stop)
+func LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd {
+	_ = ctx
+	_ = key
+	_ = start
+	_ = stop
+	return &StringSliceCmd{val: nil}
 }
 
-func LRem(ctx context.Context, key string, count int64, value interface{}) *redis.IntCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.LRem(ctx, rKey, count, value)
+func LRem(ctx context.Context, key string, count int64, value interface{}) *IntCmd {
+	_ = ctx
+	_ = key
+	_ = count
+	_ = value
+	return &IntCmd{val: 0}
 }
 
-func LPush(ctx context.Context, key string, values ...interface{}) *redis.IntCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.LPush(ctx, rKey, values)
+func LPush(ctx context.Context, key string, values ...interface{}) *IntCmd {
+	_ = ctx
+	_ = key
+	_ = values
+	return &IntCmd{val: 0}
 }
 
-// TTL 获取key过期时间
-func TTL(ctx context.Context, key string) *redis.DurationCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.TTL(ctx, rKey)
+func TTL(ctx context.Context, key string) *DurationCmd {
+	_ = ctx
+	_ = key
+	return &DurationCmd{val: -1}
 }
 
-// GetSet 获取key的值 并设置新的值
-func GetSet(ctx context.Context, key string, value interface{}) *redis.StringCmd {
+func GetSet(ctx context.Context, key string, value interface{}) *StringCmd {
+	_ = ctx
 	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.GetSet(ctx, rKey, value)
+	old, _ := memcache.Default.Get(rKey)
+	memcache.Default.Set(rKey, toString(value), 0)
+	return &StringCmd{val: old}
 }
 
-// HMSet 设置hash的值
-func HMSet(ctx context.Context, key string, values ...interface{}) *redis.BoolCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.HMSet(ctx, rKey, values)
+func HMSet(ctx context.Context, key string, values ...interface{}) *BoolCmd {
+	_ = ctx
+	_ = key
+	_ = values
+	return &BoolCmd{val: true}
 }
 
-// HGetAll 获取hash的值
-func HGetAll(ctx context.Context, key string) *redis.MapStringStringCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.HGetAll(ctx, rKey)
+func HGetAll(ctx context.Context, key string) *MapStringStringCmd {
+	_ = ctx
+	_ = key
+	return &MapStringStringCmd{val: map[string]string{}}
 }
 
-// HGet 获取hash的值
-func HGet(ctx context.Context, key string, field string) *redis.StringCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.HGet(ctx, rKey, field)
+func HGet(ctx context.Context, key string, field string) *StringCmd {
+	_ = ctx
+	_ = key
+	_ = field
+	return &StringCmd{err: ErrNil}
 }
 
-// SMembers 获取集合的值
-func SMembers(ctx context.Context, key string) *redis.StringSliceCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.SMembers(ctx, rKey)
+func SMembers(ctx context.Context, key string) *StringSliceCmd {
+	_ = ctx
+	_ = key
+	return &StringSliceCmd{val: nil}
 }
 
-// SRem 删除集合的值
-func SRem(ctx context.Context, key string, values ...interface{}) *redis.IntCmd {
-	rKey := BuildAuthRedisKey(key)
-	return vars.Redis.SRem(ctx, rKey, values)
+func SRem(ctx context.Context, key string, values ...interface{}) *IntCmd {
+	_ = ctx
+	_ = key
+	_ = values
+	return &IntCmd{val: 0}
 }
 
-// Publish 发布消息到 Redis topic
 func Publish(ctx context.Context, topic, msg string) error {
-	return vars.Redis.Publish(ctx, topic, msg).Err()
+	_ = ctx
+	_ = topic
+	_ = msg
+	return nil
 }
 
-// Subscribe 订阅 Redis topic，返回 *redis.PubSub
-func Subscribe(ctx context.Context, topic string) *redis.PubSub {
-	return vars.Redis.Subscribe(ctx, topic)
+func Subscribe(ctx context.Context, topic string) interface{} {
+	_ = ctx
+	_ = topic
+	return nil
+}
+
+func toString(v interface{}) string {
+	switch t := v.(type) {
+	case string:
+		return t
+	case []byte:
+		return string(t)
+	default:
+		return ""
+	}
 }

@@ -56,6 +56,10 @@ func TenantMiddleware(db *gorm.DB) fiber.Handler {
 			if needTenantData {
 				headerTID := cast.ToUint64(ctx.Get(vars.HeaderTenantID))
 				if headerTID == 0 {
+					// WebSocket clients pass tenant via query (cannot set custom headers).
+					headerTID = cast.ToUint64(ctx.Query("tenantId"))
+				}
+				if headerTID == 0 {
 					return response.BadRequestException(ctx, "请通过 "+vars.HeaderTenantID+" 指定操作租户")
 				}
 				if !isSuper {

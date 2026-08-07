@@ -24,6 +24,16 @@ func Models() []any {
 		&sysRoleAuth{},
 		&sysCasbinRule{},
 		&attachment{},
+		&farmAccount{},
+		&farmAccountConfig{},
+		&farmCard{},
+		&farmCardClaim{},
+		&farmFriendGid{},
+		&farmStats{},
+		&farmInteractLog{},
+		&farmSystemConfig{},
+		&farmGameConfig{},
+		&farmActivityState{},
 	}
 }
 
@@ -71,6 +81,13 @@ func Seed(db *gorm.DB) error {
 }
 
 func syncPostgresSequences(db *gorm.DB) error {
+	if db == nil || db.Dialector == nil {
+		return nil
+	}
+	name := strings.ToLower(db.Dialector.Name())
+	if name != "postgres" && name != "postgresql" {
+		return nil
+	}
 	tables := []string{
 		"cn_sys_admin",
 		"cn_sys_role",
@@ -80,6 +97,16 @@ func syncPostgresSequences(db *gorm.DB) error {
 		"cn_sys_role_auth",
 		"cn_sys_casbin_rule",
 		"cn_attachment",
+		"cn_farm_account",
+		"cn_farm_account_config",
+		"cn_farm_card",
+		"cn_farm_card_claim",
+		"cn_farm_friend_gid",
+		"cn_farm_stats",
+		"cn_farm_interact_log",
+		"cn_farm_system_config",
+		"cn_farm_game_config",
+		"cn_farm_activity_state",
 	}
 	for _, table := range tables {
 		sql := fmt.Sprintf(
@@ -160,23 +187,24 @@ func seedResources(db *gorm.DB) error {
 	show, hide := uint8(1), uint8(2)
 	// 精确 b_url，禁止 /*；hide_in_menu：1显示 2隐藏
 	resources := []model.SysResource{
-		{ID: 1, Name: "平台管理", Alias: "platform", Desc: "平台配置目录", Icon: "mdi:office-building-cog", ParentID: 0, Path: "1", ResourceType: vars.ResourceTypeDir, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
-		{ID: 20, Name: "系统管理", Alias: "system", Desc: "系统业务目录", Icon: "mdi:cog-outline", ParentID: 0, Path: "20", ResourceType: vars.ResourceTypeDir, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 1, Name: "平台管理", Alias: "platform", Desc: "平台配置目录", Icon: "mdi:office-building-cog", ParentID: 0, Path: "1", ResourceType: vars.ResourceTypeDir, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		// 系统管理挂到农场管理下（ParentID=60）
+		{ID: 20, Name: "系统管理", Alias: "system", Desc: "系统业务目录", Icon: "mdi:cog-outline", ParentID: 60, Path: "60-20", ResourceType: vars.ResourceTypeDir, HideInMenu: show, Status: 1, SortOrder: 90, CreatedAt: now, UpdatedAt: now},
 
-		{ID: 2, Name: "用户管理", Alias: "system_admin", Desc: "用户管理", FURL: "/system/admin", Icon: "mdi:account", ParentID: 20, Path: "20-2", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
-		{ID: 4, Name: "用户列表", Alias: "admin:list", Desc: "用户列表", BURL: "/system/admin/list", Methods: "GET", ParentID: 2, Path: "20-2-4", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
-		{ID: 21, Name: "用户新增", Alias: "admin:add", Desc: "创建用户", BURL: "/system/admin/add", Methods: "POST", ParentID: 2, Path: "20-2-21", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
-		{ID: 22, Name: "用户修改", Alias: "admin:modify", Desc: "更新用户", BURL: "/system/admin/modify", Methods: "POST", ParentID: 2, Path: "20-2-22", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
-		{ID: 23, Name: "用户启停", Alias: "admin:status", Desc: "启停用户", BURL: "/system/admin/status", Methods: "POST", ParentID: 2, Path: "20-2-23", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
-		{ID: 13, Name: "平台用户新增", Alias: "platform-user:add", Desc: "创建平台用户", BURL: "/system/platform-user/add", Methods: "POST", ParentID: 2, Path: "20-2-13", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
+		{ID: 2, Name: "用户管理", Alias: "system_admin", Desc: "用户管理", FURL: "/system/admin", Icon: "mdi:account", ParentID: 20, Path: "60-20-2", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 4, Name: "用户列表", Alias: "admin:list", Desc: "用户列表", BURL: "/system/admin/list", Methods: "GET", ParentID: 2, Path: "60-20-2-4", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 21, Name: "用户新增", Alias: "admin:add", Desc: "创建用户", BURL: "/system/admin/add", Methods: "POST", ParentID: 2, Path: "60-20-2-21", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 22, Name: "用户修改", Alias: "admin:modify", Desc: "更新用户", BURL: "/system/admin/modify", Methods: "POST", ParentID: 2, Path: "60-20-2-22", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
+		{ID: 23, Name: "用户启停", Alias: "admin:status", Desc: "启停用户", BURL: "/system/admin/status", Methods: "POST", ParentID: 2, Path: "60-20-2-23", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
+		{ID: 13, Name: "平台用户新增", Alias: "platform-user:add", Desc: "创建平台用户", BURL: "/system/platform-user/add", Methods: "POST", ParentID: 2, Path: "60-20-2-13", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
 
-		{ID: 14, Name: "附件管理", Alias: "system_attachment", Desc: "附件", FURL: "/system/attachment", Icon: "mdi:paperclip", ParentID: 20, Path: "20-14", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
-		{ID: 24, Name: "附件列表", Alias: "attachment:list", BURL: "/system/attachment/list", Methods: "GET", ParentID: 14, Path: "20-14-24", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
-		{ID: 25, Name: "附件详情", Alias: "attachment:detail", BURL: "/system/attachment/detail", Methods: "GET", ParentID: 14, Path: "20-14-25", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
-		{ID: 26, Name: "附件上传", Alias: "attachment:upload", BURL: "/system/attachment/upload", Methods: "POST", ParentID: 14, Path: "20-14-26", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
-		{ID: 27, Name: "附件访问址", Alias: "attachment:access-url", BURL: "/system/attachment/access-url", Methods: "POST", ParentID: 14, Path: "20-14-27", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
-		{ID: 28, Name: "附件启停", Alias: "attachment:status", BURL: "/system/attachment/status", Methods: "POST", ParentID: 14, Path: "20-14-28", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
-		{ID: 29, Name: "附件删除", Alias: "attachment:delete", BURL: "/system/attachment/delete", Methods: "POST", ParentID: 14, Path: "20-14-29", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 60, CreatedAt: now, UpdatedAt: now},
+		{ID: 14, Name: "附件管理", Alias: "system_attachment", Desc: "附件", FURL: "/system/attachment", Icon: "mdi:paperclip", ParentID: 20, Path: "60-20-14", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 24, Name: "附件列表", Alias: "attachment:list", BURL: "/system/attachment/list", Methods: "GET", ParentID: 14, Path: "60-20-14-24", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 25, Name: "附件详情", Alias: "attachment:detail", BURL: "/system/attachment/detail", Methods: "GET", ParentID: 14, Path: "60-20-14-25", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 26, Name: "附件上传", Alias: "attachment:upload", BURL: "/system/attachment/upload", Methods: "POST", ParentID: 14, Path: "60-20-14-26", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
+		{ID: 27, Name: "附件访问址", Alias: "attachment:access-url", BURL: "/system/attachment/access-url", Methods: "POST", ParentID: 14, Path: "60-20-14-27", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
+		{ID: 28, Name: "附件启停", Alias: "attachment:status", BURL: "/system/attachment/status", Methods: "POST", ParentID: 14, Path: "60-20-14-28", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
+		{ID: 29, Name: "附件删除", Alias: "attachment:delete", BURL: "/system/attachment/delete", Methods: "POST", ParentID: 14, Path: "60-20-14-29", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 60, CreatedAt: now, UpdatedAt: now},
 
 		{ID: 11, Name: "租户", Alias: "system_tenant", Desc: "租户管理", FURL: "/system/tenant", Icon: "mdi:office-building", ParentID: 1, Path: "1-11", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
 		{ID: 30, Name: "租户列表", Alias: "tenant:list", BURL: "/platform/tenant/list", Methods: "GET", ParentID: 11, Path: "1-11-30", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
@@ -211,6 +239,67 @@ func seedResources(db *gorm.DB) error {
 		{ID: 48, Name: "动态路由", Alias: "auth:user-routes", BURL: "/auth/user-routes", Methods: "GET", ParentID: 16, Path: "1-16-48", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
 		{ID: 49, Name: "退出登录", Alias: "auth:logout", BURL: "/auth/logout", Methods: "POST", ParentID: 16, Path: "1-16-49", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
 		{ID: 50, Name: "修改密码", Alias: "auth:password", BURL: "/auth/password", Methods: "POST", ParentID: 16, Path: "1-16-50", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
+
+		// 农场业务（FURL 对齐 vue-framework Elegant Router）
+		{ID: 60, Name: "农场管理", Alias: "farm", Desc: "农场业务目录", Icon: "mdi:barn", ParentID: 0, Path: "60", ResourceType: vars.ResourceTypeDir, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+
+		// 概览已迁到首页 /home，菜单隐藏；权限按钮仍挂在此节点
+		{ID: 69, Name: "农场概览", Alias: "farm_dashboard", Desc: "农场概览（已迁至首页）", FURL: "/farm/dashboard", Icon: "mdi:view-dashboard", ParentID: 60, Path: "60-69", ResourceType: vars.ResourceTypeMenu, HideInMenu: hide, Status: 1, SortOrder: 1, CreatedAt: now, UpdatedAt: now},
+		{ID: 76, Name: "状态详情", Alias: "farm-status:detail", BURL: "/farm/status/detail", Methods: "GET", ParentID: 69, Path: "60-69-76", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 77, Name: "状态列表", Alias: "farm-status:list", BURL: "/farm/status/list", Methods: "GET", ParentID: 69, Path: "60-69-77", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 108, Name: "实时通道", Alias: "farm-ws:get", BURL: "/farm/ws", Methods: "GET", ParentID: 69, Path: "60-69-108", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
+		{ID: 109, Name: "运行日志", Alias: "farm-logs:list", BURL: "/farm/logs", Methods: "GET", ParentID: 69, Path: "60-69-109", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
+		{ID: 110, Name: "清空日志", Alias: "farm-logs:clear", BURL: "/farm/logs", Methods: "DELETE", ParentID: 69, Path: "60-69-110", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
+
+		{ID: 61, Name: "农场账号", Alias: "farm_account", Desc: "农场账号管理", FURL: "/farm/account", Icon: "mdi:account-cowboy-hat", ParentID: 60, Path: "60-61", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 62, Name: "账号列表", Alias: "farm-account:list", BURL: "/farm/account/list", Methods: "GET", ParentID: 61, Path: "60-61-62", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 63, Name: "账号详情", Alias: "farm-account:detail", BURL: "/farm/account/detail", Methods: "GET", ParentID: 61, Path: "60-61-63", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 64, Name: "账号新增", Alias: "farm-account:add", BURL: "/farm/account/add", Methods: "POST", ParentID: 61, Path: "60-61-64", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
+		{ID: 65, Name: "账号修改", Alias: "farm-account:modify", BURL: "/farm/account/modify", Methods: "POST", ParentID: 61, Path: "60-61-65", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
+		{ID: 66, Name: "账号删除", Alias: "farm-account:delete", BURL: "/farm/account/delete", Methods: "POST", ParentID: 61, Path: "60-61-66", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
+		{ID: 67, Name: "账号启动", Alias: "farm-account:start", BURL: "/farm/account/start", Methods: "POST", ParentID: 61, Path: "60-61-67", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 60, CreatedAt: now, UpdatedAt: now},
+		{ID: 68, Name: "账号停止", Alias: "farm-account:stop", BURL: "/farm/account/stop", Methods: "POST", ParentID: 61, Path: "60-61-68", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 70, CreatedAt: now, UpdatedAt: now},
+
+		{ID: 85, Name: "好友", Alias: "farm_friends", Desc: "好友互动", FURL: "/farm/friends", Icon: "mdi:account-group", ParentID: 60, Path: "60-85", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 15, CreatedAt: now, UpdatedAt: now},
+		{ID: 86, Name: "好友列表", Alias: "farm-friend:list", BURL: "/farm/friend/list", Methods: "GET", ParentID: 85, Path: "60-85-86", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 87, Name: "互动记录", Alias: "farm-friend:interact-logs", BURL: "/farm/friend/interact-logs", Methods: "GET", ParentID: 85, Path: "60-85-87", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 111, Name: "最近访客", Alias: "farm-friend:interact-records", BURL: "/farm/friend/interact-records", Methods: "GET", ParentID: 85, Path: "60-85-111", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 25, CreatedAt: now, UpdatedAt: now},
+		{ID: 104, Name: "同步好友", Alias: "farm-friend:sync", BURL: "/farm/friend/sync", Methods: "POST", ParentID: 85, Path: "60-85-104", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
+		{ID: 105, Name: "好友互动", Alias: "farm-friend:op", BURL: "/farm/friend/op", Methods: "POST", ParentID: 85, Path: "60-85-105", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
+		{ID: 106, Name: "好友土地", Alias: "farm-friend:lands", BURL: "/farm/friend/lands", Methods: "GET", ParentID: 85, Path: "60-85-106", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
+
+		{ID: 88, Name: "活动中心", Alias: "farm_activity", Desc: "活动中心", FURL: "/farm/activity", Icon: "mdi:star-circle", ParentID: 60, Path: "60-88", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 16, CreatedAt: now, UpdatedAt: now},
+		{ID: 89, Name: "活动快照", Alias: "farm-activity:snapshot", BURL: "/farm/activity/snapshot", Methods: "GET", ParentID: 88, Path: "60-88-89", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 90, Name: "领取通行证", Alias: "farm-activity:pass-claim", BURL: "/farm/activity/pass/claim", Methods: "POST", ParentID: 88, Path: "60-88-90", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 91, Name: "点亮观星", Alias: "farm-activity:constellation", BURL: "/farm/activity/constellation/light", Methods: "POST", ParentID: 88, Path: "60-88-91", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
+		{ID: 92, Name: "星砂兑换", Alias: "farm-activity:shop", BURL: "/farm/activity/shop/exchange", Methods: "POST", ParentID: 88, Path: "60-88-92", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
+		{ID: 93, Name: "领取节令", Alias: "farm-activity:solar", BURL: "/farm/activity/solar-terms/claim", Methods: "POST", ParentID: 88, Path: "60-88-93", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 50, CreatedAt: now, UpdatedAt: now},
+
+		{ID: 94, Name: "分析", Alias: "farm_analytics", Desc: "数据分析", FURL: "/farm/analytics", Icon: "mdi:chart-line", ParentID: 60, Path: "60-94", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 17, CreatedAt: now, UpdatedAt: now},
+		{ID: 95, Name: "分析详情", Alias: "farm-analytics:detail", BURL: "/farm/analytics/detail", Methods: "GET", ParentID: 94, Path: "60-94-95", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+
+		{ID: 70, Name: "自动化设置", Alias: "farm_settings", Desc: "自动化与间隔设置", FURL: "/farm/settings", Icon: "mdi:cog", ParentID: 60, Path: "60-70", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 71, Name: "配置详情", Alias: "farm-automation:detail", BURL: "/farm/automation/detail", Methods: "GET", ParentID: 70, Path: "60-70-71", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 72, Name: "配置修改", Alias: "farm-automation:modify", BURL: "/farm/automation/modify", Methods: "POST", ParentID: 70, Path: "60-70-72", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+
+		{ID: 96, Name: "游戏配置", Alias: "farm_game-config", Desc: "游戏静态配置", FURL: "/farm/game-config", Icon: "mdi:seed", ParentID: 60, Path: "60-96", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 25, CreatedAt: now, UpdatedAt: now},
+		// KeyMatch2：/farm/game-config/* 覆盖 list/seeds/fruits/items/plants/item-types 等只读目录 API
+		{ID: 97, Name: "配置列表", Alias: "farm-game-config:list", BURL: "/farm/game-config/*", Methods: "GET", ParentID: 96, Path: "60-96-97", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		// 覆盖 modify 与 seed/fruit/item 的 add|modify|delete
+		{ID: 98, Name: "配置修改", Alias: "farm-game-config:modify", BURL: "/farm/game-config/*", Methods: "POST", ParentID: 96, Path: "60-96-98", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+
+		{ID: 80, Name: "卡密管理", Alias: "farm_card", Desc: "卡密生成与兑换", FURL: "/farm/card", Icon: "mdi:ticket-percent", ParentID: 60, Path: "60-80", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
+		{ID: 81, Name: "卡密列表", Alias: "farm-card:list", BURL: "/farm/card/list", Methods: "GET", ParentID: 80, Path: "60-80-81", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 82, Name: "卡密生成", Alias: "farm-card:add", BURL: "/farm/card/add", Methods: "POST", ParentID: 80, Path: "60-80-82", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 83, Name: "卡密兑换", Alias: "farm-card:redeem", BURL: "/farm/card/redeem", Methods: "POST", ParentID: 80, Path: "60-80-83", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
+		{ID: 84, Name: "卡密作废", Alias: "farm-card:status", BURL: "/farm/card/status", Methods: "POST", ParentID: 80, Path: "60-80-84", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
+
+		{ID: 99, Name: "个人农场", Alias: "farm_personal", Desc: "个人农场面板", FURL: "/farm/personal", Icon: "mdi:sprout", ParentID: 60, Path: "60-99", ResourceType: vars.ResourceTypeMenu, HideInMenu: show, Status: 1, SortOrder: 8, CreatedAt: now, UpdatedAt: now},
+		{ID: 107, Name: "可用种子", Alias: "farm-seeds:get", BURL: "/farm/seeds", Methods: "GET", ParentID: 70, Path: "60-70-107", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
+		{ID: 100, Name: "土地列表", Alias: "farm-lands:get", BURL: "/farm/lands", Methods: "GET", ParentID: 99, Path: "60-99-100", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 10, CreatedAt: now, UpdatedAt: now},
+		{ID: 101, Name: "农场操作", Alias: "farm-operate:post", BURL: "/farm/operate", Methods: "POST", ParentID: 99, Path: "60-99-101", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 20, CreatedAt: now, UpdatedAt: now},
+		{ID: 102, Name: "背包列表", Alias: "farm-bag:get", BURL: "/farm/bag", Methods: "GET", ParentID: 99, Path: "60-99-102", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 30, CreatedAt: now, UpdatedAt: now},
+		{ID: 103, Name: "背包出售", Alias: "farm-bag:sell", BURL: "/farm/bag/sell", Methods: "POST", ParentID: 99, Path: "60-99-103", ResourceType: vars.ResourceTypeButton, HideInMenu: show, Status: 1, SortOrder: 40, CreatedAt: now, UpdatedAt: now},
 	}
 
 	for _, row := range resources {
@@ -245,8 +334,8 @@ func seedResources(db *gorm.DB) error {
 		}
 	}
 
-	// 删除旧通配按钮
-	obsolete := []uint64{3, 10, 12, 15, 17, 19}
+	// 删除旧通配按钮与过时农场菜单
+	obsolete := []uint64{3, 10, 12, 15, 17, 19, 75}
 	if err := db.Where("id IN ?", obsolete).Delete(&model.SysResource{}).Error; err != nil {
 		return err
 	}
@@ -260,11 +349,25 @@ func seedRoleAuth(db *gorm.DB) error {
 	attachFull := "14,24,25,26,27,28,29"
 	tenantFull := "11,30,31,32,33,34,35"
 	roleRead := "5,6"
+	farmDash := "69,76,77,108,109,110"
+	farmAccount := "61,62,63,64,65,66,67,68"
+	farmFriends := "85,86,87,111,104,105,106"
+	farmActivity := "88,89,90,91,92,93"
+	farmAnalytics := "94,95"
+	farmSettings := "70,71,72,107"
+	farmGameCfg := "96,97,98"
+	farmCardAll := "80,81,82,83,84"
+	farmPersonal := "99,100,101,102,103"
+	// 租户仅保留兑换按钮权限，不授卡密管理菜单(80)与列表(81)
+	farmCardRedeem := "83"
+	farmCommon := "60," + farmDash + "," + farmAccount + "," + farmFriends + "," + farmActivity + "," + farmAnalytics + "," + farmSettings + "," + farmGameCfg + "," + farmPersonal
+	farmTenant := farmCommon + "," + farmCardRedeem
+	farmPlatform := farmCommon + "," + farmCardAll
 
 	auths := []model.SysRoleAuth{
-		{ID: 1, RoleID: 2, ResourceIds: "1,20," + tenantFull + "," + adminFull + "," + attachFull + "," + roleRead + "," + authBtns},
-		{ID: 2, RoleID: 3, ResourceIds: "20," + adminFull + "," + attachFull + "," + roleRead + "," + authBtns},
-		{ID: 3, RoleID: 4, ResourceIds: "20," + adminList + "," + roleRead + "," + authBtns},
+		{ID: 1, RoleID: 2, ResourceIds: "1,20," + tenantFull + "," + adminFull + "," + attachFull + "," + roleRead + "," + farmPlatform + "," + authBtns},
+		{ID: 2, RoleID: 3, ResourceIds: "20," + adminFull + "," + attachFull + "," + roleRead + "," + farmTenant + "," + authBtns},
+		{ID: 3, RoleID: 4, ResourceIds: "20," + adminList + "," + roleRead + "," + farmTenant + "," + authBtns},
 	}
 
 	for _, row := range auths {
@@ -298,6 +401,8 @@ func syncSeededRoleCasbin(db *gorm.DB) error {
 			return fmt.Errorf("sync casbin role %d: %w", roleID, err)
 		}
 	}
+	// Enforcer 可能已在上一轮启动中加载；热迁移后尽量刷新内存策略。
+	_ = rbac.ReloadPolicy()
 	return nil
 }
 

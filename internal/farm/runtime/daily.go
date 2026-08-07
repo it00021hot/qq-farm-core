@@ -1,0 +1,507 @@
+package runtime
+
+import (
+	"context"
+	"log/slog"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/MQEnergy/go-skeleton/internal/farm/game"
+	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
+	"github.com/MQEnergy/go-skeleton/internal/farm/proto/emailpb"
+	"github.com/MQEnergy/go-skeleton/internal/farm/proto/taskpb"
+	"github.com/MQEnergy/go-skeleton/internal/farm/stats"
+)
+
+const (
+	ticketItemID           int64 = 1002
+	emailCheckCooldown     = 5 * time.Minute
+	dailyCheckCooldown     = 10 * time.Minute
+	illustratedMinTicketGain int64 = 200
+)
+
+// DailyState tracks per-session daily routine progress.
+type DailyState struct {
+	mu sync.Mutex
+
+	lastDailyDateKey string
+
+	emailDoneDateKey string
+	emailLastCheck   time.Time
+
+	shareDoneDateKey string
+	shareLastCheck   time.Time
+
+	monthCardDoneDateKey string
+	monthCardLastCheck   time.Time
+
+	freeGiftDoneDateKey string
+	freeGiftLastCheck   time.Time
+
+	vipDoneDateKey string
+	vipLastCheck   time.Time
+
+	taskChecking bool
+}
+
+func localDateKey(t time.Time) string {
+	return t.Format("2006-01-02")
+}
+
+// RunDailyRoutines executes email/share/monthcard/vip/free-gift routines.
+// Aligned with qq-farm-bot worker.runDailyRoutines: always enabled (no per-flag toggles).
+func RunDailyRoutines(ctx context.Context, api *game.API, cfg logic.AccountConfig, state *DailyState, force bool) {
+	if api == nil || state == nil {
+		return
+	}
+	_ = cfg
+	now := time.Now()
+	today := localDateKey(now)
+
+	state.mu.Lock()
+	if force || state.lastDailyDateKey != today {
+		state.lastDailyDateKey = today
+	}
+	state.mu.Unlock()
+
+	runEmailClaim(ctx, api, state, force, now)
+	runShareClaim(ctx, api, state, force, now)
+	runMonthCardClaim(ctx, api, state, force, now)
+	runFreeGifts(ctx, api, state, force, now)
+	runVipGift(ctx, api, state, force, now)
+}
+
+// RunTaskClaims auto-claims tasks, actives, and illustrated rewards when Automation.Task is enabled.
+func RunTaskClaims(ctx context.Context, api *game.API, cfg logic.AccountConfig, accountID uint64, state *DailyState) {
+	if api == nil || state == nil || !cfg.Automation.Task {
+		return
+	}
+
+	state.mu.Lock()
+	if state.taskChecking {
+		state.mu.Unlock()
+		return
+	}
+	state.taskChecking = true
+	state.mu.Unlock()
+
+	defer func() {
+		state.mu.Lock()
+		state.taskChecking = false
+		state.mu.Unlock()
+	}()
+
+	reply, err := api.TaskInfo(ctx)
+	if err != nil {
+		slog.Warn("task claim: TaskInfo failed", "err", err)
+		return
+	}
+	if reply == nil || reply.TaskInfo == nil {
+		return
+	}
+
+	normalized := normalizeTaskInfo(reply.TaskInfo)
+	claimable := append(
+		append(
+			analyzeTaskList(normalized.dailyTasks, "daily"),
+			analyzeTaskList(normalized.growthTasks, "growth")...,
+		),
+		analyzeTaskList(normalized.otherTasks, "main")...,
+	)
+
+	for _, task := range claimable {
+		doShared := task.ShareMultiple > 1
+		if _, err := api.ClaimTaskReward(ctx, task.ID, doShared); err != nil {
+			continue
+		}
+		stats.RecordOp(accountID, 0, "taskClaim", 1)
+		time.Sleep(300 * time.Millisecond)
+	}
+
+	claimActives(ctx, api, normalized.actives)
+	claimIllustratedIfWorthwhile(ctx, api, accountID)
+}
+
+type normalizedTaskInfo struct {
+	growthTasks []taskpb.Task
+	dailyTasks  []taskpb.Task
+	otherTasks  []taskpb.Task
+	actives     []taskpb.Active
+}
+
+type claimableTask struct {
+	ID            int64
+	Desc          string
+	Category      string
+	ShareMultiple int64
+}
+
+func normalizeTaskInfo(info *taskpb.TaskInfo) normalizedTaskInfo {
+	out := normalizedTaskInfo{}
+	if info == nil {
+		return out
+	}
+	seen := make(map[int64]struct{})
+
+	appendTask := func(task taskpb.Task, target *[]taskpb.Task) {
+		if task.ID > 0 {
+			if _, ok := seen[task.ID]; ok {
+				return
+			}
+			seen[task.ID] = struct{}{}
+		}
+		*target = append(*target, task)
+	}
+
+	for _, task := range info.Tasks {
+		switch task.TaskType {
+		case 1:
+			appendTask(task, &out.growthTasks)
+		case 2:
+			appendTask(task, &out.dailyTasks)
+		default:
+			appendTask(task, &out.otherTasks)
+		}
+	}
+	for _, task := range info.GrowthTasks {
+		appendTask(task, &out.growthTasks)
+	}
+	for _, task := range info.DailyTasks {
+		appendTask(task, &out.dailyTasks)
+	}
+	out.actives = append(out.actives, info.Actives...)
+	return out
+}
+
+func analyzeTaskList(tasks []taskpb.Task, category string) []claimableTask {
+	out := make([]claimableTask, 0)
+	for _, task := range tasks {
+		if task.ID <= 0 {
+			continue
+		}
+		if !task.IsUnlocked || task.IsClaimed {
+			continue
+		}
+		if task.TotalProgress <= 0 || task.Progress < task.TotalProgress {
+			continue
+		}
+		desc := task.Desc
+		if desc == "" {
+			desc = "任务"
+		}
+		out = append(out, claimableTask{
+			ID:            task.ID,
+			Desc:          desc,
+			Category:      category,
+			ShareMultiple: task.ShareMultiple,
+		})
+	}
+	return out
+}
+
+func claimActives(ctx context.Context, api *game.API, actives []taskpb.Active) {
+	for _, active := range actives {
+		pointIDs := make([]int64, 0)
+		for _, reward := range active.Rewards {
+			if reward.Status == 2 && reward.PointID > 0 {
+				pointIDs = append(pointIDs, reward.PointID)
+			}
+		}
+		if len(pointIDs) == 0 {
+			continue
+		}
+		if _, err := api.ClaimDailyReward(ctx, active.Type, pointIDs); err != nil {
+			slog.Warn("task claim: active reward failed", "type", active.Type, "err", err)
+			continue
+		}
+		time.Sleep(300 * time.Millisecond)
+	}
+}
+
+func claimIllustratedIfWorthwhile(ctx context.Context, api *game.API, accountID uint64) {
+	before := ticketBalance(ctx, api)
+	reply, err := api.ClaimAllIllustratedRewards(ctx, true)
+	if err != nil {
+		return
+	}
+	after := ticketBalance(ctx, api)
+	gain := after - before
+	if gain < illustratedMinTicketGain {
+		return
+	}
+	if reply != nil && (len(reply.Items) > 0 || len(reply.BonusItems) > 0) {
+		stats.RecordOp(accountID, 0, "taskClaim", 1)
+		slog.Info("task claim: illustrated rewards", "ticketGain", gain)
+	}
+}
+
+func ticketBalance(ctx context.Context, api *game.API) int64 {
+	bag, err := api.Bag(ctx)
+	if err != nil {
+		return 0
+	}
+	for _, item := range game.GetBagItems(bag) {
+		if item.ID == ticketItemID {
+			return item.Count
+		}
+	}
+	return 0
+}
+
+func runEmailClaim(ctx context.Context, api *game.API, state *DailyState, force bool, now time.Time) {
+	state.mu.Lock()
+	today := localDateKey(now)
+	if !force && state.emailDoneDateKey == today {
+		state.mu.Unlock()
+		return
+	}
+	if !force && now.Sub(state.emailLastCheck) < emailCheckCooldown {
+		state.mu.Unlock()
+		return
+	}
+	state.emailLastCheck = now
+	state.mu.Unlock()
+
+	box1, err1 := api.GetEmailList(ctx, 1)
+	box2, err2 := api.GetEmailList(ctx, 2)
+	if err1 != nil && err2 != nil {
+		slog.Warn("daily: email list failed", "err1", err1, "err2", err2)
+		return
+	}
+
+	claimable := mergeClaimableEmails(box1, box2)
+	if len(claimable) == 0 {
+		state.mu.Lock()
+		state.emailDoneDateKey = today
+		state.mu.Unlock()
+		return
+	}
+
+	byBox := map[int32][]emailEntry{}
+	for _, e := range claimable {
+		byBox[e.boxType] = append(byBox[e.boxType], e)
+	}
+	for boxType, list := range byBox {
+		if len(list) == 0 {
+			continue
+		}
+		_, _ = api.BatchClaimEmail(ctx, boxType, list[0].id)
+	}
+	for _, e := range claimable {
+		_, _ = api.ClaimEmail(ctx, e.boxType, e.id)
+	}
+
+	state.mu.Lock()
+	state.emailDoneDateKey = today
+	state.mu.Unlock()
+}
+
+type emailEntry struct {
+	id      string
+	boxType int32
+}
+
+func mergeClaimableEmails(box1, box2 *emailpb.GetEmailListReply) []emailEntry {
+	type keyed struct {
+		entry     emailEntry
+		claimable bool
+	}
+	merged := map[string]keyed{}
+	add := func(items []emailpb.EmailItem, boxType int32) {
+		for _, item := range items {
+			if item.ID == "" {
+				continue
+			}
+			entry := emailEntry{id: item.ID, boxType: boxType}
+			claimable := item.HasReward && !item.Claimed
+			if !claimable {
+				continue
+			}
+			if old, ok := merged[item.ID]; !ok {
+				merged[item.ID] = keyed{entry: entry, claimable: true}
+			} else if !old.claimable {
+				merged[item.ID] = keyed{entry: entry, claimable: true}
+			}
+		}
+	}
+	if box1 != nil {
+		add(box1.Emails, 1)
+	}
+	if box2 != nil {
+		add(box2.Emails, 2)
+	}
+	out := make([]emailEntry, 0, len(merged))
+	for _, v := range merged {
+		if v.claimable {
+			out = append(out, v.entry)
+		}
+	}
+	return out
+}
+
+func runShareClaim(ctx context.Context, api *game.API, state *DailyState, force bool, now time.Time) {
+	state.mu.Lock()
+	today := localDateKey(now)
+	if !force && state.shareDoneDateKey == today {
+		state.mu.Unlock()
+		return
+	}
+	if !force && now.Sub(state.shareLastCheck) < dailyCheckCooldown {
+		state.mu.Unlock()
+		return
+	}
+	state.shareLastCheck = now
+	state.mu.Unlock()
+
+	can, err := api.CheckCanShare(ctx)
+	if err != nil {
+		slog.Warn("daily: share check failed", "err", err)
+		return
+	}
+	if can == nil || !can.CanShare {
+		state.mu.Lock()
+		state.shareDoneDateKey = today
+		state.mu.Unlock()
+		return
+	}
+	report, err := api.ReportShare(ctx)
+	if err != nil || report == nil {
+		return
+	}
+	reply, err := api.ClaimShareReward(ctx)
+	if err != nil {
+		if isAlreadyClaimedError(err) {
+			state.mu.Lock()
+			state.shareDoneDateKey = today
+			state.mu.Unlock()
+		}
+		return
+	}
+	if reply == nil {
+		return
+	}
+	state.mu.Lock()
+	state.shareDoneDateKey = today
+	state.mu.Unlock()
+	slog.Info("daily: share reward claimed", "items", len(reply.Items))
+}
+
+func runMonthCardClaim(ctx context.Context, api *game.API, state *DailyState, force bool, now time.Time) {
+	state.mu.Lock()
+	today := localDateKey(now)
+	if !force && state.monthCardDoneDateKey == today {
+		state.mu.Unlock()
+		return
+	}
+	if !force && now.Sub(state.monthCardLastCheck) < dailyCheckCooldown {
+		state.mu.Unlock()
+		return
+	}
+	state.monthCardLastCheck = now
+	state.mu.Unlock()
+
+	rep, err := api.GetMonthCardInfos(ctx)
+	if err != nil {
+		slog.Warn("daily: month card info failed", "err", err)
+		return
+	}
+	if rep == nil || len(rep.Infos) == 0 {
+		state.mu.Lock()
+		state.monthCardDoneDateKey = today
+		state.mu.Unlock()
+		return
+	}
+	claimed := 0
+	for _, info := range rep.Infos {
+		if !info.CanClaim || info.GoodsID <= 0 {
+			continue
+		}
+		if _, err := api.ClaimMonthCardReward(ctx, info.GoodsID); err != nil {
+			continue
+		}
+		claimed++
+	}
+	state.mu.Lock()
+	state.monthCardDoneDateKey = today
+	state.mu.Unlock()
+	if claimed > 0 {
+		slog.Info("daily: month card claimed", "count", claimed)
+	}
+}
+
+func runFreeGifts(ctx context.Context, api *game.API, state *DailyState, force bool, now time.Time) {
+	state.mu.Lock()
+	today := localDateKey(now)
+	if !force && state.freeGiftDoneDateKey == today {
+		state.mu.Unlock()
+		return
+	}
+	if !force && now.Sub(state.freeGiftLastCheck) < dailyCheckCooldown {
+		state.mu.Unlock()
+		return
+	}
+	state.freeGiftLastCheck = now
+	state.mu.Unlock()
+
+	bought, err := api.BuyFreeGifts(ctx)
+	if err != nil {
+		slog.Warn("daily: free gifts failed", "err", err)
+		return
+	}
+	state.mu.Lock()
+	state.freeGiftDoneDateKey = today
+	state.mu.Unlock()
+	if bought > 0 {
+		slog.Info("daily: free gifts purchased", "count", bought)
+	}
+}
+
+func runVipGift(ctx context.Context, api *game.API, state *DailyState, force bool, now time.Time) {
+	state.mu.Lock()
+	today := localDateKey(now)
+	if !force && state.vipDoneDateKey == today {
+		state.mu.Unlock()
+		return
+	}
+	if !force && now.Sub(state.vipLastCheck) < dailyCheckCooldown {
+		state.mu.Unlock()
+		return
+	}
+	state.vipLastCheck = now
+	state.mu.Unlock()
+
+	status, err := api.GetDailyGiftStatus(ctx)
+	if err != nil {
+		slog.Warn("daily: vip status failed", "err", err)
+		return
+	}
+	if status == nil || !status.CanClaim {
+		state.mu.Lock()
+		state.vipDoneDateKey = today
+		state.mu.Unlock()
+		return
+	}
+	if _, err := api.ClaimDailyGift(ctx); err != nil {
+		if isAlreadyClaimedError(err) {
+			state.mu.Lock()
+			state.vipDoneDateKey = today
+			state.mu.Unlock()
+		}
+		return
+	}
+	state.mu.Lock()
+	state.vipDoneDateKey = today
+	state.mu.Unlock()
+	slog.Info("daily: vip gift claimed")
+}
+
+func isAlreadyClaimedError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "code=1021002") ||
+		strings.Contains(msg, "今日已领取") ||
+		strings.Contains(msg, "已领取")
+}

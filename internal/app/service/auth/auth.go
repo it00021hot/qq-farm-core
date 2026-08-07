@@ -348,10 +348,15 @@ func menuNodeToElegant(n authtypes.MenuNode) (authtypes.ElegantRoute, bool) {
 			parts := strings.SplitN(name, "_", 2)
 			path = "/" + parts[0]
 		}
+		// 仅顶层目录挂 layout；嵌套目录（如农场下的系统管理）作菜单分组，避免双层 layout
+		component := ""
+		if n.ParentID == 0 {
+			component = "layout.base"
+		}
 		return authtypes.ElegantRoute{
 			Name:      name,
 			Path:      path,
-			Component: "layout.base",
+			Component: component,
 			Meta:      meta,
 			Children:  children,
 		}, true

@@ -3,6 +3,7 @@ package router
 import (
 	"strings"
 
+	"github.com/MQEnergy/go-skeleton/internal/bootstrap/boots"
 	"github.com/MQEnergy/go-skeleton/internal/middleware"
 	"github.com/MQEnergy/go-skeleton/internal/router/routes"
 	"github.com/MQEnergy/go-skeleton/internal/vars"
@@ -16,6 +17,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
+	"github.com/gofiber/fiber/v3/middleware/static"
 )
 
 // Register ...
@@ -69,7 +71,17 @@ func Register(appName string) *fiber.App {
 	// common
 	routes.InitCommonGroup(r, publicMiddleware...)
 
-	prefix := vars.Config.GetString("database.pgsql.sources." + database.DefaultAlias + ".prefix")
+	// game-config static icons (Plant/Item images), public like qq-farm-bot /game-config/*
+	gameConfigDir := vars.Config.GetString("farm.gameConfigDir")
+	if gameConfigDir == "" {
+		gameConfigDir = "resource/farm/gameConfig"
+	}
+	r.Get("/game-config/*", static.New(gameConfigDir))
+
+	prefix := boots.TablePrefix()
+	if prefix == "" {
+		prefix = vars.Config.GetString("database.pgsql.sources." + database.DefaultAlias + ".prefix")
+	}
 
 	protected := append(publicMiddleware,
 		middleware.AuthMiddleware(),
@@ -81,6 +93,7 @@ func Register(appName string) *fiber.App {
 	routes.InitAuthGroup(r, protected...)
 	routes.InitPlatformGroup(r, protected...)
 	routes.InitSystemGroup(r, protected...)
+	routes.InitFarmGroup(r, protected...)
 
 	// frontend
 	routes.InitFrontendGroup(r,
