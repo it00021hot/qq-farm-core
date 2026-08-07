@@ -32,17 +32,26 @@ const (
 )
 
 // SyncFriendsToDB persists the game friend list used by the friend HTTP views.
-func SyncFriendsToDB(accountID uint64, _ uint64, friends []friendpb.GameFriend) {
-	if accountID == 0 || len(friends) == 0 {
+// myGID, when > 0, is excluded and any stale self row is deleted (game APIs may return self).
+func SyncFriendsToDB(accountID uint64, myGID int64, friends []friendpb.GameFriend) {
+	if accountID == 0 {
 		return
 	}
 	db := vars.DB
 	if db == nil {
 		return
 	}
+	if myGID > 0 {
+		if err := db.Where("account_id = ? AND gid = ?", accountID, myGID).Delete(&model.FarmFriendGid{}).Error; err != nil {
+			slog.Warn("farm friend self gid purge failed", "account", accountID, "gid", myGID, "err", err)
+		}
+	}
+	if len(friends) == 0 {
+		return
+	}
 	now := uint(time.Now().Unix())
 	for _, friend := range friends {
-		if friend.Gid <= 0 {
+		if friend.Gid <= 0 || (myGID > 0 && friend.Gid == myGID) {
 			continue
 		}
 		nickname := friend.Remark
@@ -108,7 +117,7 @@ func RunStealTick(ctx context.Context, s *Session, visited map[int64]struct{}) (
 	if err != nil {
 		return 0, err
 	}
-	SyncFriendsToDB(accountID, 0, friends)
+	SyncFriendsToDB(accountID, myGID, friends)
 	blacklist := makeIDSet(cfg.FriendBlacklist)
 	if visited == nil {
 		visited = make(map[int64]struct{})
@@ -192,7 +201,7 @@ func RunHelpTick(ctx context.Context, s *Session, visited map[int64]struct{}) (a
 	if err != nil {
 		return 0, err
 	}
-	SyncFriendsToDB(accountID, 0, friends)
+	SyncFriendsToDB(accountID, myGID, friends)
 	blacklist := makeIDSet(cfg.FriendBlacklist)
 	if visited == nil {
 		visited = make(map[int64]struct{})
@@ -252,7 +261,7 @@ func RunBadOnce(ctx context.Context, s *Session) (actions int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	SyncFriendsToDB(accountID, 0, friends)
+	SyncFriendsToDB(accountID, myGID, friends)
 	blacklist := makeIDSet(cfg.FriendBlacklist)
 	targets := buildBadFriendTargets(friends, myGID, blacklist, badFriendTopN)
 	helpState := s.ensureHelpState()
@@ -295,36 +304,40 @@ const qqFriendListBatchSize = 35
 
 func loadFriends(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig) ([]friendpb.GameFriend, error) {
 	platform := ""
+	myGID := int64(0)
 	if s != nil {
 		s.mu.Lock()
 		platform = s.cfg.Platform
+		myGID = s.gid
 		s.mu.Unlock()
 	}
 	if platform == "" {
 		platform = "qq"
 	}
 
+	var friends []friendpb.GameFriend
 	if platform != "qq" {
-		reply, err := api.GetAllFriends(ctx)
-		if err == nil {
-			return dedupeFriendsByGID(reply.GameFriends), nil
+		reply, getErr := api.GetAllFriends(ctx)
+		if getErr == nil {
+			friends = dedupeFriendsByGID(reply.GameFriends)
+		} else if len(cfg.KnownFriendGids) == 0 {
+			return nil, fmt.Errorf("get all friends: %w", getErr)
+		} else {
+			fallback, fallbackErr := api.GetGameFriends(ctx, excludeGID(cfg.KnownFriendGids, myGID))
+			if fallbackErr != nil {
+				return nil, fmt.Errorf("get all friends: %w; get known friends: %v", getErr, fallbackErr)
+			}
+			friends = dedupeFriendsByGID(fallback.GameFriends)
 		}
-		if len(cfg.KnownFriendGids) == 0 {
-			return nil, fmt.Errorf("get all friends: %w", err)
-		}
-		fallback, fallbackErr := api.GetGameFriends(ctx, cfg.KnownFriendGids)
-		if fallbackErr != nil {
-			return nil, fmt.Errorf("get all friends: %w; get known friends: %v", err, fallbackErr)
-		}
-		return dedupeFriendsByGID(fallback.GameFriends), nil
+		return excludeSelfFriends(friends, myGID), nil
 	}
 
 	// QQ path (gid-manager.ts): InteractRecords → merge visitor GIDs → GetGameFriends;
 	// fallback SyncAll then GetAll.
-	known := mergeVisitorGIDsFromInteract(ctx, s, api, cfg)
-	if friends := fetchQQFriendsByKnownGIDs(ctx, api, known); len(friends) > 0 {
+	known := mergeVisitorGIDsFromInteract(ctx, s, api, cfg, myGID)
+	if friends = fetchQQFriendsByKnownGIDs(ctx, api, known); len(friends) > 0 {
 		mergeKnownFriendGIDs(s, friendGIDs(friends))
-		return friends, nil
+		return excludeSelfFriends(friends, myGID), nil
 	}
 
 	legacy, legacyErr := fetchQQFriendsLegacy(ctx, api)
@@ -337,11 +350,11 @@ func loadFriends(ctx context.Context, s *Session, api *game.API, cfg logic.Accou
 	if len(legacy) > 0 {
 		mergeKnownFriendGIDs(s, friendGIDs(legacy))
 	}
-	return legacy, nil
+	return excludeSelfFriends(legacy, myGID), nil
 }
 
-func mergeVisitorGIDsFromInteract(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig) []int64 {
-	known := normalizeFriendGIDs(cfg.KnownFriendGids)
+func mergeVisitorGIDsFromInteract(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig, myGID int64) []int64 {
+	known := excludeGID(normalizeFriendGIDs(cfg.KnownFriendGids), myGID)
 	blacklist := makeIDSet(cfg.FriendBlacklist)
 	reply, err := api.InteractRecords(ctx)
 	if err != nil {
@@ -350,7 +363,7 @@ func mergeVisitorGIDsFromInteract(ctx context.Context, s *Session, api *game.API
 	}
 	visitorGIDs := make([]int64, 0, len(reply.Records))
 	for _, rec := range reply.Records {
-		if rec == nil || rec.VisitorGid <= 0 {
+		if rec == nil || rec.VisitorGid <= 0 || (myGID > 0 && rec.VisitorGid == myGID) {
 			continue
 		}
 		if _, blocked := blacklist[rec.VisitorGid]; blocked {
@@ -415,8 +428,9 @@ func mergeKnownFriendGIDs(s *Session, gids []int64) {
 	}
 	normalized := normalizeFriendGIDs(gids)
 	s.mu.Lock()
+	myGID := s.gid
 	cfg := s.cfg.AccountConfig
-	merged := normalizeFriendGIDs(append(append([]int64(nil), cfg.KnownFriendGids...), normalized...))
+	merged := excludeGID(normalizeFriendGIDs(append(append([]int64(nil), cfg.KnownFriendGids...), normalized...)), myGID)
 	same := len(merged) == len(cfg.KnownFriendGids)
 	if same {
 		for i := range merged {
@@ -433,7 +447,7 @@ func mergeKnownFriendGIDs(s *Session, gids []int64) {
 	cfg.KnownFriendGids = merged
 	s.cfg.AccountConfig = cfg
 	s.mu.Unlock()
-	persistFriendBlacklist(parseAccountID(s.id), cfg)
+	persistKnownFriendGIDs(parseAccountID(s.id), cfg)
 }
 
 func normalizeFriendGIDs(values []int64) []int64 {
@@ -448,6 +462,34 @@ func normalizeFriendGIDs(values []int64) []int64 {
 		}
 		seen[gid] = struct{}{}
 		out = append(out, gid)
+	}
+	return out
+}
+
+func excludeGID(gids []int64, skip int64) []int64 {
+	if skip <= 0 || len(gids) == 0 {
+		return gids
+	}
+	out := make([]int64, 0, len(gids))
+	for _, gid := range gids {
+		if gid == skip {
+			continue
+		}
+		out = append(out, gid)
+	}
+	return out
+}
+
+func excludeSelfFriends(friends []friendpb.GameFriend, myGID int64) []friendpb.GameFriend {
+	if myGID <= 0 || len(friends) == 0 {
+		return friends
+	}
+	out := make([]friendpb.GameFriend, 0, len(friends))
+	for _, f := range friends {
+		if f.Gid == myGID {
+			continue
+		}
+		out = append(out, f)
 	}
 	return out
 }

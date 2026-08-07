@@ -4,7 +4,8 @@ QQ 农场智能助手后端：多账号托管、自动化种地/好友互动、�
 
 基于 [go-skeleton](https://github.com/MQEnergy/go-skeleton)（Go ≥ 1.26 + Fiber）改造；业务核心在 `internal/farm`。
 
-配套前端：[`../vue-framework`](../vue-framework)。
+配套前端：[`../vue-framework`](../vue-framework)。  
+桌面端（Wails）：[`../desktop`](../desktop)（通过 [`pkg/appserver`](pkg/appserver) 进程内启动本服务）。
 
 ## 功能概览
 

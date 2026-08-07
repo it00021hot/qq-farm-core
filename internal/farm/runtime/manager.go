@@ -866,7 +866,7 @@ func (s *Session) SyncFriends(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	SyncFriendsToDB(parseAccountID(s.id), 0, friends)
+	SyncFriendsToDB(parseAccountID(s.id), s.GID(), friends)
 	return nil
 }
 
@@ -885,6 +885,9 @@ func (s *Session) FriendOp(ctx context.Context, gid int64, op string) error {
 	s.mu.Unlock()
 	if api == nil {
 		return fmt.Errorf("farm session is not connected")
+	}
+	if myGID > 0 && gid == myGID {
+		return fmt.Errorf("不能对自己执行好友操作")
 	}
 
 	var (
@@ -947,9 +950,13 @@ func (s *Session) FriendLands(ctx context.Context, gid int64) ([]logic.LandInfo,
 
 	s.mu.Lock()
 	api := s.gameAPI
+	myGID := s.gid
 	s.mu.Unlock()
 	if api == nil {
 		return nil, fmt.Errorf("farm session is not connected")
+	}
+	if myGID > 0 && gid == myGID {
+		return nil, fmt.Errorf("不能查看自己的好友农场，请使用个人农场")
 	}
 	lands, err := api.VisitEnter(ctx, gid, enterReasonFriend)
 	if err != nil {
@@ -1973,6 +1980,19 @@ func (m *AccountManager) Session(accountID string) (*Session, bool) {
 	defer m.mu.Unlock()
 	s, ok := m.sess[accountID]
 	return s, ok
+}
+
+// StopAll stops every tracked account session.
+func (m *AccountManager) StopAll() {
+	m.mu.Lock()
+	ids := make([]string, 0, len(m.sess))
+	for id := range m.sess {
+		ids = append(ids, id)
+	}
+	m.mu.Unlock()
+	for _, id := range ids {
+		_ = m.StopAccount(id)
+	}
 }
 
 // List returns account IDs currently tracked.

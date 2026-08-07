@@ -3,6 +3,7 @@ package vars
 import (
 	"log/slog"
 	"path"
+	"path/filepath"
 	"runtime"
 
 	"github.com/MQEnergy/go-skeleton/pkg/config"
@@ -13,18 +14,35 @@ import (
 )
 
 var (
-	BasePath string              // 根目录
-	DB       *gorm.DB            // Pgsql数据库
-	MDB      map[string]*gorm.DB // pgsql多数据库操作
-	Redis    *redis.Client       // redis连接池
-	Router   fiber.Router        // 路由
-	Routes   []fiber.Route       // 所有路由
-	Config   config.Config       // 配置
-	Logger   *slog.Logger        // 日志
+	BasePath string // resource root (bundled assets: configs/resource)
+	DataPath string // writable runtime root (sqlite/logs/tsdk); defaults to BasePath
+	DB       *gorm.DB
+	MDB      map[string]*gorm.DB
+	Redis    *redis.Client
+	Router   fiber.Router
+	Routes   []fiber.Route
+	Config   config.Config
+	Logger   *slog.Logger
+
+	// DesktopMode disables swagger and other browser-oriented extras.
+	DesktopMode bool
 )
 
 func init() {
 	_, filename, _, _ := runtime.Caller(0)
 	root := path.Dir(path.Dir(path.Dir(filename)))
 	BasePath = root
+	DataPath = root
+}
+
+// SetPaths overrides resource and data roots (used by the Wails desktop shell).
+func SetPaths(resourceRoot, dataRoot string) {
+	if resourceRoot != "" {
+		BasePath = filepath.Clean(resourceRoot)
+	}
+	if dataRoot != "" {
+		DataPath = filepath.Clean(dataRoot)
+	} else if DataPath == "" {
+		DataPath = BasePath
+	}
 }

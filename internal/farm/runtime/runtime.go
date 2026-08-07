@@ -108,6 +108,15 @@ func (f *Facade) Stop(accountID uint64) error {
 	return m.StopAccount(id)
 }
 
+// StopAll stops every in-process farm session (desktop / process shutdown).
+func (f *Facade) StopAll() {
+	m := getManager()
+	if m == nil {
+		return
+	}
+	m.StopAll()
+}
+
 func (f *Facade) GetStatus(accountID uint64) (uint8, string) {
 	m := getManager()
 	if m == nil {

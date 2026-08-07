@@ -225,3 +225,26 @@ func TestFriendHelpStateLimitsAndBadCap(t *testing.T) {
 		t.Fatal("bad limit → weed remaining 0")
 	}
 }
+
+func TestExcludeSelfFriends(t *testing.T) {
+	friends := []friendpb.GameFriend{
+		{Gid: 10, Name: "a"},
+		{Gid: 99, Name: "me"},
+		{Gid: 11, Name: "b"},
+	}
+	got := excludeSelfFriends(friends, 99)
+	if len(got) != 2 || got[0].Gid != 10 || got[1].Gid != 11 {
+		t.Fatalf("expected [10 11], got %v", got)
+	}
+	if same := excludeSelfFriends(friends, 0); len(same) != 3 {
+		t.Fatalf("myGID=0 should keep all, got %d", len(same))
+	}
+}
+
+func TestExcludeGID(t *testing.T) {
+	gids := []int64{1, 99, 2, 99}
+	got := excludeGID(gids, 99)
+	if len(got) != 2 || got[0] != 1 || got[1] != 2 {
+		t.Fatalf("expected [1 2], got %v", got)
+	}
+}

@@ -70,6 +70,15 @@ func (c *Config) Get(key string) any {
 	return val
 }
 
+// Set updates a config value and invalidates the matching cache entry.
+func (c *Config) Set(key string, value any) bool {
+	ok := c.viper.Set(key, value)
+	c.mu.Lock()
+	c.cache.FuzzyDelete(key)
+	c.mu.Unlock()
+	return ok
+}
+
 func (c *Config) GetString(key string) string {
 	return cast.ToString(c.Get(key))
 }

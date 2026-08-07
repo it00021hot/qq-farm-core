@@ -91,21 +91,28 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.FriendListReq) (response.Pag
 	}
 
 	liveMap := map[int64]friendpb.GameFriend{}
+	var myGID int64
 	if session, err := s.session(ctx, req.AccountID); err == nil {
+		myGID = session.GID()
 		callCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		friends, loadErr := session.Friends(callCtx)
 		cancel()
 		if loadErr == nil {
-			farmruntime.SyncFriendsToDB(req.AccountID, 0, friends)
+			farmruntime.SyncFriendsToDB(req.AccountID, myGID, friends)
 			for _, f := range friends {
 				if f.Gid > 0 {
 					liveMap[f.Gid] = f
 				}
 			}
+		} else if myGID > 0 {
+			farmruntime.SyncFriendsToDB(req.AccountID, myGID, nil)
 		}
 	}
 
 	db := vars.DB.Model(&model.FarmFriendGid{}).Where("account_id = ?", req.AccountID)
+	if myGID > 0 {
+		db = db.Where("gid <> ?", myGID)
+	}
 	if req.Keyword != "" {
 		db = db.Where("nickname LIKE ?", "%"+req.Keyword+"%")
 	}
@@ -143,7 +150,7 @@ func (s *Service) Sync(ctx fiber.Ctx, req farmtypes.FriendSyncReq) (map[string]a
 	if err != nil {
 		return nil, err
 	}
-	farmruntime.SyncFriendsToDB(req.AccountID, 0, friends)
+	farmruntime.SyncFriendsToDB(req.AccountID, session.GID(), friends)
 	return map[string]any{
 		"accountId": req.AccountID,
 		"count":     len(friends),

@@ -32,6 +32,7 @@ func BootService(services ...string) {
 	if err := boots.InitConfig(); err != nil {
 		panic("Failed to load config：" + err.Error())
 	}
+	boots.NormalizePaths()
 	// init logger
 	boots.InitLogger()
 
