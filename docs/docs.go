@@ -121,7 +121,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_auth.LoginReq"
+                            "$ref": "#/definitions/github_com_it00021hot_qq-farm-core_internal_app_controller_auth.LoginReq"
                         }
                     }
                 ],
@@ -192,7 +192,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_auth.ChangePasswordReq"
+                            "$ref": "#/definitions/github_com_it00021hot_qq-farm-core_internal_app_controller_auth.ChangePasswordReq"
                         }
                     }
                 ],
@@ -225,7 +225,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_auth.RefreshReq"
+                            "$ref": "#/definitions/github_com_it00021hot_qq-farm-core_internal_app_controller_auth.RefreshReq"
                         }
                     }
                 ],
@@ -916,7 +916,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.CreateReq"
+                            "$ref": "#/definitions/github_com_it00021hot_qq-farm-core_internal_app_controller_system_admin.CreateReq"
                         }
                     }
                 ],
@@ -1037,7 +1037,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.UpdateReq"
+                            "$ref": "#/definitions/github_com_it00021hot_qq-farm-core_internal_app_controller_system_admin.UpdateReq"
                         }
                     }
                 ],
@@ -1087,7 +1087,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.StatusReq"
+                            "$ref": "#/definitions/github_com_it00021hot_qq-farm-core_internal_app_controller_system_admin.StatusReq"
                         }
                     }
                 ],
@@ -1424,7 +1424,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_MQEnergy_go-skeleton_internal_app_controller_auth.ChangePasswordReq": {
+        "github_com_it00021hot_qq-farm-core_internal_app_controller_auth.ChangePasswordReq": {
             "type": "object",
             "required": [
                 "newPassword",
@@ -1441,7 +1441,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_MQEnergy_go-skeleton_internal_app_controller_auth.LoginReq": {
+        "github_com_it00021hot_qq-farm-core_internal_app_controller_auth.LoginReq": {
             "type": "object",
             "required": [
                 "password",
@@ -1456,7 +1456,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_MQEnergy_go-skeleton_internal_app_controller_auth.RefreshReq": {
+        "github_com_it00021hot_qq-farm-core_internal_app_controller_auth.RefreshReq": {
             "type": "object",
             "required": [
                 "refreshToken"
@@ -1467,7 +1467,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.CreateReq": {
+        "github_com_it00021hot_qq-farm-core_internal_app_controller_system_admin.CreateReq": {
             "type": "object",
             "required": [
                 "account",
@@ -1509,7 +1509,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.StatusReq": {
+        "github_com_it00021hot_qq-farm-core_internal_app_controller_system_admin.StatusReq": {
             "type": "object",
             "required": [
                 "id",
@@ -1528,7 +1528,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_MQEnergy_go-skeleton_internal_app_controller_system_admin.UpdateReq": {
+        "github_com_it00021hot_qq-farm-core_internal_app_controller_system_admin.UpdateReq": {
             "type": "object",
             "required": [
                 "id",

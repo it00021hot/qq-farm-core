@@ -7,7 +7,7 @@
 package itempb
 
 import (
-	corepb "github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
+	corepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -74,7 +74,7 @@ const file_notifypb_proto_rawDesc = "" +
 	"\x0enotifypb.proto\x12\rgamepb.itempb\x1a\fcorepb.proto\"3\n" +
 	"\n" +
 	"ItemNotify\x12%\n" +
-	"\x05items\x18\x01 \x03(\v2\x0f.corepb.ItemChgR\x05itemsBCZAgithub.com/MQEnergy/go-skeleton/internal/farm/proto/itempb;itempbb\x06proto3"
+	"\x05items\x18\x01 \x03(\v2\x0f.corepb.ItemChgR\x05itemsBCZAgithub.com/it00021hot/qq-farm-core/internal/farm/proto/itempb;itempbb\x06proto3"
 
 var (
 	file_notifypb_proto_rawDescOnce sync.Once

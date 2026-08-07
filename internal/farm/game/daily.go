@@ -3,10 +3,10 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/emailpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/mallpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/qqvippb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/sharepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/emailpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/mallpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/qqvippb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/sharepb"
 )
 
 const emailService = "gamepb.emailpb.EmailService"

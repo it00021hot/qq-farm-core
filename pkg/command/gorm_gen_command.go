@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/entity"
-	"github.com/MQEnergy/go-skeleton/pkg/helper"
+	"github.com/it00021hot/qq-farm-core/internal/app/entity"
+	"github.com/it00021hot/qq-farm-core/pkg/helper"
 	"gorm.io/gen"
 	"gorm.io/gorm"
 )

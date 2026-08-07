@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.seasonpb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/seasonpb;seasonpb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/seasonpb;seasonpb";
 // SeasonService.GetSeasonInfo 抓包中已确认的只读字段。
 message SeasonItem {
     int64 item_id = 1;

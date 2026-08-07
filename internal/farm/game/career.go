@@ -3,7 +3,7 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/careerpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/careerpb"
 )
 
 func (a *API) sendCareer(ctx context.Context, method string, body []byte) ([]byte, error) {

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/memcache"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
+	"github.com/it00021hot/qq-farm-core/pkg/memcache"
 )
 
 // ErrNil mimics redis.Nil when key is missing.

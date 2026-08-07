@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/game"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/taskpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/game"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/taskpb"
 )
 
 // DailyGiftCard is one card in the personal「每日礼包 & 任务」grid (bot getDailyGiftOverview gifts[]).

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/game"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/userpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/game"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/userpb"
 )
 
 const inviteRequestDelay = 2 * time.Second

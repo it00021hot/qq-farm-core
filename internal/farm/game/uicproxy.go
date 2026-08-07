@@ -3,7 +3,7 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/uicproxypb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/uicproxypb"
 )
 
 func (a *API) sendUicProxy(ctx context.Context, method string, body []byte) ([]byte, error) {

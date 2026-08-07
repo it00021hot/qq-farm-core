@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.rechargebonuspb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/rechargebonuspb;rechargebonuspb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/rechargebonuspb;rechargebonuspb";
 // ============ 充值奖励配置 ============
 message GetConfigRequest {}
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/illustratedpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/taskpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/illustratedpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/taskpb"
 )
 
 const taskService = "gamepb.taskpb.TaskService"

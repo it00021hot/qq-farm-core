@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/interactpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/interactpb"
 )
 
 // interactRecordsCandidates mirrors Node interact.ts RPC fallbacks.

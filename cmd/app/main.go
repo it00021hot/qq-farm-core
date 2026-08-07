@@ -6,16 +6,16 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/bootstrap"
-	"github.com/MQEnergy/go-skeleton/internal/router"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/config"
+	"github.com/it00021hot/qq-farm-core/internal/bootstrap"
+	"github.com/it00021hot/qq-farm-core/internal/router"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
+	"github.com/it00021hot/qq-farm-core/pkg/config"
 	"github.com/gofiber/fiber/v3"
 	"github.com/urfave/cli/v2"
 )
 
 var (
-	AppName  = "go-skeleton"
+	AppName  = "qq-farm-core"
 	AppUsage = "基于Go语言和fiber框架的高性能高并发的Web项目骨架"
 	Authors  = []*cli.Author{
 		{
@@ -24,7 +24,7 @@ var (
 		},
 	}
 	AppPort string // port
-	// https://patorjk.com/software/taag/#p=testall&v=1&f=ANSI%20Shadow&t=go-skeleton%20
+	// https://patorjk.com/software/taag/#p=testall&v=1&f=ANSI%20Shadow&t=qq-farm-core%20
 	_UI = `
  ██████╗  ██████╗       ███████╗██╗  ██╗███████╗██╗     ███████╗████████╗ ██████╗ ███╗   ██╗
 ██╔════╝ ██╔═══██╗      ██╔════╝██║ ██╔╝██╔════╝██║     ██╔════╝╚══██╔══╝██╔═══██╗████╗  ██║

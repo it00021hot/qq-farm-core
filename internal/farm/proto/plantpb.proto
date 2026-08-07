@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.plantpb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb;plantpb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb;plantpb";
 import "corepb.proto";
 
 // ============ 生长阶段枚举 ============

@@ -1,8 +1,8 @@
 package entity
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/app/entity/admin"
-	"github.com/MQEnergy/go-skeleton/pkg/helper"
+	"github.com/it00021hot/qq-farm-core/internal/app/entity/admin"
+	"github.com/it00021hot/qq-farm-core/pkg/helper"
 )
 
 type MethodMaps map[string][]any

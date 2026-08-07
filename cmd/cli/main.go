@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/command"
-	"github.com/MQEnergy/go-skeleton/pkg/config"
+	"github.com/it00021hot/qq-farm-core/internal/command"
+	"github.com/it00021hot/qq-farm-core/pkg/config"
 
 	"github.com/urfave/cli/v2"
 )

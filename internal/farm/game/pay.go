@@ -3,7 +3,7 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/paypb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/paypb"
 )
 
 const DefaultRechargeSource = "MallUI"

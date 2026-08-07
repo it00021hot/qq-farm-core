@@ -7,7 +7,7 @@
 package redpacketpb
 
 import (
-	corepb "github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
+	corepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -268,7 +268,7 @@ const file_redpacketpb_proto_rawDesc = "" +
 	"\x04item\x18\x02 \x01(\v2\f.corepb.ItemR\x04item2\xed\x01\n" +
 	"\x10RedPacketService\x12s\n" +
 	"\x13GetTodayClaimStatus\x12..gamepb.redpacketpb.GetTodayClaimStatusRequest\x1a,.gamepb.redpacketpb.GetTodayClaimStatusReply\x12d\n" +
-	"\x0eClaimRedPacket\x12).gamepb.redpacketpb.ClaimRedPacketRequest\x1a'.gamepb.redpacketpb.ClaimRedPacketReplyBMZKgithub.com/MQEnergy/go-skeleton/internal/farm/proto/redpacketpb;redpacketpbb\x06proto3"
+	"\x0eClaimRedPacket\x12).gamepb.redpacketpb.ClaimRedPacketRequest\x1a'.gamepb.redpacketpb.ClaimRedPacketReplyBMZKgithub.com/it00021hot/qq-farm-core/internal/farm/proto/redpacketpb;redpacketpbb\x06proto3"
 
 var (
 	file_redpacketpb_proto_rawDescOnce sync.Once

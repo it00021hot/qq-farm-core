@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/gatepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/gatepb"
 	"google.golang.org/protobuf/proto"
 )
 

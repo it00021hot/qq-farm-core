@@ -460,7 +460,7 @@ const file_solartermspb_proto_rawDesc = "" +
 	"\aterm_id\x18\x01 \x01(\x03R\x06termId\"\x8e\x01\n" +
 	"\x14ClaimSolarTermsReply\x12>\n" +
 	"\arewards\x18\x01 \x03(\v2$.gamepb.solartermspb.SolarTermRewardR\arewards\x126\n" +
-	"\x04term\x18\x02 \x01(\v2\".gamepb.solartermspb.SolarTermInfoR\x04termBOZMgithub.com/MQEnergy/go-skeleton/internal/farm/proto/solartermspb;solartermspbb\x06proto3"
+	"\x04term\x18\x02 \x01(\v2\".gamepb.solartermspb.SolarTermInfoR\x04termBOZMgithub.com/it00021hot/qq-farm-core/internal/farm/proto/solartermspb;solartermspbb\x06proto3"
 
 var (
 	file_solartermspb_proto_rawDescOnce sync.Once

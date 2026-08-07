@@ -117,7 +117,7 @@ const file_acepb_proto_rawDesc = "" +
 	"\x0fAntiDataRequest\x12\x12\n" +
 	"\x04data\x18\x01 \x01(\fR\x04data\"'\n" +
 	"\rAntiDataReply\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\fR\x06resultBAZ?github.com/MQEnergy/go-skeleton/internal/farm/proto/acepb;acepbb\x06proto3"
+	"\x06result\x18\x01 \x01(\fR\x06resultBAZ?github.com/it00021hot/qq-farm-core/internal/farm/proto/acepb;acepbb\x06proto3"
 
 var (
 	file_acepb_proto_rawDescOnce sync.Once

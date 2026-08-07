@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
 )
 
 // UIBagItem is one merged bag row for the personal panel.

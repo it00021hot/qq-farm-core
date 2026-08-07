@@ -1,8 +1,8 @@
-# QQ 农场 · 后端（go-framework）
+# QQ 农场 · 后端（qq-farm-core）
 
 QQ 农场智能助手后端：多账号托管、自动化种地/好友互动、活动与商城，以及管理端 API。
 
-基于 [go-skeleton](https://github.com/MQEnergy/go-skeleton)（Go ≥ 1.26 + Fiber）改造；业务核心在 `internal/farm`。
+基于 [qq-farm-core](https://github.com/it00021hot/qq-farm-core)（Go ≥ 1.26 + Fiber）改造；业务核心在 `internal/farm`。
 
 配套前端：[`../vue-framework`](../vue-framework)。  
 桌面端（Wails）：[`../desktop`](../desktop)（通过 [`pkg/appserver`](pkg/appserver) 进程内启动本服务）。
@@ -122,4 +122,4 @@ bash scripts/api_security_check.sh
 
 ## License
 
-MIT（上游 go-skeleton LICENSE 仍适用）。
+MIT（上游 qq-farm-core LICENSE 仍适用）。

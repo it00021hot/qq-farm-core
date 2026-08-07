@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.illustratedpb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/illustratedpb;illustratedpb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/illustratedpb;illustratedpb";
 import "corepb.proto";
 
 message GetIllustratedListV2Request {

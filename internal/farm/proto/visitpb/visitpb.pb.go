@@ -7,8 +7,8 @@
 package visitpb
 
 import (
-	plantpb "github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
-	userpb "github.com/MQEnergy/go-skeleton/internal/farm/proto/userpb"
+	plantpb "github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
+	userpb "github.com/it00021hot/qq-farm-core/internal/farm/proto/userpb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -285,7 +285,7 @@ const file_visitpb_proto_rawDesc = "" +
 	"\x15ENTER_REASON_INTERACT\x10\x032\x94\x01\n" +
 	"\fVisitService\x12A\n" +
 	"\x05Enter\x12\x1c.gamepb.visitpb.EnterRequest\x1a\x1a.gamepb.visitpb.EnterReply\x12A\n" +
-	"\x05Leave\x12\x1c.gamepb.visitpb.LeaveRequest\x1a\x1a.gamepb.visitpb.LeaveReplyBEZCgithub.com/MQEnergy/go-skeleton/internal/farm/proto/visitpb;visitpbb\x06proto3"
+	"\x05Leave\x12\x1c.gamepb.visitpb.LeaveRequest\x1a\x1a.gamepb.visitpb.LeaveReplyBEZCgithub.com/it00021hot/qq-farm-core/internal/farm/proto/visitpb;visitpbb\x06proto3"
 
 var (
 	file_visitpb_proto_rawDescOnce sync.Once

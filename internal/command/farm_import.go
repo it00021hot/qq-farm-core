@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/model"
-	"github.com/MQEnergy/go-skeleton/internal/bootstrap"
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"github.com/it00021hot/qq-farm-core/internal/app/model"
+	"github.com/it00021hot/qq-farm-core/internal/bootstrap"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
 	"github.com/urfave/cli/v2"
 )
 

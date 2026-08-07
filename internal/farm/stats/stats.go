@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/model"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"github.com/it00021hot/qq-farm-core/internal/app/model"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

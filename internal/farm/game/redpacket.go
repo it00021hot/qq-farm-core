@@ -3,7 +3,7 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/redpacketpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/redpacketpb"
 )
 
 func (a *API) sendRedPacket(ctx context.Context, method string, body []byte) ([]byte, error) {

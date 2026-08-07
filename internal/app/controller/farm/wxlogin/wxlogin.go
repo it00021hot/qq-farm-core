@@ -1,9 +1,9 @@
 package wxlogin
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/app/controller"
-	farmwx "github.com/MQEnergy/go-skeleton/internal/farm/wxlogin"
-	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/it00021hot/qq-farm-core/internal/app/controller"
+	farmwx "github.com/it00021hot/qq-farm-core/internal/farm/wxlogin"
+	"github.com/it00021hot/qq-farm-core/pkg/response"
 	"github.com/gofiber/fiber/v3"
 	"github.com/spf13/cast"
 )

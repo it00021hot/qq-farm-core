@@ -3,7 +3,7 @@ syntax = "proto3";
 package corepb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb;corepb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb;corepb";
 // The purchase ItemNotify currently carries an empty display payload. Keeping
 // the message typed preserves the wire field and supports populated data later.
 message ItemShow {

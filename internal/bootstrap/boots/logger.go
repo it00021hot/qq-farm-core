@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/MQEnergy/go-skeleton/internal/vars"
-	logger2 "github.com/MQEnergy/go-skeleton/pkg/logger"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
+	logger2 "github.com/it00021hot/qq-farm-core/pkg/logger"
 )
 
 // InitLogger ...

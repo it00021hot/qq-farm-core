@@ -6,10 +6,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/game"
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/gatepb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/game"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/gatepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
 	"google.golang.org/protobuf/proto"
 )
 

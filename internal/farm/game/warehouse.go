@@ -3,9 +3,9 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/itempb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/itempb"
 )
 
 func (a *API) sendItem(ctx context.Context, method string, body []byte) ([]byte, error) {

@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.solartermspb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/solartermspb;solartermspb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/solartermspb;solartermspb";
 // SolarTermsService.GetSolarTerms 抓包中已确认的只读字段。
 message SolarTermReward {
     int64 item_id = 1;

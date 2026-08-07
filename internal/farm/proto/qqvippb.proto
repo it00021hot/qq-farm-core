@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.qqvippb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/qqvippb;qqvippb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/qqvippb;qqvippb";
 import "corepb.proto";
 
 // ============ QQ会员服务 ============

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/MQEnergy/go-skeleton/pkg/config"
+	"github.com/it00021hot/qq-farm-core/pkg/config"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/redis/go-redis/v9"

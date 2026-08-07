@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/pkg/helper"
+	"github.com/it00021hot/qq-farm-core/pkg/helper"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cache"

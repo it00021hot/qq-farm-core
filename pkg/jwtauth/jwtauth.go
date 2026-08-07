@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/pkg/config"
+	"github.com/it00021hot/qq-farm-core/pkg/config"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )

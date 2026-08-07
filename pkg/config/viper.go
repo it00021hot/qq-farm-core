@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/MQEnergy/go-skeleton/configs"
+	"github.com/it00021hot/qq-farm-core/configs"
 
 	"github.com/spf13/viper"
 )

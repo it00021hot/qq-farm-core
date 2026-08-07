@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/MQEnergy/go-skeleton/internal/bootstrap/boots"
-	"github.com/MQEnergy/go-skeleton/pkg/helper"
+	"github.com/it00021hot/qq-farm-core/internal/bootstrap/boots"
+	"github.com/it00021hot/qq-farm-core/pkg/helper"
 )
 
 // Define service list

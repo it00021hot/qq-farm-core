@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/app/controller"
-	auth2 "github.com/MQEnergy/go-skeleton/internal/app/service/auth"
-	"github.com/MQEnergy/go-skeleton/internal/types/user/auth"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/it00021hot/qq-farm-core/internal/app/controller"
+	auth2 "github.com/it00021hot/qq-farm-core/internal/app/service/auth"
+	"github.com/it00021hot/qq-farm-core/internal/types/user/auth"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
+	"github.com/it00021hot/qq-farm-core/pkg/response"
 
 	"github.com/gofiber/fiber/v3"
 )

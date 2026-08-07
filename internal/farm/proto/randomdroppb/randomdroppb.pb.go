@@ -7,7 +7,7 @@
 package randomdroppb
 
 import (
-	_ "github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
+	_ "github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -298,7 +298,7 @@ const file_randomdroppb_proto_rawDesc = "" +
 	"\x14GetActivityInfoReply\x12E\n" +
 	"\n" +
 	"activities\x18\x01 \x03(\v2%.gamepb.randomdroppb.DropActivityInfoR\n" +
-	"activitiesBOZMgithub.com/MQEnergy/go-skeleton/internal/farm/proto/randomdroppb;randomdroppbb\x06proto3"
+	"activitiesBOZMgithub.com/it00021hot/qq-farm-core/internal/farm/proto/randomdroppb;randomdroppbb\x06proto3"
 
 var (
 	file_randomdroppb_proto_rawDescOnce sync.Once

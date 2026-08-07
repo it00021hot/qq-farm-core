@@ -240,7 +240,7 @@ const file_uicproxypb_proto_rawDesc = "" +
 	"\x18BatchModerateTextRequest\x121\n" +
 	"\x05items\x18\x01 \x03(\v2\x1b.gamepb.uicproxypb.TextItemR\x05items\"Q\n" +
 	"\x16BatchModerateTextReply\x127\n" +
-	"\aresults\x18\x01 \x03(\v2\x1d.gamepb.uicproxypb.TextResultR\aresultsBKZIgithub.com/MQEnergy/go-skeleton/internal/farm/proto/uicproxypb;uicproxypbb\x06proto3"
+	"\aresults\x18\x01 \x03(\v2\x1d.gamepb.uicproxypb.TextResultR\aresultsBKZIgithub.com/it00021hot/qq-farm-core/internal/farm/proto/uicproxypb;uicproxypbb\x06proto3"
 
 var (
 	file_uicproxypb_proto_rawDescOnce sync.Once

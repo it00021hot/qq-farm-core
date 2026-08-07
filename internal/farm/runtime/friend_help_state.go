@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
 )
 
 // friendHelpState mirrors bot friend/scheduler operation-limit + help-exp flags.

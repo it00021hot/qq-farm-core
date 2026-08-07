@@ -17,7 +17,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/model"
+	"github.com/it00021hot/qq-farm-core/internal/app/model"
 )
 
 func newSysAdmin(db *gorm.DB, opts ...gen.DOOption) sysAdmin {

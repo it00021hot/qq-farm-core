@@ -3,7 +3,7 @@ package pagination
 import (
 	"math"
 
-	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
 	"gorm.io/gorm"
 )
 

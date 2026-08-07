@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.mutantpb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/mutantpb;mutantpb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/mutantpb;mutantpb";
 // ============ 变异图鉴服务 ============
 
 service MutantService {

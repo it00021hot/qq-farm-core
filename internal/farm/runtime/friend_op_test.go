@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/friendpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/friendpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
 )
 
 func TestSummarizeHarvestRewards(t *testing.T) {

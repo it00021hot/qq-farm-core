@@ -1,9 +1,9 @@
 package common
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/jwtauth"
-	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
+	"github.com/it00021hot/qq-farm-core/pkg/jwtauth"
+	"github.com/it00021hot/qq-farm-core/pkg/response"
 	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
 )

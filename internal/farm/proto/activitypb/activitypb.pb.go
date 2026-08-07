@@ -1098,7 +1098,7 @@ const file_activitypb_proto_rawDesc = "" +
 	"\x14ActiviesChangeNotify\x12B\n" +
 	"\n" +
 	"activities\x18\x01 \x03(\v2\".gamepb.activitypb.ActivityContentR\n" +
-	"activitiesBKZIgithub.com/MQEnergy/go-skeleton/internal/farm/proto/activitypb;activitypbb\x06proto3"
+	"activitiesBKZIgithub.com/it00021hot/qq-farm-core/internal/farm/proto/activitypb;activitypbb\x06proto3"
 
 var (
 	file_activitypb_proto_rawDescOnce sync.Once

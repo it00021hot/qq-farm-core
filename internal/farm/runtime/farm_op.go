@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/game"
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/itempb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/shoppb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/stats"
+	"github.com/it00021hot/qq-farm-core/internal/farm/game"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/itempb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/shoppb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/stats"
 )
 
 // FarmOperationOption customizes one farm operation.

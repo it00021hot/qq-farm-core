@@ -3,7 +3,7 @@ package activitycenter
 import (
 	"testing"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/seasonpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/seasonpb"
 )
 
 func TestLoadConstellationCatalog(t *testing.T) {

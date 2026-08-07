@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/game"
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/emailpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/taskpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/stats"
+	"github.com/it00021hot/qq-farm-core/internal/farm/game"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/emailpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/taskpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/stats"
 )
 
 const (

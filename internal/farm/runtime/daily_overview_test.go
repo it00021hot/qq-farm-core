@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/taskpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/taskpb"
 )
 
 func TestGrowthTaskRowFromPB(t *testing.T) {

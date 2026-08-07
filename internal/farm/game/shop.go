@@ -3,7 +3,7 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/shoppb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/shoppb"
 )
 
 func (a *API) sendShop(ctx context.Context, method string, body []byte) ([]byte, error) {

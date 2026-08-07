@@ -765,7 +765,7 @@ const file_interactpb_proto_rawDesc = "" +
 	"\x17GetInteractSummaryReply\x12<\n" +
 	"\asummary\x18\x01 \x01(\v2\".gamepb.interactpb.InteractSummaryR\asummary\"\x1d\n" +
 	"\x1bDismissInteractPopupRequest\"\x1b\n" +
-	"\x19DismissInteractPopupReplyBKZIgithub.com/MQEnergy/go-skeleton/internal/farm/proto/interactpb;interactpbb\x06proto3"
+	"\x19DismissInteractPopupReplyBKZIgithub.com/it00021hot/qq-farm-core/internal/farm/proto/interactpb;interactpbb\x06proto3"
 
 var (
 	file_interactpb_proto_rawDescOnce sync.Once

@@ -1,10 +1,10 @@
 package admin
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/app/controller"
-	adminsvc "github.com/MQEnergy/go-skeleton/internal/app/service/system/admin"
-	admintypes "github.com/MQEnergy/go-skeleton/internal/types/admin"
-	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/it00021hot/qq-farm-core/internal/app/controller"
+	adminsvc "github.com/it00021hot/qq-farm-core/internal/app/service/system/admin"
+	admintypes "github.com/it00021hot/qq-farm-core/internal/types/admin"
+	"github.com/it00021hot/qq-farm-core/pkg/response"
 	"github.com/gofiber/fiber/v3"
 )
 

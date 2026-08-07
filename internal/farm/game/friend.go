@@ -3,10 +3,10 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/friendpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/visitpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/friendpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/visitpb"
 )
 
 func (a *API) sendFriend(ctx context.Context, method string, body []byte) ([]byte, error) {

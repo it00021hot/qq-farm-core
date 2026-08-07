@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/controller"
-	"github.com/MQEnergy/go-skeleton/internal/farm/hub"
+	"github.com/it00021hot/qq-farm-core/internal/app/controller"
+	"github.com/it00021hot/qq-farm-core/internal/farm/hub"
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
 )

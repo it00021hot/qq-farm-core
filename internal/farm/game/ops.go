@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
 )
 
 func (a *API) send(ctx context.Context, method string, body []byte) error {

@@ -1,11 +1,11 @@
 ---
-name: go-skeleton-dev
-description: Develop APIs in the go-skeleton Fiber/GORM QQ Farm backend. Covers layered workflow (model/dao/types/service/controller/router), static JWT auth (no Casbin), Make/CLI codegen, Swagger, and verification. Use when working under go-framework/, adding farm/system endpoints, or make run/docs/lint.
+name: qq-farm-core-dev
+description: Develop APIs in the qq-farm-core Fiber/GORM QQ Farm backend. Covers layered workflow (model/dao/types/service/controller/router), static JWT auth (no Casbin), Make/CLI codegen, Swagger, and verification. Use when working under qq-farm-core/, adding farm/system endpoints, or make run/docs/lint.
 ---
 
-# go-skeleton Development
+# qq-farm-core Development
 
-Work from the `go-framework/` repo root. Config: `configs/config.{dev|test|prod}.yaml`.
+Work from the `qq-farm-core/` repo root. Config: `configs/config.{dev|test|prod}.yaml`.
 
 Defaults: `ENV=dev`, `PORT=9528`. Seed admin: `admin` / `admin888`. DB auto-migrates and seeds on boot; see [database/README.md](../../../database/README.md).
 

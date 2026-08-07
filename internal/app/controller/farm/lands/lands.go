@@ -1,10 +1,10 @@
 package lands
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/app/controller"
-	landssvc "github.com/MQEnergy/go-skeleton/internal/app/service/farm/lands"
-	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
-	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/it00021hot/qq-farm-core/internal/app/controller"
+	landssvc "github.com/it00021hot/qq-farm-core/internal/app/service/farm/lands"
+	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
+	"github.com/it00021hot/qq-farm-core/pkg/response"
 	"github.com/gofiber/fiber/v3"
 )
 

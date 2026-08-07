@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/tsdk"
+	"github.com/it00021hot/qq-farm-core/internal/farm/tsdk"
 )
 
 func TestInitAndEncryptRoundTrip(t *testing.T) {

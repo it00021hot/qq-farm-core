@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/model"
-	"github.com/MQEnergy/go-skeleton/internal/app/service"
-	farmruntime "github.com/MQEnergy/go-skeleton/internal/farm/runtime"
-	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"github.com/it00021hot/qq-farm-core/internal/app/model"
+	"github.com/it00021hot/qq-farm-core/internal/app/service"
+	farmruntime "github.com/it00021hot/qq-farm-core/internal/farm/runtime"
+	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
 	"github.com/gofiber/fiber/v3"
 )
 

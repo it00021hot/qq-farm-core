@@ -4,10 +4,10 @@ import (
 	"log/slog"
 	"path/filepath"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/hub"
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	farmruntime "github.com/MQEnergy/go-skeleton/internal/farm/runtime"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"github.com/it00021hot/qq-farm-core/internal/farm/hub"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	farmruntime "github.com/it00021hot/qq-farm-core/internal/farm/runtime"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
 )
 
 // InitFarmRuntime wires the in-process AccountManager and loads game config JSON.

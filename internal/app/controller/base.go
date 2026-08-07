@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/pkg/validator"
-	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/it00021hot/qq-farm-core/internal/app/pkg/validator"
+	"github.com/it00021hot/qq-farm-core/pkg/response"
 	"github.com/gofiber/utils/v2"
 
 	"github.com/gofiber/fiber/v3"

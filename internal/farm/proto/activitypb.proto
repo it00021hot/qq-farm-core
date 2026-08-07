@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.activitypb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/activitypb;activitypb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/activitypb;activitypb";
 message ActivityContent {
     int64 activity_id = 1;
     int64 group_id = 2;

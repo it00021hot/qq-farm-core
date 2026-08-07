@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/gatepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/gatepb"
 )
 
 // Encryptor encrypts/decrypts RPC bodies (typically TSDK ba/ca).

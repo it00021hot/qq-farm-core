@@ -1,4 +1,4 @@
-module github.com/MQEnergy/go-skeleton
+module github.com/it00021hot/qq-farm-core
 
 go 1.26.0
 

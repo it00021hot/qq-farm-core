@@ -753,7 +753,7 @@ const file_seasonpb_proto_rawDesc = "" +
 	"\x04pass\x18\x03 \x01(\v2\x1b.gamepb.seasonpb.SeasonPassR\x04pass\x12\x17\n" +
 	"\afield_4\x18\x04 \x01(\bR\x06field4\"I\n" +
 	"\x16BattlePassChangeNotify\x12/\n" +
-	"\x04pass\x18\x01 \x01(\v2\x1b.gamepb.seasonpb.SeasonPassR\x04passBGZEgithub.com/MQEnergy/go-skeleton/internal/farm/proto/seasonpb;seasonpbb\x06proto3"
+	"\x04pass\x18\x01 \x01(\v2\x1b.gamepb.seasonpb.SeasonPassR\x04passBGZEgithub.com/it00021hot/qq-farm-core/internal/farm/proto/seasonpb;seasonpbb\x06proto3"
 
 var (
 	file_seasonpb_proto_rawDescOnce sync.Once

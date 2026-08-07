@@ -1,8 +1,8 @@
 package routes
 
 import (
-	backendctl "github.com/MQEnergy/go-skeleton/internal/app/controller/backend"
-	"github.com/MQEnergy/go-skeleton/internal/app/controller/system/admin"
+	backendctl "github.com/it00021hot/qq-farm-core/internal/app/controller/backend"
+	"github.com/it00021hot/qq-farm-core/internal/app/controller/system/admin"
 	"github.com/gofiber/fiber/v3"
 )
 

@@ -1,10 +1,10 @@
 package gameconfig
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/app/controller"
-	gameconfigsvc "github.com/MQEnergy/go-skeleton/internal/app/service/farm/gameconfig"
-	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
-	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/it00021hot/qq-farm-core/internal/app/controller"
+	gameconfigsvc "github.com/it00021hot/qq-farm-core/internal/app/service/farm/gameconfig"
+	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
+	"github.com/it00021hot/qq-farm-core/pkg/response"
 	"github.com/gofiber/fiber/v3"
 )
 

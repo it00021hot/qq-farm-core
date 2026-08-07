@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PROTO_DIR="$ROOT/internal/farm/proto"
-MODULE_PREFIX="github.com/MQEnergy/go-skeleton/internal/farm/proto"
+MODULE_PREFIX="github.com/it00021hot/qq-farm-core/internal/farm/proto"
 
 export PATH="${HOME}/.local/bin:$(go env GOPATH)/bin:${PATH}"
 

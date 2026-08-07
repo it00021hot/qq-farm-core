@@ -3,7 +3,7 @@ package runtime
 import (
 	"sort"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/friendpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/friendpb"
 )
 
 const badFriendTopN = 20

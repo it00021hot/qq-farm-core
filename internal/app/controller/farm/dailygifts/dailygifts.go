@@ -1,10 +1,10 @@
 package dailygifts
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/app/controller"
-	dailygiftssvc "github.com/MQEnergy/go-skeleton/internal/app/service/farm/dailygifts"
-	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
-	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/it00021hot/qq-farm-core/internal/app/controller"
+	dailygiftssvc "github.com/it00021hot/qq-farm-core/internal/app/service/farm/dailygifts"
+	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
+	"github.com/it00021hot/qq-farm-core/pkg/response"
 	"github.com/gofiber/fiber/v3"
 )
 

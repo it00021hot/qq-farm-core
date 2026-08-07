@@ -3,7 +3,7 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/marqueepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/marqueepb"
 )
 
 func (a *API) sendMarquee(ctx context.Context, method string, body []byte) ([]byte, error) {

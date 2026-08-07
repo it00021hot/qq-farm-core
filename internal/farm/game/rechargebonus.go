@@ -3,7 +3,7 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/rechargebonuspb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/rechargebonuspb"
 )
 
 func (a *API) sendRechargeBonus(ctx context.Context, method string, body []byte) ([]byte, error) {

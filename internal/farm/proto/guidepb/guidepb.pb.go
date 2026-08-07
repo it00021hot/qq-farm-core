@@ -7,7 +7,7 @@
 package guidepb
 
 import (
-	corepb "github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
+	corepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -303,7 +303,7 @@ const file_guidepb_proto_rawDesc = "" +
 	"\anode_id\x18\x01 \x01(\x03R\x06nodeId\"Y\n" +
 	"\x19ClaimWeakGuideRewardReply\x12\"\n" +
 	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\x12\x18\n" +
-	"\asuccess\x18\x02 \x01(\bR\asuccessBEZCgithub.com/MQEnergy/go-skeleton/internal/farm/proto/guidepb;guidepbb\x06proto3"
+	"\asuccess\x18\x02 \x01(\bR\asuccessBEZCgithub.com/it00021hot/qq-farm-core/internal/farm/proto/guidepb;guidepbb\x06proto3"
 
 var (
 	file_guidepb_proto_rawDescOnce sync.Once

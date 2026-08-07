@@ -4,12 +4,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/model"
-	"github.com/MQEnergy/go-skeleton/internal/app/service"
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
-	farmstats "github.com/MQEnergy/go-skeleton/internal/farm/stats"
-	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"github.com/it00021hot/qq-farm-core/internal/app/model"
+	"github.com/it00021hot/qq-farm-core/internal/app/service"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
+	farmstats "github.com/it00021hot/qq-farm-core/internal/farm/stats"
+	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
 	"github.com/gofiber/fiber/v3"
 )
 

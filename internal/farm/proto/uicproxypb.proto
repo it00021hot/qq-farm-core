@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.uicproxypb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/uicproxypb;uicproxypb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/uicproxypb;uicproxypb";
 // ============ 文本审核结果 ============
 message TextResult {
     int32 status = 1;       // 审核状态

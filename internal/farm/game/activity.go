@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/activitypb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/seasonpb"
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/solartermspb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/activitypb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/seasonpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/solartermspb"
 )
 
 const (

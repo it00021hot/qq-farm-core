@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.avatarframepb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/avatarframepb;avatarframepb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/avatarframepb;avatarframepb";
 // ============ 头像框信息 ============
 message AvatarFrame {
     int64 frame_id = 1;

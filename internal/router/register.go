@@ -3,11 +3,11 @@ package router
 import (
 	"strings"
 
-	"github.com/MQEnergy/go-skeleton/internal/middleware"
-	"github.com/MQEnergy/go-skeleton/internal/router/routes"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/helper"
-	"github.com/MQEnergy/go-skeleton/pkg/response"
+	"github.com/it00021hot/qq-farm-core/internal/middleware"
+	"github.com/it00021hot/qq-farm-core/internal/router/routes"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
+	"github.com/it00021hot/qq-farm-core/pkg/helper"
+	"github.com/it00021hot/qq-farm-core/pkg/response"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/contrib/v3/swagger"
 	"github.com/gofiber/fiber/v3"

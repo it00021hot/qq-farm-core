@@ -3,7 +3,7 @@ syntax = "proto3";
 package gamepb.mysteryshoppb;
 
 
-option go_package = "github.com/MQEnergy/go-skeleton/internal/farm/proto/mysteryshoppb;mysteryshoppb";
+option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/mysteryshoppb;mysteryshoppb";
 service MysteryShopService {
   rpc GetActiveNPC(GetActiveNPCRequest) returns (GetActiveNPCReply);
 }

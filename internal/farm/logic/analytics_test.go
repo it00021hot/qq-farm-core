@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/logic"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 )
 
 func TestGetPlantRankings(t *testing.T) {

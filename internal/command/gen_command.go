@@ -7,9 +7,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/command"
-	"github.com/MQEnergy/go-skeleton/pkg/helper"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
+	"github.com/it00021hot/qq-farm-core/pkg/command"
+	"github.com/it00021hot/qq-farm-core/pkg/helper"
 
 	"github.com/urfave/cli/v2"
 )

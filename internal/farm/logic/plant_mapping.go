@@ -1,6 +1,6 @@
 package logic
 
-import "github.com/MQEnergy/go-skeleton/internal/farm/proto/plantpb"
+import "github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
 
 // LandsFromPlantPB maps plantpb land snapshots into logic.LandInfo values.
 func LandsFromPlantPB(lands []*plantpb.LandInfo) []LandInfo {

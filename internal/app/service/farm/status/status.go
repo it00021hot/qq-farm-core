@@ -3,13 +3,13 @@ package status
 import (
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/model"
-	"github.com/MQEnergy/go-skeleton/internal/app/pkg/pagination"
-	"github.com/MQEnergy/go-skeleton/internal/app/service"
-	farmruntime "github.com/MQEnergy/go-skeleton/internal/farm/runtime"
-	farmstats "github.com/MQEnergy/go-skeleton/internal/farm/stats"
-	farmtypes "github.com/MQEnergy/go-skeleton/internal/types/farm"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
+	"github.com/it00021hot/qq-farm-core/internal/app/model"
+	"github.com/it00021hot/qq-farm-core/internal/app/pkg/pagination"
+	"github.com/it00021hot/qq-farm-core/internal/app/service"
+	farmruntime "github.com/it00021hot/qq-farm-core/internal/farm/runtime"
+	farmstats "github.com/it00021hot/qq-farm-core/internal/farm/stats"
+	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
 	"github.com/gofiber/fiber/v3"
 )
 

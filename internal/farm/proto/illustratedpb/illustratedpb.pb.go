@@ -7,7 +7,7 @@
 package illustratedpb
 
 import (
-	corepb "github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
+	corepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -451,7 +451,7 @@ const file_illustratedpb_proto_rawDesc = "" +
 	"\x1fIllustratedRewardRedDotNotifyV2\":\n" +
 	"\x1fClearNewUnlockedFruitsV2Request\x12\x17\n" +
 	"\aseed_id\x18\x01 \x01(\x03R\x06seedId\"\x1f\n" +
-	"\x1dClearNewUnlockedFruitsV2ReplyBQZOgithub.com/MQEnergy/go-skeleton/internal/farm/proto/illustratedpb;illustratedpbb\x06proto3"
+	"\x1dClearNewUnlockedFruitsV2ReplyBQZOgithub.com/it00021hot/qq-farm-core/internal/farm/proto/illustratedpb;illustratedpbb\x06proto3"
 
 var (
 	file_illustratedpb_proto_rawDescOnce sync.Once

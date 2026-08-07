@@ -3,7 +3,7 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/mallpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/mallpb"
 )
 
 const (

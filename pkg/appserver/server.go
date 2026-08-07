@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/bootstrap"
-	farmruntime "github.com/MQEnergy/go-skeleton/internal/farm/runtime"
-	"github.com/MQEnergy/go-skeleton/internal/router"
-	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/config"
+	"github.com/it00021hot/qq-farm-core/internal/bootstrap"
+	farmruntime "github.com/it00021hot/qq-farm-core/internal/farm/runtime"
+	"github.com/it00021hot/qq-farm-core/internal/router"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
+	"github.com/it00021hot/qq-farm-core/pkg/config"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -153,14 +153,14 @@ func ResolveResourceRoot() (string, error) {
 	}
 
 	candidates := []string{
-		filepath.Join(exeDir, "..", "..", "go-framework"),
-		filepath.Join(exeDir, "..", "go-framework"),
-		filepath.Join(exeDir, "go-framework"),
+		filepath.Join(exeDir, "..", "..", "qq-farm-core"),
+		filepath.Join(exeDir, "..", "qq-farm-core"),
+		filepath.Join(exeDir, "qq-farm-core"),
 	}
 	if wd, err := os.Getwd(); err == nil {
 		candidates = append(candidates,
-			filepath.Join(wd, "..", "go-framework"),
-			filepath.Join(wd, "go-framework"),
+			filepath.Join(wd, "..", "qq-farm-core"),
+			filepath.Join(wd, "qq-farm-core"),
 		)
 	}
 	for _, c := range candidates {

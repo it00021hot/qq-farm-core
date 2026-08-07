@@ -3,7 +3,7 @@ package game
 import (
 	"context"
 
-	"github.com/MQEnergy/go-skeleton/internal/farm/proto/mutantpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/mutantpb"
 )
 
 func (a *API) sendMutant(ctx context.Context, method string, body []byte) ([]byte, error) {

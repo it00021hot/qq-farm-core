@@ -3,8 +3,8 @@ package boots
 import (
 	"log/slog"
 
-	"github.com/MQEnergy/go-skeleton/internal/vars"
-	"github.com/MQEnergy/go-skeleton/pkg/config"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
+	"github.com/it00021hot/qq-farm-core/pkg/config"
 )
 
 // InitConfig ...

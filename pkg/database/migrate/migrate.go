@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/internal/app/model"
+	"github.com/it00021hot/qq-farm-core/internal/app/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

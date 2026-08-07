@@ -7,7 +7,7 @@
 package mallpb
 
 import (
-	corepb "github.com/MQEnergy/go-skeleton/internal/farm/proto/corepb"
+	corepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -820,7 +820,7 @@ const file_mallpb_proto_rawDesc = "" +
 	"\x15GetMallListBySlotType\x12+.gamepb.mallpb.GetMallListBySlotTypeRequest\x1a,.gamepb.mallpb.GetMallListBySlotTypeResponse\x12K\n" +
 	"\bPurchase\x12\x1e.gamepb.mallpb.PurchaseRequest\x1a\x1f.gamepb.mallpb.PurchaseResponse\x12c\n" +
 	"\x11GetMonthCardInfos\x12'.gamepb.mallpb.GetMonthCardInfosRequest\x1a%.gamepb.mallpb.GetMonthCardInfosReply\x12l\n" +
-	"\x14ClaimMonthCardReward\x12*.gamepb.mallpb.ClaimMonthCardRewardRequest\x1a(.gamepb.mallpb.ClaimMonthCardRewardReplyBCZAgithub.com/MQEnergy/go-skeleton/internal/farm/proto/mallpb;mallpbb\x06proto3"
+	"\x14ClaimMonthCardReward\x12*.gamepb.mallpb.ClaimMonthCardRewardRequest\x1a(.gamepb.mallpb.ClaimMonthCardRewardReplyBCZAgithub.com/it00021hot/qq-farm-core/internal/farm/proto/mallpb;mallpbb\x06proto3"
 
 var (
 	file_mallpb_proto_rawDescOnce sync.Once

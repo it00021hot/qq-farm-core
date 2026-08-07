@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/MQEnergy/go-skeleton/internal/app/controller/frontend"
+	"github.com/it00021hot/qq-farm-core/internal/app/controller/frontend"
 
 	"github.com/gofiber/fiber/v3"
 )
