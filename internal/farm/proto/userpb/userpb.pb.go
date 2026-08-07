@@ -1659,7 +1659,7 @@ const file_userpb_proto_rawDesc = "" +
 	"\x16BatchGetBasicInfoReply\x12.\n" +
 	"\x05users\x18\x01 \x03(\v2\x18.gamepb.userpb.BasicInfoR\x05users\"=\n" +
 	"\vBasicNotify\x12.\n" +
-	"\x05basic\x18\x01 \x01(\v2\x18.gamepb.userpb.BasicInfoR\x05basicBCZAgithub.com/it00021hot/qq-farm-core/internal/farm/proto/userpb;userpbb\x06proto3"
+	"\x05basic\x18\x01 \x01(\v2\x18.gamepb.userpb.BasicInfoR\x05basicBFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/userpb;userpbb\x06proto3"
 
 var (
 	file_userpb_proto_rawDescOnce sync.Once

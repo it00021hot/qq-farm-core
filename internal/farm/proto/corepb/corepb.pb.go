@@ -278,7 +278,7 @@ const file_corepb_proto_rawDesc = "" +
 	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"A\n" +
 	"\aItemChg\x12 \n" +
 	"\x04item\x18\x01 \x01(\v2\f.corepb.ItemR\x04item\x12\x14\n" +
-	"\x05delta\x18\x02 \x01(\x03R\x05deltaBCZAgithub.com/it00021hot/qq-farm-core/internal/farm/proto/corepb;corepbb\x06proto3"
+	"\x05delta\x18\x02 \x01(\x03R\x05deltaBFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/corepb;corepbb\x06proto3"
 
 var (
 	file_corepb_proto_rawDescOnce sync.Once

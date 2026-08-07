@@ -415,7 +415,7 @@ const file_bulletinboardpb_proto_rawDesc = "" +
 	"\x16GetBulletinDetailReply\x12>\n" +
 	"\x06detail\x18\x01 \x01(\v2&.gamepb.bulletinboardpb.BulletinDetailR\x06detail\"\\\n" +
 	"\x16BulletinListChangedNTF\x12B\n" +
-	"\tbulletins\x18\x01 \x03(\v2$.gamepb.bulletinboardpb.BulletinItemR\tbulletinsBUZSgithub.com/it00021hot/qq-farm-core/internal/farm/proto/bulletinboardpb;bulletinboardpbb\x06proto3"
+	"\tbulletins\x18\x01 \x03(\v2$.gamepb.bulletinboardpb.BulletinItemR\tbulletinsBXZVgithub.com/it00021hot/qq-farm-core/internal/farm/proto/bulletinboardpb;bulletinboardpbb\x06proto3"
 
 var (
 	file_bulletinboardpb_proto_rawDescOnce sync.Once

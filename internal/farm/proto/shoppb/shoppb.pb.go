@@ -669,7 +669,7 @@ const file_shoppb_proto_rawDesc = "" +
 	"\bCondType\x12\x15\n" +
 	"\x11COND_TYPE_UNKNOWN\x10\x00\x12\r\n" +
 	"\tMIN_LEVEL\x10\x01\x12\x0f\n" +
-	"\vUNLOCK_CARD\x10\x02BCZAgithub.com/it00021hot/qq-farm-core/internal/farm/proto/shoppb;shoppbb\x06proto3"
+	"\vUNLOCK_CARD\x10\x02BFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/shoppb;shoppbb\x06proto3"
 
 var (
 	file_shoppb_proto_rawDescOnce sync.Once

@@ -1298,7 +1298,7 @@ const file_friendpb_proto_rawDesc = "" +
 	"\x1fFriendApplicationReceivedNotify\x12@\n" +
 	"\fapplications\x18\x01 \x03(\v2\x1c.gamepb.friendpb.ApplicationR\fapplications\"J\n" +
 	"\x11FriendAddedNotify\x125\n" +
-	"\afriends\x18\x01 \x03(\v2\x1b.gamepb.friendpb.GameFriendR\afriendsBGZEgithub.com/it00021hot/qq-farm-core/internal/farm/proto/friendpb;friendpbb\x06proto3"
+	"\afriends\x18\x01 \x03(\v2\x1b.gamepb.friendpb.GameFriendR\afriendsBJZHgithub.com/it00021hot/qq-farm-core/internal/farm/proto/friendpb;friendpbb\x06proto3"
 
 var (
 	file_friendpb_proto_rawDescOnce sync.Once

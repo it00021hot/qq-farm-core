@@ -250,7 +250,7 @@ const file_mysteryshoppb_proto_rawDesc = "" +
 	"\vexpire_time\x18\x04 \x01(\x03R\n" +
 	"expireTime2x\n" +
 	"\x12MysteryShopService\x12b\n" +
-	"\fGetActiveNPC\x12).gamepb.mysteryshoppb.GetActiveNPCRequest\x1a'.gamepb.mysteryshoppb.GetActiveNPCReplyBQZOgithub.com/it00021hot/qq-farm-core/internal/farm/proto/mysteryshoppb;mysteryshoppbb\x06proto3"
+	"\fGetActiveNPC\x12).gamepb.mysteryshoppb.GetActiveNPCRequest\x1a'.gamepb.mysteryshoppb.GetActiveNPCReplyBTZRgithub.com/it00021hot/qq-farm-core/internal/farm/proto/mysteryshoppb;mysteryshoppbb\x06proto3"
 
 var (
 	file_mysteryshoppb_proto_rawDescOnce sync.Once

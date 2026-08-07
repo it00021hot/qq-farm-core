@@ -100,7 +100,7 @@ const file_marqueepb_proto_rawDesc = "" +
 	"\n" +
 	"\x0fmarqueepb.proto\x12\x10gamepb.marqueepb\"\x13\n" +
 	"\x11GetMarqueeRequest\"\x11\n" +
-	"\x0fGetMarqueeReplyBIZGgithub.com/it00021hot/qq-farm-core/internal/farm/proto/marqueepb;marqueepbb\x06proto3"
+	"\x0fGetMarqueeReplyBLZJgithub.com/it00021hot/qq-farm-core/internal/farm/proto/marqueepb;marqueepbb\x06proto3"
 
 var (
 	file_marqueepb_proto_rawDescOnce sync.Once

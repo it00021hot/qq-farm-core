@@ -1102,7 +1102,7 @@ const file_taskpb_proto_rawDesc = "" +
 	"\fActiveStatus\x12\x10\n" +
 	"\fNONE_UNKNOWN\x10\x00\x12\b\n" +
 	"\x04WAIT\x10\x01\x12\b\n" +
-	"\x04DONE\x10\x02BCZAgithub.com/it00021hot/qq-farm-core/internal/farm/proto/taskpb;taskpbb\x06proto3"
+	"\x04DONE\x10\x02BFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/taskpb;taskpbb\x06proto3"
 
 var (
 	file_taskpb_proto_rawDescOnce sync.Once

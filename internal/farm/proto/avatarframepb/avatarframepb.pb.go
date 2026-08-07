@@ -222,7 +222,7 @@ const file_avatarframepb_proto_rawDesc = "" +
 	"\x18AvatarFramesOwnedRequest\"S\n" +
 	"\x16AvatarFramesOwnedReply\x129\n" +
 	"\x06frames\x18\x01 \x03(\v2!.gamepb.avatarframepb.AvatarFrameR\x06frames\"\x19\n" +
-	"\x17AvatarFrameRedDotNotifyBQZOgithub.com/it00021hot/qq-farm-core/internal/farm/proto/avatarframepb;avatarframepbb\x06proto3"
+	"\x17AvatarFrameRedDotNotifyBTZRgithub.com/it00021hot/qq-farm-core/internal/farm/proto/avatarframepb;avatarframepbb\x06proto3"
 
 var (
 	file_avatarframepb_proto_rawDescOnce sync.Once

@@ -483,7 +483,7 @@ const file_skinpb_proto_rawDesc = "" +
 	"\bskin_ids\x18\x01 \x03(\x03R\askinIds\"\x13\n" +
 	"\x11MarkAsViewedReply\"A\n" +
 	"\x10SkinChangeNotify\x12-\n" +
-	"\x05skins\x18\x01 \x03(\v2\x17.gamepb.skinpb.SkinItemR\x05skinsBCZAgithub.com/it00021hot/qq-farm-core/internal/farm/proto/skinpb;skinpbb\x06proto3"
+	"\x05skins\x18\x01 \x03(\v2\x17.gamepb.skinpb.SkinItemR\x05skinsBFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/skinpb;skinpbb\x06proto3"
 
 var (
 	file_skinpb_proto_rawDescOnce sync.Once

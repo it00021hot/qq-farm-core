@@ -606,7 +606,7 @@ const file_emailpb_proto_rawDesc = "" +
 	"\bbox_type\x18\x01 \x01(\x05R\aboxType\x12\x1b\n" +
 	"\temail_ids\x18\x02 \x03(\tR\bemailIds\"1\n" +
 	"\x15BatchDeleteEmailReply\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccessBEZCgithub.com/it00021hot/qq-farm-core/internal/farm/proto/emailpb;emailpbb\x06proto3"
+	"\asuccess\x18\x01 \x01(\bR\asuccessBHZFgithub.com/it00021hot/qq-farm-core/internal/farm/proto/emailpb;emailpbb\x06proto3"
 
 var (
 	file_emailpb_proto_rawDescOnce sync.Once

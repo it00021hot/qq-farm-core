@@ -100,7 +100,7 @@ const file_rechargebonuspb_proto_rawDesc = "" +
 	"\n" +
 	"\x15rechargebonuspb.proto\x12\x16gamepb.rechargebonuspb\"\x12\n" +
 	"\x10GetConfigRequest\"\x10\n" +
-	"\x0eGetConfigReplyBUZSgithub.com/it00021hot/qq-farm-core/internal/farm/proto/rechargebonuspb;rechargebonuspbb\x06proto3"
+	"\x0eGetConfigReplyBXZVgithub.com/it00021hot/qq-farm-core/internal/farm/proto/rechargebonuspb;rechargebonuspbb\x06proto3"
 
 var (
 	file_rechargebonuspb_proto_rawDescOnce sync.Once

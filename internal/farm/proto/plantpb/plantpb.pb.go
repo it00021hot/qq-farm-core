@@ -3215,7 +3215,7 @@ const file_plantpb_proto_rawDesc = "" +
 	"\bBLOOMING\x10\x05\x12\n" +
 	"\n" +
 	"\x06MATURE\x10\x06\x12\b\n" +
-	"\x04DEAD\x10\aBEZCgithub.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb;plantpbb\x06proto3"
+	"\x04DEAD\x10\aBHZFgithub.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb;plantpbb\x06proto3"
 
 var (
 	file_plantpb_proto_rawDescOnce sync.Once

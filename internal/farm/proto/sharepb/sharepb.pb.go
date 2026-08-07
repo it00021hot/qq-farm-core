@@ -713,7 +713,7 @@ const file_sharepb_proto_rawDesc = "" +
 	"shareCfgId\"S\n" +
 	"\x13GetInviteAwardReply\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\"\n" +
-	"\x05items\x18\x02 \x03(\v2\f.corepb.ItemR\x05itemsBEZCgithub.com/it00021hot/qq-farm-core/internal/farm/proto/sharepb;sharepbb\x06proto3"
+	"\x05items\x18\x02 \x03(\v2\f.corepb.ItemR\x05itemsBHZFgithub.com/it00021hot/qq-farm-core/internal/farm/proto/sharepb;sharepbb\x06proto3"
 
 var (
 	file_sharepb_proto_rawDescOnce sync.Once

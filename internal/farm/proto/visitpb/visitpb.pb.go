@@ -285,7 +285,7 @@ const file_visitpb_proto_rawDesc = "" +
 	"\x15ENTER_REASON_INTERACT\x10\x032\x94\x01\n" +
 	"\fVisitService\x12A\n" +
 	"\x05Enter\x12\x1c.gamepb.visitpb.EnterRequest\x1a\x1a.gamepb.visitpb.EnterReply\x12A\n" +
-	"\x05Leave\x12\x1c.gamepb.visitpb.LeaveRequest\x1a\x1a.gamepb.visitpb.LeaveReplyBEZCgithub.com/it00021hot/qq-farm-core/internal/farm/proto/visitpb;visitpbb\x06proto3"
+	"\x05Leave\x12\x1c.gamepb.visitpb.LeaveRequest\x1a\x1a.gamepb.visitpb.LeaveReplyBHZFgithub.com/it00021hot/qq-farm-core/internal/farm/proto/visitpb;visitpbb\x06proto3"
 
 var (
 	file_visitpb_proto_rawDescOnce sync.Once

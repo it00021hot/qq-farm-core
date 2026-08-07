@@ -268,7 +268,7 @@ const file_qqvippb_proto_rawDesc = "" +
 	"\x11VipInfoUpdatedNTF\x12\x1b\n" +
 	"\tvip_level\x18\x01 \x01(\x03R\bvipLevel\x12\x1b\n" +
 	"\tcan_claim\x18\x02 \x01(\bR\bcanClaim\x12\x19\n" +
-	"\bhas_gift\x18\x03 \x01(\bR\ahasGiftBEZCgithub.com/it00021hot/qq-farm-core/internal/farm/proto/qqvippb;qqvippbb\x06proto3"
+	"\bhas_gift\x18\x03 \x01(\bR\ahasGiftBHZFgithub.com/it00021hot/qq-farm-core/internal/farm/proto/qqvippb;qqvippbb\x06proto3"
 
 var (
 	file_qqvippb_proto_rawDescOnce sync.Once

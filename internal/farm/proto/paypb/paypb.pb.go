@@ -221,7 +221,7 @@ const file_paypb_proto_rawDesc = "" +
 	"\x06status\x18\x01 \x01(\x03R\x06status2i\n" +
 	"\n" +
 	"PayService\x12[\n" +
-	"\x0fGetRechargeInfo\x12$.gamepb.paypb.GetRechargeInfoRequest\x1a\".gamepb.paypb.GetRechargeInfoReplyBAZ?github.com/it00021hot/qq-farm-core/internal/farm/proto/paypb;paypbb\x06proto3"
+	"\x0fGetRechargeInfo\x12$.gamepb.paypb.GetRechargeInfoRequest\x1a\".gamepb.paypb.GetRechargeInfoReplyBDZBgithub.com/it00021hot/qq-farm-core/internal/farm/proto/paypb;paypbb\x06proto3"
 
 var (
 	file_paypb_proto_rawDescOnce sync.Once

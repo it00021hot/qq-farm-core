@@ -276,7 +276,7 @@ const file_dogpb_proto_rawDesc = "" +
 	"\x0fGetDogInfoReply\x12)\n" +
 	"\x04dogs\x18\x01 \x03(\v2\x15.gamepb.dogpb.DogInfoR\x04dogs\x12)\n" +
 	"\x10protect_duration\x18\x04 \x01(\x03R\x0fprotectDuration\x12+\n" +
-	"\x05items\x18\x05 \x03(\v2\x15.gamepb.dogpb.DogItemR\x05itemsBAZ?github.com/it00021hot/qq-farm-core/internal/farm/proto/dogpb;dogpbb\x06proto3"
+	"\x05items\x18\x05 \x03(\v2\x15.gamepb.dogpb.DogItemR\x05itemsBDZBgithub.com/it00021hot/qq-farm-core/internal/farm/proto/dogpb;dogpbb\x06proto3"
 
 var (
 	file_dogpb_proto_rawDescOnce sync.Once
