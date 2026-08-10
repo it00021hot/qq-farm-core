@@ -54,6 +54,7 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Get("/game-mall", commerce.Commerce.Mall).Name("游戏商城")
 		router.Post("/game-mall/purchase", commerce.Commerce.Purchase).Name("购买商城商品")
 		router.Get("/mystery-shop", commerce.Commerce.MysteryShop).Name("神秘商人")
+		router.Post("/mystery-shop/purchase", commerce.Commerce.PurchaseMystery).Name("购买神秘商人商品")
 		router.Get("/diamond", commerce.Commerce.Diamond).Name("钻石余额")
 
 		router.Get("/friend/list", friend.Friend.List).Name("好友列表")

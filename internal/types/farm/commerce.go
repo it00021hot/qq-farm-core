@@ -83,12 +83,14 @@ type MallPurchaseResult struct {
 }
 
 type MysteryNPC struct {
-	ID              int64        `json:"id"`
-	Reward          CommerceItem `json:"reward"`
-	Stock           int32        `json:"stock"`
-	Price           MallPrice    `json:"price"`
-	OriginalPrice   int64        `json:"originalPrice"`
-	DiscountPercent int32        `json:"discountPercent"`
+	ID                int64     `json:"id"`
+	Reward            CommerceItem `json:"reward"`
+	Stock             int32     `json:"stock"`
+	Price             MallPrice `json:"price"`
+	OriginalPrice     int64     `json:"originalPrice"`
+	UnitPrice         int64     `json:"unitPrice"`
+	UnitOriginalPrice int64     `json:"unitOriginalPrice"`
+	DiscountPercent   int32     `json:"discountPercent"`
 }
 
 type MysteryShop struct {
@@ -97,6 +99,25 @@ type MysteryShop struct {
 	ActiveTime int64       `json:"activeTime,omitempty"`
 	ExpireTime int64       `json:"expireTime,omitempty"`
 	NPC        *MysteryNPC `json:"npc"`
+}
+
+// MysteryPurchaseReq buys the active mystery shop offer.
+type MysteryPurchaseReq struct {
+	AccountID uint64 `json:"accountId" validate:"required"`
+	NpcID     int64  `json:"npcId" validate:"required,min=1"`
+}
+
+type MysteryPurchase struct {
+	NpcID          int64        `json:"npcId"`
+	Reward          CommerceItem `json:"reward"`
+	Price           MallPrice    `json:"price"`
+	OriginalPrice   int64        `json:"originalPrice"`
+	DiscountPercent int32        `json:"discountPercent"`
+}
+
+type MysteryPurchaseResult struct {
+	Purchase MysteryPurchase `json:"purchase"`
+	Shop     MysteryShop     `json:"shop"`
 }
 
 type DiamondBalance struct {

@@ -18,8 +18,18 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/static"
 )
 
+// RegisterOptions tweaks route registration for embedded hosts.
+type RegisterOptions struct {
+	// SkipRootIndex omits GET / JSON health so a later SPA mount can own "/".
+	SkipRootIndex bool
+}
+
 // Register ...
-func Register(appName string) *fiber.App {
+func Register(appName string, opts ...RegisterOptions) *fiber.App {
+	var cfg RegisterOptions
+	if len(opts) > 0 {
+		cfg = opts[0]
+	}
 	publicMiddleware := []any{
 		middleware.LoggerMiddleware(),  // 日志
 		middleware.WhiteIpMiddleware(), // 白名单
@@ -67,7 +77,7 @@ func Register(appName string) *fiber.App {
 	}
 
 	// common
-	routes.InitCommonGroup(r, publicMiddleware...)
+	routes.InitCommonGroup(r, cfg.SkipRootIndex, publicMiddleware...)
 
 	// game-config static icons (Plant/Item images), public like qq-farm-bot /game-config/*
 	gameConfigDir := vars.Config.GetString("farm.gameConfigDir")

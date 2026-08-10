@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	friendOpPutWeed   int64 = 10003
-	friendOpPutBug    int64 = 10004
+	friendOpBadShared int64 = 10003 // 放草/放虫共用每日资格额度
+	friendOpPutWeed   int64 = 10003 // alias of friendOpBadShared
+	friendOpPutBug    int64 = 10004 // 放虫计数
 	friendOpWeed      int64 = 10005
 	friendOpBug       int64 = 10006
 	friendOpWater     int64 = 10007
@@ -272,7 +273,7 @@ func RunBadOnce(ctx context.Context, s *Session) (actions int, err error) {
 		if helpState.isBadOperationLimitReached() {
 			break
 		}
-		if !helpState.canOperate(friendOpPutBug) && !helpState.canOperate(friendOpPutWeed) {
+		if helpState.getRemainingBadOperationTimes() <= 0 {
 			break
 		}
 		outcome, visitErr := badFriend(ctx, s, api, myGID, gid)
@@ -1083,6 +1084,49 @@ func isTransientNetworkError(err error) bool {
 	return false
 }
 
+// isFatalTransportError reports gateway/socket death. Login Code is one-shot —
+// the account must stop; dialing again with the same code will not work.
+func isFatalTransportError(err error) bool {
+	if err == nil {
+		return false
+	}
+	// Intentional Stop() cancels context; do not treat as a dead socket.
+	if errors.Is(err, context.Canceled) {
+		return false
+	}
+	msg := err.Error()
+	if msg == "" {
+		return false
+	}
+	// Bare RPC timeout is not proof the websocket is dead.
+	if errors.Is(err, context.DeadlineExceeded) && !strings.Contains(msg, "protocol:") {
+		return false
+	}
+	keywords := []string{
+		"protocol: client closed",
+		"protocol: connection closed",
+		"protocol: not connected",
+		"protocol: read:",
+		"protocol: write:",
+		"连接未打开",
+		"连接关闭",
+		"连接已在加密途中关闭",
+		"wsasend:",
+		"wsarecv:",
+		"use of closed network connection",
+		"broken pipe",
+		"connection reset by peer",
+		"EOF",
+		"heartbeat timeout",
+	}
+	for _, kw := range keywords {
+		if strings.Contains(msg, kw) {
+			return true
+		}
+	}
+	return false
+}
+
 func friendlyNetworkError(err error) string {
 	if err == nil {
 		return ""
@@ -1147,7 +1191,11 @@ func shouldAbortFriendPatrol(ctx context.Context, s *Session) bool {
 
 // abortFriendPatrol stops the batch after a transport/session exit error.
 // While stopping/kicked, stay silent (bot quiesceBot); otherwise log once.
+// Fatal transport errors stop the account (no reconnect — Code is one-shot).
 func abortFriendPatrol(s *Session, accountID uint64, kind string, err error) {
+	if s != nil {
+		s.failTransport(err)
+	}
 	if s != nil && s.isQuiescing() {
 		slog.Info("friend patrol aborted (session exiting)", "account", accountID, "kind", kind, "err", friendlyNetworkError(err))
 		return
@@ -1400,28 +1448,38 @@ func badFriend(ctx context.Context, s *Session, api *game.API, myGID, gid int64)
 	}()
 	weedTargets, bugTargets := collectBadLandTargets(lands, myGID)
 
-	// Bot: slice by remaining times; insect failure must not block weeds; 1001046 marks day limit.
-	if len(bugTargets) > 0 && helpState.canOperate(friendOpPutBug) {
-		remaining := helpState.getRemainingTimes(friendOpPutBug)
+	// Shared 10003 quota; weeds first then insects; one land per request (bot a7c2692).
+	if len(weedTargets) > 0 && !helpState.isBadOperationLimitReached() {
+		remaining := helpState.getRemainingBadOperationTimes()
 		if remaining > 0 {
-			if remaining < len(bugTargets) {
-				bugTargets = bugTargets[:remaining]
+			if remaining < len(weedTargets) {
+				weedTargets = weedTargets[:remaining]
 			}
-			canOperate, _, checkErr := api.CheckCanOperate(ctx, gid, friendOpPutBug)
-			if checkErr != nil || canOperate {
-				reply, putErr := api.PutInsects(ctx, gid, bugTargets)
-				if putErr != nil {
-					if isBadOpLimitError(putErr) {
-						helpState.markBadOperationLimitReached()
-					} else {
-						slog.Debug("put insects failed", "account", sessionID(s), "friend_gid", gid, "err", putErr)
-					}
+			ok, putErr := api.PutWeeds(ctx, gid, weedTargets, game.PutPlantHooks{
+				OnLimits: helpState.updateLimits,
+				Continue: func() bool {
+					return !helpState.isBadOperationLimitReached() && helpState.getRemainingBadOperationTimes() > 0
+				},
+			})
+			if putErr != nil {
+				if isBadOpLimitError(putErr) {
+					helpState.markBadOperationLimitReached()
 				} else {
-					if reply != nil {
-						helpState.updateLimits(reply.OperationLimits)
+					slog.Debug("put weeds failed", "account", sessionID(s), "friend_gid", gid, "err", putErr)
+				}
+			}
+			if ok > 0 {
+				out.PutWeed = ok
+				out.Count += ok
+			}
+			if !helpState.isBadOperationLimitReached() {
+				select {
+				case <-ctx.Done():
+					if out.Count > 0 {
+						out.Summary = formatBadSummary(out.PutBug, out.PutWeed)
 					}
-					out.PutBug = len(bugTargets)
-					out.Count += out.PutBug
+					return out, ctx.Err()
+				case <-time.After(time.Duration(500+time.Now().UnixNano()%300) * time.Millisecond):
 				}
 			}
 		}
@@ -1432,28 +1490,28 @@ func badFriend(ctx context.Context, s *Session, api *game.API, myGID, gid int64)
 		}
 		return out, nil
 	}
-	if len(weedTargets) > 0 && helpState.canOperate(friendOpPutWeed) {
-		remaining := helpState.getRemainingTimes(friendOpPutWeed)
+	if len(bugTargets) > 0 {
+		remaining := helpState.getRemainingBadOperationTimes()
 		if remaining > 0 {
-			if remaining < len(weedTargets) {
-				weedTargets = weedTargets[:remaining]
+			if remaining < len(bugTargets) {
+				bugTargets = bugTargets[:remaining]
 			}
-			canOperate, _, checkErr := api.CheckCanOperate(ctx, gid, friendOpPutWeed)
-			if checkErr != nil || canOperate {
-				reply, putErr := api.PutWeeds(ctx, gid, weedTargets)
-				if putErr != nil {
-					if isBadOpLimitError(putErr) {
-						helpState.markBadOperationLimitReached()
-					} else {
-						slog.Debug("put weeds failed", "account", sessionID(s), "friend_gid", gid, "err", putErr)
-					}
+			ok, putErr := api.PutInsects(ctx, gid, bugTargets, game.PutPlantHooks{
+				OnLimits: helpState.updateLimits,
+				Continue: func() bool {
+					return !helpState.isBadOperationLimitReached() && helpState.getRemainingBadOperationTimes() > 0
+				},
+			})
+			if putErr != nil {
+				if isBadOpLimitError(putErr) {
+					helpState.markBadOperationLimitReached()
 				} else {
-					if reply != nil {
-						helpState.updateLimits(reply.OperationLimits)
-					}
-					out.PutWeed = len(weedTargets)
-					out.Count += out.PutWeed
+					slog.Debug("put insects failed", "account", sessionID(s), "friend_gid", gid, "err", putErr)
 				}
+			}
+			if ok > 0 {
+				out.PutBug = ok
+				out.Count += ok
 			}
 		}
 	}
@@ -1473,11 +1531,11 @@ func isBadOpLimitError(err error) bool {
 
 func formatBadSummary(putBug, putWeed int) string {
 	parts := make([]string, 0, 2)
-	if putBug > 0 {
-		parts = append(parts, fmt.Sprintf("放虫%d", putBug))
-	}
 	if putWeed > 0 {
 		parts = append(parts, fmt.Sprintf("放草%d", putWeed))
+	}
+	if putBug > 0 {
+		parts = append(parts, fmt.Sprintf("放虫%d", putBug))
 	}
 	return strings.Join(parts, "/")
 }

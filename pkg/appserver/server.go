@@ -3,6 +3,7 @@ package appserver
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -30,6 +31,9 @@ type Options struct {
 	ResourceRoot string
 	DataRoot     string
 	DesktopMode  bool
+	// WebFS, when set, serves a Vue SPA (dist root) on the same listener as the API.
+	// Root index JSON is skipped so GET / returns index.html.
+	WebFS fs.FS
 }
 
 // Server is a running Fiber API bound to loopback.
@@ -91,7 +95,13 @@ func Start(opts Options) (*Server, error) {
 		port = DefaultPort
 	}
 	addr := host + ":" + port
-	app := router.Register("qq-farm-desktop")
+	app := router.Register("qq-farm-desktop", router.RegisterOptions{
+		SkipRootIndex: opts.WebFS != nil,
+	})
+	if opts.WebFS != nil {
+		mountWebUI(app, opts.WebFS)
+		log.Printf("appserver web UI mounted on http://%s/", addr)
+	}
 
 	errCh := make(chan error, 1)
 	go func() {

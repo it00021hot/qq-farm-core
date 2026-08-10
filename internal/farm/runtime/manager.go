@@ -111,6 +111,7 @@ type Session struct {
 }
 
 func newSession(cfg SessionConfig, h *hub.Hub) *Session {
+	accountID := parseAccountID(cfg.AccountID)
 	return &Session{
 		id:                 cfg.AccountID,
 		cfg:                cfg,
@@ -119,7 +120,7 @@ func newSession(cfg SessionConfig, h *hub.Hub) *Session {
 		isFirstFarmCheck:   true,
 		stealPatrolVisited: make(map[int64]struct{}),
 		helpPatrolVisited:  make(map[int64]struct{}),
-		helpState:          newFriendHelpState(),
+		helpState:          newFriendHelpState(accountID, cfg.DataRoot),
 	}
 }
 
@@ -325,6 +326,7 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 		Encryptor:      enc,
 		HeartbeatEvery: 25 * time.Second,
 		OnNotify:       s.handleNotify,
+		OnDisconnect:   s.failTransport,
 	})
 
 	slog.Info("farm gateway dial",
@@ -427,6 +429,9 @@ func (s *Session) doLogin(ctx context.Context, client *protocol.Client, ver stri
 	if reply.Basic == nil || reply.Basic.Gid == 0 {
 		return fmt.Errorf("登录失败: 响应缺少账号信息（Code 可能已失效）")
 	}
+	if reply.GetTimeNowMillis() > 0 {
+		logic.SyncServerTime(reply.GetTimeNowMillis())
+	}
 
 	s.mu.Lock()
 	s.gid = reply.Basic.Gid
@@ -500,10 +505,21 @@ func (s *Session) postLoginHooks(ctx context.Context) {
 	}
 }
 
-// gameHeartbeatLoop sends UserService.Heartbeat with gid + client_version every 25s.
+// gameHeartbeatLoop mirrors qq-farm-bot startHeartbeat:
+// UserService.Heartbeat every 25s; kill only after >30s without a heartbeat reply.
 func (s *Session) gameHeartbeatLoop(ctx context.Context) {
-	ticker := time.NewTicker(25 * time.Second)
+	const (
+		heartbeatInterval   = 25 * time.Second
+		heartbeatSilence    = 30 * time.Second
+		heartbeatRPCTimeout = 20 * time.Second
+		maxHeartbeatMiss    = 1
+	)
+	ticker := time.NewTicker(heartbeatInterval)
 	defer ticker.Stop()
+
+	lastResponse := time.Now()
+	missCount := 0
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -520,18 +536,53 @@ func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 			if ver == "" {
 				ver = "1.13.0.5_20260723"
 			}
+
+			silence := time.Since(lastResponse)
+			if silence > heartbeatSilence {
+				missCount++
+				slog.Warn("farm heartbeat silence",
+					"account", s.id,
+					"silence_sec", int(silence.Seconds()),
+					"miss", missCount,
+				)
+				if missCount >= maxHeartbeatMiss {
+					s.failTransport(fmt.Errorf("protocol: connection closed: heartbeat timeout (%ds no response)", int(silence.Seconds())))
+					return
+				}
+			}
+
 			heartbeatBody, marshalErr := proto.Marshal(&userpb.HeartbeatRequest{Gid: gid, ClientVersion: ver})
 			if marshalErr != nil {
 				continue
 			}
-			hbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-			_, _, err := client.Send(hbCtx, "gamepb.userpb.UserService", "Heartbeat", heartbeatBody)
+			hbCtx, cancel := context.WithTimeout(ctx, heartbeatRPCTimeout)
+			raw, _, err := client.Send(hbCtx, "gamepb.userpb.UserService", "Heartbeat", heartbeatBody)
 			cancel()
 			if err != nil {
+				// Node: Heartbeat send/reply errors are swallowed; only silence kills the session.
 				slog.Warn("farm heartbeat failed", "account", s.id, "err", err)
+				continue
+			}
+
+			lastResponse = time.Now()
+			missCount = 0
+			var reply userpb.HeartbeatReply
+			if proto.Unmarshal(raw, &reply) == nil && reply.GetServerTime() > 0 {
+				logic.SyncServerTime(normalizeServerTimeMs(reply.GetServerTime()))
 			}
 		}
 	}
+}
+
+// normalizeServerTimeMs mirrors bot toTimeSec inverse for SyncServerTime (expects ms).
+func normalizeServerTimeMs(v int64) int64 {
+	if v <= 0 {
+		return 0
+	}
+	if v > 1e12 {
+		return v
+	}
+	return v * 1000
 }
 
 // aceLoop mirrors qq-farm-bot startAceRuntime timers.
@@ -687,6 +738,9 @@ func (s *Session) RunFarmOp(ctx context.Context, op string) (hadWork bool, actio
 			"message": msg,
 			"isWarn":  err != nil,
 		})
+	}
+	if err != nil {
+		s.failTransport(err)
 	}
 	return hadWork, actions, err
 }
@@ -1286,6 +1340,27 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 	}()
 }
 
+// failTransport stops the account when the gateway socket is dead.
+// Login Code is one-shot; reconnecting with the same code is useless.
+func (s *Session) failTransport(err error) {
+	if s == nil || err == nil || !isFatalTransportError(err) {
+		return
+	}
+	if s.isQuiescing() {
+		return
+	}
+	detail := "网关连接已断开（登录 Code 为一次性，无法自动重连）"
+	slog.Warn("farm transport dead, stopping session", "account", s.id, "err", err)
+	s.setStatus(StatusError, detail)
+	persistRunStatus(parseAccountID(s.id), RunError, false)
+	s.mu.Lock()
+	cancel := s.cancel
+	s.mu.Unlock()
+	if cancel != nil {
+		cancel()
+	}
+}
+
 func (s *Session) applyItemNotify(body []byte) {
 	var notify itempb.ItemNotify
 	if err := proto.Unmarshal(body, &notify); err != nil {
@@ -1426,7 +1501,8 @@ func (s *Session) ensureHelpState() *friendHelpState {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.helpState == nil {
-		s.helpState = newFriendHelpState()
+		accountID := parseAccountID(s.id)
+		s.helpState = newFriendHelpState(accountID, s.cfg.DataRoot)
 	}
 	return s.helpState
 }

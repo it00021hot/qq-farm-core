@@ -36,6 +36,7 @@ type Client struct {
 	encryptor      Encryptor
 	heartbeatEvery time.Duration
 	onNotify       NotifyHandler
+	onDisconnect   func(error)
 
 	mu         sync.Mutex
 	conn       *websocket.Conn
@@ -60,6 +61,10 @@ type Options struct {
 	Encryptor      Encryptor // optional; if nil, bodies are sent plaintext
 	HeartbeatEvery time.Duration
 	OnNotify       NotifyHandler
+	// OnDisconnect is invoked once when the read loop dies unexpectedly
+	// (not after an intentional Close). Login Code is one-shot, so callers
+	// should stop the account session rather than retry dialing.
+	OnDisconnect func(error)
 }
 
 // NewClient builds a disconnected client.
@@ -73,6 +78,7 @@ func NewClient(opts Options) *Client {
 		encryptor:      opts.Encryptor,
 		heartbeatEvery: opts.HeartbeatEvery,
 		onNotify:       opts.OnNotify,
+		onDisconnect:   opts.OnDisconnect,
 		pending:        make(map[int64]chan rpcResult),
 		clientSeq:      1,
 	}
@@ -142,15 +148,39 @@ func (c *Client) Close() error {
 
 // Send performs a request/response RPC wrapped in gatepb.Message.
 func (c *Client) Send(ctx context.Context, service, method string, body []byte) ([]byte, *gatepb.Meta, error) {
+	seq, ch, err := c.writeRequest(body, service, method, true)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	select {
+	case <-ctx.Done():
+		c.mu.Lock()
+		delete(c.pending, seq)
+		c.mu.Unlock()
+		return nil, nil, ctx.Err()
+	case res := <-ch:
+		return res.body, res.meta, res.err
+	}
+}
+
+// SendNoReply writes a request without registering a pending waiter.
+// Matches bot sendMsgNoReply; success is confirmed by a follow-up query.
+func (c *Client) SendNoReply(_ context.Context, service, method string, body []byte) error {
+	_, _, err := c.writeRequest(body, service, method, false)
+	return err
+}
+
+func (c *Client) writeRequest(body []byte, service, method string, waitReply bool) (int64, chan rpcResult, error) {
 	if c.closed.Load() {
-		return nil, nil, fmt.Errorf("protocol: client closed")
+		return 0, nil, fmt.Errorf("protocol: client closed")
 	}
 
 	finalBody := body
 	if len(finalBody) > 0 && c.encryptor != nil {
 		enc, err := c.encryptor.Encrypt(finalBody)
 		if err != nil {
-			return nil, nil, fmt.Errorf("protocol: encrypt: %w", err)
+			return 0, nil, fmt.Errorf("protocol: encrypt: %w", err)
 		}
 		finalBody = enc
 	}
@@ -158,13 +188,16 @@ func (c *Client) Send(ctx context.Context, service, method string, body []byte) 
 	c.mu.Lock()
 	if c.conn == nil {
 		c.mu.Unlock()
-		return nil, nil, fmt.Errorf("protocol: not connected")
+		return 0, nil, fmt.Errorf("protocol: not connected")
 	}
 	seq := c.clientSeq
 	c.clientSeq++
 	serverSeq := c.serverSeq
-	ch := make(chan rpcResult, 1)
-	c.pending[seq] = ch
+	var ch chan rpcResult
+	if waitReply {
+		ch = make(chan rpcResult, 1)
+		c.pending[seq] = ch
+	}
 
 	msg := &gatepb.Message{
 		Meta: &gatepb.Meta{
@@ -179,28 +212,23 @@ func (c *Client) Send(ctx context.Context, service, method string, body []byte) 
 	}
 	frame, err := proto.Marshal(msg)
 	if err != nil {
-		delete(c.pending, seq)
+		if waitReply {
+			delete(c.pending, seq)
+		}
 		c.mu.Unlock()
-		return nil, nil, fmt.Errorf("protocol: marshal: %w", err)
+		return 0, nil, fmt.Errorf("protocol: marshal: %w", err)
 	}
 	err = c.conn.WriteMessage(websocket.BinaryMessage, frame)
 	c.mu.Unlock()
 	if err != nil {
-		c.mu.Lock()
-		delete(c.pending, seq)
-		c.mu.Unlock()
-		return nil, nil, fmt.Errorf("protocol: write: %w", err)
+		if waitReply {
+			c.mu.Lock()
+			delete(c.pending, seq)
+			c.mu.Unlock()
+		}
+		return 0, nil, fmt.Errorf("protocol: write: %w", err)
 	}
-
-	select {
-	case <-ctx.Done():
-		c.mu.Lock()
-		delete(c.pending, seq)
-		c.mu.Unlock()
-		return nil, nil, ctx.Err()
-	case res := <-ch:
-		return res.body, res.meta, res.err
-	}
+	return seq, ch, nil
 }
 
 func (c *Client) readLoop(ctx context.Context) {
@@ -216,10 +244,20 @@ func (c *Client) readLoop(ctx context.Context) {
 		if conn == nil {
 			return
 		}
-		_ = conn.SetReadDeadline(time.Now().Add(90 * time.Second))
+		// No client read deadline — matches qq-farm-bot (idle detection is via Heartbeat silence).
 		_, data, err := conn.ReadMessage()
 		if err != nil {
-			c.rejectAll(fmt.Errorf("protocol: read: %w", err))
+			readErr := fmt.Errorf("protocol: read: %w", err)
+			c.rejectAll(readErr)
+			// Intentional Close sets closed before tearing down the conn.
+			if !c.closed.Load() {
+				c.mu.Lock()
+				cb := c.onDisconnect
+				c.mu.Unlock()
+				if cb != nil {
+					cb(readErr)
+				}
+			}
 			return
 		}
 		c.handleFrame(data)

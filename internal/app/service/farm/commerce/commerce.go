@@ -73,15 +73,69 @@ func (s *Service) MysteryShop(ctx fiber.Ctx, req farmtypes.CommerceAccountReq) (
 	if err != nil {
 		return farmtypes.MysteryShop{}, friendlyFarmErr(err)
 	}
+	callCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	result, err := s.loadMysteryShop(callCtx, session)
+	return result, friendlyFarmErr(err)
+}
+
+func (s *Service) PurchaseMystery(ctx fiber.Ctx, req farmtypes.MysteryPurchaseReq) (farmtypes.MysteryPurchaseResult, error) {
+	session, err := s.session(ctx, req.AccountID)
+	if err != nil {
+		return farmtypes.MysteryPurchaseResult{}, friendlyFarmErr(err)
+	}
+	api := session.GameAPI()
+	if api == nil {
+		return farmtypes.MysteryPurchaseResult{}, errors.New("账号未连接游戏")
+	}
+	callCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	before, err := s.loadMysteryShop(callCtx, session)
+	if err != nil {
+		return farmtypes.MysteryPurchaseResult{}, friendlyFarmErr(err)
+	}
+	offer := before.NPC
+	if !before.Active || offer == nil || offer.ID != req.NpcID {
+		return farmtypes.MysteryPurchaseResult{}, errors.New("神秘商人商品已失效")
+	}
+	if offer.Stock <= 0 {
+		return farmtypes.MysteryPurchaseResult{}, errors.New("神秘商人商品已售罄")
+	}
+	if offer.Price.Balance != nil && *offer.Price.Balance < offer.Price.Count {
+		return farmtypes.MysteryPurchaseResult{}, errors.New("货币余额不足")
+	}
+
+	if err := api.Buy(callCtx, req.NpcID); err != nil {
+		return farmtypes.MysteryPurchaseResult{}, friendlyFarmErr(err)
+	}
+	shop, err := s.loadMysteryShop(callCtx, session)
+	if err != nil {
+		return farmtypes.MysteryPurchaseResult{}, friendlyFarmErr(err)
+	}
+	if shop.Active && shop.NPC != nil && shop.NPC.ID == req.NpcID && shop.NPC.Stock >= offer.Stock {
+		return farmtypes.MysteryPurchaseResult{}, errors.New("神秘商人购买未确认")
+	}
+	return farmtypes.MysteryPurchaseResult{
+		Purchase: farmtypes.MysteryPurchase{
+			NpcID:          offer.ID,
+			Reward:          offer.Reward,
+			Price:           offer.Price,
+			OriginalPrice:   offer.OriginalPrice,
+			DiscountPercent: offer.DiscountPercent,
+		},
+		Shop: shop,
+	}, nil
+}
+
+func (s *Service) loadMysteryShop(ctx context.Context, session *farmruntime.Session) (farmtypes.MysteryShop, error) {
 	api := session.GameAPI()
 	if api == nil {
 		return farmtypes.MysteryShop{}, errors.New("账号未连接游戏")
 	}
-	callCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-	reply, err := api.GetActiveNPC(callCtx)
+	reply, err := api.GetActiveNPC(ctx)
 	if err != nil {
-		return farmtypes.MysteryShop{}, friendlyFarmErr(err)
+		return farmtypes.MysteryShop{}, err
 	}
 	result := farmtypes.MysteryShop{
 		Active:     reply.GetIsActive() && reply.GetNpc() != nil,
@@ -91,16 +145,21 @@ func (s *Service) MysteryShop(ctx fiber.Ctx, req farmtypes.CommerceAccountReq) (
 	if !result.Active || npc == nil {
 		return result, nil
 	}
-	balances := bagBalances(callCtx, session)
+	balances := bagBalances(ctx, session)
+	rewardCount := int64(max32(npc.GetRewardCount()))
+	unitPrice := max64(npc.GetPrice())
+	unitOriginal := max64(npc.GetOriginalPrice())
 	result.ActiveTime = millis(reply.GetActiveTime())
 	result.ExpireTime = millis(reply.GetExpireTime())
 	result.NPC = &farmtypes.MysteryNPC{
-		ID:              npc.GetNpcId(),
-		Reward:          commerceItem(npc.GetRewardItemId(), int64(npc.GetRewardCount()), "神秘商品"),
-		Stock:           max32(npc.GetStockCount()),
-		Price:           commercePrice(npc.GetCurrencyItemId(), npc.GetPrice(), balances),
-		OriginalPrice:   max64(npc.GetOriginalPrice()),
-		DiscountPercent: max32(npc.GetDiscountPercent()),
+		ID:                npc.GetNpcId(),
+		Reward:            commerceItem(npc.GetRewardItemId(), rewardCount, "神秘商品"),
+		Stock:             max32(npc.GetStockCount()),
+		Price:             commercePrice(npc.GetCurrencyItemId(), unitPrice*rewardCount, balances),
+		OriginalPrice:     unitOriginal * rewardCount,
+		UnitPrice:         unitPrice,
+		UnitOriginalPrice: unitOriginal,
+		DiscountPercent:   max32(npc.GetDiscountPercent()),
 	}
 	return result, nil
 }

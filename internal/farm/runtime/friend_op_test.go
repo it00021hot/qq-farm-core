@@ -54,6 +54,42 @@ func TestIsTransientNetworkError(t *testing.T) {
 	}
 }
 
+func TestIsFatalTransportError(t *testing.T) {
+	cases := []struct {
+		err  error
+		want bool
+	}{
+		{nil, false},
+		{context.Canceled, false},
+		{context.DeadlineExceeded, false},
+		{fmt.Errorf("请求超时"), false},
+		{fmt.Errorf("protocol: write: write tcp: wsasend: aborted"), true},
+		{fmt.Errorf("protocol: read: EOF"), true},
+		{fmt.Errorf("protocol: connection closed"), true},
+		{fmt.Errorf("连接关闭"), true},
+		{fmt.Errorf("load lands: protocol: write: broken pipe"), true},
+		{fmt.Errorf("protocol: connection closed: heartbeat timeout (35s no response)"), true},
+		{fmt.Errorf("code=1002003 banned"), false},
+	}
+	for _, tc := range cases {
+		if got := isFatalTransportError(tc.err); got != tc.want {
+			t.Fatalf("isFatalTransportError(%v)=%v want %v", tc.err, got, tc.want)
+		}
+	}
+}
+
+func TestNormalizeServerTimeMs(t *testing.T) {
+	if got := normalizeServerTimeMs(0); got != 0 {
+		t.Fatalf("zero=%d", got)
+	}
+	if got := normalizeServerTimeMs(1_700_000_000); got != 1_700_000_000_000 {
+		t.Fatalf("seconds→ms=%d", got)
+	}
+	if got := normalizeServerTimeMs(1_700_000_000_000); got != 1_700_000_000_000 {
+		t.Fatalf("ms passthrough=%d", got)
+	}
+}
+
 func TestGetPatrolBatchSize(t *testing.T) {
 	cases := []struct {
 		n, want int
@@ -197,7 +233,8 @@ func TestIsActivityPlant(t *testing.T) {
 
 func TestFriendHelpStateLimitsAndBadCap(t *testing.T) {
 	logic.SyncServerTime(1_700_000_000_000)
-	s := newFriendHelpState()
+	dir := t.TempDir()
+	s := newFriendHelpState(1, dir)
 	if s.canGetExp(friendOpWeed) {
 		t.Fatal("no limits yet → canGetExp should be false")
 	}
@@ -206,14 +243,15 @@ func TestFriendHelpStateLimitsAndBadCap(t *testing.T) {
 	}
 	s.updateLimits([]*plantpb.OperationLimit{
 		{Id: friendOpSteal, DayTimes: 5, DayTimesLt: 5},
+		{Id: friendOpBadShared, DayTimes: 1, DayTimesLt: 3},
 		{Id: friendOpPutBug, DayTimes: 1, DayTimesLt: 3},
 		{Id: friendOpWeed, DayTimes: 0, DayTimesLt: 10, DayExpTimes: 0, DayExTimesLt: 10},
 	})
 	if s.canOperate(friendOpSteal) {
 		t.Fatal("steal times exhausted")
 	}
-	if s.getRemainingTimes(friendOpPutBug) != 2 {
-		t.Fatalf("put bug remaining=%d", s.getRemainingTimes(friendOpPutBug))
+	if s.getRemainingBadOperationTimes() != 2 {
+		t.Fatalf("shared bad remaining=%d", s.getRemainingBadOperationTimes())
 	}
 	if !s.canGetExp(friendOpWeed) {
 		t.Fatal("weed exp available")
@@ -221,8 +259,42 @@ func TestFriendHelpStateLimitsAndBadCap(t *testing.T) {
 	if !s.markBadOperationLimitReached() {
 		t.Fatal("first mark should succeed")
 	}
+	if s.getRemainingBadOperationTimes() != 0 {
+		t.Fatal("bad limit → shared remaining 0")
+	}
 	if s.getRemainingTimes(friendOpPutWeed) != 0 {
 		t.Fatal("bad limit → weed remaining 0")
+	}
+	if !s.loadBadDailyStop(beijingDateKey()) {
+		t.Fatal("expected persisted bad daily stop")
+	}
+}
+
+func TestFriendHelpStateSharedQuotaExhaustMarksStop(t *testing.T) {
+	logic.SyncServerTime(1_700_000_000_000)
+	dir := t.TempDir()
+	s := newFriendHelpState(42, dir)
+	s.updateLimits([]*plantpb.OperationLimit{
+		{Id: friendOpBadShared, DayTimes: 3, DayTimesLt: 3},
+	})
+	if !s.isBadOperationLimitReached() {
+		t.Fatal("shared quota exhausted should stop bad ops")
+	}
+	if s.getRemainingBadOperationTimes() != 0 {
+		t.Fatal("remaining should be 0")
+	}
+}
+
+func TestFriendHelpStateBadStopReloadsAcrossInstances(t *testing.T) {
+	logic.SyncServerTime(1_700_000_000_000)
+	dir := t.TempDir()
+	s1 := newFriendHelpState(7, dir)
+	if !s1.markBadOperationLimitReached() {
+		t.Fatal("mark failed")
+	}
+	s2 := newFriendHelpState(7, dir)
+	if !s2.isBadOperationLimitReached() {
+		t.Fatal("reloaded state should keep day stop")
 	}
 }
 

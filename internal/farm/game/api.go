@@ -41,6 +41,9 @@ const (
 // Sender is the RPC transport used by game APIs.
 type Sender interface {
 	Send(ctx context.Context, service, method string, body []byte) ([]byte, *gatepb.Meta, error)
+	// SendNoReply writes a request without waiting for an application reply
+	// (gateway responses with unknown client_seq are ignored).
+	SendNoReply(ctx context.Context, service, method string, body []byte) error
 }
 
 // API wraps plant service calls.

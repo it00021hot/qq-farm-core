@@ -8,10 +8,12 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func InitCommonGroup(r fiber.Router, handles ...any) {
+func InitCommonGroup(r fiber.Router, skipRootIndex bool, handles ...any) {
 	router := r.Group("/", handles...)
 	{
-		router.Get("/", common.Common.Index)
+		if !skipRootIndex {
+			router.Get("/", common.Common.Index)
+		}
 		router.Get("/ping", common.Common.Ping)
 		router.Post("/token/create", common.Common.TokenCreate)
 		router.Post("/token/view", middleware.AuthMiddleware(), common.Common.TokenView)

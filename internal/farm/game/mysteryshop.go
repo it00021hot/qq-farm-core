@@ -27,3 +27,13 @@ func (a *API) GetActiveNPC(ctx context.Context) (*mysteryshoppb.GetActiveNPCRepl
 	}
 	return reply, nil
 }
+
+// Buy purchases the active mystery shop offer for npcID.
+// The game acknowledges success via ItemNotify / stock change, not BuyReply body.
+func (a *API) Buy(ctx context.Context, npcID int64) error {
+	if err := a.requireSender(); err != nil {
+		return err
+	}
+	req := &mysteryshoppb.BuyRequest{NpcId: npcID}
+	return a.Sender.SendNoReply(ctx, mysteryShopService, "Buy", marshalMessage(req))
+}

@@ -73,6 +73,11 @@ func (s *farmOpSender) Send(_ context.Context, _ string, method string, body []b
 	return nil, nil, nil
 }
 
+func (s *farmOpSender) SendNoReply(_ context.Context, _ string, method string, body []byte) error {
+	_, _, err := s.Send(context.Background(), "", method, body)
+	return err
+}
+
 func (s *farmOpSender) called(method string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -189,6 +194,10 @@ func (s *harvestDecodeSender) Send(_ context.Context, _ string, method string, _
 		return nil, nil, errors.New("unexpected method " + method)
 	}
 	return s.reply, nil, nil
+}
+
+func (s *harvestDecodeSender) SendNoReply(context.Context, string, string, []byte) error {
+	return errors.New("unexpected SendNoReply")
 }
 
 func mustMarshalHarvestReply(t *testing.T, lands []*plantpb.LandInfo) []byte {

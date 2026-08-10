@@ -50,6 +50,18 @@ func (c *Controller) MysteryShop(ctx fiber.Ctx) error {
 	return response.SuccessJSON(ctx, "", result)
 }
 
+func (c *Controller) PurchaseMystery(ctx fiber.Ctx) error {
+	var req farmtypes.MysteryPurchaseReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	result, err := commercesvc.Commerce.PurchaseMystery(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", result)
+}
+
 func (c *Controller) Diamond(ctx fiber.Ctx) error {
 	var req farmtypes.CommerceAccountReq
 	if err := c.Validate(ctx, &req); err != nil {

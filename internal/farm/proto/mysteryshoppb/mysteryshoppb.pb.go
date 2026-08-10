@@ -57,6 +57,87 @@ func (*GetActiveNPCRequest) Descriptor() ([]byte, []int) {
 	return file_mysteryshoppb_proto_rawDescGZIP(), []int{0}
 }
 
+type BuyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NpcId         int64                  `protobuf:"varint,1,opt,name=npc_id,json=npcId,proto3" json:"npc_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BuyRequest) Reset() {
+	*x = BuyRequest{}
+	mi := &file_mysteryshoppb_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BuyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BuyRequest) ProtoMessage() {}
+
+func (x *BuyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_mysteryshoppb_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BuyRequest.ProtoReflect.Descriptor instead.
+func (*BuyRequest) Descriptor() ([]byte, []int) {
+	return file_mysteryshoppb_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *BuyRequest) GetNpcId() int64 {
+	if x != nil {
+		return x.NpcId
+	}
+	return 0
+}
+
+// A successful purchase is acknowledged by ItemNotify rather than an RPC body.
+type BuyReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BuyReply) Reset() {
+	*x = BuyReply{}
+	mi := &file_mysteryshoppb_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BuyReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BuyReply) ProtoMessage() {}
+
+func (x *BuyReply) ProtoReflect() protoreflect.Message {
+	mi := &file_mysteryshoppb_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BuyReply.ProtoReflect.Descriptor instead.
+func (*BuyReply) Descriptor() ([]byte, []int) {
+	return file_mysteryshoppb_proto_rawDescGZIP(), []int{2}
+}
+
 // The active merchant offer embedded in GetActiveNPCReply.
 type ActiveNPC struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
@@ -65,16 +146,16 @@ type ActiveNPC struct {
 	RewardCount     int32                  `protobuf:"varint,3,opt,name=reward_count,json=rewardCount,proto3" json:"reward_count,omitempty"`
 	StockCount      int32                  `protobuf:"varint,4,opt,name=stock_count,json=stockCount,proto3" json:"stock_count,omitempty"`
 	CurrencyItemId  int64                  `protobuf:"varint,5,opt,name=currency_item_id,json=currencyItemId,proto3" json:"currency_item_id,omitempty"`
-	Price           int64                  `protobuf:"varint,6,opt,name=price,proto3" json:"price,omitempty"`
+	Price           int64                  `protobuf:"varint,6,opt,name=price,proto3" json:"price,omitempty"` // Discounted unit price; multiply by reward_count for the order total.
 	DiscountPercent int32                  `protobuf:"varint,7,opt,name=discount_percent,json=discountPercent,proto3" json:"discount_percent,omitempty"`
-	OriginalPrice   int64                  `protobuf:"varint,9,opt,name=original_price,json=originalPrice,proto3" json:"original_price,omitempty"`
+	OriginalPrice   int64                  `protobuf:"varint,9,opt,name=original_price,json=originalPrice,proto3" json:"original_price,omitempty"` // Original unit price; multiply by reward_count for the order total.
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
 
 func (x *ActiveNPC) Reset() {
 	*x = ActiveNPC{}
-	mi := &file_mysteryshoppb_proto_msgTypes[1]
+	mi := &file_mysteryshoppb_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -86,7 +167,7 @@ func (x *ActiveNPC) String() string {
 func (*ActiveNPC) ProtoMessage() {}
 
 func (x *ActiveNPC) ProtoReflect() protoreflect.Message {
-	mi := &file_mysteryshoppb_proto_msgTypes[1]
+	mi := &file_mysteryshoppb_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -99,7 +180,7 @@ func (x *ActiveNPC) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActiveNPC.ProtoReflect.Descriptor instead.
 func (*ActiveNPC) Descriptor() ([]byte, []int) {
-	return file_mysteryshoppb_proto_rawDescGZIP(), []int{1}
+	return file_mysteryshoppb_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ActiveNPC) GetNpcId() int64 {
@@ -170,7 +251,7 @@ type GetActiveNPCReply struct {
 
 func (x *GetActiveNPCReply) Reset() {
 	*x = GetActiveNPCReply{}
-	mi := &file_mysteryshoppb_proto_msgTypes[2]
+	mi := &file_mysteryshoppb_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -182,7 +263,7 @@ func (x *GetActiveNPCReply) String() string {
 func (*GetActiveNPCReply) ProtoMessage() {}
 
 func (x *GetActiveNPCReply) ProtoReflect() protoreflect.Message {
-	mi := &file_mysteryshoppb_proto_msgTypes[2]
+	mi := &file_mysteryshoppb_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -195,7 +276,7 @@ func (x *GetActiveNPCReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetActiveNPCReply.ProtoReflect.Descriptor instead.
 func (*GetActiveNPCReply) Descriptor() ([]byte, []int) {
-	return file_mysteryshoppb_proto_rawDescGZIP(), []int{2}
+	return file_mysteryshoppb_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetActiveNPCReply) GetIsActive() bool {
@@ -231,7 +312,12 @@ var File_mysteryshoppb_proto protoreflect.FileDescriptor
 const file_mysteryshoppb_proto_rawDesc = "" +
 	"\n" +
 	"\x13mysteryshoppb.proto\x12\x14gamepb.mysteryshoppb\"\x15\n" +
-	"\x13GetActiveNPCRequest\"\xa4\x02\n" +
+	"\x13GetActiveNPCRequest\"#\n" +
+	"\n" +
+	"BuyRequest\x12\x15\n" +
+	"\x06npc_id\x18\x01 \x01(\x03R\x05npcId\"\n" +
+	"\n" +
+	"\bBuyReply\"\xa4\x02\n" +
 	"\tActiveNPC\x12\x15\n" +
 	"\x06npc_id\x18\x01 \x01(\x03R\x05npcId\x12$\n" +
 	"\x0ereward_item_id\x18\x02 \x01(\x03R\frewardItemId\x12!\n" +
@@ -248,9 +334,10 @@ const file_mysteryshoppb_proto_rawDesc = "" +
 	"\vactive_time\x18\x03 \x01(\x03R\n" +
 	"activeTime\x12\x1f\n" +
 	"\vexpire_time\x18\x04 \x01(\x03R\n" +
-	"expireTime2x\n" +
+	"expireTime2\xc1\x01\n" +
 	"\x12MysteryShopService\x12b\n" +
-	"\fGetActiveNPC\x12).gamepb.mysteryshoppb.GetActiveNPCRequest\x1a'.gamepb.mysteryshoppb.GetActiveNPCReplyBTZRgithub.com/it00021hot/qq-farm-core/internal/farm/proto/mysteryshoppb;mysteryshoppbb\x06proto3"
+	"\fGetActiveNPC\x12).gamepb.mysteryshoppb.GetActiveNPCRequest\x1a'.gamepb.mysteryshoppb.GetActiveNPCReply\x12G\n" +
+	"\x03Buy\x12 .gamepb.mysteryshoppb.BuyRequest\x1a\x1e.gamepb.mysteryshoppb.BuyReplyBTZRgithub.com/it00021hot/qq-farm-core/internal/farm/proto/mysteryshoppb;mysteryshoppbb\x06proto3"
 
 var (
 	file_mysteryshoppb_proto_rawDescOnce sync.Once
@@ -264,18 +351,22 @@ func file_mysteryshoppb_proto_rawDescGZIP() []byte {
 	return file_mysteryshoppb_proto_rawDescData
 }
 
-var file_mysteryshoppb_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_mysteryshoppb_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_mysteryshoppb_proto_goTypes = []any{
 	(*GetActiveNPCRequest)(nil), // 0: gamepb.mysteryshoppb.GetActiveNPCRequest
-	(*ActiveNPC)(nil),           // 1: gamepb.mysteryshoppb.ActiveNPC
-	(*GetActiveNPCReply)(nil),   // 2: gamepb.mysteryshoppb.GetActiveNPCReply
+	(*BuyRequest)(nil),          // 1: gamepb.mysteryshoppb.BuyRequest
+	(*BuyReply)(nil),            // 2: gamepb.mysteryshoppb.BuyReply
+	(*ActiveNPC)(nil),           // 3: gamepb.mysteryshoppb.ActiveNPC
+	(*GetActiveNPCReply)(nil),   // 4: gamepb.mysteryshoppb.GetActiveNPCReply
 }
 var file_mysteryshoppb_proto_depIdxs = []int32{
-	1, // 0: gamepb.mysteryshoppb.GetActiveNPCReply.npc:type_name -> gamepb.mysteryshoppb.ActiveNPC
+	3, // 0: gamepb.mysteryshoppb.GetActiveNPCReply.npc:type_name -> gamepb.mysteryshoppb.ActiveNPC
 	0, // 1: gamepb.mysteryshoppb.MysteryShopService.GetActiveNPC:input_type -> gamepb.mysteryshoppb.GetActiveNPCRequest
-	2, // 2: gamepb.mysteryshoppb.MysteryShopService.GetActiveNPC:output_type -> gamepb.mysteryshoppb.GetActiveNPCReply
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
+	1, // 2: gamepb.mysteryshoppb.MysteryShopService.Buy:input_type -> gamepb.mysteryshoppb.BuyRequest
+	4, // 3: gamepb.mysteryshoppb.MysteryShopService.GetActiveNPC:output_type -> gamepb.mysteryshoppb.GetActiveNPCReply
+	2, // 4: gamepb.mysteryshoppb.MysteryShopService.Buy:output_type -> gamepb.mysteryshoppb.BuyReply
+	3, // [3:5] is the sub-list for method output_type
+	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -292,7 +383,7 @@ func file_mysteryshoppb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mysteryshoppb_proto_rawDesc), len(file_mysteryshoppb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
