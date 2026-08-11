@@ -18,6 +18,7 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/stats"
 	"github.com/it00021hot/qq-farm-core/internal/vars"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -42,11 +43,51 @@ func SyncFriendsToDB(accountID uint64, myGID int64, friends []friendpb.GameFrien
 	if db == nil {
 		return
 	}
-	if myGID > 0 {
-		if err := db.Where("account_id = ? AND gid = ?", accountID, myGID).Delete(&model.FarmFriendGid{}).Error; err != nil {
-			slog.Warn("farm friend self gid purge failed", "account", accountID, "gid", myGID, "err", err)
+	purgeSelfGid(db, accountID, myGID)
+	upsertFriendsToDB(db, accountID, myGID, friends)
+}
+
+// ReplaceFriendsToDB fully replaces this account's friend rows with the given list so a
+// re-login never leaves stale rows behind. When friends is nil (fetch failed) only the
+// self row is purged, avoiding a full table wipe on transient errors.
+func ReplaceFriendsToDB(accountID uint64, myGID int64, friends []friendpb.GameFriend) {
+	if accountID == 0 {
+		return
+	}
+	db := vars.DB
+	if db == nil {
+		return
+	}
+	purgeSelfGid(db, accountID, myGID)
+	if friends == nil {
+		return
+	}
+	gids := make([]int64, 0, len(friends))
+	for _, f := range friends {
+		if f.Gid > 0 && !(myGID > 0 && f.Gid == myGID) {
+			gids = append(gids, f.Gid)
 		}
 	}
+	if len(gids) == 0 {
+		if err := db.Where("account_id = ?", accountID).Delete(&model.FarmFriendGid{}).Error; err != nil {
+			slog.Warn("farm friend list replace purge failed", "account", accountID, "err", err)
+		}
+	} else if err := db.Where("account_id = ? AND gid NOT IN ?", accountID, gids).Delete(&model.FarmFriendGid{}).Error; err != nil {
+		slog.Warn("farm friend list replace purge failed", "account", accountID, "err", err)
+	}
+	upsertFriendsToDB(db, accountID, myGID, friends)
+}
+
+func purgeSelfGid(db *gorm.DB, accountID uint64, myGID int64) {
+	if myGID <= 0 {
+		return
+	}
+	if err := db.Where("account_id = ? AND gid = ?", accountID, myGID).Delete(&model.FarmFriendGid{}).Error; err != nil {
+		slog.Warn("farm friend self gid purge failed", "account", accountID, "gid", myGID, "err", err)
+	}
+}
+
+func upsertFriendsToDB(db *gorm.DB, accountID uint64, myGID int64, friends []friendpb.GameFriend) {
 	if len(friends) == 0 {
 		return
 	}
@@ -160,6 +201,16 @@ func RunStealTick(ctx context.Context, s *Session, visited map[int64]struct{}) (
 					"summary": fmt.Sprintf("获得积分x%d", outcome.Score),
 				})
 			}
+		}
+		if outcome.HelpCount > 0 {
+			stats.RecordOp(accountID, 0, "help", outcome.HelpCount)
+			writeInteractLog(accountID, 0, gid, "help", "ok", map[string]any{
+				"count":   outcome.HelpCount,
+				"summary": outcome.HelpSummary,
+				"weed":    outcome.Weed,
+				"bug":     outcome.Bug,
+				"water":   outcome.Water,
+			})
 		}
 	}
 	if actions > 0 {
@@ -544,16 +595,18 @@ func sessionID(s *Session) string {
 
 // friendVisitOutcome carries bot-style log details for one friend visit.
 type friendVisitOutcome struct {
-	Count   int
-	Plants  []string
-	Summary string
-	Score   int64
-	Value   int64
-	Weed    int
-	Bug     int
-	Water   int
-	PutBug  int
-	PutWeed int
+	Count       int
+	Plants      []string
+	Summary     string
+	Score       int64
+	Value       int64
+	Weed        int
+	Bug         int
+	Water       int
+	PutBug      int
+	PutWeed     int
+	HelpCount   int
+	HelpSummary string
 }
 
 func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig, myGID, gid int64) (friendVisitOutcome, error) {
@@ -613,6 +666,13 @@ func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accou
 	if len(targets) == 0 {
 		return out, nil
 	}
+	// 偷菜顺手帮忙：仅当农场有可偷作物时才帮忙，不受自动帮忙开关与帮忙经验上限约束。
+	helpCount, helpWeed, helpBug, helpWater, helpSummary := stealSideHelp(ctx, s, api, gid, lands)
+	out.HelpCount = helpCount
+	out.HelpSummary = helpSummary
+	out.Weed = helpWeed
+	out.Bug = helpBug
+	out.Water = helpWater
 	// Bot checkCanOperate: on error fail-open (canOperate=true).
 	canOperate, canSteal, checkErr := api.CheckCanOperate(ctx, gid, friendOpSteal)
 	if checkErr != nil {
@@ -916,6 +976,39 @@ func logSellFruits(s *Session, accountID uint64, names []string, gold int64, sol
 		return
 	}
 	hub.Default.PublishJSON("farm_operation", accountID, payload)
+}
+
+// stealSideHelp performs one-click help (water/weed/bug) on a visited friend's farm
+// while stealing. Unlike the dedicated help loop it ignores both the friend_help toggle
+// and the friend_help_exp_limit setting: whenever the farm needs help, we help.
+func stealSideHelp(ctx context.Context, s *Session, api *game.API, gid int64, lands []logic.LandInfo) (count, weed, bug, water int, summary string) {
+	needWater, needWeed, needBug := logic.AnalyzeFriendHelpLands(lands)
+	weed, bug, water = len(needWeed), len(needBug), len(needWater)
+	allHelp := uniqueLandIDs(needWeed, needBug, needWater)
+	if len(allHelp) == 0 {
+		return 0, weed, bug, water, ""
+	}
+	reply, err := api.FriendFarming(ctx, gid, allHelp)
+	if err != nil {
+		if isFarmingNoopError(err) {
+			return 0, weed, bug, water, ""
+		}
+		slog.Warn("steal side help failed", "account", sessionID(s), "friend_gid", gid, "err", err)
+		return 0, weed, bug, water, ""
+	}
+	if reply != nil {
+		s.ensureHelpState().updateLimits(reply.OperationLimits)
+	}
+	count = len(allHelp)
+	if reply != nil {
+		if landIDs := farmingResultLandIDs(reply.Results); len(landIDs) > 0 {
+			count = len(landIDs)
+		} else if len(reply.Results) > 0 {
+			count = len(reply.Results)
+		}
+	}
+	summary = formatHelpSummary(count, weed, bug, water)
+	return count, weed, bug, water, summary
 }
 
 func helpFriend(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig, gid int64) (friendVisitOutcome, bool, error) {

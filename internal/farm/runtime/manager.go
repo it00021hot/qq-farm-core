@@ -373,6 +373,7 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 	go s.friendLoop(ctx, "help")
 	go s.friendLoop(ctx, "bad")
 	go s.runAcceptFriendsBootstrap(ctx)
+	go s.runFriendRefreshBootstrap(ctx)
 	go s.dailyLoop(ctx)
 	go s.runDailyBootstrap(ctx)
 
@@ -920,7 +921,7 @@ func (s *Session) SyncFriends(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	SyncFriendsToDB(parseAccountID(s.id), s.GID(), friends)
+	ReplaceFriendsToDB(parseAccountID(s.id), s.GID(), friends)
 	return nil
 }
 
@@ -963,6 +964,9 @@ func (s *Session) FriendOp(ctx context.Context, gid int64, op string) error {
 				}
 			}
 		}
+		if outcome.HelpCount > 0 {
+			stats.RecordOp(parseAccountID(s.id), 0, "help", outcome.HelpCount)
+		}
 	case "help", "water", "weed", "bug":
 		var limitReached bool
 		outcome, limitReached, err = manualHelpFriend(ctx, s, api, gid, op)
@@ -980,15 +984,16 @@ func (s *Session) FriendOp(ctx context.Context, gid int64, op string) error {
 		result = "error"
 	}
 	detail := map[string]any{
-		"count":   outcome.Count,
-		"plants":  outcome.Plants,
-		"summary": outcome.Summary,
-		"weed":    outcome.Weed,
-		"bug":     outcome.Bug,
-		"water":   outcome.Water,
-		"putBug":  outcome.PutBug,
-		"putWeed": outcome.PutWeed,
-		"error":   errorText(err),
+		"count":       outcome.Count,
+		"plants":      outcome.Plants,
+		"summary":     outcome.Summary,
+		"helpSummary": outcome.HelpSummary,
+		"weed":        outcome.Weed,
+		"bug":         outcome.Bug,
+		"water":       outcome.Water,
+		"putBug":      outcome.PutBug,
+		"putWeed":     outcome.PutWeed,
+		"error":       errorText(err),
 	}
 	writeInteractLog(parseAccountID(s.id), 0, gid, op, result, detail)
 	return err
@@ -1646,6 +1651,36 @@ func (s *Session) runAcceptFriendsBootstrap(ctx context.Context) {
 	} else if n > 0 {
 		slog.Info("accepted friend applications on bootstrap", "account", s.id, "count", n)
 	}
+}
+
+// runFriendRefreshBootstrap fully replaces the persisted friend list shortly after
+// login so re-login never leaves stale friend rows in the DB.
+func (s *Session) runFriendRefreshBootstrap(ctx context.Context) {
+	timer := time.NewTimer(2 * time.Second)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return
+	case <-timer.C:
+	}
+	s.farmOpMu.Lock()
+	defer s.farmOpMu.Unlock()
+	s.mu.Lock()
+	api := s.gameAPI
+	cfg := s.cfg.AccountConfig
+	myGID := s.gid
+	s.mu.Unlock()
+	if api == nil {
+		return
+	}
+	friends, err := loadFriends(ctx, s, api, cfg)
+	if err != nil {
+		slog.Warn("friend refresh bootstrap failed", "account", s.id, "err", err)
+		return
+	}
+	ReplaceFriendsToDB(parseAccountID(s.id), myGID, friends)
+	s.setFriendCount(len(friends))
+	slog.Info("friend list refreshed on login", "account", s.id, "count", len(friends))
 }
 
 func (s *Session) nextFriendDelay(cfg logic.AccountConfig, kind string) time.Duration {

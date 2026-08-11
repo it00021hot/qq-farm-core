@@ -98,7 +98,7 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.FriendListReq) (response.Pag
 		friends, loadErr := session.Friends(callCtx)
 		cancel()
 		if loadErr == nil {
-			farmruntime.SyncFriendsToDB(req.AccountID, myGID, friends)
+			farmruntime.ReplaceFriendsToDB(req.AccountID, myGID, friends)
 			for _, f := range friends {
 				if f.Gid > 0 {
 					liveMap[f.Gid] = f
@@ -150,7 +150,7 @@ func (s *Service) Sync(ctx fiber.Ctx, req farmtypes.FriendSyncReq) (map[string]a
 	if err != nil {
 		return nil, err
 	}
-	farmruntime.SyncFriendsToDB(req.AccountID, session.GID(), friends)
+	farmruntime.ReplaceFriendsToDB(req.AccountID, session.GID(), friends)
 	return map[string]any{
 		"accountId": req.AccountID,
 		"count":     len(friends),
