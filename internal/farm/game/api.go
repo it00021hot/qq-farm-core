@@ -4,6 +4,7 @@ package game
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/gatepb"
 	"google.golang.org/protobuf/proto"
@@ -57,6 +58,13 @@ type API struct {
 	// the date here and snapshot building treats any claim on the same date as
 	// idempotent, mirroring the reference bot.
 	greenPlumSeedClaimedDate string
+
+	// greenPlumDailyActivityID / greenPlumBrewActivityID cache the resolved
+	// 青梅 activity ids. The recurring activity gets a fresh id every run, so
+	// the first lookup discovers them from the live API; the hard-coded ids
+	// are used as a fallback when nothing is recognized yet.
+	greenPlumDailyActivityID atomic.Int64
+	greenPlumBrewActivityID   atomic.Int64
 }
 
 func (a *API) requireSender() error {

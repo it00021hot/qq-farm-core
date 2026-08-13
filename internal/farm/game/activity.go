@@ -508,12 +508,48 @@ func (a *API) SettleGreenPlumBrew(ctx context.Context, activityID int64) (*activ
 }
 
 // FindGreenPlumActivityID returns the 青梅 activity id: wantDaily selects the
-// daily seed entry (…01), otherwise the brew entry (…02). The ids are the same
-// ones the reference bot uses, so the flows stay in sync with it.
+// daily seed entry (…01), otherwise the brew entry (…02). The recurring
+// activity gets a fresh id every run, so the id is discovered from the live
+// API (the daily entry carries data.qingmei_daily_seed, the brew entry
+// carries data.qingmei_brew) and cached per API. The hard-coded ids aligned
+// with the reference bot are used as a fallback when nothing is recognized.
 func (a *API) FindGreenPlumActivityID(ctx context.Context, wantDaily bool) int64 {
 	if wantDaily {
+		if id := a.greenPlumDailyActivityID.Load(); id > 0 {
+			return id
+		}
+	} else if id := a.greenPlumBrewActivityID.Load(); id > 0 {
+		return id
+	}
+
+	for _, item := range logic.GreenPlumActivities() {
+		id, err := strconv.ParseInt(item.ActivityID, 10, 64)
+		if err != nil || id <= 0 {
+			continue
+		}
+		reply, err := a.QueryGreenPlum(ctx, id)
+		if err != nil || reply == nil || reply.Data == nil {
+			continue
+		}
+		if reply.Data.QingmeiDailySeed != nil {
+			a.greenPlumDailyActivityID.Store(id)
+			if wantDaily {
+				return id
+			}
+		}
+		if reply.Data.QingmeiBrew != nil {
+			a.greenPlumBrewActivityID.Store(id)
+			if !wantDaily {
+				return id
+			}
+		}
+	}
+
+	if wantDaily {
+		a.greenPlumDailyActivityID.Store(GreenPlumDailyActivityID)
 		return GreenPlumDailyActivityID
 	}
+	a.greenPlumBrewActivityID.Store(GreenPlumBrewActivityID)
 	return GreenPlumBrewActivityID
 }
 

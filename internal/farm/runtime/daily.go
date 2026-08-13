@@ -2,12 +2,14 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/it00021hot/qq-farm-core/internal/farm/game"
+	"github.com/it00021hot/qq-farm-core/internal/farm/hub"
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/emailpb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/taskpb"
@@ -57,7 +59,7 @@ func localDateKey(t time.Time) string {
 
 // RunDailyRoutines executes email/share/monthcard/vip/free-gift routines.
 // Aligned with qq-farm-bot worker.runDailyRoutines: always enabled (no per-flag toggles).
-func RunDailyRoutines(ctx context.Context, api *game.API, cfg logic.AccountConfig, state *DailyState, force bool) {
+func RunDailyRoutines(ctx context.Context, api *game.API, cfg logic.AccountConfig, accountID uint64, state *DailyState, force bool) {
 	if api == nil || state == nil {
 		return
 	}
@@ -76,8 +78,8 @@ func RunDailyRoutines(ctx context.Context, api *game.API, cfg logic.AccountConfi
 	runMonthCardClaim(ctx, api, state, force, now)
 	runFreeGifts(ctx, api, state, force, now)
 	runVipGift(ctx, api, state, force, now)
-	runGreenPlumClaim(ctx, api, state, force, now)
-	runGreenPlumBrew(ctx, api, state, force, now)
+	runGreenPlumClaim(ctx, api, accountID, state, force, now)
+	runGreenPlumBrew(ctx, api, accountID, state, force, now)
 }
 
 // RunTaskClaims auto-claims tasks, actives, and illustrated rewards when Automation.Task is enabled.
@@ -315,7 +317,7 @@ func runEmailClaim(ctx context.Context, api *game.API, state *DailyState, force 
 // activity is known and active. The daily seed activity id is located by live
 // query (it carries data.qingmei_daily_seed), with a discovery pass when
 // nothing is registered yet. Unknown activities are skipped gracefully.
-func runGreenPlumClaim(ctx context.Context, api *game.API, state *DailyState, force bool, now time.Time) {
+func runGreenPlumClaim(ctx context.Context, api *game.API, accountID uint64, state *DailyState, force bool, now time.Time) {
 	state.mu.Lock()
 	today := localDateKey(now)
 	if !force && state.greenPlumDoneDateKey == today {
@@ -343,12 +345,15 @@ func runGreenPlumClaim(ctx context.Context, api *game.API, state *DailyState, fo
 		if game.IsAlreadyClaimedGreenPlum(err) {
 			api.RememberGreenPlumSeedClaimed()
 			slog.Info("daily: green plum seed already claimed today", "activityId", activityID)
+			appendDailyLog(accountID, "青梅", "青梅种子今日已领取", false)
 		} else {
 			slog.Warn("daily: green plum seed claim failed", "activityId", activityID, "err", err)
+			appendDailyLog(accountID, "青梅", "青梅种子领取失败: "+err.Error(), true)
 			return
 		}
 	} else {
 		slog.Info("daily: green plum seed claimed", "activityId", activityID, "operateType", reply.GetOperateType())
+		appendDailyLog(accountID, "青梅", "青梅种子已领取", false)
 	}
 	state.mu.Lock()
 	state.greenPlumDoneDateKey = today
@@ -360,7 +365,7 @@ func runGreenPlumClaim(ctx context.Context, api *game.API, state *DailyState, fo
 // 青梅 when nothing is brewing, continue rounds until the last one, then
 // report the share and settle. Each stage is guarded by the live brew state so
 // a partially completed run resumes naturally on the next pass.
-func runGreenPlumBrew(ctx context.Context, api *game.API, state *DailyState, force bool, now time.Time) {
+func runGreenPlumBrew(ctx context.Context, api *game.API, accountID uint64, state *DailyState, force bool, now time.Time) {
 	state.mu.Lock()
 	today := localDateKey(now)
 	if !force && state.greenPlumBrewDateKey == today {
@@ -424,6 +429,7 @@ func runGreenPlumBrew(ctx context.Context, api *game.API, state *DailyState, for
 			return
 		}
 		slog.Info("daily: green plum brew started", "activityId", activityID, "count", count)
+		appendDailyLog(accountID, "青梅", fmt.Sprintf("青梅酿造已开始，投入 %d 青梅", count), false)
 		return
 	}
 
@@ -437,6 +443,7 @@ func runGreenPlumBrew(ctx context.Context, api *game.API, state *DailyState, for
 			return
 		}
 		slog.Info("daily: green plum brew continued", "activityId", activityID, "round", brew.CurrentRound)
+		appendDailyLog(accountID, "青梅", fmt.Sprintf("青梅酿造进行至第 %d 轮", brew.CurrentRound+1), false)
 		return
 	}
 
@@ -445,6 +452,7 @@ func runGreenPlumBrew(ctx context.Context, api *game.API, state *DailyState, for
 		return
 	}
 	slog.Info("daily: green plum brew settled", "activityId", activityID, "round", brew.CurrentRound)
+	appendDailyLog(accountID, "青梅", "青梅酿造已完成并按分享奖励结算", false)
 	state.mu.Lock()
 	state.greenPlumBrewDateKey = today
 	state.mu.Unlock()
@@ -657,4 +665,20 @@ func isAlreadyClaimedError(err error) bool {
 	return strings.Contains(msg, "code=1021002") ||
 		strings.Contains(msg, "今日已领取") ||
 		strings.Contains(msg, "已领取")
+}
+
+// appendDailyLog pushes a dashboard-visible run log entry for a daily routine
+// (tag 系统/错误, event names the routine e.g. 青梅).
+func appendDailyLog(accountID uint64, event, msg string, isWarn bool) {
+	tag := "系统"
+	if isWarn {
+		tag = "错误"
+	}
+	hub.Logs.Append(hub.LogEntry{
+		Tag:       tag,
+		Msg:       msg,
+		IsWarn:    isWarn,
+		Meta:      hub.LogMeta{Module: "system", Event: event},
+		AccountID: accountID,
+	})
 }

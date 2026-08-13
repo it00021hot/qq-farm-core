@@ -99,6 +99,24 @@ func (s *Service) Get(ctx fiber.Ctx, req farmtypes.BagReq) (logic.BagUIResponse,
 	return logic.FormatBagResponse(items), nil
 }
 
+// SeedsInBag returns the seed entries currently in the account bag. Seeds are
+// resolved from the full Plant.json catalog instead of the shop goods list, so
+// activity/legacy seeds that are not sold in the shop are still listed for the
+// bag-priority planting strategy.
+func (s *Service) SeedsInBag(ctx fiber.Ctx, req farmtypes.BagReq) ([]logic.BagSeed, error) {
+	session, err := s.session(ctx, req.AccountID)
+	if err != nil {
+		return nil, friendlyFarmErr(err)
+	}
+	callCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	seeds, err := session.BagSeeds(callCtx)
+	if err != nil {
+		return nil, friendlyFarmErr(err)
+	}
+	return seeds, nil
+}
+
 func friendlyFarmErr(err error) error {
 	if err == nil {
 		return nil

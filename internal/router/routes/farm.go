@@ -47,6 +47,7 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Get("/lands", lands.Lands.Get).Name("农场土地列表")
 		router.Post("/operate", lands.Lands.Operate).Name("执行农场操作")
 		router.Get("/bag", bag.Bag.Get).Name("农场背包")
+		router.Get("/bag/seeds", bag.Bag.SeedsInBag).Name("背包种子列表")
 		router.Get("/seeds", bag.Bag.Seeds).Name("可用种子列表")
 		router.Post("/bag/sell", bag.Bag.Sell).Name("出售背包物品")
 		router.Post("/bag/use", bag.Bag.Use).Name("使用背包物品")

@@ -38,6 +38,18 @@ func (c *Controller) Seeds(ctx fiber.Ctx) error {
 	return response.SuccessJSON(ctx, "", result)
 }
 
+func (c *Controller) SeedsInBag(ctx fiber.Ctx) error {
+	var req farmtypes.BagReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	result, err := bagsvc.Bag.SeedsInBag(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", result)
+}
+
 func (c *Controller) Sell(ctx fiber.Ctx) error {
 	var req farmtypes.BagSellReq
 	if err := c.Validate(ctx, &req); err != nil {

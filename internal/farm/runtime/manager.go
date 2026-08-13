@@ -781,6 +781,19 @@ func (s *Session) GetBagItems(ctx context.Context) ([]corepb.Item, error) {
 	return game.GetBagItems(reply), nil
 }
 
+// BagSeeds returns the seed entries currently in the bag for this session.
+// Unlike the shop catalog, every seed with a Plant.json entry is included, so
+// activity/legacy seeds that are not for sale are still visible.
+func (s *Session) BagSeeds(ctx context.Context) ([]logic.BagSeed, error) {
+	s.mu.Lock()
+	api := s.gameAPI
+	s.mu.Unlock()
+	if api == nil {
+		return nil, fmt.Errorf("farm session is not connected")
+	}
+	return api.BagSeeds(ctx)
+}
+
 // GetAvailableSeeds returns shop seeds with lock/sold-out flags for this account (bot getAvailableSeeds).
 // Falls back to local catalog when shop RPC fails or is unavailable.
 func (s *Session) GetAvailableSeeds(ctx context.Context) ([]logic.AvailableShopSeed, error) {
@@ -1948,7 +1961,7 @@ func (s *Session) runDailyBootstrap(ctx context.Context) {
 		return
 	}
 	seedActivityRegistry(ctx, api)
-	RunDailyRoutines(ctx, api, cfg, &s.dailyState, true)
+	RunDailyRoutines(ctx, api, cfg, accountID, &s.dailyState, true)
 	RunTaskClaims(ctx, api, cfg, accountID, &s.dailyState)
 }
 
@@ -1969,17 +1982,18 @@ func (s *Session) dailyLoop(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
-			cfg := s.Config()
-			s.maybeRunDailyOnDateChange(ctx, cfg)
-			s.farmOpMu.Lock()
-			s.mu.Lock()
-			api := s.gameAPI
-			s.mu.Unlock()
-			if api != nil {
-				RunDailyRoutines(ctx, api, cfg, &s.dailyState, false)
-			}
-			s.farmOpMu.Unlock()
+	case <-ticker.C:
+		cfg := s.Config()
+		s.maybeRunDailyOnDateChange(ctx, cfg)
+		s.farmOpMu.Lock()
+		s.mu.Lock()
+		api := s.gameAPI
+		accountID := parseAccountID(s.id)
+		s.mu.Unlock()
+		if api != nil {
+			RunDailyRoutines(ctx, api, cfg, accountID, &s.dailyState, false)
+		}
+		s.farmOpMu.Unlock()
 		}
 	}
 }
@@ -1998,7 +2012,7 @@ func (s *Session) maybeRunDailyOnDateChange(ctx context.Context, cfg logic.Accou
 		return
 	}
 	s.farmOpMu.Lock()
-	RunDailyRoutines(ctx, api, cfg, &s.dailyState, true)
+	RunDailyRoutines(ctx, api, cfg, parseAccountID(s.id), &s.dailyState, true)
 	s.farmOpMu.Unlock()
 }
 
