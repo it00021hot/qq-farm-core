@@ -8,6 +8,7 @@ import (
 	"math/rand/v2"
 	urlquery "net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,6 +19,7 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/farm/hub"
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/acepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/activitypb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/friendpb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/gatepb"
@@ -861,11 +863,24 @@ func (s *Session) UseBagItem(ctx context.Context, itemID, count int64) error {
 	if itemID <= 0 || count <= 0 {
 		return fmt.Errorf("invalid item")
 	}
-	if _, err := api.Use(ctx, itemID, count, nil); err == nil {
+	if _, useErr := api.Use(ctx, itemID, count); useErr == nil {
 		return nil
 	} else {
-		useErr := err
-		if _, batchErr := api.BatchUse(ctx, []corepb.Item{{Id: itemID, Count: count}}); batchErr != nil {
+		bag, bagErr := api.Bag(ctx)
+		if bagErr != nil {
+			return useErr
+		}
+		items := []corepb.Item{}
+		for _, it := range game.GetBagItems(bag) {
+			if it.Id != itemID {
+				continue
+			}
+			items = append(items, it)
+		}
+		if len(items) == 0 {
+			return useErr
+		}
+		if _, batchErr := api.BatchUse(ctx, items); batchErr != nil {
 			return useErr
 		}
 		return nil
@@ -1231,6 +1246,17 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 		return
 	}
 
+	// Protocol sniffing: log every push so unknown activity/season pushes are
+	// visible before their payloads are understood. Info level so the sniffing
+	// deployment sees pushes without enabling debug logging.
+	slog.Info("farm push",
+		"account", s.id,
+		"service", service,
+		"method", method,
+		"messageType", messageType,
+		"bodyLen", len(eventBody),
+	)
+
 	// P0: gate kickout — stop session to avoid zombies (Node: gatepb.KickoutNotify).
 	if strings.Contains(messageType, "Kickout") {
 		reason := "未知"
@@ -1295,6 +1321,12 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 	if strings.Contains(messageType, "BattlePassChangeNotify") ||
 		(service == "gamepb.seasonpb.SeasonService" && method == "BattlePassChangeNotify") {
 		s.applyBattlePassNotify(eventBody)
+		return
+	}
+	if strings.Contains(messageType, "ActiviesChangeNotify") ||
+		strings.Contains(messageType, "ActivityChangeNotify") ||
+		(service == "gamepb.activitypb.ActivityService" && strings.Contains(method, "Activity")) {
+		s.applyActivityChangeNotify(eventBody)
 		return
 	}
 	if !strings.Contains(messageType, "LandsNotify") &&
@@ -1456,6 +1488,40 @@ func (s *Session) applyBattlePassNotify(body []byte) {
 		"progress", pass["progress"],
 		"progressMax", pass["progressMax"],
 	)
+}
+
+func (s *Session) applyActivityChangeNotify(body []byte) {
+	var notify activitypb.ActiviesChangeNotify
+	if err := proto.Unmarshal(body, &notify); err != nil {
+		slog.Debug("ActiviesChangeNotify decode failed", "account", s.id, "err", err)
+		return
+	}
+	if len(notify.Activities) == 0 {
+		return
+	}
+	items := make([]logic.ActivityRegistryItem, 0, len(notify.Activities))
+	for _, act := range notify.Activities {
+		if act == nil {
+			continue
+		}
+		items = append(items, logic.ActivityRegistryItem{
+			ActivityID: strconv.FormatInt(act.ActivityId, 10),
+			Type:       act.Type,
+			Name:       strings.TrimSpace(act.Name),
+			BeginTime:  act.BeginTime,
+			EndTime:    act.EndTime,
+		})
+		slog.Info("activity change notify",
+			"account", s.id,
+			"activityId", act.ActivityId,
+			"groupId", act.GroupId,
+			"type", act.Type,
+			"name", strings.TrimSpace(act.Name),
+			"beginTime", act.BeginTime,
+			"endTime", act.EndTime,
+		)
+	}
+	logic.RegisterActivities(items)
 }
 
 func (s *Session) applyBasicNotify(body []byte) {
@@ -1881,8 +1947,19 @@ func (s *Session) runDailyBootstrap(ctx context.Context) {
 	if api == nil {
 		return
 	}
+	seedActivityRegistry(ctx, api)
 	RunDailyRoutines(ctx, api, cfg, &s.dailyState, true)
 	RunTaskClaims(ctx, api, cfg, accountID, &s.dailyState)
+}
+
+// seedActivityRegistry refreshes the activity registry from GetSeasonInfo so
+// activity-restricted fruit selling has real schedules (instead of unknown).
+func seedActivityRegistry(ctx context.Context, api *game.API) {
+	seedCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	if _, err := api.GetSeasonInfo(seedCtx); err != nil {
+		slog.Debug("seed activity registry failed", "err", err)
+	}
 }
 
 func (s *Session) dailyLoop(ctx context.Context) {

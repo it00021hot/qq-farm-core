@@ -204,10 +204,19 @@ type ActivitySnapshotReq struct {
 
 // ActivityActionReq 活动操作
 type ActivityActionReq struct {
-	AccountID uint64 `json:"accountId" validate:"required"`
-	TermID    string `json:"termId"`
-	ItemID    string `json:"itemId"`
-	Count     int64  `json:"count"`
+	AccountID   uint64 `json:"accountId" validate:"required"`
+	TermID      string `json:"termId"`
+	ItemID      string `json:"itemId"`
+	Count       int64  `json:"count"`
+	ActivityID  string `json:"activityId"`
+	OperateType int64  `json:"operateType"`
+	Ingredients []ActivityIngredient `json:"ingredients"`
+}
+
+// ActivityIngredient 青梅酿造原料（按背包 UID 选择）
+type ActivityIngredient struct {
+	Uid   int64 `json:"uid"`
+	Count int64 `json:"count"`
 }
 
 // AnalyticsDetailReq 分析详情

@@ -15,6 +15,9 @@ type UIBagItem struct {
 	Image           string `json:"image,omitempty"`
 	Category        string `json:"category,omitempty"`
 	ItemType        int64  `json:"itemType,omitempty"`
+	Sellable        bool   `json:"sellable,omitempty"`
+	SellStatus      string `json:"sellStatus,omitempty"`
+	SellCondition   string `json:"sellCondition,omitempty"`
 	PriceID         int64  `json:"priceId,omitempty"`
 	Price           int64  `json:"price,omitempty"`
 	PriceUnit       string `json:"priceUnit,omitempty"`
@@ -87,14 +90,11 @@ func FormatBagResponse(rawItems []corepb.Item) BagUIResponse {
 		}
 		info := GetItemByID(it.Id)
 		name, category := bagItemName(it.Id, info)
-		sells := []SellEntry{}
-		if info != nil {
-			sells = sellsOrCond(info)
-		}
+		sellInfo := GetEffectiveSellInfo(info)
 		var priceID, price int64
-		if len(sells) > 0 {
-			priceID = sells[0].CurrencyID
-			price = sells[0].Price
+		if len(sellInfo.Sells) > 0 {
+			priceID = sellInfo.Sells[0].CurrencyID
+			price = sellInfo.Sells[0].Price
 		}
 		var itemType, level int64
 		interactionType := ""
@@ -109,7 +109,9 @@ func FormatBagResponse(rawItems []corepb.Item) BagUIResponse {
 		if !ok {
 			row = &UIBagItem{
 				ID: it.Id, Name: name, Image: SeedImagePath(it.Id), Category: category,
-				ItemType: itemType, PriceID: priceID, Price: price, PriceUnit: priceUnit(priceID),
+				ItemType: itemType, Sellable: sellInfo.Sellable,
+				SellStatus: string(sellInfo.Status), SellCondition: sellInfo.Condition,
+				PriceID: priceID, Price: price, PriceUnit: priceUnit(priceID),
 				Level: level, InteractionType: interactionType,
 			}
 			merged[it.Id] = row

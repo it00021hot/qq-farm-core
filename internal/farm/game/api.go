@@ -50,6 +50,13 @@ type Sender interface {
 type API struct {
 	Sender Sender
 	GID    int64 // host_gid for own-farm ops
+
+	// greenPlumSeedClaimedDate caches the Beijing date on which today's 青梅
+	// seed was claimed. The server's daily_seed.claimed flag is not always
+	// reliable, so a successful claim (or an "already claimed" reply) records
+	// the date here and snapshot building treats any claim on the same date as
+	// idempotent, mirroring the reference bot.
+	greenPlumSeedClaimedDate string
 }
 
 func (a *API) requireSender() error {

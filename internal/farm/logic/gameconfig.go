@@ -452,6 +452,67 @@ func (g *GameConfig) GetItemByID(id int64) *ItemInfo {
 	return g.itemByID[id]
 }
 
+// ActivitySellCond captures a sell_cond that gates selling on an activity.
+type ActivitySellCond struct {
+	ActivityID string // referenced activity id, e.g. "2026080102"
+}
+
+// ParseActivitySellCond parses "活动结束后:<activityId>" style sell_cond.
+// Returns nil when the condition is not activity-restricted.
+func ParseActivitySellCond(sellCond *string) *ActivitySellCond {
+	if sellCond == nil {
+		return nil
+	}
+	raw := strings.TrimSpace(*sellCond)
+	const prefix = "活动结束后:"
+	if !strings.HasPrefix(raw, prefix) {
+		return nil
+	}
+	id := strings.TrimSpace(strings.TrimPrefix(raw, prefix))
+	if id == "" {
+		return nil
+	}
+	return &ActivitySellCond{ActivityID: id}
+}
+
+// IsActivityRestrictedForSale reports whether itemID must NOT be sold at now
+// (Unix seconds) because its sell_cond references an activity that is still
+// running. Unknown activities are treated as active (conservative skip).
+//
+// Recurring activities like 青梅 get a fresh id every run while the item
+// config may keep a stale id in sell_cond. When the referenced activity has
+// ended but another instance of the same activity type is ongoing, the item is
+// still treated as restricted.
+func IsActivityRestrictedForSale(itemID int64, now int64) bool {
+	item := GetItemByID(itemID)
+	if item == nil {
+		return false
+	}
+	cond := ParseActivitySellCond(item.SellCond)
+	if cond == nil {
+		return false
+	}
+	if ActivityActive(cond.ActivityID, now) {
+		return true
+	}
+	ref, ok := activityByID(cond.ActivityID)
+	if !ok || ref.Type <= 0 {
+		return false
+	}
+	for _, act := range ActivityRegistrySnapshot() {
+		if act.Type != ref.Type {
+			continue
+		}
+		if act.ActivityID == cond.ActivityID {
+			continue
+		}
+		if ActivityActive(act.ActivityID, now) {
+			return true
+		}
+	}
+	return false
+}
+
 // ParseSells parses "currencyId:price;..." strings.
 func ParseSells(sells string) []SellEntry {
 	sells = strings.TrimSpace(sells)
@@ -489,6 +550,65 @@ func sellsOrCond(item *ItemInfo) []SellEntry {
 		return ParseSells(*item.CondSells)
 	}
 	return nil
+}
+
+// EffectiveSellStatus classifies how (and whether) an item can be sold,
+// mirroring the reference bot's getEffectiveSellInfo.
+type EffectiveSellStatus string
+
+const (
+	SellStatusAvailable   EffectiveSellStatus = "available"
+	SellStatusConditional EffectiveSellStatus = "conditional"
+	SellStatusUnavailable EffectiveSellStatus = "unavailable"
+)
+
+// EffectiveSellInfo is the resolved sell state of an item.
+type EffectiveSellInfo struct {
+	Sellable  bool                `json:"sellable"`
+	Status    EffectiveSellStatus `json:"sellStatus"`
+	Condition string              `json:"sellCondition,omitempty"`
+	Sells     []SellEntry         `json:"sells"`
+}
+
+// GetEffectiveSellInfo resolves whether item can be sold right now.
+//
+// An item is directly sellable only when its plain sells list carries a real
+// price. Conditional sells (cond_sells) alone do NOT make an item sellable —
+// those prices only apply once the referenced activity/condition is met, so
+// they must not be shown or used for direct selling. This mirrors the bot's
+// getEffectiveSellInfo fix for fruits that appeared sellable with a cond_sells
+// fallback price.
+func GetEffectiveSellInfo(item *ItemInfo) EffectiveSellInfo {
+	if item == nil {
+		return EffectiveSellInfo{Status: SellStatusUnavailable}
+	}
+	var normal []SellEntry
+	if item.Sells != nil {
+		for _, sell := range ParseSells(*item.Sells) {
+			if sell.CurrencyID > 0 && sell.Price > 0 {
+				normal = append(normal, sell)
+			}
+		}
+	}
+	condition := ""
+	if item.SellCond != nil {
+		condition = strings.TrimSpace(*item.SellCond)
+	}
+	var conditional []SellEntry
+	if item.CondSells != nil {
+		for _, sell := range ParseSells(*item.CondSells) {
+			if sell.CurrencyID > 0 && sell.Price > 0 {
+				conditional = append(conditional, sell)
+			}
+		}
+	}
+	if len(normal) > 0 {
+		return EffectiveSellInfo{Sellable: true, Status: SellStatusAvailable, Condition: condition, Sells: normal}
+	}
+	if condition != "" && len(conditional) > 0 {
+		return EffectiveSellInfo{Status: SellStatusConditional, Condition: condition}
+	}
+	return EffectiveSellInfo{Status: SellStatusUnavailable, Condition: condition}
 }
 
 // GetSeedPrice returns the primary sell price for a seed.

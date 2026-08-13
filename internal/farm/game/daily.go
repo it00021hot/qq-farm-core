@@ -92,9 +92,15 @@ func (a *API) CheckCanShare(ctx context.Context) (*sharepb.CheckCanShareReply, e
 	return reply, nil
 }
 
-// ReportShare reports a share action.
+// ReportShare reports a share action. The wire protocol distinguishes share
+// scenes: daily gift uses field_1=1/field_4=42, 青梅酿造 uses 11/215.
 func (a *API) ReportShare(ctx context.Context) (*sharepb.ReportShareReply, error) {
-	req := &sharepb.ReportShareRequest{Field_1: true}
+	return a.ReportShareScene(ctx, 1, 42)
+}
+
+// ReportShareScene reports a share action for an explicit scene pair.
+func (a *API) ReportShareScene(ctx context.Context, field1, field4 int32) (*sharepb.ReportShareReply, error) {
+	req := &sharepb.ReportShareRequest{Field_1: field1, Field_4: field4}
 	raw, err := a.sendShare(ctx, "ReportShare", marshalMessage(req))
 	if err != nil {
 		return nil, err

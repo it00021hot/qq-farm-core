@@ -42,6 +42,12 @@ type DailyState struct {
 	vipDoneDateKey string
 	vipLastCheck   time.Time
 
+	greenPlumDoneDateKey string
+	greenPlumLastCheck   time.Time
+
+	greenPlumBrewDateKey string
+	greenPlumBrewCheck   time.Time
+
 	taskChecking bool
 }
 
@@ -70,6 +76,8 @@ func RunDailyRoutines(ctx context.Context, api *game.API, cfg logic.AccountConfi
 	runMonthCardClaim(ctx, api, state, force, now)
 	runFreeGifts(ctx, api, state, force, now)
 	runVipGift(ctx, api, state, force, now)
+	runGreenPlumClaim(ctx, api, state, force, now)
+	runGreenPlumBrew(ctx, api, state, force, now)
 }
 
 // RunTaskClaims auto-claims tasks, actives, and illustrated rewards when Automation.Task is enabled.
@@ -300,6 +308,145 @@ func runEmailClaim(ctx context.Context, api *game.API, state *DailyState, force 
 
 	state.mu.Lock()
 	state.emailDoneDateKey = today
+	state.mu.Unlock()
+}
+
+// runGreenPlumClaim auto-claims the daily 青梅 seed once per day when the
+// activity is known and active. The daily seed activity id is located by live
+// query (it carries data.qingmei_daily_seed), with a discovery pass when
+// nothing is registered yet. Unknown activities are skipped gracefully.
+func runGreenPlumClaim(ctx context.Context, api *game.API, state *DailyState, force bool, now time.Time) {
+	state.mu.Lock()
+	today := localDateKey(now)
+	if !force && state.greenPlumDoneDateKey == today {
+		state.mu.Unlock()
+		return
+	}
+	if !force && now.Sub(state.greenPlumLastCheck) < dailyCheckCooldown {
+		state.mu.Unlock()
+		return
+	}
+	state.greenPlumLastCheck = now
+	state.mu.Unlock()
+
+	if api == nil {
+		return
+	}
+	activityID := api.FindGreenPlumDailyActivityID(ctx)
+	if activityID <= 0 {
+		slog.Debug("daily: green plum seed activity not recognized yet, skip claim")
+		return
+	}
+
+	reply, err := api.ClaimGreenPlumSeed(ctx, activityID)
+	if err != nil {
+		if game.IsAlreadyClaimedGreenPlum(err) {
+			api.RememberGreenPlumSeedClaimed()
+			slog.Info("daily: green plum seed already claimed today", "activityId", activityID)
+		} else {
+			slog.Warn("daily: green plum seed claim failed", "activityId", activityID, "err", err)
+			return
+		}
+	} else {
+		slog.Info("daily: green plum seed claimed", "activityId", activityID, "operateType", reply.GetOperateType())
+	}
+	state.mu.Lock()
+	state.greenPlumDoneDateKey = today
+	state.mu.Unlock()
+}
+
+// runGreenPlumBrew auto-brews 青梅 through every round and settles via the
+// boosted shared (1.5x) mode, once per day. Flow: start with all available
+// 青梅 when nothing is brewing, continue rounds until the last one, then
+// report the share and settle. Each stage is guarded by the live brew state so
+// a partially completed run resumes naturally on the next pass.
+func runGreenPlumBrew(ctx context.Context, api *game.API, state *DailyState, force bool, now time.Time) {
+	state.mu.Lock()
+	today := localDateKey(now)
+	if !force && state.greenPlumBrewDateKey == today {
+		state.mu.Unlock()
+		return
+	}
+	if !force && now.Sub(state.greenPlumBrewCheck) < dailyCheckCooldown {
+		state.mu.Unlock()
+		return
+	}
+	state.greenPlumBrewCheck = now
+	state.mu.Unlock()
+
+	if api == nil {
+		return
+	}
+	activityID := api.FindGreenPlumBrewActivityID(ctx)
+	if activityID <= 0 {
+		slog.Debug("daily: green plum brew activity not recognized yet, skip brew")
+		return
+	}
+
+	reply, err := api.QueryGreenPlum(ctx, activityID)
+	if err != nil || reply == nil || reply.Data == nil {
+		slog.Warn("daily: green plum brew query failed", "err", err)
+		return
+	}
+	brew := reply.Data.QingmeiBrew
+	if brew == nil {
+		slog.Debug("daily: green plum brew entry not ready, skip")
+		return
+	}
+
+	if brew.Finished {
+		slog.Info("daily: green plum brew already settled", "round", brew.CurrentRound)
+		state.mu.Lock()
+		state.greenPlumBrewDateKey = today
+		state.mu.Unlock()
+		return
+	}
+
+	if brew.BaseGold <= 0 {
+		// Not started yet: invest the whole 青梅 balance and start brewing.
+		bag, bagErr := api.Bag(ctx)
+		if bagErr != nil {
+			slog.Warn("daily: green plum brew bag failed", "err", bagErr)
+			return
+		}
+		count := int64(0)
+		for _, item := range game.GetBagItems(bag) {
+			if item.Id == game.GreenPlumItemID {
+				count += item.Count
+			}
+		}
+		if count <= 0 {
+			slog.Debug("daily: no green plum to brew, skip")
+			return
+		}
+		if _, err := api.StartGreenPlumBrewAll(ctx, activityID); err != nil {
+			slog.Warn("daily: green plum brew start failed", "err", err)
+			return
+		}
+		slog.Info("daily: green plum brew started", "activityId", activityID, "count", count)
+		return
+	}
+
+	maxRounds := brew.MaxRounds
+	if maxRounds <= 0 {
+		maxRounds = 3
+	}
+	if brew.CurrentRound < maxRounds {
+		if _, err := api.ContinueGreenPlumBrew(ctx, activityID); err != nil {
+			slog.Warn("daily: green plum brew continue failed", "round", brew.CurrentRound, "err", err)
+			return
+		}
+		slog.Info("daily: green plum brew continued", "activityId", activityID, "round", brew.CurrentRound)
+		return
+	}
+
+	if _, err := api.SettleGreenPlumBrew(ctx, activityID); err != nil {
+		slog.Warn("daily: green plum brew settle failed", "round", brew.CurrentRound, "err", err)
+		return
+	}
+	slog.Info("daily: green plum brew settled", "activityId", activityID, "round", brew.CurrentRound)
+	state.mu.Lock()
+	state.greenPlumBrewDateKey = today
 	state.mu.Unlock()
 }
 

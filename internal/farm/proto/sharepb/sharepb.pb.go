@@ -103,10 +103,10 @@ func (x *CheckCanShareReply) GetCanShare() bool {
 	return false
 }
 
-// --- 分享上报（抓包确认：field_1=true，field_4=42） ---
+// --- 分享上报（每日礼包：field_1=1/field_4=42；青梅酿：field_1=11/field_4=215） ---
 type ReportShareRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Field_1       bool                   `protobuf:"varint,1,opt,name=field_1,json=field1,proto3" json:"field_1,omitempty"`
+	Field_1       int32                  `protobuf:"varint,1,opt,name=field_1,json=field1,proto3" json:"field_1,omitempty"`
 	Field_4       int32                  `protobuf:"varint,4,opt,name=field_4,json=field4,proto3" json:"field_4,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -142,11 +142,11 @@ func (*ReportShareRequest) Descriptor() ([]byte, []int) {
 	return file_sharepb_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ReportShareRequest) GetField_1() bool {
+func (x *ReportShareRequest) GetField_1() int32 {
 	if x != nil {
 		return x.Field_1
 	}
-	return false
+	return 0
 }
 
 func (x *ReportShareRequest) GetField_4() int32 {
@@ -680,7 +680,7 @@ const file_sharepb_proto_rawDesc = "" +
 	"\x12CheckCanShareReply\x12\x1b\n" +
 	"\tcan_share\x18\x01 \x01(\bR\bcanShare\"F\n" +
 	"\x12ReportShareRequest\x12\x17\n" +
-	"\afield_1\x18\x01 \x01(\bR\x06field1\x12\x17\n" +
+	"\afield_1\x18\x01 \x01(\x05R\x06field1\x12\x17\n" +
 	"\afield_4\x18\x04 \x01(\x05R\x06field4\"*\n" +
 	"\x10ReportShareReply\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\fR\x06result\"2\n" +
@@ -713,7 +713,7 @@ const file_sharepb_proto_rawDesc = "" +
 	"shareCfgId\"S\n" +
 	"\x13GetInviteAwardReply\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\"\n" +
-	"\x05items\x18\x02 \x03(\v2\f.corepb.ItemR\x05itemsBHZFgithub.com/it00021hot/qq-farm-core/internal/farm/proto/sharepb;sharepbb\x06proto3"
+	"\x05items\x18\x02 \x03(\v2\f.corepb.ItemR\x05itemsb\x06proto3"
 
 var (
 	file_sharepb_proto_rawDescOnce sync.Once

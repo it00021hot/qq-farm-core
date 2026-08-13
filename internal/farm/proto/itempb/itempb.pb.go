@@ -201,9 +201,7 @@ func (x *SellReply) GetGetItems() []*corepb.Item {
 
 type UseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ItemId        int64                  `protobuf:"varint,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
-	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
-	LandIds       []int64                `protobuf:"varint,3,rep,packed,name=land_ids,json=landIds,proto3" json:"land_ids,omitempty"`
+	Item          *corepb.Item           `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -238,30 +236,17 @@ func (*UseRequest) Descriptor() ([]byte, []int) {
 	return file_itempb_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *UseRequest) GetItemId() int64 {
+func (x *UseRequest) GetItem() *corepb.Item {
 	if x != nil {
-		return x.ItemId
-	}
-	return 0
-}
-
-func (x *UseRequest) GetCount() int64 {
-	if x != nil {
-		return x.Count
-	}
-	return 0
-}
-
-func (x *UseRequest) GetLandIds() []int64 {
-	if x != nil {
-		return x.LandIds
+		return x.Item
 	}
 	return nil
 }
 
 type UseReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*corepb.Item         `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	UsedItems     []*corepb.Item         `protobuf:"bytes,1,rep,name=used_items,json=usedItems,proto3" json:"used_items,omitempty"`
+	Items         []*corepb.Item         `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -294,6 +279,13 @@ func (x *UseReply) ProtoReflect() protoreflect.Message {
 // Deprecated: Use UseReply.ProtoReflect.Descriptor instead.
 func (*UseReply) Descriptor() ([]byte, []int) {
 	return file_itempb_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *UseReply) GetUsedItems() []*corepb.Item {
+	if x != nil {
+		return x.UsedItems
+	}
+	return nil
 }
 
 func (x *UseReply) GetItems() []*corepb.Item {
@@ -493,14 +485,14 @@ const file_itempb_proto_rawDesc = "" +
 	"\tSellReply\x12+\n" +
 	"\n" +
 	"sell_items\x18\x01 \x03(\v2\f.corepb.ItemR\tsellItems\x12)\n" +
-	"\tget_items\x18\x02 \x03(\v2\f.corepb.ItemR\bgetItems\"V\n" +
+	"\tget_items\x18\x02 \x03(\v2\f.corepb.ItemR\bgetItems\".\n" +
 	"\n" +
-	"UseRequest\x12\x17\n" +
-	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\x03R\x05count\x12\x19\n" +
-	"\bland_ids\x18\x03 \x03(\x03R\alandIds\".\n" +
-	"\bUseReply\x12\"\n" +
-	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"5\n" +
+	"UseRequest\x12 \n" +
+	"\x04item\x18\x01 \x01(\v2\f.corepb.ItemR\x04item\"[\n" +
+	"\bUseReply\x12+\n" +
+	"\n" +
+	"used_items\x18\x01 \x03(\v2\f.corepb.ItemR\tusedItems\x12\"\n" +
+	"\x05items\x18\x02 \x03(\v2\f.corepb.ItemR\x05items\"5\n" +
 	"\x0fBatchUseRequest\x12\"\n" +
 	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"`\n" +
 	"\rBatchUseReply\x12+\n" +
@@ -509,7 +501,7 @@ const file_itempb_proto_rawDesc = "" +
 	"\x05items\x18\x02 \x03(\v2\f.corepb.ItemR\x05items\"6\n" +
 	"\x10CannelNewRequest\x12\"\n" +
 	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"\x10\n" +
-	"\x0eCannelNewReplyBFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/itempb;itempbb\x06proto3"
+	"\x0eCannelNewReplyb\x06proto3"
 
 var (
 	file_itempb_proto_rawDescOnce sync.Once
@@ -543,16 +535,18 @@ var file_itempb_proto_depIdxs = []int32{
 	11, // 1: gamepb.itempb.SellRequest.items:type_name -> corepb.Item
 	11, // 2: gamepb.itempb.SellReply.sell_items:type_name -> corepb.Item
 	11, // 3: gamepb.itempb.SellReply.get_items:type_name -> corepb.Item
-	11, // 4: gamepb.itempb.UseReply.items:type_name -> corepb.Item
-	11, // 5: gamepb.itempb.BatchUseRequest.items:type_name -> corepb.Item
-	11, // 6: gamepb.itempb.BatchUseReply.used_items:type_name -> corepb.Item
-	11, // 7: gamepb.itempb.BatchUseReply.items:type_name -> corepb.Item
-	11, // 8: gamepb.itempb.CannelNewRequest.items:type_name -> corepb.Item
-	9,  // [9:9] is the sub-list for method output_type
-	9,  // [9:9] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	11, // 4: gamepb.itempb.UseRequest.item:type_name -> corepb.Item
+	11, // 5: gamepb.itempb.UseReply.used_items:type_name -> corepb.Item
+	11, // 6: gamepb.itempb.UseReply.items:type_name -> corepb.Item
+	11, // 7: gamepb.itempb.BatchUseRequest.items:type_name -> corepb.Item
+	11, // 8: gamepb.itempb.BatchUseReply.used_items:type_name -> corepb.Item
+	11, // 9: gamepb.itempb.BatchUseReply.items:type_name -> corepb.Item
+	11, // 10: gamepb.itempb.CannelNewRequest.items:type_name -> corepb.Item
+	11, // [11:11] is the sub-list for method output_type
+	11, // [11:11] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_itempb_proto_init() }

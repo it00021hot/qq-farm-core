@@ -2,6 +2,7 @@ package game
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
@@ -42,18 +43,42 @@ func (a *API) Sell(ctx context.Context, items []corepb.Item) (*itempb.SellReply,
 	return reply, nil
 }
 
-// Use uses a single item.
-func (a *API) Use(ctx context.Context, itemID, count int64, landIDs []int64) (*itempb.UseReply, error) {
-	req := &itempb.UseRequest{ItemId: itemID, Count: count, LandIds: landIDs}
-	raw, err := a.sendItem(ctx, "Use", marshalMessage(req))
+// Use uses a single item. The current protocol requires the bag uid of the
+// item entry, so the bag is queried to locate an entry holding at least count.
+// When no single entry suffices, entries are used via BatchUse instead.
+func (a *API) Use(ctx context.Context, itemID, count int64) (*itempb.UseReply, error) {
+	bag, err := a.Bag(ctx)
 	if err != nil {
 		return nil, err
 	}
-	reply := &itempb.UseReply{}
-	if err := unmarshalMessage(raw, reply); err != nil {
-		return nil, err
+	items := GetBagItems(bag)
+	var candidates []corepb.Item
+	available := int64(0)
+	for _, item := range items {
+		if item.Id != itemID {
+			continue
+		}
+		candidates = append(candidates, item)
+		available += item.Count
 	}
-	return reply, nil
+	if available < count {
+		return nil, fmt.Errorf("item %d count insufficient: have %d, need %d", itemID, available, count)
+	}
+	for _, item := range candidates {
+		if item.Count >= count {
+			req := &itempb.UseRequest{Item: &corepb.Item{Id: itemID, Count: count, Uid: item.Uid}}
+			raw, err := a.sendItem(ctx, "Use", marshalMessage(req))
+			if err != nil {
+				return nil, err
+			}
+			reply := &itempb.UseReply{}
+			if err := unmarshalMessage(raw, reply); err != nil {
+				return nil, err
+			}
+			return reply, nil
+		}
+	}
+	return nil, fmt.Errorf("item %d no single entry holds %d", itemID, count)
 }
 
 // BatchUse uses multiple items at once.

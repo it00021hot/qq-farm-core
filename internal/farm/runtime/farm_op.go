@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math"
 	"strings"
 	"time"
@@ -563,6 +564,23 @@ func sellAllFruitsDetailed(ctx context.Context, api *game.API) (soldKinds int, g
 	nameSet := make(map[string]struct{})
 	for _, item := range items {
 		if logic.GetPlantByFruitID(item.Id) == nil {
+			continue
+		}
+		if logic.IsActivityRestrictedForSale(item.Id, time.Now().Unix()) {
+			info := logic.GetItemByID(item.Id)
+			restrictedName := ""
+			if info != nil {
+				restrictedName = info.Name
+			}
+			if restrictedName == "" {
+				restrictedName = fmt.Sprintf("果实%d", item.Id)
+			}
+			slog.Warn("skip activity-restricted fruit sale",
+				"item", item.Id, "name", restrictedName, "count", item.Count)
+			continue
+		}
+		sellInfo := logic.GetEffectiveSellInfo(logic.GetItemByID(item.Id))
+		if !sellInfo.Sellable {
 			continue
 		}
 		fruits = append(fruits, item)

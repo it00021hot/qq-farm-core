@@ -65,7 +65,12 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Get("/friend/interact-records", friend.Friend.InteractRecords).Name("最近访客")
 
 		router.Get("/activity/snapshot", activity.Activity.Snapshot).Name("活动快照")
+		router.Get("/activity/registry", activity.Activity.Registry).Name("活动注册表")
 		router.Post("/activity/pass/claim", activity.Activity.ClaimPass).Name("领取通行证")
+		router.Post("/activity/green-plum/claim", activity.Activity.ClaimGreenPlum).Name("领取青梅种子")
+		router.Post("/activity/green-plum/brew/start", activity.Activity.StartGreenPlumBrew).Name("开始青梅酿造")
+		router.Post("/activity/green-plum/brew/continue", activity.Activity.ContinueGreenPlumBrew).Name("继续青梅酿造")
+		router.Post("/activity/green-plum/brew/settle", activity.Activity.SettleGreenPlumBrew).Name("结算青梅酿造")
 		router.Post("/activity/constellation/light", activity.Activity.LightConstellation).Name("点亮观星")
 		router.Post("/activity/shop/exchange", activity.Activity.ShopExchange).Name("星砂兑换")
 		router.Post("/activity/solar-terms/claim", activity.Activity.ClaimSolarTerm).Name("领取节令")

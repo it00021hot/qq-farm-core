@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/it00021hot/qq-farm-core/internal/app/model"
 	"github.com/it00021hot/qq-farm-core/internal/app/service"
 	"github.com/it00021hot/qq-farm-core/internal/farm/activitycenter"
 	"github.com/it00021hot/qq-farm-core/internal/farm/game"
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/activitypb"
 	farmruntime "github.com/it00021hot/qq-farm-core/internal/farm/runtime"
 	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
@@ -40,6 +42,7 @@ func (s *Service) Snapshot(ctx fiber.Ctx, req farmtypes.ActivitySnapshotReq) (ma
 		"shop":          map[string]any{},
 		"solarTerms":    map[string]any{},
 		"constellation": map[string]any{},
+		"greenPlum":     map[string]any{},
 	}
 
 	session, err := s.session(ctx, req.AccountID)
@@ -55,6 +58,13 @@ func (s *Service) Snapshot(ctx fiber.Ctx, req farmtypes.ActivitySnapshotReq) (ma
 	}
 	snap := activitycenter.BuildSnapshot(callCtx, api)
 	return s.attachSnapshot(ctx, req.AccountID, snap, nil)
+}
+
+// Registry returns the process-wide activity registry (debug/protocol sniffing).
+func (s *Service) Registry(_ fiber.Ctx) (map[string]any, error) {
+	return map[string]any{
+		"activities": logic.ActivityRegistrySnapshot(),
+	}, nil
 }
 
 func (s *Service) ClaimPass(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map[string]any, error) {
@@ -242,6 +252,222 @@ func (s *Service) ClaimSolarTerm(ctx fiber.Ctx, req farmtypes.ActivityActionReq)
 	})
 }
 
+// ClaimGreenPlum claims the 青梅 seed reward. The activity id may be supplied
+// explicitly or resolved by feature from the registry; already-claimed today is
+// reported as an idempotent outcome instead of an error.
+func (s *Service) ClaimGreenPlum(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map[string]any, error) {
+	_, api, callCtx, cancel, err := s.liveAPI(ctx, req.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	activityID, err := s.resolveGreenPlumActivity(callCtx, api, req.ActivityID, true)
+	if err != nil {
+		return nil, err
+	}
+
+	reply, err := api.ClaimGreenPlumSeed(callCtx, activityID)
+	if err != nil {
+		if game.IsAlreadyClaimedGreenPlum(err) {
+			api.RememberGreenPlumSeedClaimed()
+			snap := activitycenter.BuildSnapshot(callCtx, api)
+			return s.attachSnapshot(ctx, req.AccountID, snap, map[string]any{
+				"outcome":     "alreadyClaimed",
+				"greenPlum":   snap.GreenPlum,
+				"message":     "今日青梅种子已经领取，无需重复领取",
+				"rewards":     []map[string]any{},
+			})
+		}
+		return nil, err
+	}
+	snap := activitycenter.BuildSnapshot(callCtx, api)
+	return s.attachSnapshot(ctx, req.AccountID, snap, map[string]any{
+		"outcome":   "claimed",
+		"greenPlum": snap.GreenPlum,
+		"rewards":   activitycenter.QingMeiSeedRewardDTOs(reply),
+	})
+}
+
+// StartGreenPlumBrew starts a brewing round with the given 青梅 ingredients.
+// Ingredients are bag UID entries (uid+count pairs); when the request only
+// carries a legacy count, a single bag entry holding at least that many 青梅
+// is used instead.
+func (s *Service) StartGreenPlumBrew(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map[string]any, error) {
+	_, api, callCtx, cancel, err := s.liveAPI(ctx, req.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	activityID, err := s.resolveGreenPlumActivity(callCtx, api, req.ActivityID, false)
+	if err != nil {
+		return nil, err
+	}
+
+	ingredients, err := buildGreenPlumIngredients(callCtx, api, req)
+	if err != nil {
+		return nil, err
+	}
+	reply, err := api.StartGreenPlumBrew(callCtx, activityID, ingredients)
+	if err != nil {
+		return nil, err
+	}
+	snap := activitycenter.BuildSnapshot(callCtx, api)
+	return s.attachSnapshot(ctx, req.AccountID, snap, map[string]any{
+		"outcome":     "started",
+		"greenPlum":   snap.GreenPlum,
+		"activity":    activitycenter.QingMeiBrewDTO(reply),
+		"message":     "已开始青梅酿造",
+	})
+}
+
+// buildGreenPlumIngredients turns the start-brew request into ingredient
+// entries. UID entries from the request are validated against the live bag;
+// a legacy scalar count is resolved to the single bag entry holding at least
+// that many 青梅, matching the reference bot's fallback path.
+func buildGreenPlumIngredients(ctx context.Context, api *game.API, req farmtypes.ActivityActionReq) ([]*activitypb.StartQingMeiBrewRequest_Ingredient, error) {
+	if len(req.Ingredients) > 0 {
+		bag, err := api.Bag(ctx)
+		if err != nil {
+			return nil, err
+		}
+		byUID := make(map[int64]int64, 8)
+		for _, item := range game.GetBagItems(bag) {
+			if item.Id == game.GreenPlumItemID && item.Uid > 0 {
+				byUID[item.Uid] = item.Count
+			}
+		}
+		seen := make(map[int64]bool, len(req.Ingredients))
+		out := make([]*activitypb.StartQingMeiBrewRequest_Ingredient, 0, len(req.Ingredients))
+		for _, ing := range req.Ingredients {
+			if ing.Uid <= 0 || ing.Count <= 0 {
+				return nil, fmt.Errorf("青梅原料 UID/数量 无效")
+			}
+			if seen[ing.Uid] {
+				return nil, fmt.Errorf("青梅 UID %d 重复", ing.Uid)
+			}
+			if byUID[ing.Uid] < ing.Count {
+				return nil, fmt.Errorf("青梅 UID %d 数量不足", ing.Uid)
+			}
+			seen[ing.Uid] = true
+			out = append(out, &activitypb.StartQingMeiBrewRequest_Ingredient{
+				Uid:   ing.Uid,
+				Count: ing.Count,
+			})
+		}
+		return out, nil
+	}
+
+	// Legacy path: a single count investing from the bag entry holding the
+	// most 青梅.
+	if req.Count <= 0 {
+		return nil, errors.New("count 或 ingredients 必填")
+	}
+	uid, err := findGreenPlumBagUID(ctx, api, req.Count)
+	if err != nil {
+		return nil, err
+	}
+	return []*activitypb.StartQingMeiBrewRequest_Ingredient{
+		{Uid: uid, Count: req.Count},
+	}, nil
+}
+
+// ContinueGreenPlumBrew continues to the next brewing round.
+func (s *Service) ContinueGreenPlumBrew(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map[string]any, error) {
+	_, api, callCtx, cancel, err := s.liveAPI(ctx, req.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	activityID, err := s.resolveGreenPlumActivity(callCtx, api, req.ActivityID, false)
+	if err != nil {
+		return nil, err
+	}
+	reply, err := api.ContinueGreenPlumBrew(callCtx, activityID)
+	if err != nil {
+		return nil, err
+	}
+	snap := activitycenter.BuildSnapshot(callCtx, api)
+	quote := activitycenter.QingMeiQuoteDTO(reply)
+	return s.attachSnapshot(ctx, req.AccountID, snap, map[string]any{
+		"outcome":     "continued",
+		"greenPlum":   snap.GreenPlum,
+		"quote":       quote,
+		"message":     activitycenter.QingMeiQuoteMessage(quote),
+	})
+}
+
+// SettleGreenPlumBrew reports the share and settles the brew at the boosted
+// (1.5x) shared settlement mode.
+func (s *Service) SettleGreenPlumBrew(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map[string]any, error) {
+	_, api, callCtx, cancel, err := s.liveAPI(ctx, req.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	activityID, err := s.resolveGreenPlumActivity(callCtx, api, req.ActivityID, false)
+	if err != nil {
+		return nil, err
+	}
+	reply, err := api.SettleGreenPlumBrew(callCtx, activityID)
+	if err != nil {
+		return nil, err
+	}
+	snap := activitycenter.BuildSnapshot(callCtx, api)
+	return s.attachSnapshot(ctx, req.AccountID, snap, map[string]any{
+		"outcome":    "settled",
+		"greenPlum":  snap.GreenPlum,
+		"settlement": activitycenter.QingMeiSettlementDTO(reply),
+		"rewards":    activitycenter.QingMeiSettlementRewardDTOs(reply),
+		"message":    activitycenter.QingMeiSettlementMessage(reply),
+	})
+}
+
+// resolveGreenPlumActivity resolves the 青梅 activity id from req.ActivityID if
+// provided, otherwise falls back to the reference 青梅 activity ids (daily seed
+// entry …01 vs brew entry …02, matching liyangpengs/qq-farm-bot).
+func (s *Service) resolveGreenPlumActivity(callCtx context.Context, api *game.API, rawID string, wantDaily bool) (int64, error) {
+	activityID := int64(0)
+	if rawID != "" {
+		id, err := game.ParsePositiveInt64(rawID)
+		if err != nil {
+			return 0, err
+		}
+		activityID = id
+	}
+	if activityID <= 0 {
+		activityID = api.FindGreenPlumActivityID(callCtx, wantDaily)
+	}
+	if activityID <= 0 {
+		if wantDaily {
+			return 0, errors.New("青梅种子活动尚未被识别，无法领取")
+		}
+		return 0, errors.New("青梅酿造活动尚未被识别，无法操作")
+	}
+	return activityID, nil
+}
+
+// findGreenPlumBagUID finds a bag entry holding at least count 青梅 and returns
+// its uid for the start-brew ingredient.
+func findGreenPlumBagUID(ctx context.Context, api *game.API, count int64) (int64, error) {
+	bag, err := api.Bag(ctx)
+	if err != nil {
+		return 0, err
+	}
+	for _, item := range game.GetBagItems(bag) {
+		if item.Id != game.GreenPlumItemID {
+			continue
+		}
+		if item.Count >= count {
+			return item.Uid, nil
+		}
+	}
+	return 0, errors.New("青梅数量不足，或数量分散在多个背包条目中")
+}
+
 func (s *Service) ClaimTask(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map[string]any, error) {
 	_, api, callCtx, cancel, err := s.liveAPI(ctx, req.AccountID)
 	if err != nil {
@@ -316,6 +542,7 @@ func (s *Service) attachSnapshot(ctx fiber.Ctx, accountID uint64, snap activityc
 		"shop":          snap.Shop,
 		"solarTerms":    snap.SolarTerms,
 		"constellation": snap.Constellation,
+		"greenPlum":     snap.GreenPlum,
 		"capabilities":  snap.Capabilities,
 		"actions":       snap.Actions,
 	}
@@ -331,6 +558,7 @@ func (s *Service) attachSnapshot(ctx fiber.Ctx, accountID uint64, snap activityc
 		"shop":          snap.Shop,
 		"solarTerms":    snap.SolarTerms,
 		"constellation": snap.Constellation,
+		"greenPlum":     snap.GreenPlum,
 		"capabilities":  snap.Capabilities,
 		"actions":       snap.Actions,
 		"errors":        snap.Errors,
@@ -380,6 +608,7 @@ func (s *Service) persistSnapshotStates(db *gorm.DB, accountID uint64, snap acti
 		{"pass", snap.Season},
 		{"constellation", snap.Constellation},
 		{"shop", snap.Shop},
+		{"greenPlum", snap.GreenPlum},
 	}
 	for _, e := range entries {
 		if len(e.data) == 0 {

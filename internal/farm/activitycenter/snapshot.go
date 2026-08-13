@@ -39,6 +39,7 @@ type Snapshot struct {
 	Constellation map[string]any            `json:"constellation"`
 	Shop          map[string]any            `json:"shop"`
 	SolarTerms    map[string]any            `json:"solarTerms"`
+	GreenPlum     map[string]any            `json:"greenPlum"`
 	Capabilities  map[string]bool           `json:"capabilities"`
 	Actions       map[string]map[string]any `json:"actions"`
 	Errors        map[string]string         `json:"errors,omitempty"`
@@ -51,11 +52,13 @@ func BuildSnapshot(ctx context.Context, api *game.API) Snapshot {
 		Constellation: map[string]any{},
 		Shop:          map[string]any{},
 		SolarTerms:    map[string]any{},
+		GreenPlum:     buildGreenPlum(ctx, api),
 		Capabilities: map[string]bool{
 			"claimPass":          false,
 			"lightConstellation": false,
 			"claimSolar":         false,
 			"exchange":           false,
+			"claimGreenPlum":     false,
 		},
 		Actions: map[string]map[string]any{},
 		Errors:  map[string]string{},
@@ -96,7 +99,7 @@ func BuildSnapshot(ctx context.Context, api *game.API) Snapshot {
 		out.SolarTerms = normalizeSolarTerms(solarReply)
 	}
 
-	out.Actions = buildActions(out.Season, out.SolarTerms, out.Constellation, out.Shop)
+	out.Actions = buildActions(out.Season, out.SolarTerms, out.Constellation, out.Shop, out.GreenPlum)
 
 	// capabilities remain actionable bools for Vue clients that have not migrated to actions yet
 	if pass, ok := out.Season["pass"].(map[string]any); ok {
@@ -112,6 +115,9 @@ func BuildSnapshot(ctx context.Context, api *game.API) Snapshot {
 	}
 	if enabled, _ := out.Actions["exchange"]["enabled"].(bool); enabled {
 		out.Capabilities["exchange"] = true
+	}
+	if enabled, _ := out.Actions["claimGreenPlum"]["enabled"].(bool); enabled {
+		out.Capabilities["claimGreenPlum"] = true
 	}
 
 	return out
@@ -250,7 +256,7 @@ func ConfirmedFromDynamicNodes(nodes []*activitypb.ConstellationNode) (opened, l
 	return sortedKeys(openedSet), sortedKeys(litSet)
 }
 
-func buildActions(season, solarTerms, constellation, shop map[string]any) map[string]map[string]any {
+func buildActions(season, solarTerms, constellation, shop, greenPlum map[string]any) map[string]map[string]any {
 	pass, _ := season["pass"].(map[string]any)
 	hasPass := pass != nil
 	claimablePassCount := 0
@@ -332,6 +338,22 @@ func buildActions(season, solarTerms, constellation, shop map[string]any) map[st
 		exchange["reason"] = reason
 	}
 
+	greenPlumActions, _ := greenPlum["actions"].(map[string]any)
+	claimSeedEnabled := actionBool(greenPlumActions, "claimSeed")
+	startEnabled := actionBool(greenPlumActions, "start")
+	continueEnabled := actionBool(greenPlumActions, "continue")
+	settleEnabled := actionBool(greenPlumActions, "settle")
+	greenPlumKnown := greenPlum != nil && greenPlum["known"] == true
+	gpActive := greenPlumActive(greenPlum)
+	greenPlumReason := ""
+	if !greenPlumKnown {
+		greenPlumReason = "青梅活动尚未被识别"
+	} else if !gpActive {
+		greenPlumReason = "青梅活动当前未开放"
+	} else if !claimSeedEnabled && !startEnabled && !continueEnabled && !settleEnabled {
+		greenPlumReason = "青梅活动暂无可用操作"
+	}
+
 	return map[string]map[string]any{
 		"claimPass": {
 			"supported": true,
@@ -353,7 +375,45 @@ func buildActions(season, solarTerms, constellation, shop map[string]any) map[st
 			"enabled":   hasClaimableSolar,
 		},
 		"exchange": exchange,
+		"claimGreenPlum": {
+			"supported":         true,
+			"enabled":           gpActive && (claimSeedEnabled || startEnabled || continueEnabled || settleEnabled),
+			"available":         gpActive && (claimSeedEnabled || startEnabled || continueEnabled || settleEnabled),
+			"availabilityKnown": greenPlumKnown,
+			"reason":            greenPlumReason,
+			"claimSeed":         greenPlumActionMap(greenPlumActions, "claimSeed"),
+			"start":             greenPlumActionMap(greenPlumActions, "start"),
+			"continue":          greenPlumActionMap(greenPlumActions, "continue"),
+			"settle":            greenPlumActionMap(greenPlumActions, "settle"),
+		},
 	}
+}
+
+func actionBool(actions map[string]any, key string) bool {
+	if actions == nil {
+		return false
+	}
+	m, _ := actions[key].(map[string]any)
+	if m == nil {
+		return false
+	}
+	return boolValue(m["enabled"])
+}
+
+func greenPlumActionMap(actions map[string]any, key string) map[string]any {
+	if actions == nil {
+		return nil
+	}
+	m, _ := actions[key].(map[string]any)
+	return m
+}
+
+func greenPlumActive(greenPlum map[string]any) bool {
+	if greenPlum == nil {
+		return false
+	}
+	active, _ := greenPlum["active"].(bool)
+	return active
 }
 
 func normalizeSeason(season *seasonpb.SeasonInfo) map[string]any {

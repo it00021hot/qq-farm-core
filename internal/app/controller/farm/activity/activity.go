@@ -97,3 +97,59 @@ func (c *Controller) ClaimGift(ctx fiber.Ctx) error {
 	}
 	return response.SuccessJSON(ctx, "", info)
 }
+
+func (c *Controller) Registry(ctx fiber.Ctx) error {
+	info, err := activitysvc.Activity.Registry(ctx)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) ClaimGreenPlum(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityActionReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.ClaimGreenPlum(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) StartGreenPlumBrew(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityActionReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.StartGreenPlumBrew(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) ContinueGreenPlumBrew(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityActionReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.ContinueGreenPlumBrew(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) SettleGreenPlumBrew(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityActionReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.SettleGreenPlumBrew(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}

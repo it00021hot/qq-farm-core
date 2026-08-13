@@ -2,7 +2,9 @@ package activitycenter
 
 import (
 	"testing"
+	"time"
 
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/activitypb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/seasonpb"
 )
@@ -102,6 +104,7 @@ func TestBuildActionsClaimPass(t *testing.T) {
 		map[string]any{},
 		map[string]any{},
 		map[string]any{},
+		map[string]any{},
 	)
 	claim := actions["claimPass"]
 	if claim["enabled"] != true {
@@ -133,5 +136,47 @@ func TestStateJSONConstellationPersistsNodes(t *testing.T) {
 	confirmed := v.(*constellationConfirmed)
 	if len(confirmed.Lit) == 0 {
 		t.Fatalf("lit empty after hydrate: %+v", confirmed)
+	}
+}
+
+func TestBuildGreenPlum(t *testing.T) {
+	logic.ResetActivityRegistry()
+
+	// Unknown activity -> known=false, inactive, no activityId yet.
+	gp := buildGreenPlum(nil, nil)
+	if gp["known"] != false || gp["active"] != false {
+		t.Fatalf("expected unknown/inactive: %+v", gp)
+	}
+	if _, ok := gp["activityId"]; ok {
+		t.Fatalf("unexpected activityId for unknown activity: %+v", gp)
+	}
+
+	// Known + active (matched by type code 12, not by hard-coded id).
+	logic.RegisterActivity(logic.ActivityRegistryItem{
+		ActivityID: "2026081202",
+		Type:       12,
+		Name:       "青酿换万金",
+		BeginTime:  time.Now().Unix() - 3600,
+		EndTime:    time.Now().Unix() + 86400,
+	})
+	gp = buildGreenPlum(nil, nil)
+	if gp["known"] != true || gp["active"] != true {
+		t.Fatalf("expected known/active: %+v", gp)
+	}
+	if gp["activityId"] != "2026081202" {
+		t.Fatalf("activityId=%v", gp["activityId"])
+	}
+	if gp["typeCode"] != int64(12) {
+		t.Fatalf("typeCode=%v", gp["typeCode"])
+	}
+
+	// Claim action reflects activity state.
+	actions := buildActions(map[string]any{}, map[string]any{}, map[string]any{}, map[string]any{}, gp)
+	claim, ok := actions["claimGreenPlum"]
+	if !ok {
+		t.Fatal("missing claimGreenPlum action")
+	}
+	if claim["enabled"] != true || claim["available"] != true {
+		t.Fatalf("claim action should be enabled: %+v", claim)
 	}
 }
