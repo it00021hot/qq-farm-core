@@ -1,5 +1,7 @@
 package farm
 
+import "encoding/json"
+
 // AccountCreateReq 创建农场账号（code 可为裸登录 Code 或完整登录 URL）
 type AccountCreateReq struct {
 	Name     string `json:"name" validate:"omitempty,max=64"`
@@ -215,8 +217,25 @@ type ActivityActionReq struct {
 
 // ActivityIngredient 青梅酿造原料（按背包 UID 选择）
 type ActivityIngredient struct {
-	Uid   int64 `json:"uid"`
-	Count int64 `json:"count"`
+	Uid   string `json:"uid"`
+	Count int64  `json:"count"`
+}
+
+// UnmarshalJSON accepts uid as either a JSON string or a JSON number and
+// normalizes it to a decimal string. Game UIDs are snowflake int64s too large
+// for JS number precision, so the web sends them as strings while older
+// clients may still send numbers.
+func (i *ActivityIngredient) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		Uid   json.Number `json:"uid"`
+		Count int64       `json:"count"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	i.Uid = raw.Uid.String()
+	i.Count = raw.Count
+	return nil
 }
 
 // AnalyticsDetailReq 分析详情

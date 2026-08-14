@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/it00021hot/qq-farm-core/internal/app/model"
@@ -341,18 +343,19 @@ func buildGreenPlumIngredients(ctx context.Context, api *game.API, req farmtypes
 		seen := make(map[int64]bool, len(req.Ingredients))
 		out := make([]*activitypb.StartQingMeiBrewRequest_Ingredient, 0, len(req.Ingredients))
 		for _, ing := range req.Ingredients {
-			if ing.Uid <= 0 || ing.Count <= 0 {
-				return nil, fmt.Errorf("青梅原料 UID/数量 无效")
+			uid, parseErr := strconv.ParseInt(strings.TrimSpace(ing.Uid), 10, 64)
+			if parseErr != nil || uid <= 0 || ing.Count <= 0 {
+				return nil, fmt.Errorf("青梅原料 UID/数量 无效: %q", ing.Uid)
 			}
-			if seen[ing.Uid] {
-				return nil, fmt.Errorf("青梅 UID %d 重复", ing.Uid)
+			if seen[uid] {
+				return nil, fmt.Errorf("青梅 UID %d 重复", uid)
 			}
-			if byUID[ing.Uid] < ing.Count {
-				return nil, fmt.Errorf("青梅 UID %d 数量不足", ing.Uid)
+			if byUID[uid] < ing.Count {
+				return nil, fmt.Errorf("青梅 UID %d 数量不足", uid)
 			}
-			seen[ing.Uid] = true
+			seen[uid] = true
 			out = append(out, &activitypb.StartQingMeiBrewRequest_Ingredient{
-				Uid:   ing.Uid,
+				Uid:   uid,
 				Count: ing.Count,
 			})
 		}
