@@ -441,29 +441,6 @@ func (a *API) StartGreenPlumBrew(ctx context.Context, activityID int64, ingredie
 	return reply, nil
 }
 
-// StartGreenPlumBrewAll invests every 青梅 stack in the bag into a brewing
-// round. UIDs with insufficient count for the requested total are skipped.
-func (a *API) StartGreenPlumBrewAll(ctx context.Context, activityID int64) (*activitypb.ActivityOperateReply, error) {
-	bag, err := a.Bag(ctx)
-	if err != nil {
-		return nil, err
-	}
-	ingredients := make([]*activitypb.StartQingMeiBrewRequest_Ingredient, 0)
-	for _, item := range GetBagItems(bag) {
-		if item.Id != GreenPlumItemID || item.Count <= 0 {
-			continue
-		}
-		ingredients = append(ingredients, &activitypb.StartQingMeiBrewRequest_Ingredient{
-			Uid:   item.Uid,
-			Count: item.Count,
-		})
-	}
-	if len(ingredients) == 0 {
-		return nil, fmt.Errorf("green plum brew: no 青梅 in bag")
-	}
-	return a.StartGreenPlumBrew(ctx, activityID, ingredients)
-}
-
 // ContinueGreenPlumBrew continues to the next brewing round (operateType=15).
 func (a *API) ContinueGreenPlumBrew(ctx context.Context, activityID int64) (*activitypb.ActivityOperateReply, error) {
 	req := &activitypb.ContinueQingMeiBrewRequest{
@@ -556,11 +533,6 @@ func (a *API) FindGreenPlumActivityID(ctx context.Context, wantDaily bool) int64
 // FindGreenPlumDailyActivityID returns the daily seed activity id.
 func (a *API) FindGreenPlumDailyActivityID(ctx context.Context) int64 {
 	return a.FindGreenPlumActivityID(ctx, true)
-}
-
-// FindGreenPlumBrewActivityID returns the brew activity id.
-func (a *API) FindGreenPlumBrewActivityID(ctx context.Context) int64 {
-	return a.FindGreenPlumActivityID(ctx, false)
 }
 
 // FindSeasonActivity finds a sub-activity by type code.

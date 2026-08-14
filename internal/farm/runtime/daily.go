@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"strings"
 	"sync"
@@ -47,9 +46,6 @@ type DailyState struct {
 	greenPlumDoneDateKey string
 	greenPlumLastCheck   time.Time
 
-	greenPlumBrewDateKey string
-	greenPlumBrewCheck   time.Time
-
 	taskChecking bool
 }
 
@@ -79,7 +75,6 @@ func RunDailyRoutines(ctx context.Context, api *game.API, cfg logic.AccountConfi
 	runFreeGifts(ctx, api, state, force, now)
 	runVipGift(ctx, api, state, force, now)
 	runGreenPlumClaim(ctx, api, accountID, state, force, now)
-	runGreenPlumBrew(ctx, api, accountID, state, force, now)
 }
 
 // RunTaskClaims auto-claims tasks, actives, and illustrated rewards when Automation.Task is enabled.
@@ -357,104 +352,6 @@ func runGreenPlumClaim(ctx context.Context, api *game.API, accountID uint64, sta
 	}
 	state.mu.Lock()
 	state.greenPlumDoneDateKey = today
-	state.mu.Unlock()
-}
-
-// runGreenPlumBrew auto-brews 青梅 through every round and settles via the
-// boosted shared (1.5x) mode, once per day. Flow: start with all available
-// 青梅 when nothing is brewing, continue rounds until the last one, then
-// report the share and settle. Each stage is guarded by the live brew state so
-// a partially completed run resumes naturally on the next pass.
-func runGreenPlumBrew(ctx context.Context, api *game.API, accountID uint64, state *DailyState, force bool, now time.Time) {
-	state.mu.Lock()
-	today := localDateKey(now)
-	if !force && state.greenPlumBrewDateKey == today {
-		state.mu.Unlock()
-		return
-	}
-	if !force && now.Sub(state.greenPlumBrewCheck) < dailyCheckCooldown {
-		state.mu.Unlock()
-		return
-	}
-	state.greenPlumBrewCheck = now
-	state.mu.Unlock()
-
-	if api == nil {
-		return
-	}
-	activityID := api.FindGreenPlumBrewActivityID(ctx)
-	if activityID <= 0 {
-		slog.Debug("daily: green plum brew activity not recognized yet, skip brew")
-		return
-	}
-
-	reply, err := api.QueryGreenPlum(ctx, activityID)
-	if err != nil || reply == nil || reply.Data == nil {
-		slog.Warn("daily: green plum brew query failed", "err", err)
-		return
-	}
-	brew := reply.Data.QingmeiBrew
-	if brew == nil {
-		slog.Debug("daily: green plum brew entry not ready, skip")
-		return
-	}
-
-	if brew.Finished {
-		slog.Info("daily: green plum brew already settled", "round", brew.CurrentRound)
-		state.mu.Lock()
-		state.greenPlumBrewDateKey = today
-		state.mu.Unlock()
-		return
-	}
-
-	if brew.BaseGold <= 0 {
-		// Not started yet: invest the whole 青梅 balance and start brewing.
-		bag, bagErr := api.Bag(ctx)
-		if bagErr != nil {
-			slog.Warn("daily: green plum brew bag failed", "err", bagErr)
-			return
-		}
-		count := int64(0)
-		for _, item := range game.GetBagItems(bag) {
-			if item.Id == game.GreenPlumItemID {
-				count += item.Count
-			}
-		}
-		if count <= 0 {
-			slog.Debug("daily: no green plum to brew, skip")
-			return
-		}
-		if _, err := api.StartGreenPlumBrewAll(ctx, activityID); err != nil {
-			slog.Warn("daily: green plum brew start failed", "err", err)
-			return
-		}
-		slog.Info("daily: green plum brew started", "activityId", activityID, "count", count)
-		appendDailyLog(accountID, "青梅", fmt.Sprintf("青梅酿造已开始，投入 %d 青梅", count), false)
-		return
-	}
-
-	maxRounds := brew.MaxRounds
-	if maxRounds <= 0 {
-		maxRounds = 3
-	}
-	if brew.CurrentRound < maxRounds {
-		if _, err := api.ContinueGreenPlumBrew(ctx, activityID); err != nil {
-			slog.Warn("daily: green plum brew continue failed", "round", brew.CurrentRound, "err", err)
-			return
-		}
-		slog.Info("daily: green plum brew continued", "activityId", activityID, "round", brew.CurrentRound)
-		appendDailyLog(accountID, "青梅", fmt.Sprintf("青梅酿造进行至第 %d 轮", brew.CurrentRound+1), false)
-		return
-	}
-
-	if _, err := api.SettleGreenPlumBrew(ctx, activityID); err != nil {
-		slog.Warn("daily: green plum brew settle failed", "round", brew.CurrentRound, "err", err)
-		return
-	}
-	slog.Info("daily: green plum brew settled", "activityId", activityID, "round", brew.CurrentRound)
-	appendDailyLog(accountID, "青梅", "青梅酿造已完成并按分享奖励结算", false)
-	state.mu.Lock()
-	state.greenPlumBrewDateKey = today
 	state.mu.Unlock()
 }
 
