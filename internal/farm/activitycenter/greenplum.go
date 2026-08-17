@@ -12,13 +12,10 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/activitypb"
 )
 
-// buildGreenPlum reports the 青梅 activity. The recurring 青梅 / 青酿换万金
-// activity gets a fresh id every run. The registry is the primary source of
-// schedule info, but 青梅 is a standalone activity system that may not appear
-// in the season list; the hard-coded daily (…01) and brew (…02) ids are used
-// as a fallback so the panel never stays "not recognized" when the game API is
-// reachable. When a live API is available the daily seed and brew state are
-// queried and merged on top.
+// buildGreenPlum reports the type-12 brew activity (青梅 / 青酿换万金 and
+// successors). The recurring event gets a fresh id every run. The registry is
+// the primary source of schedule info; expired or unrecognized runs leave
+// known=false so the UI can hide the tab.
 func buildGreenPlum(ctx context.Context, api *game.API) map[string]any {
 	out := map[string]any{
 		"known":        false,
@@ -75,16 +72,9 @@ func buildGreenPlum(ctx context.Context, api *game.API) map[string]any {
 		return out
 	}
 
-	// 青梅 is a standalone activity system that may not appear in the season
-	// activity list. When a live API is reachable, fall back to the hard-coded
-	// daily (…01) / brew (…02) ids so the panel is never stuck unrecognized.
-	if len(items) == 0 && game.GreenPlumDailyActivityID > 0 {
-		items = []logic.ActivityRegistryItem{
-			{ActivityID: strconv.FormatInt(game.GreenPlumDailyActivityID, 10), Type: 12, Name: "青梅"},
-			{ActivityID: strconv.FormatInt(game.GreenPlumBrewActivityID, 10), Type: 12, Name: "青酿换万金"},
-		}
-	}
-
+	// Only query registry-recognized entries. Do not fall back to hard-coded
+	// dated activity ids — those expire each run and would keep the panel
+	// "recognized" after the event ends.
 	for i := range items {
 		item := items[i]
 		id, err := strconv.ParseInt(item.ActivityID, 10, 64)

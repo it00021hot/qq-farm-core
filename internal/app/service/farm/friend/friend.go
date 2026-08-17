@@ -179,14 +179,20 @@ func (s *Service) Op(ctx fiber.Ctx, req farmtypes.FriendOpReq) (map[string]any, 
 	}
 	callCtx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
-	if err := session.FriendOp(callCtx, req.Gid, req.Op); err != nil {
+	outcome, err := session.FriendOp(callCtx, req.Gid, req.Op)
+	if err != nil {
 		return nil, err
 	}
 	return map[string]any{
-		"accountId": req.AccountID,
-		"gid":       req.Gid,
-		"op":        req.Op,
-		"ok":        true,
+		"accountId":   req.AccountID,
+		"gid":         req.Gid,
+		"op":          req.Op,
+		"ok":          true,
+		"count":       outcome.Count,
+		"summary":     outcome.Summary,
+		"skipReason":  outcome.SkipReason,
+		"helpSummary": outcome.HelpSummary,
+		"plants":      outcome.Plants,
 	}, nil
 }
 

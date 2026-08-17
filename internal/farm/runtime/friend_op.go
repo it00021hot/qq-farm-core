@@ -201,6 +201,12 @@ func RunStealTick(ctx context.Context, s *Session, visited map[int64]struct{}) (
 					"summary": fmt.Sprintf("获得积分x%d", outcome.Score),
 				})
 			}
+		} else if outcome.SkipReason != "" {
+			slog.Info("steal visit zero",
+				"account", accountID,
+				"friend_gid", gid,
+				"skip_reason", outcome.SkipReason,
+			)
 		}
 		if outcome.HelpCount > 0 {
 			stats.RecordOp(accountID, 0, "help", outcome.HelpCount)
@@ -607,6 +613,8 @@ type friendVisitOutcome struct {
 	PutWeed     int
 	HelpCount   int
 	HelpSummary string
+	// SkipReason explains count==0 after a successful visit (empty when stolen or not entered).
+	SkipReason string
 }
 
 func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig, myGID, gid int64) (friendVisitOutcome, error) {
@@ -624,10 +632,10 @@ func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accou
 		}
 	}()
 	blacklist := makeIDSet(cfg.PlantBlacklist)
-	activityOnly := cfg.Automation.FriendStealActivityOnly
 	landsMap := logic.BuildLandMap(lands)
 	targets := make([]int64, 0, len(lands))
 	plantByLand := make(map[int64]string, len(lands))
+	blacklistedMature := 0
 	for i := range lands {
 		land := &lands[i]
 		if logic.IsOccupiedSlaveLand(land, landsMap) {
@@ -637,9 +645,7 @@ func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accou
 			continue
 		}
 		if isPlantBlacklistedBySeed(blacklist, land.Plant.ID) {
-			continue
-		}
-		if activityOnly && !logic.IsActivityPlant(land.Plant) {
+			blacklistedMature++
 			continue
 		}
 		targets = append(targets, land.ID)
@@ -664,6 +670,11 @@ func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accou
 		}
 	}
 	if len(targets) == 0 {
+		if blacklistedMature > 0 {
+			out.SkipReason = "plant_blacklist"
+		} else {
+			out.SkipReason = "no_stealable"
+		}
 		return out, nil
 	}
 	// 偷菜顺手帮忙：仅当农场有可偷作物时才帮忙，不受自动帮忙开关与帮忙经验上限约束。
@@ -679,6 +690,7 @@ func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accou
 		canOperate, canSteal = true, 0
 	}
 	if !canOperate {
+		out.SkipReason = "cannot_operate"
 		return out, nil
 	}
 	if canSteal > 0 && int64(len(targets)) > canSteal {
@@ -696,6 +708,8 @@ func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accou
 		)
 		out.Score, out.Value = summarizeHarvestRewards(items)
 		out.Summary = formatStealSummary(out.Count, out.Plants, out.Score, out.Value)
+	} else {
+		out.SkipReason = "no_stealable"
 	}
 	return out, nil
 }

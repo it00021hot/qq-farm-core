@@ -522,12 +522,8 @@ func (a *API) FindGreenPlumActivityID(ctx context.Context, wantDaily bool) int64
 		}
 	}
 
-	if wantDaily {
-		a.greenPlumDailyActivityID.Store(GreenPlumDailyActivityID)
-		return GreenPlumDailyActivityID
-	}
-	a.greenPlumBrewActivityID.Store(GreenPlumBrewActivityID)
-	return GreenPlumBrewActivityID
+	// Do not fall back to dated hard-coded ids after the event rotates.
+	return 0
 }
 
 // FindGreenPlumDailyActivityID returns the daily seed activity id.

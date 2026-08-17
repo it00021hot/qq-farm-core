@@ -213,24 +213,6 @@ func TestCollectBadLandTargetsOwnersLimit(t *testing.T) {
 	}
 }
 
-func TestIsActivityPlant(t *testing.T) {
-	if logic.IsActivityPlant(nil) {
-		t.Fatal("nil plant")
-	}
-	if logic.IsActivityPlant(&logic.PlantInfo{}) {
-		t.Fatal("no activity")
-	}
-	if !logic.IsActivityPlant(&logic.PlantInfo{Activity: &logic.PlantActivityInfo{Param1: 10}}) {
-		t.Fatal("param1 score")
-	}
-	if !logic.IsActivityPlant(&logic.PlantInfo{Activity: &logic.PlantActivityInfo{Param2: 5}}) {
-		t.Fatal("param2 fallback")
-	}
-	if logic.IsActivityPlant(&logic.PlantInfo{Activity: &logic.PlantActivityInfo{ActivityID: 1019}}) {
-		t.Fatal("id alone is not activity")
-	}
-}
-
 func TestFriendHelpStateLimitsAndBadCap(t *testing.T) {
 	logic.SyncServerTime(1_700_000_000_000)
 	dir := t.TempDir()

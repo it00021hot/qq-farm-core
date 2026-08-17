@@ -953,10 +953,35 @@ func (s *Session) SyncFriends(ctx context.Context) error {
 	return nil
 }
 
+// FriendOpResult is the public outcome of a manual friend interaction.
+type FriendOpResult struct {
+	Count       int      `json:"count"`
+	Summary     string   `json:"summary,omitempty"`
+	SkipReason  string   `json:"skipReason,omitempty"`
+	HelpSummary string   `json:"helpSummary,omitempty"`
+	Plants      []string `json:"plants,omitempty"`
+	Weed        int      `json:"weed,omitempty"`
+	Bug         int      `json:"bug,omitempty"`
+	Water       int      `json:"water,omitempty"`
+}
+
+func friendOpResultFrom(outcome friendVisitOutcome) FriendOpResult {
+	return FriendOpResult{
+		Count:       outcome.Count,
+		Summary:     outcome.Summary,
+		SkipReason:  outcome.SkipReason,
+		HelpSummary: outcome.HelpSummary,
+		Plants:      outcome.Plants,
+		Weed:        outcome.Weed,
+		Bug:         outcome.Bug,
+		Water:       outcome.Water,
+	}
+}
+
 // FriendOp performs one manual friend interaction.
-func (s *Session) FriendOp(ctx context.Context, gid int64, op string) error {
+func (s *Session) FriendOp(ctx context.Context, gid int64, op string) (FriendOpResult, error) {
 	if gid <= 0 {
-		return fmt.Errorf("friend gid is required")
+		return FriendOpResult{}, fmt.Errorf("friend gid is required")
 	}
 	s.farmOpMu.Lock()
 	defer s.farmOpMu.Unlock()
@@ -967,10 +992,10 @@ func (s *Session) FriendOp(ctx context.Context, gid int64, op string) error {
 	myGID := s.gid
 	s.mu.Unlock()
 	if api == nil {
-		return fmt.Errorf("farm session is not connected")
+		return FriendOpResult{}, fmt.Errorf("farm session is not connected")
 	}
 	if myGID > 0 && gid == myGID {
-		return fmt.Errorf("不能对自己执行好友操作")
+		return FriendOpResult{}, fmt.Errorf("不能对自己执行好友操作")
 	}
 
 	var (
@@ -1005,7 +1030,7 @@ func (s *Session) FriendOp(ctx context.Context, gid int64, op string) error {
 	case "bad":
 		outcome, err = badFriend(ctx, s, api, myGID, gid)
 	default:
-		return fmt.Errorf("unsupported friend operation %q", op)
+		return FriendOpResult{}, fmt.Errorf("unsupported friend operation %q", op)
 	}
 	result := "ok"
 	if err != nil {
@@ -1016,6 +1041,7 @@ func (s *Session) FriendOp(ctx context.Context, gid int64, op string) error {
 		"plants":      outcome.Plants,
 		"summary":     outcome.Summary,
 		"helpSummary": outcome.HelpSummary,
+		"skipReason":  outcome.SkipReason,
 		"weed":        outcome.Weed,
 		"bug":         outcome.Bug,
 		"water":       outcome.Water,
@@ -1024,7 +1050,7 @@ func (s *Session) FriendOp(ctx context.Context, gid int64, op string) error {
 		"error":       errorText(err),
 	}
 	writeInteractLog(parseAccountID(s.id), 0, gid, op, result, detail)
-	return err
+	return friendOpResultFrom(outcome), err
 }
 
 // FriendLands returns a friend's current farm state and always leaves the visit.

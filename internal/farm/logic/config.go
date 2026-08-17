@@ -59,7 +59,6 @@ type AutomationConfig struct {
 	Friend                  bool     `json:"friend"`
 	FriendHelpExpLimit      bool     `json:"friend_help_exp_limit"`
 	FriendSteal             bool     `json:"friend_steal"`
-	FriendStealActivityOnly bool     `json:"friend_steal_activity_only"`
 	FriendHelp              bool     `json:"friend_help"`
 	FriendBad               bool     `json:"friend_bad"`
 	Task                    bool     `json:"task"`
@@ -137,11 +136,10 @@ func DefaultAccountConfig() AccountConfig {
 			Friend:                  true,
 			FriendHelpExpLimit:      false,
 			FriendSteal:             true,
-			FriendStealActivityOnly: true,
 			FriendHelp:              false,
 			FriendBad:               false,
 			Task:                    true,
-			FertilizerGift:          false,
+			FertilizerGift:          true,
 			FertilizerBuyOrganic:    false,
 			FertilizerBuyNormal:     false,
 			Sell:                    true,
@@ -149,7 +147,7 @@ func DefaultAccountConfig() AccountConfig {
 			FertilizerMultiSeason:   true,
 			FertilizerLandTypes:     append([]string(nil), AllFertilizerLandTypes...),
 			FertilizerSmartSeconds:  360,
-			SkipOwnWeedBug:          false,
+			SkipOwnWeedBug:          true,
 		},
 		PlantingStrategy: StrategyPreferred,
 		PreferredSeedID:  0,
@@ -182,7 +180,7 @@ func DefaultAccountConfig() AccountConfig {
 }
 
 // ParseAccountConfigJSON loads config on top of defaults so omitted JSON keys keep bot defaults,
-// while explicit false (e.g. friend_steal_activity_only) is preserved.
+// while explicit false values are preserved.
 func ParseAccountConfigJSON(raw string) AccountConfig {
 	cfg := DefaultAccountConfig()
 	if strings.TrimSpace(raw) == "" {

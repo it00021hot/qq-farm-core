@@ -179,4 +179,18 @@ func TestBuildGreenPlum(t *testing.T) {
 	if claim["enabled"] != true || claim["available"] != true {
 		t.Fatalf("claim action should be enabled: %+v", claim)
 	}
+
+	// Expired type-12 activity stays known but inactive (UI hides the tab).
+	logic.ResetActivityRegistry()
+	logic.RegisterActivity(logic.ActivityRegistryItem{
+		ActivityID: "2026081202",
+		Type:       12,
+		Name:       "青酿换万金",
+		BeginTime:  time.Now().Unix() - 86400*10,
+		EndTime:    time.Now().Unix() - 3600,
+	})
+	gp = buildGreenPlum(nil, nil)
+	if gp["known"] != true || gp["active"] != false {
+		t.Fatalf("expected known/inactive for expired: %+v", gp)
+	}
 }

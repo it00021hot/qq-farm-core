@@ -61,8 +61,8 @@ type API struct {
 
 	// greenPlumDailyActivityID / greenPlumBrewActivityID cache the resolved
 	// 青梅 activity ids. The recurring activity gets a fresh id every run, so
-	// the first lookup discovers them from the live API; the hard-coded ids
-	// are used as a fallback when nothing is recognized yet.
+	// the first lookup discovers them from the live registry/API; dated
+	// hard-coded ids are no longer used as a fallback after the event rotates.
 	greenPlumDailyActivityID atomic.Int64
 	greenPlumBrewActivityID   atomic.Int64
 }

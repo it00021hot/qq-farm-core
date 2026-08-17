@@ -54,19 +54,6 @@ type PlantInfo struct {
 	Activity           *PlantActivityInfo `json:"activity,omitempty"`
 }
 
-// IsActivityPlant reports whether the plant carries activity points (score > 0).
-// Mirrors bot gameConfig.isActivityPlant: score from param1, else param2.
-func IsActivityPlant(plant *PlantInfo) bool {
-	if plant == nil || plant.Activity == nil {
-		return false
-	}
-	score := plant.Activity.Param1
-	if score <= 0 {
-		score = plant.Activity.Param2
-	}
-	return score > 0
-}
-
 // LandInfo is one farmland plot.
 type LandInfo struct {
 	ID           int64      `json:"id"`
