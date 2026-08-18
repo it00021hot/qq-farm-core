@@ -19,5 +19,6 @@ type Session struct {
 	UUID        string
 	OAuthCode   string
 	OpenID      string
+	AccessToken string
 	LoginBuffer string
 }

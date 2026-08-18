@@ -1,10 +1,10 @@
 package wxlogin
 
 import (
+	"github.com/gofiber/fiber/v3"
 	"github.com/it00021hot/qq-farm-core/internal/app/controller"
 	farmwx "github.com/it00021hot/qq-farm-core/internal/farm/wxlogin"
 	"github.com/it00021hot/qq-farm-core/pkg/response"
-	"github.com/gofiber/fiber/v3"
 	"github.com/spf13/cast"
 )
 
@@ -105,6 +105,11 @@ func (c *Controller) Code(ctx fiber.Ctx) error {
 	openid := ""
 	if task.Session != nil {
 		openid = task.Session.OpenID
+		farmwx.StorePendingAuth(code, farmwx.WxAuth{
+			OpenID:      task.Session.OpenID,
+			LoginBuffer: task.Session.LoginBuffer,
+			AccessToken: task.Session.AccessToken,
+		})
 	}
 	data := map[string]any{
 		"openid":  openid,

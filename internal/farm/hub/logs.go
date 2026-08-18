@@ -158,7 +158,7 @@ func AppendFromEvent(typ string, accountID uint64, payload any) {
 
 func logEntryFromEvent(typ string, accountID uint64, payload any) (LogEntry, bool) {
 	switch typ {
-	case "farm_operation", "farm_tick", "friend_interact", "account_status":
+	case "farm_operation", "farm_tick", "friend_interact", "account_status", "runtime_log":
 	default:
 		return LogEntry{}, false
 	}
@@ -218,6 +218,21 @@ func logEntryFromEvent(typ string, accountID uint64, payload any) (LogEntry, boo
 		entry.Meta.Event = "账号状态"
 		if entry.Msg == "" {
 			entry.Msg = formatAccountStatusMsg(st, detail)
+		}
+	case "runtime_log":
+		entry.Meta.Module = "system"
+		if entry.Tag == "" {
+			if entry.IsWarn {
+				entry.Tag = "错误"
+			} else {
+				entry.Tag = "系统"
+			}
+		}
+		if entry.Meta.Event == "" {
+			entry.Meta.Event = "登录"
+		}
+		if entry.Msg == "" {
+			entry.Msg = asString(m["msg"])
 		}
 	}
 	return entry, true

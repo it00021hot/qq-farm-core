@@ -29,11 +29,12 @@ type AccountUpdateReq struct {
 
 // AccountListReq 账号列表
 type AccountListReq struct {
-	Current   int    `json:"current" query:"current"`
-	Size      int    `json:"size" query:"size"`
-	Keyword   string `json:"keyword" query:"keyword"`
-	Status    uint8  `json:"status" query:"status"`
-	RunStatus *uint8 `json:"runStatus" query:"runStatus"`
+	Current    int    `json:"current" query:"current"`
+	Size       int    `json:"size" query:"size"`
+	Keyword    string `json:"keyword" query:"keyword"`
+	Status     uint8  `json:"status" query:"status"`
+	RunStatus  *uint8 `json:"runStatus" query:"runStatus"`
+	AuthStatus string `json:"authStatus" query:"authStatus"`
 }
 
 // AccountIDReq 账号 ID
@@ -206,12 +207,12 @@ type ActivitySnapshotReq struct {
 
 // ActivityActionReq 活动操作
 type ActivityActionReq struct {
-	AccountID   uint64 `json:"accountId" validate:"required"`
-	TermID      string `json:"termId"`
-	ItemID      string `json:"itemId"`
-	Count       int64  `json:"count"`
-	ActivityID  string `json:"activityId"`
-	OperateType int64  `json:"operateType"`
+	AccountID   uint64               `json:"accountId" validate:"required"`
+	TermID      string               `json:"termId"`
+	ItemID      string               `json:"itemId"`
+	Count       int64                `json:"count"`
+	ActivityID  string               `json:"activityId"`
+	OperateType int64                `json:"operateType"`
 	Ingredients []ActivityIngredient `json:"ingredients"`
 }
 

@@ -7,16 +7,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofiber/fiber/v3"
 	"github.com/it00021hot/qq-farm-core/internal/app/model"
 	"github.com/it00021hot/qq-farm-core/internal/app/pkg/pagination"
 	"github.com/it00021hot/qq-farm-core/internal/app/service"
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	"github.com/it00021hot/qq-farm-core/internal/farm/loginurl"
 	farmruntime "github.com/it00021hot/qq-farm-core/internal/farm/runtime"
+	farmwx "github.com/it00021hot/qq-farm-core/internal/farm/wxlogin"
 	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
 	"github.com/it00021hot/qq-farm-core/internal/vars"
 	"github.com/it00021hot/qq-farm-core/pkg/response"
-	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 )
 
@@ -52,6 +53,33 @@ func normalizeLoginInput(rawCode, rawPlatform string) (code, platform, loginOS, 
 	return code, platform, loginOS, clientVer, nil
 }
 
+func applyPendingWxAuth(acc *model.FarmAccount) {
+	if acc == nil {
+		return
+	}
+	auth, ok := farmwx.TakePendingAuth(acc.Code)
+	if !ok {
+		acc.FillWxAuthorized()
+		return
+	}
+	now := uint(time.Now().Unix())
+	updates := map[string]any{
+		"wx_openid":       auth.OpenID,
+		"wx_login_buffer": auth.LoginBuffer,
+		"wx_access_token": auth.AccessToken,
+		"updated_at":      now,
+	}
+	if err := vars.DB.Model(acc).Updates(updates).Error; err != nil {
+		acc.FillWxAuthorized()
+		return
+	}
+	acc.WxOpenID = auth.OpenID
+	acc.WxLoginBuffer = auth.LoginBuffer
+	acc.WxAccessToken = auth.AccessToken
+	acc.UpdatedAt = now
+	acc.FillWxAuthorized()
+}
+
 func (s *Service) List(ctx fiber.Ctx, req farmtypes.AccountListReq) (response.PageData, error) {
 	db := vars.DB.Model(&model.FarmAccount{})
 	if req.Keyword != "" {
@@ -64,6 +92,12 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.AccountListReq) (response.Pa
 	// Empty query runStatus= must not filter: binders may coerce "" -> 0 (stopped-only).
 	if raw := strings.TrimSpace(ctx.Query("runStatus")); raw != "" && req.RunStatus != nil {
 		db = db.Where("run_status = ?", *req.RunStatus)
+	}
+	switch strings.TrimSpace(req.AuthStatus) {
+	case "authorized":
+		db = db.Where("wx_login_buffer <> ''")
+	case "unauthorized":
+		db = db.Where("wx_login_buffer = '' OR wx_login_buffer IS NULL")
 	}
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
@@ -80,6 +114,7 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.AccountListReq) (response.Pa
 	for i := range list {
 		st, _ := farmruntime.Default.GetStatus(list[i].ID)
 		list[i].RunStatus = st
+		list[i].FillWxAuthorized()
 	}
 	return response.NewPageData(list, req.Current, req.Size, total), nil
 }
@@ -89,6 +124,7 @@ func (s *Service) Detail(ctx fiber.Ctx, id uint64) (*model.FarmAccount, error) {
 	if err := vars.DB.Where("id = ?", id).First(&acc).Error; err != nil {
 		return nil, errors.New("账号不存在")
 	}
+	acc.FillWxAuthorized()
 	return &acc, nil
 }
 
@@ -141,6 +177,7 @@ func (s *Service) Create(ctx fiber.Ctx, req farmtypes.AccountCreateReq) (*model.
 	}); err != nil {
 		return nil, err
 	}
+	applyPendingWxAuth(acc)
 	return acc, nil
 }
 
@@ -185,6 +222,9 @@ func (s *Service) Update(ctx fiber.Ctx, req farmtypes.AccountUpdateReq) error {
 	if err := db.Model(&acc).Updates(updates).Error; err != nil {
 		return err
 	}
+	acc.Code = code
+	acc.Platform = platform
+	applyPendingWxAuth(&acc)
 
 	// Refreshing login code implies reconnect: start (or restart) when account stays enabled.
 	if codeChanged && req.Status == vars.StatusNormal {
@@ -219,7 +259,7 @@ func (s *Service) Start(ctx fiber.Ctx, id uint64) error {
 	if acc.Status != vars.StatusNormal {
 		return errors.New("账号已禁用")
 	}
-	if strings.TrimSpace(acc.Code) == "" {
+	if strings.TrimSpace(acc.Code) == "" && !acc.HasWxAuth() {
 		return errors.New("账号缺少登录 Code，请先编辑并填入 Code / 登录 URL")
 	}
 	// Blocks until gateway connect + Login succeed or fail; only then is run_status=running.

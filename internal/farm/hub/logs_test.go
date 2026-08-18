@@ -80,14 +80,20 @@ func TestAppendFromEvent(t *testing.T) {
 	AppendFromEvent("account_status", 1, map[string]any{
 		"status": "error", "detail": "被踢下线",
 	})
+	AppendFromEvent("runtime_log", 1, map[string]any{
+		"tag": "系统", "event": "重连", "message": "将在 5 分钟后用应用宝授权重连",
+	})
 	got := Logs.Query(1, "", "", 10)
-	if len(got) != 2 {
-		t.Fatalf("want 2 got %d", len(got))
+	if len(got) != 3 {
+		t.Fatalf("want 3 got %d", len(got))
 	}
 	if got[1].Meta.Module != "system" || !got[1].IsWarn {
 		t.Fatalf("account_status entry: %+v", got[1])
 	}
 	if got[0].Meta.Module != "farm" || got[0].Msg != "harvest" {
 		t.Fatalf("farm_operation entry: %+v", got[0])
+	}
+	if got[2].Meta.Event != "重连" || got[2].Msg != "将在 5 分钟后用应用宝授权重连" {
+		t.Fatalf("runtime_log entry: %+v", got[2])
 	}
 }

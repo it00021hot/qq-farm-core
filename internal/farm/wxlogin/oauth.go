@@ -10,11 +10,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -55,7 +57,10 @@ func request(ctx context.Context, jar *cookiejar.Jar, rawURL, method string, bod
 		}
 	}
 	req.Header.Set("User-Agent", userAgent)
-	client := &http.Client{Jar: jar}
+	client := &http.Client{}
+	if jar != nil {
+		client.Jar = jar
+	}
 	response, err := client.Do(req)
 	if err != nil {
 		return 0, nil, err
@@ -171,6 +176,84 @@ func (s *WxLoginService) Confirm(ctx context.Context, session *Session) (string,
 	if err != nil {
 		return "", "", err
 	}
+	loginBuffer, err := s.postLoginBuffer(ctx, session.Cookies, openID, accessToken)
+	if err != nil {
+		return "", "", err
+	}
+	session.Cookies, _ = cookiejar.New(nil)
+	session.OpenID = openID
+	session.AccessToken = accessToken
+	session.LoginBuffer = loginBuffer
+	return openID, loginBuffer, nil
+}
+
+// RefreshLoginBuffer exchanges a stored Yingyongbao accesstoken for a new login_buffer.
+func (s *WxLoginService) RefreshLoginBuffer(ctx context.Context, openID, accessToken string) (string, error) {
+	openID = strings.TrimSpace(openID)
+	accessToken = strings.TrimSpace(accessToken)
+	if openID == "" || accessToken == "" {
+		return "", fmt.Errorf("Missing Yingyongbao authorization")
+	}
+	return s.postLoginBuffer(ctx, nil, openID, accessToken)
+}
+
+// MintGatewayCode mints a one-shot wx.login code from login_buffer.
+// If minting fails and accesstoken is present, the buffer is refreshed once and mint is retried.
+func (s *WxLoginService) MintGatewayCode(ctx context.Context, loginBuffer, openID, accessToken, appID string) (code, newBuffer string, err error) {
+	loginBuffer = strings.TrimSpace(loginBuffer)
+	if loginBuffer == "" {
+		return "", "", fmt.Errorf("WeChat login session has not been confirmed")
+	}
+	if strings.TrimSpace(appID) == "" {
+		appID = TargetMiniProgramID
+	}
+	code, err = getNativeWxLoginCode(ctx, loginBuffer, appID)
+	if err == nil {
+		return code, loginBuffer, nil
+	}
+	if strings.TrimSpace(openID) == "" || strings.TrimSpace(accessToken) == "" {
+		return "", loginBuffer, err
+	}
+	slog.Warn("login_buffer mint failed, refreshing via Yingyongbao", "err", err)
+	newBuffer, refreshErr := s.RefreshLoginBuffer(ctx, openID, accessToken)
+	if refreshErr != nil {
+		return "", loginBuffer, fmt.Errorf("%v; refresh login_buffer: %w", err, refreshErr)
+	}
+	code, err = getNativeWxLoginCode(ctx, newBuffer, appID)
+	if err != nil {
+		return "", newBuffer, err
+	}
+	return code, newBuffer, nil
+}
+
+func (s *WxLoginService) postLoginBuffer(ctx context.Context, jar *cookiejar.Jar, openID, accessToken string) (string, error) {
+	payload, err := loginBufferPayload(openID, accessToken)
+	if err != nil {
+		return "", err
+	}
+	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
+	nonce, err := loginBufferNonce()
+	if err != nil {
+		return "", err
+	}
+	headers := http.Header{
+		"Content-Type":          {"application/json"},
+		"Ual-Access-Businessid": {"pc_yyb_auth"},
+		"Ual-Access-Timestamp":  {timestamp},
+		"Ual-Access-Nonce":      {nonce},
+		"Ual-Access-Signature":  {loginBufferSignature(payload, timestamp, nonce)},
+	}
+	status, data, err := request(ctx, jar, loginBufferURL, http.MethodPost, []byte(payload), headers, 35*time.Second)
+	if err != nil {
+		return "", err
+	}
+	if status < 200 || status >= 300 {
+		return "", fmt.Errorf("unable to obtain WeChat login buffer (HTTP %d)", status)
+	}
+	return parseLoginBufferJSON(data)
+}
+
+func loginBufferPayload(openID, accessToken string) (string, error) {
 	payload, err := json.Marshal(map[string]any{"extInfo": map[string]any{
 		"listS": map[string]any{
 			"unionid":      map[string]any{"value": []string{openID}},
@@ -180,29 +263,25 @@ func (s *WxLoginService) Confirm(ctx context.Context, session *Session) (string,
 		"listI": map[string]any{"user_type": map[string]any{"value": []int{0}}},
 	}})
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
+	return string(payload), nil
+}
+
+func loginBufferNonce() (string, error) {
 	var random [8]byte
-	if _, err = rand.Read(random[:]); err != nil {
-		return "", "", err
+	if _, err := rand.Read(random[:]); err != nil {
+		return "", err
 	}
-	nonce := strconv.Itoa(1000 + int(binary.BigEndian.Uint64(random[:])%9000))
-	sum := md5.Sum([]byte(string(payload) + timestamp + loginBufferAccessKey + nonce))
-	headers := http.Header{
-		"Content-Type":          {"application/json"},
-		"Ual-Access-Businessid": {"pc_yyb_auth"},
-		"Ual-Access-Timestamp":  {timestamp},
-		"Ual-Access-Nonce":      {nonce},
-		"Ual-Access-Signature":  {hex.EncodeToString(sum[:])},
-	}
-	status, data, err := request(ctx, session.Cookies, loginBufferURL, http.MethodPost, payload, headers, 35*time.Second)
-	if err != nil {
-		return "", "", err
-	}
-	if status < 200 || status >= 300 {
-		return "", "", fmt.Errorf("unable to obtain WeChat login buffer (HTTP %d)", status)
-	}
+	return strconv.Itoa(1000 + int(binary.BigEndian.Uint64(random[:])%9000)), nil
+}
+
+func loginBufferSignature(payload, timestamp, nonce string) string {
+	sum := md5.Sum([]byte(payload + timestamp + loginBufferAccessKey + nonce))
+	return hex.EncodeToString(sum[:])
+}
+
+func parseLoginBufferJSON(data []byte) (string, error) {
 	var result struct {
 		Code    int `json:"code"`
 		ExtInfo struct {
@@ -214,16 +293,12 @@ func (s *WxLoginService) Confirm(ctx context.Context, session *Session) (string,
 		} `json:"ext_info"`
 	}
 	if err := json.Unmarshal(data, &result); err != nil {
-		return "", "", err
+		return "", err
 	}
 	if result.Code != 0 || len(result.ExtInfo.ListS.LoginBuffer.Value) == 0 || result.ExtInfo.ListS.LoginBuffer.Value[0] == "" {
-		return "", "", fmt.Errorf("WeChat login buffer response is invalid")
+		return "", fmt.Errorf("WeChat login buffer response is invalid")
 	}
-	loginBuffer := result.ExtInfo.ListS.LoginBuffer.Value[0]
-	session.Cookies, _ = cookiejar.New(nil)
-	session.OpenID = openID
-	session.LoginBuffer = loginBuffer
-	return openID, loginBuffer, nil
+	return result.ExtInfo.ListS.LoginBuffer.Value[0], nil
 }
 
 // IssueCode requests a wx.login code for appID over WeChat's native protocol.
@@ -242,5 +317,6 @@ func (s *WxLoginService) Destroy(session *Session) {
 	session.Cookies, _ = cookiejar.New(nil)
 	session.OAuthCode = ""
 	session.OpenID = ""
+	session.AccessToken = ""
 	session.LoginBuffer = ""
 }

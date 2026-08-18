@@ -62,8 +62,8 @@ type Options struct {
 	HeartbeatEvery time.Duration
 	OnNotify       NotifyHandler
 	// OnDisconnect is invoked once when the read loop dies unexpectedly
-	// (not after an intentional Close). Login Code is one-shot, so callers
-	// should stop the account session rather than retry dialing.
+	// (not after an intentional Close). Callers should stop the session;
+	// WeChat accounts with Yingyongbao auth mint a new code instead of reusing the old one.
 	OnDisconnect func(error)
 }
 

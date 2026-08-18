@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/app/model"
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/userpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/wxlogin"
 	"github.com/it00021hot/qq-farm-core/internal/vars"
 )
 
@@ -59,12 +61,42 @@ func (f *Facade) Start(accountID uint64) error {
 		return errors.New("账号不存在")
 	}
 	code := strings.TrimSpace(acc.Code)
-	if code == "" {
-		return errors.New("连接缺少一次性 Code")
-	}
 	platform := acc.Platform
 	if platform == "" {
 		platform = "qq"
+	}
+	hasWx := acc.CanWxReconnect()
+	if hasWx {
+		appendRuntimeLog(accountID, logEventLogin, "正在用应用宝授权换取新的登录码", false)
+		minted, buf, err := wxlogin.NewWxLoginService().MintGatewayCode(
+			context.Background(),
+			acc.WxLoginBuffer,
+			acc.WxOpenID,
+			acc.WxAccessToken,
+			wxlogin.TargetMiniProgramID,
+		)
+		if err != nil {
+			msg := fmt.Sprintf("应用宝换码失败，请重新扫码: %v", err)
+			appendRuntimeLog(accountID, logEventLogin, msg, true)
+			persistRunStatus(accountID, RunError, false)
+			m.scheduleWxReconnect(strconv.FormatUint(accountID, 10), false)
+			return errors.New(msg)
+		}
+		if strings.TrimSpace(minted) == "" {
+			msg := "应用宝换码失败，请重新扫码: empty code"
+			appendRuntimeLog(accountID, logEventLogin, msg, true)
+			persistRunStatus(accountID, RunError, false)
+			m.scheduleWxReconnect(strconv.FormatUint(accountID, 10), false)
+			return errors.New(msg)
+		}
+		persistWxGatewayCredentials(accountID, minted, buf)
+		code = minted
+		appendRuntimeLog(accountID, logEventLogin, "换码成功，正在连接网关", false)
+	} else {
+		if code == "" {
+			return errors.New("连接缺少一次性 Code")
+		}
+		appendRuntimeLog(accountID, logEventLogin, "正在用已保存的登录码连接网关", false)
 	}
 
 	cfg := SessionConfig{
@@ -78,6 +110,7 @@ func (f *Facade) Start(accountID uint64) error {
 		DataRoot:      vars.Config.GetString("farm.tsdkDataDir"),
 		ShareFile:     vars.Config.GetString("farm.shareFile"),
 		PushWebhook:   vars.Config.GetString("farm.pushWebhook"),
+		HasWxAuth:     hasWx,
 	}
 	if cfg.ClientVersion == "" {
 		cfg.ClientVersion = vars.Config.GetString("farm.clientVersion")
@@ -102,6 +135,7 @@ func (f *Facade) Stop(accountID uint64) error {
 		return nil
 	}
 	id := strconv.FormatUint(accountID, 10)
+	m.clearWxReconnect(id)
 	if m.Status(id) == StatusStopped {
 		return nil
 	}
@@ -212,4 +246,18 @@ func persistAccountProfile(accountID uint64, basic *userpb.BasicInfo) {
 		updates["name"] = basic.Name
 	}
 	_ = db.Model(&acc).Updates(updates).Error
+}
+
+func persistWxGatewayCredentials(accountID uint64, code, loginBuffer string) {
+	if accountID == 0 || strings.TrimSpace(code) == "" {
+		return
+	}
+	updates := map[string]any{
+		"code":       code,
+		"updated_at": uint(time.Now().Unix()),
+	}
+	if strings.TrimSpace(loginBuffer) != "" {
+		updates["wx_login_buffer"] = loginBuffer
+	}
+	_ = vars.DB.Model(&model.FarmAccount{}).Where("id = ?", accountID).Updates(updates).Error
 }

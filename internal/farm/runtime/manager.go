@@ -63,6 +63,7 @@ type SessionConfig struct {
 	SysSoftware   string
 	FarmInterval  time.Duration // legacy fixed tick; 0 uses AccountConfig.Intervals jitter
 	PushWebhook   string        // optional Bark/WeCom webhook for offline/error alerts
+	HasWxAuth     bool          // Yingyongbao login_buffer is persisted; mint a new code before connect
 }
 
 // Session is one running account worker.
@@ -100,6 +101,9 @@ type Session struct {
 	stealPatrolVisited map[int64]struct{}
 	helpPatrolVisited  map[int64]struct{}
 	helpState          *friendHelpState
+	// After a successful steal, game GetAll often still reports StealPlantNum>0 for a while.
+	// Zero those GIDs in Friends() until the live list catches up.
+	friendStealCleared map[int64]struct{}
 	// next scheduled tick times for status nextChecks countdowns
 	nextFarmAt        time.Time
 	nextStealAt       time.Time
@@ -122,6 +126,7 @@ func newSession(cfg SessionConfig, h *hub.Hub) *Session {
 		isFirstFarmCheck:   true,
 		stealPatrolVisited: make(map[int64]struct{}),
 		helpPatrolVisited:  make(map[int64]struct{}),
+		friendStealCleared: make(map[int64]struct{}),
 		helpState:          newFriendHelpState(accountID, cfg.DataRoot),
 	}
 }
@@ -141,6 +146,11 @@ func (s *Session) setStatus(st AccountStatus, detail string) {
 			"status": string(st),
 			"detail": detail,
 		})
+	}
+	if st == StatusRunning {
+		if m := getManager(); m != nil {
+			m.clearWxReconnectAttempts(accountID)
+		}
 	}
 	// Push offline/error alerts once when leaving a healthy/running state.
 	if webhook != "" && st == StatusError && prev != StatusError {
@@ -240,6 +250,10 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 				delete(m.sess, s.id)
 			}
 			m.mu.Unlock()
+			if st == StatusError {
+				kicked := strings.Contains(s.lastError(), "踢")
+				m.scheduleWxReconnect(s.id, kicked)
+			}
 		}
 	}()
 
@@ -914,9 +928,51 @@ func (s *Session) Friends(ctx context.Context) ([]friendpb.GameFriend, error) {
 	}
 	friends, err := loadFriends(ctx, s, api, cfg)
 	if err == nil {
+		friends = s.applyFriendStealOverrides(friends)
 		s.setFriendCount(len(friends))
 	}
 	return friends, err
+}
+
+// markFriendStealCleared zeros StealPlantNum for gid in subsequent Friends() until live data catches up.
+func (s *Session) markFriendStealCleared(gid int64) {
+	if s == nil || gid <= 0 {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.friendStealCleared == nil {
+		s.friendStealCleared = make(map[int64]struct{})
+	}
+	s.friendStealCleared[gid] = struct{}{}
+}
+
+func (s *Session) applyFriendStealOverrides(friends []friendpb.GameFriend) []friendpb.GameFriend {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.friendStealCleared) == 0 {
+		return friends
+	}
+	for i := range friends {
+		gid := friends[i].Gid
+		if _, ok := s.friendStealCleared[gid]; !ok {
+			continue
+		}
+		if friends[i].Plant != nil && friends[i].Plant.StealPlantNum == 0 {
+			delete(s.friendStealCleared, gid)
+			continue
+		}
+		plant := friends[i].Plant
+		if plant == nil {
+			plant = &friendpb.Plant{}
+		} else {
+			cp := *plant
+			plant = &cp
+		}
+		plant.StealPlantNum = 0
+		friends[i].Plant = plant
+	}
+	return friends
 }
 
 // InteractRecords returns live visitor interaction records (bot Analytics visitors tab).
@@ -1306,7 +1362,11 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 			}
 		}
 		slog.Warn("farm kickout", "account", s.id, "reason", reason, "type", messageType)
-		s.setStatus(StatusError, "被踢下线: "+reason)
+		detail := "被踢下线: " + reason
+		if s.cfg.HasWxAuth || accountCanWxReconnect(parseAccountID(s.id)) {
+			detail = "被踢下线: " + reason + "，将在 " + wxReconnectDelayZh() + "后用应用宝授权重连"
+		}
+		s.setStatus(StatusError, detail)
 		persistRunStatus(parseAccountID(s.id), RunError, false)
 		s.mu.Lock()
 		cancel := s.cancel
@@ -1417,7 +1477,7 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 }
 
 // failTransport stops the account when the gateway socket is dead.
-// Login Code is one-shot; reconnecting with the same code is useless.
+// Authorized WeChat accounts mint a new code after a delay; others wait for a rescan.
 func (s *Session) failTransport(err error) {
 	if s == nil || err == nil || !isFatalTransportError(err) {
 		return
@@ -1425,7 +1485,10 @@ func (s *Session) failTransport(err error) {
 	if s.isQuiescing() {
 		return
 	}
-	detail := "网关连接已断开（登录 Code 为一次性，无法自动重连）"
+	detail := "网关连接已断开，已停止运行并等待重新扫码"
+	if s.cfg.HasWxAuth || accountCanWxReconnect(parseAccountID(s.id)) {
+		detail = "网关连接已断开，将在 " + wxReconnectDelayZh() + "后用应用宝授权重连"
+	}
 	slog.Warn("farm transport dead, stopping session", "account", s.id, "err", err)
 	s.setStatus(StatusError, detail)
 	persistRunStatus(parseAccountID(s.id), RunError, false)
@@ -1435,6 +1498,12 @@ func (s *Session) failTransport(err error) {
 	if cancel != nil {
 		cancel()
 	}
+}
+
+func (s *Session) lastError() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.lastErr
 }
 
 func (s *Session) applyItemNotify(body []byte) {
@@ -2008,18 +2077,18 @@ func (s *Session) dailyLoop(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-	case <-ticker.C:
-		cfg := s.Config()
-		s.maybeRunDailyOnDateChange(ctx, cfg)
-		s.farmOpMu.Lock()
-		s.mu.Lock()
-		api := s.gameAPI
-		accountID := parseAccountID(s.id)
-		s.mu.Unlock()
-		if api != nil {
-			RunDailyRoutines(ctx, api, cfg, accountID, &s.dailyState, false)
-		}
-		s.farmOpMu.Unlock()
+		case <-ticker.C:
+			cfg := s.Config()
+			s.maybeRunDailyOnDateChange(ctx, cfg)
+			s.farmOpMu.Lock()
+			s.mu.Lock()
+			api := s.gameAPI
+			accountID := parseAccountID(s.id)
+			s.mu.Unlock()
+			if api != nil {
+				RunDailyRoutines(ctx, api, cfg, accountID, &s.dailyState, false)
+			}
+			s.farmOpMu.Unlock()
 		}
 	}
 }
@@ -2098,9 +2167,10 @@ func (s *Session) cleanup() {
 
 // AccountManager owns sessions keyed by account ID.
 type AccountManager struct {
-	hub  *hub.Hub
-	mu   sync.Mutex
-	sess map[string]*Session
+	hub         *hub.Hub
+	mu          sync.Mutex
+	sess        map[string]*Session
+	wxReconnect wxReconnectState
 }
 
 // NewAccountManager creates a manager that broadcasts via h.
@@ -2108,7 +2178,15 @@ func NewAccountManager(h *hub.Hub) *AccountManager {
 	if h == nil {
 		h = hub.New()
 	}
-	return &AccountManager{hub: h, sess: make(map[string]*Session)}
+	return &AccountManager{
+		hub:  h,
+		sess: make(map[string]*Session),
+		wxReconnect: wxReconnectState{
+			attempts: make(map[string]uint32),
+			inflight: make(map[string]struct{}),
+			gen:      make(map[string]uint64),
+		},
+	}
 }
 
 // Hub returns the status broadcast hub.
@@ -2173,8 +2251,10 @@ func (m *AccountManager) StopAccount(accountID string) error {
 	}
 	m.mu.Unlock()
 	if !ok {
+		m.clearWxReconnect(accountID)
 		return fmt.Errorf("account %s not found", accountID)
 	}
+	m.clearWxReconnect(accountID)
 	s.Stop()
 	return nil
 }

@@ -702,6 +702,7 @@ func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accou
 	}
 	out.Count = len(stolenIDs)
 	if out.Count > 0 {
+		s.markFriendStealCleared(gid)
 		out.Plants = mergeUniqueNames(
 			uniquePlantNames(plantByLand, stolenIDs),
 			plantNamesFromHarvestItems(items),
@@ -1298,7 +1299,7 @@ func shouldAbortFriendPatrol(ctx context.Context, s *Session) bool {
 
 // abortFriendPatrol stops the batch after a transport/session exit error.
 // While stopping/kicked, stay silent (bot quiesceBot); otherwise log once.
-// Fatal transport errors stop the account (no reconnect — Code is one-shot).
+// Fatal transport errors stop the account (wx-authorized accounts reconnect after a delay).
 func abortFriendPatrol(s *Session, accountID uint64, kind string, err error) {
 	if s != nil {
 		s.failTransport(err)
