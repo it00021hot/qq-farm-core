@@ -15,10 +15,13 @@ const (
 
 // Session contains all state associated with one WeChat QR login attempt.
 type Session struct {
-	Cookies     *cookiejar.Jar
-	UUID        string
-	OAuthCode   string
-	OpenID      string
-	AccessToken string
-	LoginBuffer string
+	Cookies      *cookiejar.Jar
+	UUID         string
+	OAuthCode    string
+	OpenID       string
+	AccessToken  string
+	RefreshToken string
+	LoginBuffer  string
+	ExpiresAt    int64
+	ExpiresIn    int64
 }

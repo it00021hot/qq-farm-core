@@ -3,7 +3,6 @@ package runtime
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -68,17 +67,19 @@ func (f *Facade) Start(accountID uint64) error {
 	hasWx := acc.CanWxReconnect()
 	if hasWx {
 		appendRuntimeLog(accountID, logEventLogin, "正在用应用宝授权换取新的登录码", false)
-		minted, buf, err := wxlogin.NewWxLoginService().MintGatewayCode(
+		minted, creds, err := wxlogin.NewWxLoginService().MintGatewayCode(
 			context.Background(),
-			acc.WxLoginBuffer,
-			acc.WxOpenID,
-			acc.WxAccessToken,
+			wxlogin.CredentialsFromAccount(&acc),
 			wxlogin.TargetMiniProgramID,
 		)
 		if err != nil {
-			msg := fmt.Sprintf("应用宝换码失败，请重新扫码: %v", err)
+			msg := userFacingWxAuthError(err)
 			appendRuntimeLog(accountID, logEventLogin, msg, true)
 			persistRunStatus(accountID, RunError, false)
+			if authErr, ok := err.(wxlogin.WxAuthError); ok && authErr.Kind == wxlogin.WxAuthErrorCredentialsDead {
+				handleWxAuthDead(accountID, acc.Name, msg, m)
+				return errors.New(msg)
+			}
 			m.scheduleWxReconnect(strconv.FormatUint(accountID, 10), false)
 			return errors.New(msg)
 		}
@@ -89,7 +90,7 @@ func (f *Facade) Start(accountID uint64) error {
 			m.scheduleWxReconnect(strconv.FormatUint(accountID, 10), false)
 			return errors.New(msg)
 		}
-		persistWxGatewayCredentials(accountID, minted, buf)
+		persistWxGatewayCredentials(accountID, minted, creds)
 		code = minted
 		appendRuntimeLog(accountID, logEventLogin, "换码成功，正在连接网关", false)
 	} else {
@@ -248,16 +249,3 @@ func persistAccountProfile(accountID uint64, basic *userpb.BasicInfo) {
 	_ = db.Model(&acc).Updates(updates).Error
 }
 
-func persistWxGatewayCredentials(accountID uint64, code, loginBuffer string) {
-	if accountID == 0 || strings.TrimSpace(code) == "" {
-		return
-	}
-	updates := map[string]any{
-		"code":       code,
-		"updated_at": uint(time.Now().Unix()),
-	}
-	if strings.TrimSpace(loginBuffer) != "" {
-		updates["wx_login_buffer"] = loginBuffer
-	}
-	_ = vars.DB.Model(&model.FarmAccount{}).Where("id = ?", accountID).Updates(updates).Error
-}

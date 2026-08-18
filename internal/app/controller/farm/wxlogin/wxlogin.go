@@ -15,10 +15,15 @@ type Controller struct {
 var (
 	WXLogin = &Controller{}
 	store   = farmwx.NewTaskStore()
+	quick   = farmwx.NewQuickStore()
 )
 
 type createTaskReq struct {
 	AppID string `json:"app_id"`
+}
+
+type quickConfirmReq struct {
+	RedirectURL string `json:"redirect_url"`
 }
 
 func ownerKey(ctx fiber.Ctx) string {
@@ -46,6 +51,32 @@ func (c *Controller) CreateTask(ctx fiber.Ctx) error {
 	data := task.PublicView()
 	data["qr_url"] = "/farm/wx-login/tasks/" + task.ID + "/qr"
 	return response.SuccessJSON(ctx, "", data)
+}
+
+// CreateQuickTask POST /farm/wx-login/quick-tasks
+func (c *Controller) CreateQuickTask(ctx fiber.Ctx) error {
+	session, err := quick.Create(ownerKey(ctx))
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", quick.PublicView(session))
+}
+
+// ConfirmQuickTask POST /farm/wx-login/quick-tasks/:sessionId/confirm
+func (c *Controller) ConfirmQuickTask(ctx fiber.Ctx) error {
+	var req quickConfirmReq
+	_ = ctx.Bind().Body(&req)
+	code, creds, err := quick.Confirm(ownerKey(ctx), ctx.Params("sessionId"), req.RedirectURL)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	farmwx.StorePendingAuth(code, creds.ToWxAuth())
+	return response.SuccessJSON(ctx, "", map[string]any{
+		"openid":  creds.OpenID,
+		"app_id":  farmwx.TargetMiniProgramID,
+		"code":    code,
+		"err_msg": "login:ok",
+	})
 }
 
 // QRImage GET /farm/wx-login/tasks/:taskId/qr
@@ -106,9 +137,11 @@ func (c *Controller) Code(ctx fiber.Ctx) error {
 	if task.Session != nil {
 		openid = task.Session.OpenID
 		farmwx.StorePendingAuth(code, farmwx.WxAuth{
-			OpenID:      task.Session.OpenID,
-			LoginBuffer: task.Session.LoginBuffer,
-			AccessToken: task.Session.AccessToken,
+			OpenID:       task.Session.OpenID,
+			LoginBuffer:  task.Session.LoginBuffer,
+			AccessToken:  task.Session.AccessToken,
+			RefreshToken: task.Session.RefreshToken,
+			ExpiresAt:    task.Session.ExpiresAt,
 		})
 	}
 	data := map[string]any{

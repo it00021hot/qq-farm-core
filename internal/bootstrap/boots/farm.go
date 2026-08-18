@@ -29,6 +29,7 @@ func InitFarmRuntime() {
 	farmruntime.SetManager(m)
 	farmruntime.ResetPersistedRunStatus()
 	farmruntime.ScheduleWxAuthorizedStart()
+	farmruntime.StartWxKeepalive()
 	slog.Info("Farm runtime manager ready",
 		"gateway", vars.Config.GetString("farm.gatewayUrl"),
 		"wasm", vars.Config.GetString("farm.wasmPath"),

@@ -26,6 +26,12 @@ func TestWxReconnectWaitsFiveMinutes(t *testing.T) {
 	}
 }
 
+func TestBootReconnectIsImmediate(t *testing.T) {
+	if wxReconnectDelayZh() != "5 分钟" {
+		t.Fatalf("disconnect reconnect delay changed: %q", wxReconnectDelayZh())
+	}
+}
+
 func TestPlanWxReconnectCapsAttemptsAndInflight(t *testing.T) {
 	m := NewAccountManager(nil)
 	d := m.planWxReconnect("a1")

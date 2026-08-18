@@ -20,10 +20,12 @@ type FarmAccount struct {
 	RunStatus     uint8  `gorm:"column:run_status;not null;default:0;index;comment:运行状态 0：停止 1：运行中 2：异常" json:"runStatus"`
 	LastOnlineAt  uint   `gorm:"column:last_online_at;not null;default:0;comment:最近在线Unix秒" json:"lastOnlineAt"`
 	Status        uint8  `gorm:"column:status;not null;default:1;comment:状态 1：正常 2：禁用" json:"status"`
-	WxOpenID      string `gorm:"column:wx_openid;size:128;not null;default:'';comment:应用宝openid" json:"wxOpenid,omitempty"`
-	WxLoginBuffer string `gorm:"column:wx_login_buffer;type:text;not null;default:'';comment:应用宝login_buffer" json:"-"`
-	WxAccessToken string `gorm:"column:wx_access_token;size:512;not null;default:'';comment:应用宝accesstoken" json:"-"`
-	WxAuthorized  bool   `gorm:"-" json:"wxAuthorized"`
+	WxOpenID         string `gorm:"column:wx_openid;size:128;not null;default:'';comment:应用宝openid" json:"wxOpenid,omitempty"`
+	WxLoginBuffer    string `gorm:"column:wx_login_buffer;type:text;not null;default:'';comment:应用宝login_buffer" json:"-"`
+	WxAccessToken    string `gorm:"column:wx_access_token;size:512;not null;default:'';comment:应用宝accesstoken" json:"-"`
+	WxRefreshToken   string `gorm:"column:wx_refresh_token;size:512;not null;default:'';comment:应用宝refreshtoken" json:"-"`
+	WxTokenExpiresAt int64  `gorm:"column:wx_token_expires_at;not null;default:0;comment:应用宝token过期Unix秒" json:"-"`
+	WxAuthorized     bool   `gorm:"-" json:"wxAuthorized"`
 	CreatedAt     uint   `gorm:"column:created_at;not null;comment:创建时间" json:"createdAt"`
 	UpdatedAt     uint   `gorm:"column:updated_at;not null;comment:更新时间" json:"updatedAt"`
 }
@@ -44,6 +46,14 @@ func (a *FarmAccount) CanWxReconnect() bool {
 		return false
 	}
 	return strings.EqualFold(strings.TrimSpace(a.Platform), "wx") && a.HasWxAuth()
+}
+
+// CanRefreshWxToken is true when keepalive can call pcyyb_refresh_token_auth.
+func (a *FarmAccount) CanRefreshWxToken() bool {
+	if a == nil || !a.HasWxAuth() {
+		return false
+	}
+	return strings.TrimSpace(a.WxRefreshToken) != ""
 }
 
 // FillWxAuthorized sets the API-facing authorization flag (secrets stay json:"-").

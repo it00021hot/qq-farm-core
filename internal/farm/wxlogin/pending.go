@@ -11,9 +11,11 @@ const PendingAuthTTL = 10 * time.Minute
 // WxAuth is Yingyongbao authorization that can mint one-shot gateway codes.
 // It is never returned over HTTP/IPC.
 type WxAuth struct {
-	OpenID      string
-	LoginBuffer string
-	AccessToken string
+	OpenID       string
+	LoginBuffer  string
+	AccessToken  string
+	RefreshToken string
+	ExpiresAt    int64
 }
 
 type pendingWxAuth struct {

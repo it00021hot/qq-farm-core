@@ -64,10 +64,12 @@ func applyPendingWxAuth(acc *model.FarmAccount) {
 	}
 	now := uint(time.Now().Unix())
 	updates := map[string]any{
-		"wx_openid":       auth.OpenID,
-		"wx_login_buffer": auth.LoginBuffer,
-		"wx_access_token": auth.AccessToken,
-		"updated_at":      now,
+		"wx_openid":            auth.OpenID,
+		"wx_login_buffer":      auth.LoginBuffer,
+		"wx_access_token":      auth.AccessToken,
+		"wx_refresh_token":     auth.RefreshToken,
+		"wx_token_expires_at":  auth.ExpiresAt,
+		"updated_at":           now,
 	}
 	if err := vars.DB.Model(acc).Updates(updates).Error; err != nil {
 		acc.FillWxAuthorized()
@@ -76,6 +78,8 @@ func applyPendingWxAuth(acc *model.FarmAccount) {
 	acc.WxOpenID = auth.OpenID
 	acc.WxLoginBuffer = auth.LoginBuffer
 	acc.WxAccessToken = auth.AccessToken
+	acc.WxRefreshToken = auth.RefreshToken
+	acc.WxTokenExpiresAt = auth.ExpiresAt
 	acc.UpdatedAt = now
 	acc.FillWxAuthorized()
 }

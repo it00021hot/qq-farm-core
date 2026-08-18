@@ -35,9 +35,11 @@ type farmAccount struct {
 	RunStatus     uint8  `gorm:"column:run_status;not null;default:0;index;comment:运行状态 0：停止 1：运行中 2：异常"`
 	LastOnlineAt  uint   `gorm:"column:last_online_at;not null;default:0;comment:最近在线Unix秒"`
 	Status        uint8  `gorm:"column:status;not null;default:1;comment:状态 1：正常 2：禁用"`
-	WxOpenID      string `gorm:"column:wx_openid;size:128;not null;default:'';comment:应用宝openid"`
-	WxLoginBuffer string `gorm:"column:wx_login_buffer;type:text;not null;default:'';comment:应用宝login_buffer"`
-	WxAccessToken string `gorm:"column:wx_access_token;size:512;not null;default:'';comment:应用宝accesstoken"`
+	WxOpenID         string `gorm:"column:wx_openid;size:128;not null;default:'';comment:应用宝openid"`
+	WxLoginBuffer    string `gorm:"column:wx_login_buffer;type:text;not null;default:'';comment:应用宝login_buffer"`
+	WxAccessToken    string `gorm:"column:wx_access_token;size:512;not null;default:'';comment:应用宝accesstoken"`
+	WxRefreshToken   string `gorm:"column:wx_refresh_token;size:512;not null;default:'';comment:应用宝refreshtoken"`
+	WxTokenExpiresAt int64  `gorm:"column:wx_token_expires_at;not null;default:0;comment:应用宝token过期Unix秒"`
 	CreatedAt     uint   `gorm:"column:created_at;not null;comment:创建时间"`
 	UpdatedAt     uint   `gorm:"column:updated_at;not null;comment:更新时间"`
 }

@@ -225,7 +225,7 @@ func (m *AccountManager) startWxAuthorizedAccount(accountID string, attempt uint
 	}
 }
 
-// ScheduleWxAuthorizedStart reconnects WeChat accounts that have Yingyongbao tickets after a delay.
+// ScheduleWxAuthorizedStart reconnects WeChat accounts that have Yingyongbao tickets immediately on process boot.
 func ScheduleWxAuthorizedStart() {
 	m := getManager()
 	if m == nil || vars.DB == nil {
@@ -239,14 +239,12 @@ func ScheduleWxAuthorizedStart() {
 	if len(accounts) == 0 {
 		return
 	}
-	wait := wxReconnectDelayZh()
-	slog.Info("wx-authorized accounts will reconnect after delay", "count", len(accounts), "wait", wait)
+	slog.Info("wx-authorized accounts will reconnect on boot", "count", len(accounts))
 	for i := range accounts {
 		acc := accounts[i]
-		appendRuntimeLog(acc.ID, logEventReconnect, "发现已授权微信账号，将在 "+wait+"后自动重连", false)
+		appendRuntimeLog(acc.ID, logEventReconnect, "发现已授权微信账号，正在自动重连", false)
 	}
 	go func() {
-		time.Sleep(WxReconnectDelay)
 		for i := range accounts {
 			acc := accounts[i]
 			id := strconv.FormatUint(acc.ID, 10)

@@ -7,9 +7,9 @@ import (
 
 func TestPendingAuthTakenOnce(t *testing.T) {
 	resetPendingAuthForTest()
-	StorePendingAuth("wx-code", WxAuth{OpenID: "oid", LoginBuffer: "buf", AccessToken: "tok"})
+	StorePendingAuth("wx-code", WxAuth{OpenID: "oid", LoginBuffer: "buf", AccessToken: "tok", RefreshToken: "rt", ExpiresAt: 1710000000})
 	auth, ok := TakePendingAuth("wx-code")
-	if !ok || auth.OpenID != "oid" || auth.LoginBuffer != "buf" || auth.AccessToken != "tok" {
+	if !ok || auth.OpenID != "oid" || auth.LoginBuffer != "buf" || auth.AccessToken != "tok" || auth.RefreshToken != "rt" || auth.ExpiresAt != 1710000000 {
 		t.Fatalf("got %+v ok=%v", auth, ok)
 	}
 	if _, ok := TakePendingAuth("wx-code"); ok {

@@ -36,6 +36,8 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Get("/wx-login/tasks/:taskId/status", farmwxlogin.WXLogin.Status).Name("微信扫码登录状态")
 		router.Post("/wx-login/tasks/:taskId/confirm", farmwxlogin.WXLogin.Confirm).Name("确认微信扫码登录")
 		router.Post("/wx-login/tasks/:taskId/code", farmwxlogin.WXLogin.Code).Name("获取微信登录code")
+		router.Post("/wx-login/quick-tasks", farmwxlogin.WXLogin.CreateQuickTask).Name("创建本机微信快速授权会话")
+		router.Post("/wx-login/quick-tasks/:sessionId/confirm", farmwxlogin.WXLogin.ConfirmQuickTask).Name("确认本机微信快速授权")
 
 		router.Get("/automation/detail", automation.Automation.Detail).Name("自动化配置详情")
 		router.Post("/automation/modify", automation.Automation.Modify).Name("修改自动化配置")

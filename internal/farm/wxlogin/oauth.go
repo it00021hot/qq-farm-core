@@ -23,15 +23,21 @@ import (
 const (
 	OAUTHAppID          = "wxd44977328b36e647"
 	TargetMiniProgramID = "wx5306c5978fdb76e4"
+	OAuthScope          = "snsapi_login,snsapi_runtime_pcsdk"
+	OAuthState          = "web"
+	OAuthRedirectURI    = "https://yybadaccess.3g.qq.com/pc_yyb/pcyyb_oauth?login_type=WX"
 
 	qrConnectURL         = "https://open.weixin.qq.com/connect/qrconnect"
 	qrImageBase          = "https://open.weixin.qq.com/connect/qrcode/"
 	qrPollURL            = "https://long.open.weixin.qq.com/connect/l/qrconnect"
 	callbackURL          = "https://yybadaccess.3g.qq.com/pc_yyb/pcyyb_oauth"
 	loginBufferURL       = "https://yybadaccess.3g.qq.com/pc_yyb_auth/pcyyb_get_wx_login_buffer_auth"
+	refreshTokenURL      = "https://yybadaccess.3g.qq.com/pc_yyb_auth/pcyyb_refresh_token_auth"
 	loginBufferAccessKey = "wgrdg373hy26ww2"
 	userAgent            = "Mozilla/5.0"
 )
+
+var DesktopWechatPorts = []uint16{14013, 14014, 14015, 13013, 13014, 13015}
 
 var (
 	uuidPattern    = regexp.MustCompile(`/connect/qrcode/([^"'>\s]+)`)
@@ -80,8 +86,8 @@ func (s *WxLoginService) CreateQrSession(ctx context.Context) (*Session, []byte,
 		"appid":         {OAUTHAppID},
 		"redirect_uri":  {callbackURL + "?login_type=WX"},
 		"response_type": {"code"},
-		"scope":         {"snsapi_login,snsapi_runtime_pcsdk"},
-		"state":         {"web"},
+		"scope":         {OAuthScope},
+		"state":         {OAuthState},
 		"fast_login":    {"1"},
 		"self_redirect": {"true"},
 	}
@@ -155,36 +161,114 @@ func requiredCookie(session *Session, name string) (string, error) {
 	return "", fmt.Errorf("WeChat OAuth callback did not provide %s", name)
 }
 
+func optionalCookie(session *Session, name string) string {
+	u, _ := url.Parse(callbackURL)
+	for _, cookie := range session.Cookies.Cookies(u) {
+		if cookie.Name == name {
+			return cookie.Value
+		}
+	}
+	return ""
+}
+
 // Confirm exchanges the OAuth code for a native-protocol login buffer.
 func (s *WxLoginService) Confirm(ctx context.Context, session *Session) (string, string, error) {
 	if session.OAuthCode == "" {
 		return "", "", fmt.Errorf("waiting for scan authorization")
 	}
-	params := url.Values{"login_type": {"WX"}, "code": {session.OAuthCode}, "state": {"web"}}
-	status, _, err := request(ctx, session.Cookies, callbackURL+"?"+params.Encode(), http.MethodGet, nil, nil, 35*time.Second)
-	if err != nil {
-		return "", "", err
-	}
-	if status < 200 || status >= 400 {
-		return "", "", fmt.Errorf("WeChat authorization callback failed (HTTP %d)", status)
-	}
-	openID, err := requiredCookie(session, "openid")
-	if err != nil {
-		return "", "", err
-	}
-	accessToken, err := requiredCookie(session, "accesstoken")
-	if err != nil {
-		return "", "", err
-	}
-	loginBuffer, err := s.postLoginBuffer(ctx, session.Cookies, openID, accessToken)
+	creds, err := s.ExchangeOAuthCode(ctx, session.OAuthCode)
 	if err != nil {
 		return "", "", err
 	}
 	session.Cookies, _ = cookiejar.New(nil)
-	session.OpenID = openID
-	session.AccessToken = accessToken
-	session.LoginBuffer = loginBuffer
-	return openID, loginBuffer, nil
+	session.OpenID = creds.OpenID
+	session.AccessToken = creds.AccessToken
+	session.RefreshToken = creds.RefreshToken
+	session.LoginBuffer = creds.LoginBuffer
+	session.ExpiresAt = creds.ExpiresAt
+	session.ExpiresIn = creds.ExpiresIn
+	return creds.OpenID, creds.LoginBuffer, nil
+}
+
+// ExchangeOAuthCode exchanges a WeChat OAuth code for Yingyongbao credentials.
+func (s *WxLoginService) ExchangeOAuthCode(ctx context.Context, oauthCode string) (YybCredentials, error) {
+	code := strings.TrimSpace(oauthCode)
+	if code == "" {
+		return YybCredentials{}, wxAuthDead("quick authorization code is missing")
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return YybCredentials{}, wxAuthTransient(err.Error())
+	}
+	params := url.Values{"login_type": {"WX"}, "code": {code}, "state": {OAuthState}}
+	status, _, err := request(ctx, jar, callbackURL+"?"+params.Encode(), http.MethodGet, nil, nil, 35*time.Second)
+	if err != nil {
+		return YybCredentials{}, wxAuthTransient(err.Error())
+	}
+	if status < 200 || status >= 400 {
+		return YybCredentials{}, wxAuthTransient(fmt.Sprintf("WeChat authorization callback failed (HTTP %d)", status))
+	}
+	openID, err := requiredCookie(&Session{Cookies: jar}, "openid")
+	if err != nil {
+		return YybCredentials{}, wxAuthDead(err.Error())
+	}
+	accessToken, err := requiredCookie(&Session{Cookies: jar}, "accesstoken")
+	if err != nil {
+		return YybCredentials{}, wxAuthDead(err.Error())
+	}
+	refreshToken := optionalCookie(&Session{Cookies: jar}, "refreshtoken")
+	expiresIn := DefaultExpiresIn
+	if raw := optionalCookie(&Session{Cookies: jar}, "expires_in"); raw != "" {
+		if parsed, parseErr := strconv.ParseInt(raw, 10, 64); parseErr == nil && parsed > 0 {
+			expiresIn = parsed
+		}
+	}
+	creds := YybCredentials{
+		OpenID:       openID,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresAt:    time.Now().Unix() + expiresIn,
+		ExpiresIn:    expiresIn,
+	}
+	loginBuffer, err := s.postLoginBuffer(ctx, jar, &creds)
+	if err != nil {
+		return YybCredentials{}, err
+	}
+	creds.LoginBuffer = loginBuffer
+	return creds, nil
+}
+
+// ParseQuickRedirectURL validates a desktop WeChat fast_login redirect and extracts the OAuth code.
+func ParseQuickRedirectURL(raw string) (string, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", wxAuthDead("invalid quick authorization redirect")
+	}
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return "", wxAuthDead("invalid quick authorization redirect")
+	}
+	if parsed.Scheme != "https" {
+		return "", wxAuthDead("invalid quick authorization redirect")
+	}
+	if parsed.Hostname() != "yybadaccess.3g.qq.com" {
+		return "", wxAuthDead("invalid quick authorization redirect")
+	}
+	if parsed.Port() != "" || parsed.User != nil {
+		return "", wxAuthDead("invalid quick authorization redirect")
+	}
+	if parsed.Path != "/pc_yyb/pcyyb_oauth" {
+		return "", wxAuthDead("invalid quick authorization redirect")
+	}
+	q := parsed.Query()
+	if q.Get("login_type") != "WX" || q.Get("state") != OAuthState {
+		return "", wxAuthDead("invalid quick authorization state")
+	}
+	code := strings.TrimSpace(q.Get("code"))
+	if code == "" || len(code) > 2048 {
+		return "", wxAuthDead("quick authorization code is missing")
+	}
+	return code, nil
 }
 
 // RefreshLoginBuffer exchanges a stored Yingyongbao accesstoken for a new login_buffer.
@@ -192,63 +276,129 @@ func (s *WxLoginService) RefreshLoginBuffer(ctx context.Context, openID, accessT
 	openID = strings.TrimSpace(openID)
 	accessToken = strings.TrimSpace(accessToken)
 	if openID == "" || accessToken == "" {
-		return "", fmt.Errorf("Missing Yingyongbao authorization")
+		return "", wxAuthDead("Missing Yingyongbao authorization")
 	}
-	return s.postLoginBuffer(ctx, nil, openID, accessToken)
+	creds := YybCredentials{OpenID: openID, AccessToken: accessToken}
+	return s.postLoginBuffer(ctx, nil, &creds)
 }
 
-// MintGatewayCode mints a one-shot wx.login code from login_buffer.
-// If minting fails and accesstoken is present, the buffer is refreshed once and mint is retried.
-func (s *WxLoginService) MintGatewayCode(ctx context.Context, loginBuffer, openID, accessToken, appID string) (code, newBuffer string, err error) {
-	loginBuffer = strings.TrimSpace(loginBuffer)
-	if loginBuffer == "" {
-		return "", "", fmt.Errorf("WeChat login session has not been confirmed")
+// RefreshCredentials renews access/refresh tokens via pcyyb_refresh_token_auth.
+func (s *WxLoginService) RefreshCredentials(ctx context.Context, creds YybCredentials) (YybCredentials, error) {
+	if strings.TrimSpace(creds.RefreshToken) == "" {
+		return YybCredentials{}, wxAuthDead("missing refresh token")
 	}
-	if strings.TrimSpace(appID) == "" {
-		appID = TargetMiniProgramID
+	if strings.TrimSpace(creds.OpenID) == "" || strings.TrimSpace(creds.AccessToken) == "" {
+		return YybCredentials{}, wxAuthDead("Missing Yingyongbao authorization")
 	}
-	code, err = getNativeWxLoginCode(ctx, loginBuffer, appID)
-	if err == nil {
-		return code, loginBuffer, nil
-	}
-	if strings.TrimSpace(openID) == "" || strings.TrimSpace(accessToken) == "" {
-		return "", loginBuffer, err
-	}
-	slog.Warn("login_buffer mint failed, refreshing via Yingyongbao", "err", err)
-	newBuffer, refreshErr := s.RefreshLoginBuffer(ctx, openID, accessToken)
-	if refreshErr != nil {
-		return "", loginBuffer, fmt.Errorf("%v; refresh login_buffer: %w", err, refreshErr)
-	}
-	code, err = getNativeWxLoginCode(ctx, newBuffer, appID)
+	payload, err := refreshTokenPayload(creds)
 	if err != nil {
-		return "", newBuffer, err
-	}
-	return code, newBuffer, nil
-}
-
-func (s *WxLoginService) postLoginBuffer(ctx context.Context, jar *cookiejar.Jar, openID, accessToken string) (string, error) {
-	payload, err := loginBufferPayload(openID, accessToken)
-	if err != nil {
-		return "", err
+		return YybCredentials{}, wxAuthTransient(err.Error())
 	}
 	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	nonce, err := loginBufferNonce()
 	if err != nil {
-		return "", err
+		return YybCredentials{}, wxAuthTransient(err.Error())
 	}
-	headers := http.Header{
-		"Content-Type":          {"application/json"},
-		"Ual-Access-Businessid": {"pc_yyb_auth"},
-		"Ual-Access-Timestamp":  {timestamp},
-		"Ual-Access-Nonce":      {nonce},
-		"Ual-Access-Signature":  {loginBufferSignature(payload, timestamp, nonce)},
+	headers := signedJSONHeaders(timestamp, nonce, loginBufferSignature(payload, timestamp, nonce))
+	status, data, err := request(ctx, nil, refreshTokenURL, http.MethodPost, []byte(payload), headers, 35*time.Second)
+	if err != nil {
+		return YybCredentials{}, wxAuthTransient(err.Error())
+	}
+	if status < 200 || status >= 300 {
+		return YybCredentials{}, wxAuthTransient(fmt.Sprintf("Unable to refresh Yingyongbao token (HTTP %d)", status))
+	}
+	return parseRefreshTokenJSON(data, creds)
+}
+
+// RefreshCredentialsAndBuffer renews tokens when due and fetches a fresh login_buffer.
+func (s *WxLoginService) RefreshCredentialsAndBuffer(ctx context.Context, creds YybCredentials) (YybCredentials, error) {
+	current := creds
+	if strings.TrimSpace(current.RefreshToken) != "" && current.TokenDueForRefresh(0) {
+		refreshed, err := s.RefreshCredentials(ctx, current)
+		if err != nil {
+			return YybCredentials{}, err
+		}
+		current = refreshed
+	}
+	loginBuffer, err := s.postLoginBuffer(ctx, nil, &current)
+	if err != nil {
+		return YybCredentials{}, err
+	}
+	current.LoginBuffer = loginBuffer
+	return current, nil
+}
+
+// MintGatewayCode mints a one-shot wx.login code from login_buffer.
+func (s *WxLoginService) MintGatewayCode(ctx context.Context, creds YybCredentials, appID string) (string, YybCredentials, error) {
+	current := creds
+	if strings.TrimSpace(current.LoginBuffer) == "" {
+		return "", current, wxAuthDead("Missing Yingyongbao authorization")
+	}
+	if strings.TrimSpace(appID) == "" {
+		appID = TargetMiniProgramID
+	}
+	code, err := getNativeWxLoginCode(ctx, current.LoginBuffer, appID)
+	if err == nil {
+		return code, current, nil
+	}
+	slog.Warn("login_buffer mint failed, refreshing via Yingyongbao", "err", err)
+	if strings.TrimSpace(current.RefreshToken) != "" {
+		refreshed, refreshErr := s.RefreshCredentialsAndBuffer(ctx, current)
+		if refreshErr != nil {
+			return "", current, refreshErr
+		}
+		current = refreshed
+	} else if strings.TrimSpace(current.OpenID) != "" && strings.TrimSpace(current.AccessToken) != "" {
+		buf, refreshErr := s.RefreshLoginBuffer(ctx, current.OpenID, current.AccessToken)
+		if refreshErr != nil {
+			return "", current, mapNativeMintErr(err, refreshErr)
+		}
+		current.LoginBuffer = buf
+	} else {
+		return "", current, mapNativeMintErr(err, nil)
+	}
+	code, err = getNativeWxLoginCode(ctx, current.LoginBuffer, appID)
+	if err != nil {
+		return "", current, mapNativeMintErr(err, nil)
+	}
+	return code, current, nil
+}
+
+func (s *WxLoginService) postLoginBuffer(ctx context.Context, jar *cookiejar.Jar, creds *YybCredentials) (string, error) {
+	if creds == nil || strings.TrimSpace(creds.OpenID) == "" || strings.TrimSpace(creds.AccessToken) == "" {
+		return "", wxAuthDead("Missing Yingyongbao authorization")
+	}
+	if jar == nil {
+		var err error
+		jar, err = cookiejar.New(nil)
+		if err != nil {
+			return "", wxAuthTransient(err.Error())
+		}
+	}
+	payload, err := loginBufferPayload(creds.OpenID, creds.AccessToken)
+	if err != nil {
+		return "", wxAuthTransient(err.Error())
+	}
+	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
+	nonce, err := loginBufferNonce()
+	if err != nil {
+		return "", wxAuthTransient(err.Error())
+	}
+	headers := signedJSONHeaders(timestamp, nonce, loginBufferSignature(payload, timestamp, nonce))
+	if jar != nil && strings.TrimSpace(creds.RefreshToken) != "" {
+		u, _ := url.Parse(callbackURL)
+		jar.SetCookies(u, []*http.Cookie{
+			{Name: "openid", Value: creds.OpenID},
+			{Name: "accesstoken", Value: creds.AccessToken},
+			{Name: "refreshtoken", Value: creds.RefreshToken},
+		})
 	}
 	status, data, err := request(ctx, jar, loginBufferURL, http.MethodPost, []byte(payload), headers, 35*time.Second)
 	if err != nil {
-		return "", err
+		return "", wxAuthTransient(err.Error())
 	}
 	if status < 200 || status >= 300 {
-		return "", fmt.Errorf("unable to obtain WeChat login buffer (HTTP %d)", status)
+		return "", wxAuthTransient(fmt.Sprintf("unable to obtain WeChat login buffer (HTTP %d)", status))
 	}
 	return parseLoginBufferJSON(data)
 }
@@ -266,6 +416,29 @@ func loginBufferPayload(openID, accessToken string) (string, error) {
 		return "", err
 	}
 	return string(payload), nil
+}
+
+func refreshTokenPayload(creds YybCredentials) (string, error) {
+	payload, err := json.Marshal(map[string]any{"userInfo": map[string]any{
+		"openId":       creds.OpenID,
+		"refreshToken": creds.RefreshToken,
+		"accessToken":  creds.AccessToken,
+		"loginType":    "WX",
+	}})
+	if err != nil {
+		return "", err
+	}
+	return string(payload), nil
+}
+
+func signedJSONHeaders(timestamp, nonce, signature string) http.Header {
+	return http.Header{
+		"Content-Type":          {"application/json"},
+		"Ual-Access-Businessid": {"pc_yyb_auth"},
+		"Ual-Access-Timestamp":  {timestamp},
+		"Ual-Access-Nonce":      {nonce},
+		"Ual-Access-Signature":  {signature},
+	}
 }
 
 func loginBufferNonce() (string, error) {
@@ -293,12 +466,111 @@ func parseLoginBufferJSON(data []byte) (string, error) {
 		} `json:"ext_info"`
 	}
 	if err := json.Unmarshal(data, &result); err != nil {
-		return "", err
+		return "", wxAuthTransient(fmt.Sprintf("JSON parse: %v", err))
 	}
 	if result.Code != 0 || len(result.ExtInfo.ListS.LoginBuffer.Value) == 0 || result.ExtInfo.ListS.LoginBuffer.Value[0] == "" {
-		return "", fmt.Errorf("WeChat login buffer response is invalid")
+		return "", wxAuthDead("WeChat login buffer response is invalid")
 	}
 	return result.ExtInfo.ListS.LoginBuffer.Value[0], nil
+}
+
+func parseRefreshTokenJSON(data []byte, base YybCredentials) (YybCredentials, error) {
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		return YybCredentials{}, wxAuthTransient(fmt.Sprintf("JSON parse: %v", err))
+	}
+	code := int64FromAny(result["code"])
+	if code != 0 {
+		msg := stringFromAny(result["msg"])
+		if msg == "" {
+			msg = "refresh failed"
+		}
+		return YybCredentials{}, wxAuthDead(fmt.Sprintf("refresh failed: code=%d msg=%s", code, msg))
+	}
+	info, _ := result["user_info"].(map[string]any)
+	if info == nil {
+		info, _ = result["userInfo"].(map[string]any)
+	}
+	accessToken := firstString(info, "access_token", "accessToken")
+	if accessToken == "" {
+		return YybCredentials{}, wxAuthDead("refresh response missing access_token")
+	}
+	refreshToken := firstString(info, "refresh_token", "refreshToken")
+	if refreshToken == "" {
+		refreshToken = base.RefreshToken
+	}
+	expiresIn := int64FromAny(info["expires_in"])
+	if expiresIn <= 0 {
+		expiresIn = int64FromAny(info["expiresIn"])
+	}
+	if expiresIn <= 0 {
+		if base.ExpiresIn > 0 {
+			expiresIn = base.ExpiresIn
+		} else {
+			expiresIn = DefaultExpiresIn
+		}
+	}
+	return YybCredentials{
+		OpenID:       base.OpenID,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		LoginBuffer:  base.LoginBuffer,
+		ExpiresAt:    time.Now().Unix() + expiresIn,
+		ExpiresIn:    expiresIn,
+	}, nil
+}
+
+func firstString(m map[string]any, keys ...string) string {
+	if m == nil {
+		return ""
+	}
+	for _, key := range keys {
+		if s, ok := m[key].(string); ok && strings.TrimSpace(s) != "" {
+			return s
+		}
+	}
+	return ""
+}
+
+func int64FromAny(v any) int64 {
+	switch x := v.(type) {
+	case int:
+		return int64(x)
+	case int64:
+		return x
+	case float64:
+		return int64(x)
+	case json.Number:
+		n, _ := x.Int64()
+		return n
+	default:
+		return 0
+	}
+}
+
+func stringFromAny(v any) string {
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
+}
+
+func mapNativeMintErr(first error, refreshErr error) WxAuthError {
+	msg := ""
+	if first != nil {
+		msg = first.Error()
+	}
+	if refreshErr != nil {
+		if msg != "" {
+			msg += "; refresh login_buffer: " + refreshErr.Error()
+		} else {
+			msg = refreshErr.Error()
+		}
+	}
+	if msg == "" {
+		msg = "mint gateway code failed"
+	}
+	return WxAuthError{Kind: classifyYybMessage(msg), Message: msg}
 }
 
 // IssueCode requests a wx.login code for appID over WeChat's native protocol.
@@ -318,5 +590,8 @@ func (s *WxLoginService) Destroy(session *Session) {
 	session.OAuthCode = ""
 	session.OpenID = ""
 	session.AccessToken = ""
+	session.RefreshToken = ""
 	session.LoginBuffer = ""
+	session.ExpiresAt = 0
+	session.ExpiresIn = 0
 }
