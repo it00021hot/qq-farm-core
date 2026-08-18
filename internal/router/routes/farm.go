@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"github.com/gofiber/contrib/v3/websocket"
+	"github.com/gofiber/fiber/v3"
 	"github.com/it00021hot/qq-farm-core/internal/app/controller/farm/account"
 	"github.com/it00021hot/qq-farm-core/internal/app/controller/farm/activity"
 	"github.com/it00021hot/qq-farm-core/internal/app/controller/farm/analytics"
@@ -15,8 +17,6 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/app/controller/farm/status"
 	farmws "github.com/it00021hot/qq-farm-core/internal/app/controller/farm/ws"
 	farmwxlogin "github.com/it00021hot/qq-farm-core/internal/app/controller/farm/wxlogin"
-	"github.com/gofiber/contrib/v3/websocket"
-	"github.com/gofiber/fiber/v3"
 )
 
 // InitFarmGroup 农场业务
@@ -37,6 +37,8 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Post("/wx-login/tasks/:taskId/confirm", farmwxlogin.WXLogin.Confirm).Name("确认微信扫码登录")
 		router.Post("/wx-login/tasks/:taskId/code", farmwxlogin.WXLogin.Code).Name("获取微信登录code")
 		router.Post("/wx-login/quick-tasks", farmwxlogin.WXLogin.CreateQuickTask).Name("创建本机微信快速授权会话")
+		router.Post("/wx-login/quick-tasks/:sessionId/detect", farmwxlogin.WXLogin.DetectQuickTask).Name("探测本机微信")
+		router.Post("/wx-login/quick-tasks/:sessionId/authorize", farmwxlogin.WXLogin.AuthorizeQuickTask).Name("本机微信确认授权")
 		router.Post("/wx-login/quick-tasks/:sessionId/confirm", farmwxlogin.WXLogin.ConfirmQuickTask).Name("确认本机微信快速授权")
 
 		router.Get("/automation/detail", automation.Automation.Detail).Name("自动化配置详情")

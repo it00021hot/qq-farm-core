@@ -59,6 +59,31 @@ func (s *QuickStore) Take(owner, sessionID string) (*QuickSession, error) {
 	return session, nil
 }
 
+func (s *QuickStore) Peek(owner, sessionID string) (*QuickSession, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.pruneLocked(time.Now())
+	session := s.sessions[sessionID]
+	if session == nil || session.Owner != owner {
+		return nil, fmt.Errorf("Quick login session not found or expired")
+	}
+	return session, nil
+}
+
+func (s *QuickStore) Detect(ctx context.Context, owner, sessionID string) (*LocalWechatProfile, error) {
+	if _, err := s.Peek(owner, sessionID); err != nil {
+		return nil, err
+	}
+	return s.svc.DetectDesktopWechat(ctx)
+}
+
+func (s *QuickStore) Authorize(ctx context.Context, owner, sessionID string, port uint16, authorizeUUID string, x, y int) (string, error) {
+	if _, err := s.Peek(owner, sessionID); err != nil {
+		return "", err
+	}
+	return s.svc.AuthorizeDesktopWechat(ctx, port, authorizeUUID, x, y)
+}
+
 func (s *QuickStore) Confirm(owner, sessionID, redirectURL string) (string, YybCredentials, error) {
 	if _, err := s.Take(owner, sessionID); err != nil {
 		return "", YybCredentials{}, err
