@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	DefaultExpiresIn        int64 = 7200
-	WxKeepaliveInterval           = 30 * time.Minute
-	WxKeepaliveAheadSecs    int64 = 45 * 60
+	DefaultExpiresIn         int64 = 7200
+	WxKeepaliveInterval            = 30 * time.Minute
+	WxKeepaliveAheadSecs     int64 = 45 * 60
+	WxRefreshTokenRescanSecs int64 = 25 * 24 * 60 * 60
 )
 
 // WxAuthErrorKind classifies Yingyongbao refresh/mint failures.
@@ -42,12 +43,13 @@ func wxAuthTransient(msg string) WxAuthError {
 
 // YybCredentials is the persisted Yingyongbao ticket bundle.
 type YybCredentials struct {
-	OpenID       string
-	AccessToken  string
-	RefreshToken string
-	LoginBuffer  string
-	ExpiresAt    int64
-	ExpiresIn    int64
+	OpenID                 string
+	AccessToken            string
+	RefreshToken           string
+	LoginBuffer            string
+	ExpiresAt              int64
+	ExpiresIn              int64
+	RefreshTokenObservedAt int64
 }
 
 func (c YybCredentials) TokenDueForRefresh(aheadSecs int64) bool {
@@ -68,6 +70,32 @@ func (c YybCredentials) ToWxAuth() WxAuth {
 		RefreshToken: c.RefreshToken,
 		ExpiresAt:    c.ExpiresAt,
 	}
+}
+
+// ApplyNewRefreshToken keeps observed_at unless WeChat returns a different refresh_token.
+func (c YybCredentials) ApplyNewRefreshToken(newRefresh string, now int64) YybCredentials {
+	newRefresh = strings.TrimSpace(newRefresh)
+	if newRefresh != "" && newRefresh != c.RefreshToken {
+		c.RefreshToken = newRefresh
+		c.RefreshTokenObservedAt = now
+	}
+	return c.EnsureObservedAt(now)
+}
+
+// EnsureObservedAt starts the refresh_token clock on first persist.
+func (c YybCredentials) EnsureObservedAt(now int64) YybCredentials {
+	if strings.TrimSpace(c.RefreshToken) != "" && c.RefreshTokenObservedAt <= 0 {
+		c.RefreshTokenObservedAt = now
+	}
+	return c
+}
+
+// RescanRecommended is true after ~25 days on the same refresh_token.
+func RescanRecommended(refreshToken string, observedAt, now int64) bool {
+	if strings.TrimSpace(refreshToken) == "" || observedAt <= 0 {
+		return false
+	}
+	return now-observedAt >= WxRefreshTokenRescanSecs
 }
 
 func classifyYybMessage(msg string) WxAuthErrorKind {

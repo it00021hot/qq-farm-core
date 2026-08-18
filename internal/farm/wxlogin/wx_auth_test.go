@@ -36,8 +36,11 @@ func TestParseQuickRedirectURLRejectsEmptyCode(t *testing.T) {
 
 func TestTokenDueForRefresh(t *testing.T) {
 	c := YybCredentials{ExpiresAt: time.Now().Unix() + 1800}
+	if c.TokenDueForRefresh(0) {
+		t.Fatal("token with 30m left should not refresh when ahead=0")
+	}
 	if !c.TokenDueForRefresh(WxKeepaliveAheadSecs) {
-		t.Fatal("token within ahead window should refresh")
+		t.Fatal("token with 30m left should refresh under 45m keepalive window")
 	}
 	c.ExpiresAt = time.Now().Unix() + 7200
 	if c.TokenDueForRefresh(WxKeepaliveAheadSecs) {
@@ -46,6 +49,19 @@ func TestTokenDueForRefresh(t *testing.T) {
 	c.ExpiresAt = 0
 	if !c.TokenDueForRefresh(0) {
 		t.Fatal("unknown expiry should refresh")
+	}
+}
+
+func TestRescanRecommended(t *testing.T) {
+	now := time.Now().Unix()
+	if RescanRecommended("rt", now-24*24*60*60, now) {
+		t.Fatal("24d should not recommend")
+	}
+	if !RescanRecommended("rt", now-26*24*60*60, now) {
+		t.Fatal("26d should recommend")
+	}
+	if RescanRecommended("", now-26*24*60*60, now) {
+		t.Fatal("empty refresh should not recommend")
 	}
 }
 

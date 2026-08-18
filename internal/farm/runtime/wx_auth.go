@@ -61,21 +61,8 @@ func persistWxGatewayCredentials(accountID uint64, code string, creds wxlogin.Yy
 	if accountID == 0 || strings.TrimSpace(code) == "" {
 		return
 	}
-	updates := map[string]any{
-		"code":       code,
-		"updated_at": uint(time.Now().Unix()),
-	}
-	if strings.TrimSpace(creds.LoginBuffer) != "" {
-		updates["wx_login_buffer"] = creds.LoginBuffer
-	}
-	if strings.TrimSpace(creds.AccessToken) != "" {
-		updates["wx_access_token"] = creds.AccessToken
-	}
-	if strings.TrimSpace(creds.RefreshToken) != "" {
-		updates["wx_refresh_token"] = creds.RefreshToken
-	}
-	if creds.ExpiresAt > 0 {
-		updates["wx_token_expires_at"] = creds.ExpiresAt
-	}
+	now := uint(time.Now().Unix())
+	updates := wxlogin.CredentialPersistUpdates(creds, now)
+	updates["code"] = code
 	_ = vars.DB.Model(&model.FarmAccount{}).Where("id = ?", accountID).Updates(updates).Error
 }

@@ -63,23 +63,25 @@ func applyPendingWxAuth(acc *model.FarmAccount) {
 		return
 	}
 	now := uint(time.Now().Unix())
-	updates := map[string]any{
-		"wx_openid":            auth.OpenID,
-		"wx_login_buffer":      auth.LoginBuffer,
-		"wx_access_token":      auth.AccessToken,
-		"wx_refresh_token":     auth.RefreshToken,
-		"wx_token_expires_at":  auth.ExpiresAt,
-		"updated_at":           now,
-	}
+	creds := farmwx.YybCredentials{
+		OpenID:       auth.OpenID,
+		LoginBuffer:  auth.LoginBuffer,
+		AccessToken:  auth.AccessToken,
+		RefreshToken: auth.RefreshToken,
+		ExpiresAt:    auth.ExpiresAt,
+	}.EnsureObservedAt(int64(now))
+	updates := farmwx.CredentialPersistUpdates(creds, now)
+	updates["wx_openid"] = auth.OpenID
 	if err := vars.DB.Model(acc).Updates(updates).Error; err != nil {
 		acc.FillWxAuthorized()
 		return
 	}
 	acc.WxOpenID = auth.OpenID
-	acc.WxLoginBuffer = auth.LoginBuffer
-	acc.WxAccessToken = auth.AccessToken
-	acc.WxRefreshToken = auth.RefreshToken
-	acc.WxTokenExpiresAt = auth.ExpiresAt
+	acc.WxLoginBuffer = creds.LoginBuffer
+	acc.WxAccessToken = creds.AccessToken
+	acc.WxRefreshToken = creds.RefreshToken
+	acc.WxTokenExpiresAt = creds.ExpiresAt
+	acc.WxRefreshTokenObservedAt = creds.RefreshTokenObservedAt
 	acc.UpdatedAt = now
 	acc.FillWxAuthorized()
 }

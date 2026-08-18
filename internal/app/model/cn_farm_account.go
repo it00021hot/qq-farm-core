@@ -1,33 +1,38 @@
 package model
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 const TableNameFarmAccount = "cn_farm_account"
 
 // FarmAccount 农场挂机账号
 type FarmAccount struct {
-	ID            uint64 `gorm:"column:id;primaryKey;autoIncrement;comment:主键ID" json:"id"`
-	Name          string `gorm:"column:name;size:64;not null;default:'';comment:显示名称" json:"name"`
-	Code          string `gorm:"column:code;size:512;not null;default:'';uniqueIndex:uk_farm_account_code;comment:网关登录Code(一次性)" json:"code"`
-	Platform      string `gorm:"column:platform;size:32;not null;default:'qq';comment:平台 qq/wx" json:"platform"`
-	LoginOS       string `gorm:"column:login_os;size:64;not null;default:'';comment:登录URL中的os" json:"loginOs"`
-	ClientVer     string `gorm:"column:client_ver;size:64;not null;default:'';comment:登录URL中的ver" json:"clientVer"`
-	Uin           string `gorm:"column:uin;size:32;not null;default:'';index;comment:UIN" json:"uin"`
-	QQ            string `gorm:"column:qq;size:32;not null;default:'';comment:QQ号" json:"qq"`
-	Avatar        string `gorm:"column:avatar;size:512;not null;default:'';comment:头像URL" json:"avatar"`
-	Username      string `gorm:"column:username;size:64;not null;default:'';comment:归属用户名(兼容)" json:"username"`
-	Remark        string `gorm:"column:remark;size:255;not null;default:'';comment:备注" json:"remark"`
-	RunStatus     uint8  `gorm:"column:run_status;not null;default:0;index;comment:运行状态 0：停止 1：运行中 2：异常" json:"runStatus"`
-	LastOnlineAt  uint   `gorm:"column:last_online_at;not null;default:0;comment:最近在线Unix秒" json:"lastOnlineAt"`
-	Status        uint8  `gorm:"column:status;not null;default:1;comment:状态 1：正常 2：禁用" json:"status"`
-	WxOpenID         string `gorm:"column:wx_openid;size:128;not null;default:'';comment:应用宝openid" json:"wxOpenid,omitempty"`
-	WxLoginBuffer    string `gorm:"column:wx_login_buffer;type:text;not null;default:'';comment:应用宝login_buffer" json:"-"`
-	WxAccessToken    string `gorm:"column:wx_access_token;size:512;not null;default:'';comment:应用宝accesstoken" json:"-"`
-	WxRefreshToken   string `gorm:"column:wx_refresh_token;size:512;not null;default:'';comment:应用宝refreshtoken" json:"-"`
-	WxTokenExpiresAt int64  `gorm:"column:wx_token_expires_at;not null;default:0;comment:应用宝token过期Unix秒" json:"-"`
-	WxAuthorized     bool   `gorm:"-" json:"wxAuthorized"`
-	CreatedAt     uint   `gorm:"column:created_at;not null;comment:创建时间" json:"createdAt"`
-	UpdatedAt     uint   `gorm:"column:updated_at;not null;comment:更新时间" json:"updatedAt"`
+	ID                       uint64 `gorm:"column:id;primaryKey;autoIncrement;comment:主键ID" json:"id"`
+	Name                     string `gorm:"column:name;size:64;not null;default:'';comment:显示名称" json:"name"`
+	Code                     string `gorm:"column:code;size:512;not null;default:'';uniqueIndex:uk_farm_account_code;comment:网关登录Code(一次性)" json:"code"`
+	Platform                 string `gorm:"column:platform;size:32;not null;default:'qq';comment:平台 qq/wx" json:"platform"`
+	LoginOS                  string `gorm:"column:login_os;size:64;not null;default:'';comment:登录URL中的os" json:"loginOs"`
+	ClientVer                string `gorm:"column:client_ver;size:64;not null;default:'';comment:登录URL中的ver" json:"clientVer"`
+	Uin                      string `gorm:"column:uin;size:32;not null;default:'';index;comment:UIN" json:"uin"`
+	QQ                       string `gorm:"column:qq;size:32;not null;default:'';comment:QQ号" json:"qq"`
+	Avatar                   string `gorm:"column:avatar;size:512;not null;default:'';comment:头像URL" json:"avatar"`
+	Username                 string `gorm:"column:username;size:64;not null;default:'';comment:归属用户名(兼容)" json:"username"`
+	Remark                   string `gorm:"column:remark;size:255;not null;default:'';comment:备注" json:"remark"`
+	RunStatus                uint8  `gorm:"column:run_status;not null;default:0;index;comment:运行状态 0：停止 1：运行中 2：异常" json:"runStatus"`
+	LastOnlineAt             uint   `gorm:"column:last_online_at;not null;default:0;comment:最近在线Unix秒" json:"lastOnlineAt"`
+	Status                   uint8  `gorm:"column:status;not null;default:1;comment:状态 1：正常 2：禁用" json:"status"`
+	WxOpenID                 string `gorm:"column:wx_openid;size:128;not null;default:'';comment:应用宝openid" json:"wxOpenid,omitempty"`
+	WxLoginBuffer            string `gorm:"column:wx_login_buffer;type:text;not null;default:'';comment:应用宝login_buffer" json:"-"`
+	WxAccessToken            string `gorm:"column:wx_access_token;size:512;not null;default:'';comment:应用宝accesstoken" json:"-"`
+	WxRefreshToken           string `gorm:"column:wx_refresh_token;size:512;not null;default:'';comment:应用宝refreshtoken" json:"-"`
+	WxTokenExpiresAt         int64  `gorm:"column:wx_token_expires_at;not null;default:0;comment:应用宝token过期Unix秒" json:"-"`
+	WxRefreshTokenObservedAt int64  `gorm:"column:wx_refresh_token_observed_at;not null;default:0;comment:refresh_token首次观察Unix秒" json:"-"`
+	WxAuthorized             bool   `gorm:"-" json:"wxAuthorized"`
+	WxRescanRecommended      bool   `gorm:"-" json:"wxRescanRecommended"`
+	CreatedAt                uint   `gorm:"column:created_at;not null;comment:创建时间" json:"createdAt"`
+	UpdatedAt                uint   `gorm:"column:updated_at;not null;comment:更新时间" json:"updatedAt"`
 }
 
 func (*FarmAccount) TableName() string { return TableNameFarmAccount }
@@ -56,10 +61,14 @@ func (a *FarmAccount) CanRefreshWxToken() bool {
 	return strings.TrimSpace(a.WxRefreshToken) != ""
 }
 
-// FillWxAuthorized sets the API-facing authorization flag (secrets stay json:"-").
+// FillWxAuthorized sets API-facing authorization flags (secrets stay json:"-").
 func (a *FarmAccount) FillWxAuthorized() {
 	if a == nil {
 		return
 	}
 	a.WxAuthorized = a.HasWxAuth()
+	a.WxRescanRecommended = a.HasWxAuth() &&
+		strings.TrimSpace(a.WxRefreshToken) != "" &&
+		a.WxRefreshTokenObservedAt > 0 &&
+		time.Now().Unix()-a.WxRefreshTokenObservedAt >= 25*24*60*60
 }

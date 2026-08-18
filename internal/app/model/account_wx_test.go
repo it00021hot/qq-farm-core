@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestHasWxAuth(t *testing.T) {
@@ -50,11 +51,11 @@ func TestCanRefreshWxToken(t *testing.T) {
 
 func TestFarmAccountJSONRedactsWxSecrets(t *testing.T) {
 	acc := FarmAccount{
-		ID:            1,
-		Name:          "n",
-		Code:          "one-shot",
-		Platform:      "wx",
-		WxOpenID:      "oid",
+		ID:               1,
+		Name:             "n",
+		Code:             "one-shot",
+		Platform:         "wx",
+		WxOpenID:         "oid",
 		WxLoginBuffer:    "secret-buf",
 		WxAccessToken:    "secret-tok",
 		WxRefreshToken:   "secret-rt",
@@ -84,5 +85,24 @@ func TestFarmAccountJSONRedactsWxSecrets(t *testing.T) {
 	}
 	if m["wxAuthorized"] != true {
 		t.Fatalf("wxAuthorized=%v", m["wxAuthorized"])
+	}
+	if _, ok := m["wxRescanRecommended"]; !ok {
+		t.Fatalf("missing wxRescanRecommended: %s", s)
+	}
+	if strings.Contains(s, "wx_refresh_token_observed") || strings.Contains(s, "wxRefreshTokenObserved") {
+		t.Fatalf("observed_at leaked: %s", s)
+	}
+}
+
+func TestFillWxAuthorizedRescanRecommended(t *testing.T) {
+	acc := FarmAccount{WxLoginBuffer: "buf", WxRefreshToken: "rt", WxRefreshTokenObservedAt: time.Now().Unix() - 26*24*60*60}
+	acc.FillWxAuthorized()
+	if !acc.WxAuthorized || !acc.WxRescanRecommended {
+		t.Fatalf("authorized=%v rescan=%v", acc.WxAuthorized, acc.WxRescanRecommended)
+	}
+	acc.WxRefreshTokenObservedAt = time.Now().Unix()
+	acc.FillWxAuthorized()
+	if acc.WxRescanRecommended {
+		t.Fatal("fresh token should not recommend rescan")
 	}
 }

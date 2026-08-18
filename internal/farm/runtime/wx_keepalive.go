@@ -54,17 +54,11 @@ func runWxKeepaliveTick() {
 			slog.Warn("wx keepalive temporary failure", "accountId", acc.ID, "err", err)
 			continue
 		}
-		updates := map[string]any{
-			"wx_login_buffer":     updated.LoginBuffer,
-			"wx_access_token":     updated.AccessToken,
-			"wx_refresh_token":    updated.RefreshToken,
-			"wx_token_expires_at": updated.ExpiresAt,
-			"updated_at":          uint(time.Now().Unix()),
-		}
+		updates := wxlogin.CredentialPersistUpdates(updated, uint(time.Now().Unix()))
 		if err := vars.DB.Model(&model.FarmAccount{}).Where("id = ?", acc.ID).Updates(updates).Error; err != nil {
 			slog.Warn("wx keepalive persist failed", "accountId", acc.ID, "err", err)
 			continue
 		}
-		slog.Info("wx keepalive renewed credentials", "accountId", acc.ID)
+		slog.Info("wx keepalive renewed credentials", "accountId", acc.ID, "expiresAt", updated.ExpiresAt)
 	}
 }

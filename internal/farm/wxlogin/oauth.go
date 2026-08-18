@@ -230,6 +230,7 @@ func (s *WxLoginService) ExchangeOAuthCode(ctx context.Context, oauthCode string
 		ExpiresAt:    time.Now().Unix() + expiresIn,
 		ExpiresIn:    expiresIn,
 	}
+	creds = creds.EnsureObservedAt(time.Now().Unix())
 	loginBuffer, err := s.postLoginBuffer(ctx, jar, &creds)
 	if err != nil {
 		return YybCredentials{}, err
@@ -310,10 +311,11 @@ func (s *WxLoginService) RefreshCredentials(ctx context.Context, creds YybCreden
 	return parseRefreshTokenJSON(data, creds)
 }
 
-// RefreshCredentialsAndBuffer renews tokens when due and fetches a fresh login_buffer.
+// RefreshCredentialsAndBuffer always renews tokens when a refresh_token is present,
+// then fetches a fresh login_buffer. Keepalive's 45-minute ahead window is the only gate.
 func (s *WxLoginService) RefreshCredentialsAndBuffer(ctx context.Context, creds YybCredentials) (YybCredentials, error) {
 	current := creds
-	if strings.TrimSpace(current.RefreshToken) != "" && current.TokenDueForRefresh(0) {
+	if strings.TrimSpace(current.RefreshToken) != "" {
 		refreshed, err := s.RefreshCredentials(ctx, current)
 		if err != nil {
 			return YybCredentials{}, err
@@ -495,10 +497,8 @@ func parseRefreshTokenJSON(data []byte, base YybCredentials) (YybCredentials, er
 	if accessToken == "" {
 		return YybCredentials{}, wxAuthDead("refresh response missing access_token")
 	}
-	refreshToken := firstString(info, "refresh_token", "refreshToken")
-	if refreshToken == "" {
-		refreshToken = base.RefreshToken
-	}
+	now := time.Now().Unix()
+	updated := base.ApplyNewRefreshToken(firstString(info, "refresh_token", "refreshToken"), now)
 	expiresIn := int64FromAny(info["expires_in"])
 	if expiresIn <= 0 {
 		expiresIn = int64FromAny(info["expiresIn"])
@@ -510,14 +510,11 @@ func parseRefreshTokenJSON(data []byte, base YybCredentials) (YybCredentials, er
 			expiresIn = DefaultExpiresIn
 		}
 	}
-	return YybCredentials{
-		OpenID:       base.OpenID,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		LoginBuffer:  base.LoginBuffer,
-		ExpiresAt:    time.Now().Unix() + expiresIn,
-		ExpiresIn:    expiresIn,
-	}, nil
+	updated.AccessToken = accessToken
+	updated.LoginBuffer = base.LoginBuffer
+	updated.ExpiresAt = now + expiresIn
+	updated.ExpiresIn = expiresIn
+	return updated, nil
 }
 
 func firstString(m map[string]any, keys ...string) string {
