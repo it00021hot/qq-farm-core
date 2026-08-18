@@ -20,6 +20,7 @@ const (
 	localWechatAuthorizePath    = "/api/authorize"
 	localWechatDetectTimeout    = 3 * time.Second
 	localWechatAuthorizeTimeout = 120 * time.Second
+	localWechatUA               = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 )
 
 // LocalWechatClient talks to desktop WeChat's loopback HTTPS API.
@@ -103,6 +104,8 @@ func (c LocalWechatClient) Request(ctx context.Context, port uint16, path string
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Cache-Control", "no-store")
+	req.Header.Set("User-Agent", localWechatUA)
+	req.Header.Set("Accept", "application/json, text/plain, */*")
 	resp, err := c.httpClient(timeout).Do(req)
 	if err != nil {
 		return localWechatPayload{}, fmt.Errorf("连接本机微信失败（端口 %d）: %w", port, err)
@@ -225,16 +228,32 @@ func (c LocalWechatClient) Detect(ctx context.Context, ports []uint16) (*LocalWe
 		close(out)
 	}()
 	var lastErr error
+	var handshakeErr error
 	for item := range out {
 		if item.profile != nil {
 			return item.profile, nil
 		}
 		lastErr = item.err
+		if item.err != nil && !isLocalWechatUnreachable(item.err) {
+			handshakeErr = item.err
+		}
+	}
+	if handshakeErr != nil {
+		return nil, handshakeErr
 	}
 	if lastErr != nil {
 		return nil, lastErr
 	}
 	return nil, fmt.Errorf("未检测到可用的桌面微信（请确认 Windows 桌面微信已登录且未锁定）")
+}
+
+func isLocalWechatUnreachable(err error) bool {
+	s := strings.ToLower(err.Error())
+	return strings.Contains(s, "connection refused") ||
+		strings.Contains(s, "connectex") ||
+		strings.Contains(s, "no connection could be made") ||
+		strings.Contains(s, "i/o timeout") ||
+		strings.Contains(s, "timeout")
 }
 
 // Authorize waits for the desktop WeChat confirm dialog and returns redirect_url.

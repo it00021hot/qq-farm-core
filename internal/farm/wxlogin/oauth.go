@@ -37,7 +37,11 @@ const (
 	userAgent            = "Mozilla/5.0"
 )
 
-var DesktopWechatPorts = []uint16{14013, 14014, 14015, 13013, 13014, 13015}
+// DesktopWechatPorts covers WeChat 3.x (14013-14015 / 13013-13015) and Weixin 4.x extras (14016+).
+var DesktopWechatPorts = []uint16{
+	14013, 14014, 14015, 14016, 14017, 14018, 14019, 14020, 14021, 14022, 14023, 14024, 14025,
+	13013, 13014, 13015,
+}
 
 var (
 	uuidPattern    = regexp.MustCompile(`/connect/qrcode/([^"'>\s]+)`)
