@@ -175,6 +175,7 @@ type FriendListReq struct {
 	Size      int    `json:"size" query:"size"`
 	AccountID uint64 `json:"accountId" query:"accountId"`
 	Keyword   string `json:"keyword" query:"keyword"`
+	Force     bool   `json:"force" query:"force"`
 }
 
 // FriendInteractRecordsReq 最近访客（游戏侧互动记录）

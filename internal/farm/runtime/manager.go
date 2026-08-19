@@ -104,6 +104,12 @@ type Session struct {
 	// After a successful steal, game GetAll often still reports StealPlantNum>0 for a while.
 	// Zero those GIDs in Friends() until the live list catches up.
 	friendStealCleared map[int64]struct{}
+	// Empty-visit skip: gid → GetAll steal_plant_num when last enter found nothing stealable.
+	// Only applies when steal_plant_num > 0 (stale bubble). Zero-bubble probes rotate separately.
+	stealNoopMarkers map[int64]int64
+	// LandsNotify 只刷新该好友：GetAll 漏气泡时仍当可偷，进场或 GetAll 追上后清除。
+	friendPlantHints map[int64]friendPlantHint
+	lastFriendPushAt map[int64]time.Time
 	// next scheduled tick times for status nextChecks countdowns
 	nextFarmAt        time.Time
 	nextStealAt       time.Time
@@ -127,6 +133,9 @@ func newSession(cfg SessionConfig, h *hub.Hub) *Session {
 		stealPatrolVisited: make(map[int64]struct{}),
 		helpPatrolVisited:  make(map[int64]struct{}),
 		friendStealCleared: make(map[int64]struct{}),
+		stealNoopMarkers:   make(map[int64]int64),
+		friendPlantHints:   make(map[int64]friendPlantHint),
+		lastFriendPushAt:   make(map[int64]time.Time),
 		helpState:          newFriendHelpState(accountID, cfg.DataRoot),
 	}
 }
@@ -929,6 +938,7 @@ func (s *Session) Friends(ctx context.Context) ([]friendpb.GameFriend, error) {
 	friends, err := loadFriends(ctx, s, api, cfg)
 	if err == nil {
 		friends = s.applyFriendStealOverrides(friends)
+		friends = s.applyFriendPushHints(friends)
 		s.setFriendCount(len(friends))
 	}
 	return friends, err
@@ -945,6 +955,30 @@ func (s *Session) markFriendStealCleared(gid int64) {
 		s.friendStealCleared = make(map[int64]struct{})
 	}
 	s.friendStealCleared[gid] = struct{}{}
+	delete(s.stealNoopMarkers, gid)
+	delete(s.friendPlantHints, gid)
+}
+
+func (s *Session) stealNoopSkip(gid, listStealNum int64) bool {
+	if s == nil || gid <= 0 || listStealNum <= 0 {
+		return false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	prev, ok := s.stealNoopMarkers[gid]
+	return ok && prev == listStealNum
+}
+
+func (s *Session) markStealNoop(gid, listStealNum int64) {
+	if s == nil || gid <= 0 || listStealNum <= 0 {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.stealNoopMarkers == nil {
+		s.stealNoopMarkers = make(map[int64]int64)
+	}
+	s.stealNoopMarkers[gid] = listStealNum
 }
 
 func (s *Session) applyFriendStealOverrides(friends []friendpb.GameFriend) []friendpb.GameFriend {
@@ -973,6 +1007,176 @@ func (s *Session) applyFriendStealOverrides(friends []friendpb.GameFriend) []fri
 		friends[i].Plant = plant
 	}
 	return friends
+}
+
+type friendPlantHint struct {
+	Steal, Dry, Weed, Insect int64
+}
+
+func (s *Session) ClearFriendPushHints() {
+	if s == nil {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.friendPlantHints = make(map[int64]friendPlantHint)
+}
+
+func (s *Session) applyFriendPushHints(friends []friendpb.GameFriend) []friendpb.GameFriend {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.friendPlantHints) == 0 {
+		return friends
+	}
+	var caught []int64
+	for i := range friends {
+		gid := friends[i].Gid
+		hint, ok := s.friendPlantHints[gid]
+		if !ok {
+			continue
+		}
+		liveSteal := int64(0)
+		if friends[i].Plant != nil {
+			liveSteal = friends[i].Plant.StealPlantNum
+		}
+		if liveSteal > 0 {
+			caught = append(caught, gid)
+			continue
+		}
+		if hint.Steal <= 0 && hint.Dry <= 0 && hint.Weed <= 0 && hint.Insect <= 0 {
+			continue
+		}
+		plant := friends[i].Plant
+		if plant == nil {
+			plant = &friendpb.Plant{}
+		} else {
+			cp := *plant
+			plant = &cp
+		}
+		if hint.Steal > plant.StealPlantNum {
+			plant.StealPlantNum = hint.Steal
+		}
+		if hint.Dry > plant.DryNum {
+			plant.DryNum = hint.Dry
+		}
+		if hint.Weed > plant.WeedNum {
+			plant.WeedNum = hint.Weed
+		}
+		if hint.Insect > plant.InsectNum {
+			plant.InsectNum = hint.Insect
+		}
+		friends[i].Plant = plant
+	}
+	for _, gid := range caught {
+		delete(s.friendPlantHints, gid)
+	}
+	return friends
+}
+
+func (s *Session) recordFriendPlantHint(gid int64, hint friendPlantHint) {
+	if s == nil || gid <= 0 {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.friendPlantHints == nil {
+		s.friendPlantHints = make(map[int64]friendPlantHint)
+	}
+	s.friendPlantHints[gid] = hint
+	if hint.Steal > 0 {
+		delete(s.friendStealCleared, gid)
+		delete(s.stealNoopMarkers, gid)
+		delete(s.stealPatrolVisited, gid)
+	}
+}
+
+func (s *Session) clearFriendPlantHint(gid int64) {
+	if s == nil || gid <= 0 {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.friendPlantHints, gid)
+}
+
+func countFriendPlantHint(lands []logic.LandInfo) friendPlantHint {
+	var hint friendPlantHint
+	landsMap := logic.BuildLandMap(lands)
+	for i := range lands {
+		land := &lands[i]
+		if logic.IsOccupiedSlaveLand(land, landsMap) {
+			continue
+		}
+		if land.Plant == nil {
+			continue
+		}
+		if land.Plant.Stealable && isMature(*land) {
+			hint.Steal++
+		}
+		if land.Plant.DryNum > 0 {
+			hint.Dry++
+		}
+		if len(land.Plant.WeedOwners) > 0 {
+			hint.Weed++
+		}
+		if len(land.Plant.InsectOwners) > 0 {
+			hint.Insect++
+		}
+	}
+	return hint
+}
+
+func (s *Session) refreshFriendFromLandsNotify(ctx context.Context, gid int64, protoLands []*plantpb.LandInfo) {
+	if s == nil || gid <= 0 {
+		return
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	hint := countFriendPlantHint(logic.LandsFromPlantPB(protoLands))
+	s.mu.Lock()
+	api := s.gameAPI
+	s.mu.Unlock()
+	if api != nil {
+		if s.farmOpMu.TryLock() {
+			reply, err := api.GetGameFriends(ctx, []int64{gid})
+			s.farmOpMu.Unlock()
+			if err == nil && reply != nil {
+				for _, f := range reply.GameFriends {
+					if f == nil || f.Gid != gid {
+						continue
+					}
+					if f.Plant != nil {
+						hint = friendPlantHint{
+							Steal:  f.Plant.StealPlantNum,
+							Dry:    f.Plant.DryNum,
+							Weed:   f.Plant.WeedNum,
+							Insect: f.Plant.InsectNum,
+						}
+					}
+					break
+				}
+			}
+		}
+	}
+	s.recordFriendPlantHint(gid, hint)
+	accountID := parseAccountID(s.id)
+	if s.hub != nil {
+		s.hub.PublishJSON("friend_plant", accountID, map[string]any{
+			"friendGid": gid,
+			"gid":       gid,
+			"stealNum":  hint.Steal,
+			"dryNum":    hint.Dry,
+			"weedNum":   hint.Weed,
+			"insectNum": hint.Insect,
+			"plant": map[string]any{
+				"stealNum":  hint.Steal,
+				"dryNum":    hint.Dry,
+				"weedNum":   hint.Weed,
+				"insectNum": hint.Insect,
+			},
+		})
+	}
 }
 
 // InteractRecords returns live visitor interaction records (bot Analytics visitors tab).
@@ -1446,20 +1650,25 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 	cfg := s.cfg.AccountConfig
 	runCtx := s.runCtx
 	now := time.Now()
+	hostGID := notify.HostGid
+	if hostGID != 0 && myGID > 0 && hostGID != myGID {
+		if s.lastFriendPushAt == nil {
+			s.lastFriendPushAt = make(map[int64]time.Time)
+		}
+		if now.Sub(s.lastFriendPushAt[hostGID]) < 500*time.Millisecond {
+			s.mu.Unlock()
+			return
+		}
+		s.lastFriendPushAt[hostGID] = now
+		s.mu.Unlock()
+		go s.refreshFriendFromLandsNotify(runCtx, hostGID, notify.Lands)
+		return
+	}
 	if now.Sub(s.lastPushAt) < 500*time.Millisecond {
 		s.mu.Unlock()
 		return
 	}
 	if !cfg.Automation.FarmPush || !cfg.Automation.Farm {
-		s.mu.Unlock()
-		return
-	}
-	hostGID := notify.HostGid
-	if hostGID != 0 && myGID > 0 && hostGID != myGID {
-		s.mu.Unlock()
-		return
-	}
-	if logic.InQuietHours(cfg.FriendQuietHours.Enabled, cfg.FriendQuietHours.Start, cfg.FriendQuietHours.End, now.Format("15:04")) {
 		s.mu.Unlock()
 		return
 	}
@@ -1687,16 +1896,13 @@ func (s *Session) ensureHelpState() *friendHelpState {
 }
 
 // farmTick performs automatic own-farm operations (bot checkFarm).
-// Friend quiet hours also suppress own-farm ticks, matching bot scheduler.checkFarm.
+// Friend quiet hours do not pause own-farm work; they only gate steal/help/bad ticks.
 func (s *Session) farmTick(ctx context.Context) {
 	cfg := s.Config()
 	s.runBagMaintenance(ctx, cfg)
 	s.maybeRunDailyOnDateChange(ctx, cfg)
 	s.runTaskClaimsTick(ctx, cfg)
 	if !cfg.Automation.Farm {
-		return
-	}
-	if logic.InQuietHours(cfg.FriendQuietHours.Enabled, cfg.FriendQuietHours.Start, cfg.FriendQuietHours.End, time.Now().Format("15:04")) {
 		return
 	}
 	hadWork, actions, err := s.RunFarmOp(ctx, "all")

@@ -174,6 +174,53 @@ func TestBuildBadFriendTargetsTopByLevel(t *testing.T) {
 	}
 }
 
+func TestFriendListStealNumAndNoopSkip(t *testing.T) {
+	friends := []friendpb.GameFriend{
+		{Gid: 1, Plant: &friendpb.Plant{StealPlantNum: 4}},
+		{Gid: 2},
+	}
+	if friendListStealNum(friends, 1) != 4 {
+		t.Fatal("bubble")
+	}
+	if friendListStealNum(friends, 2) != 0 {
+		t.Fatal("empty plant")
+	}
+	if friendListStealNum(friends, 9) != 0 {
+		t.Fatal("missing")
+	}
+
+	s := &Session{stealNoopMarkers: make(map[int64]int64)}
+	s.markStealNoop(8, 0)
+	if s.stealNoopSkip(8, 0) {
+		t.Fatal("zero bubble must not noop-skip")
+	}
+	s.markStealNoop(8, 2)
+	if !s.stealNoopSkip(8, 2) {
+		t.Fatal("stale bubble should skip")
+	}
+	if s.stealNoopSkip(8, 3) {
+		t.Fatal("changed steal_num should visit again")
+	}
+}
+
+func TestApplyFriendPushHintsRestoresStealAfterCleared(t *testing.T) {
+	s := &Session{
+		friendStealCleared: map[int64]struct{}{8: {}},
+		friendPlantHints:   map[int64]friendPlantHint{8: {Steal: 3}},
+	}
+	friends := []friendpb.GameFriend{
+		{Gid: 8, Plant: &friendpb.Plant{StealPlantNum: 3}},
+	}
+	friends = s.applyFriendStealOverrides(friends)
+	if friends[0].Plant.StealPlantNum != 0 {
+		t.Fatalf("cleared should zero live steal, got %d", friends[0].Plant.StealPlantNum)
+	}
+	friends = s.applyFriendPushHints(friends)
+	if friends[0].Plant.StealPlantNum != 3 {
+		t.Fatalf("push hint should restore steal, got %d", friends[0].Plant.StealPlantNum)
+	}
+}
+
 func TestCollectBadLandTargetsOwnersLimit(t *testing.T) {
 	myGID := int64(7)
 	lands := []logic.LandInfo{
@@ -210,6 +257,15 @@ func TestCollectBadLandTargetsOwnersLimit(t *testing.T) {
 	// land 2: weed already by me → no weed
 	if weeds, _ := collectBadLandTargets([]logic.LandInfo{lands[1]}, myGID); len(weeds) != 0 {
 		t.Fatalf("expected no weed on land 2, got %v", weeds)
+	}
+}
+
+func TestWxStealUnlimited(t *testing.T) {
+	if !wxStealUnlimited("wx") || !wxStealUnlimited("WX") {
+		t.Fatal("wechat has no 10008 quota")
+	}
+	if wxStealUnlimited("qq") || wxStealUnlimited("") {
+		t.Fatal("qq / empty still use 10008")
 	}
 }
 

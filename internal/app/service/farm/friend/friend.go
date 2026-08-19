@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofiber/fiber/v3"
 	"github.com/it00021hot/qq-farm-core/internal/app/model"
 	"github.com/it00021hot/qq-farm-core/internal/app/pkg/pagination"
 	"github.com/it00021hot/qq-farm-core/internal/app/service"
@@ -18,7 +19,6 @@ import (
 	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
 	"github.com/it00021hot/qq-farm-core/internal/vars"
 	"github.com/it00021hot/qq-farm-core/pkg/response"
-	"github.com/gofiber/fiber/v3"
 )
 
 type Service struct {
@@ -94,6 +94,9 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.FriendListReq) (response.Pag
 	var myGID int64
 	if session, err := s.session(ctx, req.AccountID); err == nil {
 		myGID = session.GID()
+		if req.Force {
+			session.ClearFriendPushHints()
+		}
 		callCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		friends, loadErr := session.Friends(callCtx)
 		cancel()

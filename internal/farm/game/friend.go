@@ -160,11 +160,11 @@ func (a *API) VisitLeave(ctx context.Context, hostGID int64) error {
 
 // FriendHarvest steals harvest from a friend's lands and returns the decoded reply
 // (items include activity score / fruit rewards — needed for steal logs).
-func (a *API) FriendHarvest(ctx context.Context, hostGID int64, landIDs []int64) (*plantpb.HarvestReply, error) {
+func (a *API) FriendHarvest(ctx context.Context, hostGID int64, landIDs []int64, isAll bool) (*plantpb.HarvestReply, error) {
 	req := &plantpb.HarvestRequest{
 		LandIds: landIDs,
 		HostGid: hostGID,
-		IsAll:   true,
+		IsAll:   isAll,
 	}
 	raw, err := a.sendPlant(ctx, "Harvest", marshalMessage(req))
 	if err != nil {

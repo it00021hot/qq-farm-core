@@ -29,9 +29,24 @@ const (
 	friendOpWeed      int64 = 10005
 	friendOpBug       int64 = 10006
 	friendOpWater     int64 = 10007
-	friendOpSteal     int64 = 10008
+	friendOpSteal     int64 = 10008 // QQ 日偷次数；微信不受限
 	enterReasonFriend int32 = 2
 )
+
+func sessionPlatform(s *Session) string {
+	if s == nil {
+		return ""
+	}
+	s.mu.Lock()
+	p := s.cfg.Platform
+	s.mu.Unlock()
+	return p
+}
+
+// wxStealUnlimited reports WeChat farms have no daily steal quota (operation 10008).
+func wxStealUnlimited(platform string) bool {
+	return strings.EqualFold(strings.TrimSpace(platform), "wx")
+}
 
 // SyncFriendsToDB persists the game friend list used by the friend HTTP views.
 // myGID, when > 0, is excluded and any stale self row is deleted (game APIs may return self).
@@ -160,20 +175,29 @@ func RunStealTick(ctx context.Context, s *Session, visited map[int64]struct{}) (
 		return 0, err
 	}
 	SyncFriendsToDB(accountID, myGID, friends)
+	friends = s.applyFriendStealOverrides(friends)
+	friends = s.applyFriendPushHints(friends)
 	blacklist := makeIDSet(cfg.FriendBlacklist)
 	if visited == nil {
 		visited = make(map[int64]struct{})
 	}
 	targets := buildStealPatrolTargets(friends, myGID, blacklist, visited)
 	helpState := s.ensureHelpState()
+	wxUnlimited := wxStealUnlimited(sessionPlatform(s))
 	for _, gid := range targets {
 		if shouldAbortFriendPatrol(ctx, s) {
 			break
 		}
-		if !helpState.canOperate(friendOpSteal) {
+		if !wxUnlimited && !helpState.canOperate(friendOpSteal) {
 			break
 		}
+		listSteal := friendListStealNum(friends, gid)
+		if s.stealNoopSkip(gid, listSteal) {
+			markPatrolVisited(visited, gid)
+			continue
+		}
 		outcome, visitErr := stealFriend(ctx, s, api, cfg, myGID, gid)
+		s.clearFriendPlantHint(gid)
 		markPatrolVisited(visited, gid)
 		if visitErr != nil {
 			if handleFriendEnterError(s, gid, visitErr) {
@@ -187,6 +211,7 @@ func RunStealTick(ctx context.Context, s *Session, visited map[int64]struct{}) (
 			continue
 		}
 		if outcome.Count > 0 {
+			s.markFriendStealCleared(gid)
 			actions += outcome.Count
 			writeInteractLog(accountID, 0, gid, "steal", "ok", map[string]any{
 				"count":   outcome.Count,
@@ -202,6 +227,9 @@ func RunStealTick(ctx context.Context, s *Session, visited map[int64]struct{}) (
 				})
 			}
 		} else if outcome.SkipReason != "" {
+			if listSteal > 0 {
+				s.markStealNoop(gid, listSteal)
+			}
 			slog.Info("steal visit zero",
 				"account", accountID,
 				"friend_gid", gid,
@@ -617,6 +645,19 @@ type friendVisitOutcome struct {
 	SkipReason string
 }
 
+func friendListStealNum(friends []friendpb.GameFriend, gid int64) int64 {
+	for i := range friends {
+		if friends[i].Gid != gid {
+			continue
+		}
+		if friends[i].Plant == nil {
+			return 0
+		}
+		return friends[i].Plant.StealPlantNum
+	}
+	return 0
+}
+
 func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig, myGID, gid int64) (friendVisitOutcome, error) {
 	var out friendVisitOutcome
 	lands, err := api.VisitEnter(ctx, gid, enterReasonFriend)
@@ -677,41 +718,45 @@ func stealFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accou
 		}
 		return out, nil
 	}
-	// 偷菜顺手帮忙：仅当农场有可偷作物时才帮忙，不受自动帮忙开关与帮忙经验上限约束。
+	// 微信 10008 无限：不调 CheckCanOperate。QQ 失败则 fail-open。
+	canOperate, canSteal := true, int64(0)
+	if !wxStealUnlimited(sessionPlatform(s)) {
+		var checkErr error
+		canOperate, canSteal, checkErr = api.CheckCanOperate(ctx, gid, friendOpSteal)
+		if checkErr != nil {
+			canOperate, canSteal = true, 0
+		}
+	}
+	if canOperate {
+		if canSteal > 0 && int64(len(targets)) > canSteal {
+			targets = targets[:canSteal]
+		}
+		stolenIDs, items, harvestErr := friendHarvestWithFallback(ctx, s, api, gid, targets)
+		if harvestErr != nil && len(stolenIDs) == 0 {
+			return out, harvestErr
+		}
+		out.Count = len(stolenIDs)
+		if out.Count > 0 {
+			s.markFriendStealCleared(gid)
+			out.Plants = mergeUniqueNames(
+				uniquePlantNames(plantByLand, stolenIDs),
+				plantNamesFromHarvestItems(items),
+			)
+			out.Score, out.Value = summarizeHarvestRewards(items)
+			out.Summary = formatStealSummary(out.Count, out.Plants, out.Score, out.Value)
+		} else {
+			out.SkipReason = "no_stealable"
+		}
+	} else {
+		out.SkipReason = "cannot_operate"
+	}
+	// 先偷后帮：仅当本场有可偷作物才帮忙，不受自动帮忙开关与帮忙经验上限约束。
 	helpCount, helpWeed, helpBug, helpWater, helpSummary := stealSideHelp(ctx, s, api, gid, lands)
 	out.HelpCount = helpCount
 	out.HelpSummary = helpSummary
 	out.Weed = helpWeed
 	out.Bug = helpBug
 	out.Water = helpWater
-	// Bot checkCanOperate: on error fail-open (canOperate=true).
-	canOperate, canSteal, checkErr := api.CheckCanOperate(ctx, gid, friendOpSteal)
-	if checkErr != nil {
-		canOperate, canSteal = true, 0
-	}
-	if !canOperate {
-		out.SkipReason = "cannot_operate"
-		return out, nil
-	}
-	if canSteal > 0 && int64(len(targets)) > canSteal {
-		targets = targets[:canSteal]
-	}
-	stolenIDs, items, harvestErr := friendHarvestWithFallback(ctx, s, api, gid, targets)
-	if harvestErr != nil && len(stolenIDs) == 0 {
-		return out, harvestErr
-	}
-	out.Count = len(stolenIDs)
-	if out.Count > 0 {
-		s.markFriendStealCleared(gid)
-		out.Plants = mergeUniqueNames(
-			uniquePlantNames(plantByLand, stolenIDs),
-			plantNamesFromHarvestItems(items),
-		)
-		out.Score, out.Value = summarizeHarvestRewards(items)
-		out.Summary = formatStealSummary(out.Count, out.Plants, out.Score, out.Value)
-	} else {
-		out.SkipReason = "no_stealable"
-	}
 	return out, nil
 }
 
@@ -837,13 +882,13 @@ type harvestRewardAccum struct {
 	items     []*corepb.Item
 }
 
-// friendHarvestWithFallback mirrors bot stealLandsWithRewardLog: batch then per-land retry; 1001040 = unstealable.
+// friendHarvestWithFallback: 一键 is_all=true，失败后对主地 is_all=false 按地回退；1001040 = 不可偷。
 func friendHarvestWithFallback(ctx context.Context, s *Session, api *game.API, gid int64, targets []int64) (stolenIDs []int64, items []*corepb.Item, err error) {
 	if len(targets) == 0 {
 		return nil, nil, nil
 	}
 	acc := &harvestRewardAccum{}
-	reply, batchErr := api.FriendHarvest(ctx, gid, targets)
+	reply, batchErr := api.FriendHarvest(ctx, gid, targets, true)
 	if batchErr == nil {
 		if s != nil && reply != nil {
 			s.ensureHelpState().updateLimits(reply.OperationLimits)
@@ -858,7 +903,7 @@ func friendHarvestWithFallback(ctx context.Context, s *Session, api *game.API, g
 		if shouldAbortFriendPatrol(ctx, s) {
 			break
 		}
-		one, oneErr := api.FriendHarvest(ctx, gid, []int64{landID})
+		one, oneErr := api.FriendHarvest(ctx, gid, []int64{landID}, false)
 		if oneErr != nil {
 			if isUnstealableError(oneErr) {
 				continue
