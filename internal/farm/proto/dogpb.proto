@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.dogpb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/dogpb;dogpb";
 // ============ 狗狗信息 ============
 message DogInfo {
     int64 id = 1;

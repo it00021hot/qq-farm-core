@@ -214,12 +214,14 @@ type SeasonPass struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
 	ActivityId          int64                  `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
 	CurrentLevel        int64                  `protobuf:"varint,2,opt,name=current_level,json=currentLevel,proto3" json:"current_level,omitempty"`
+	TotalProgress       int64                  `protobuf:"varint,3,opt,name=total_progress,json=totalProgress,proto3" json:"total_progress,omitempty"`
 	CurrentProgress     int64                  `protobuf:"varint,4,opt,name=current_progress,json=currentProgress,proto3" json:"current_progress,omitempty"`
 	ProgressTarget      int64                  `protobuf:"varint,5,opt,name=progress_target,json=progressTarget,proto3" json:"progress_target,omitempty"`
 	NodeCount           int64                  `protobuf:"varint,6,opt,name=node_count,json=nodeCount,proto3" json:"node_count,omitempty"`
 	Nodes               []*SeasonRewardNode    `protobuf:"bytes,8,rep,name=nodes,proto3" json:"nodes,omitempty"`
 	ClaimedThroughLevel int64                  `protobuf:"varint,9,opt,name=claimed_through_level,json=claimedThroughLevel,proto3" json:"claimed_through_level,omitempty"`
 	Field_11            int64                  `protobuf:"varint,11,opt,name=field_11,json=field11,proto3" json:"field_11,omitempty"`
+	Field_12            int64                  `protobuf:"varint,12,opt,name=field_12,json=field12,proto3" json:"field_12,omitempty"`
 	Field_13            int64                  `protobuf:"varint,13,opt,name=field_13,json=field13,proto3" json:"field_13,omitempty"`
 	Field_14            []*SeasonItem          `protobuf:"bytes,14,rep,name=field_14,json=field14,proto3" json:"field_14,omitempty"`
 	Title               []byte                 `protobuf:"bytes,16,opt,name=title,proto3" json:"title,omitempty"`
@@ -273,6 +275,13 @@ func (x *SeasonPass) GetCurrentLevel() int64 {
 	return 0
 }
 
+func (x *SeasonPass) GetTotalProgress() int64 {
+	if x != nil {
+		return x.TotalProgress
+	}
+	return 0
+}
+
 func (x *SeasonPass) GetCurrentProgress() int64 {
 	if x != nil {
 		return x.CurrentProgress
@@ -311,6 +320,13 @@ func (x *SeasonPass) GetClaimedThroughLevel() int64 {
 func (x *SeasonPass) GetField_11() int64 {
 	if x != nil {
 		return x.Field_11
+	}
+	return 0
+}
+
+func (x *SeasonPass) GetField_12() int64 {
+	if x != nil {
+		return x.Field_12
 	}
 	return 0
 }
@@ -707,12 +723,13 @@ const file_seasonpb_proto_rawDesc = "" +
 	"\x04name\x18\x03 \x01(\fR\x04name\x12\x1d\n" +
 	"\n" +
 	"begin_time\x18\x04 \x01(\x03R\tbeginTime\x12\x19\n" +
-	"\bend_time\x18\x05 \x01(\x03R\aendTime\"\xf0\x03\n" +
+	"\bend_time\x18\x05 \x01(\x03R\aendTime\"\xb2\x04\n" +
 	"\n" +
 	"SeasonPass\x12\x1f\n" +
 	"\vactivity_id\x18\x01 \x01(\x03R\n" +
 	"activityId\x12#\n" +
-	"\rcurrent_level\x18\x02 \x01(\x03R\fcurrentLevel\x12)\n" +
+	"\rcurrent_level\x18\x02 \x01(\x03R\fcurrentLevel\x12%\n" +
+	"\x0etotal_progress\x18\x03 \x01(\x03R\rtotalProgress\x12)\n" +
 	"\x10current_progress\x18\x04 \x01(\x03R\x0fcurrentProgress\x12'\n" +
 	"\x0fprogress_target\x18\x05 \x01(\x03R\x0eprogressTarget\x12\x1d\n" +
 	"\n" +
@@ -720,6 +737,7 @@ const file_seasonpb_proto_rawDesc = "" +
 	"\x05nodes\x18\b \x03(\v2!.gamepb.seasonpb.SeasonRewardNodeR\x05nodes\x122\n" +
 	"\x15claimed_through_level\x18\t \x01(\x03R\x13claimedThroughLevel\x12\x19\n" +
 	"\bfield_11\x18\v \x01(\x03R\afield11\x12\x19\n" +
+	"\bfield_12\x18\f \x01(\x03R\afield12\x12\x19\n" +
 	"\bfield_13\x18\r \x01(\x03R\afield13\x126\n" +
 	"\bfield_14\x18\x0e \x03(\v2\x1b.gamepb.seasonpb.SeasonItemR\afield14\x12\x14\n" +
 	"\x05title\x18\x10 \x01(\fR\x05title\x12\x1d\n" +
@@ -753,7 +771,7 @@ const file_seasonpb_proto_rawDesc = "" +
 	"\x04pass\x18\x03 \x01(\v2\x1b.gamepb.seasonpb.SeasonPassR\x04pass\x12\x17\n" +
 	"\afield_4\x18\x04 \x01(\bR\x06field4\"I\n" +
 	"\x16BattlePassChangeNotify\x12/\n" +
-	"\x04pass\x18\x01 \x01(\v2\x1b.gamepb.seasonpb.SeasonPassR\x04passBJZHgithub.com/it00021hot/qq-farm-core/internal/farm/proto/seasonpb;seasonpbb\x06proto3"
+	"\x04pass\x18\x01 \x01(\v2\x1b.gamepb.seasonpb.SeasonPassR\x04passb\x06proto3"
 
 var (
 	file_seasonpb_proto_rawDescOnce sync.Once

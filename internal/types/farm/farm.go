@@ -212,9 +212,11 @@ type ActivityActionReq struct {
 	TermID      string               `json:"termId"`
 	ItemID      string               `json:"itemId"`
 	Count       int64                `json:"count"`
+	SachetCount int64                `json:"sachetCount"`
 	ActivityID  string               `json:"activityId"`
 	OperateType int64                `json:"operateType"`
 	Ingredients []ActivityIngredient `json:"ingredients"`
+	FriendGID   string               `json:"friendGid"`
 }
 
 // ActivityIngredient 青梅酿造原料（按背包 UID 选择）

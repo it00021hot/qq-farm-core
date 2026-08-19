@@ -211,7 +211,7 @@ type StarSandGoods struct {
 	GoodsId       int64                  `protobuf:"varint,1,opt,name=goods_id,json=goodsId,proto3" json:"goods_id,omitempty"`
 	Item          *ActivityItem          `protobuf:"bytes,2,opt,name=item,proto3" json:"item,omitempty"`
 	Cost          *ActivityItem          `protobuf:"bytes,3,opt,name=cost,proto3" json:"cost,omitempty"`
-	Status        int64                  `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"` // Previously decoded as field_4.
+	Status        int64                  `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"`
 	Owned         bool                   `protobuf:"varint,5,opt,name=owned,proto3" json:"owned,omitempty"`
 	SortOrder     int64                  `protobuf:"varint,6,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"`
 	Name          []byte                 `protobuf:"bytes,7,opt,name=name,proto3" json:"name,omitempty"`
@@ -603,16 +603,18 @@ func (x *ConstellationData) GetGroups() []*ConstellationGroup {
 }
 
 type ActivityData struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	Activity           *ActivityContent       `protobuf:"bytes,1,opt,name=activity,proto3" json:"activity,omitempty"`
-	Catalog            *StarSandGoodsList     `protobuf:"bytes,102,opt,name=catalog,proto3" json:"catalog,omitempty"`
-	QingmeiDailySeed   *QingMeiDailySeedData  `protobuf:"bytes,103,opt,name=qingmei_daily_seed,json=qingmeiDailySeed,proto3" json:"qingmei_daily_seed,omitempty"`
-	QingmeiBrew        *QingMeiBrewData       `protobuf:"bytes,108,opt,name=qingmei_brew,json=qingmeiBrew,proto3" json:"qingmei_brew,omitempty"`
-	Constellation      *ConstellationData     `protobuf:"bytes,110,opt,name=constellation,proto3" json:"constellation,omitempty"`
-	QingmeiBrewStarted *QingMeiBrewStarted    `protobuf:"bytes,113,opt,name=qingmei_brew_started,json=qingmeiBrewStarted,proto3" json:"qingmei_brew_started,omitempty"`
-	QingmeiQuote       *QingMeiQuote          `protobuf:"bytes,114,opt,name=qingmei_quote,json=qingmeiQuote,proto3" json:"qingmei_quote,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Activity         *ActivityContent       `protobuf:"bytes,1,opt,name=activity,proto3" json:"activity,omitempty"`
+	Children         []*ActivityData        `protobuf:"bytes,2,rep,name=children,proto3" json:"children,omitempty"`
+	Catalog          *StarSandGoodsList     `protobuf:"bytes,102,opt,name=catalog,proto3" json:"catalog,omitempty"`
+	QingmeiDailySeed *QingMeiDailySeedData  `protobuf:"bytes,103,opt,name=qingmei_daily_seed,json=qingmeiDailySeed,proto3" json:"qingmei_daily_seed,omitempty"`
+	QingmeiBrew      *QingMeiBrewData       `protobuf:"bytes,108,opt,name=qingmei_brew,json=qingmeiBrew,proto3" json:"qingmei_brew,omitempty"`
+	Constellation    *ConstellationData     `protobuf:"bytes,110,opt,name=constellation,proto3" json:"constellation,omitempty"`
+	QixiBridge       *QixiBridgeConfig      `protobuf:"bytes,112,opt,name=qixi_bridge,json=qixiBridge,proto3" json:"qixi_bridge,omitempty"`
+	QixiGift         *QixiGiftProgress      `protobuf:"bytes,113,opt,name=qixi_gift,json=qixiGift,proto3" json:"qixi_gift,omitempty"`
+	QingmeiQuote     *QingMeiQuote          `protobuf:"bytes,114,opt,name=qingmei_quote,json=qingmeiQuote,proto3" json:"qingmei_quote,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *ActivityData) Reset() {
@@ -652,6 +654,13 @@ func (x *ActivityData) GetActivity() *ActivityContent {
 	return nil
 }
 
+func (x *ActivityData) GetChildren() []*ActivityData {
+	if x != nil {
+		return x.Children
+	}
+	return nil
+}
+
 func (x *ActivityData) GetCatalog() *StarSandGoodsList {
 	if x != nil {
 		return x.Catalog
@@ -680,9 +689,16 @@ func (x *ActivityData) GetConstellation() *ConstellationData {
 	return nil
 }
 
-func (x *ActivityData) GetQingmeiBrewStarted() *QingMeiBrewStarted {
+func (x *ActivityData) GetQixiBridge() *QixiBridgeConfig {
 	if x != nil {
-		return x.QingmeiBrewStarted
+		return x.QixiBridge
+	}
+	return nil
+}
+
+func (x *ActivityData) GetQixiGift() *QixiGiftProgress {
+	if x != nil {
+		return x.QixiGift
 	}
 	return nil
 }
@@ -690,6 +706,330 @@ func (x *ActivityData) GetQingmeiBrewStarted() *QingMeiBrewStarted {
 func (x *ActivityData) GetQingmeiQuote() *QingMeiQuote {
 	if x != nil {
 		return x.QingmeiQuote
+	}
+	return nil
+}
+
+type ActivityWindow struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	BeginTime     int64                  `protobuf:"varint,3,opt,name=begin_time,json=beginTime,proto3" json:"begin_time,omitempty"`
+	EndTime       int64                  `protobuf:"varint,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ActivityWindow) Reset() {
+	*x = ActivityWindow{}
+	mi := &file_activitypb_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ActivityWindow) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ActivityWindow) ProtoMessage() {}
+
+func (x *ActivityWindow) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ActivityWindow.ProtoReflect.Descriptor instead.
+func (*ActivityWindow) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ActivityWindow) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *ActivityWindow) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ActivityWindow) GetBeginTime() int64 {
+	if x != nil {
+		return x.BeginTime
+	}
+	return 0
+}
+
+func (x *ActivityWindow) GetEndTime() int64 {
+	if x != nil {
+		return x.EndTime
+	}
+	return 0
+}
+
+type ActivityListRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ActivityListRequest) Reset() {
+	*x = ActivityListRequest{}
+	mi := &file_activitypb_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ActivityListRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ActivityListRequest) ProtoMessage() {}
+
+func (x *ActivityListRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ActivityListRequest.ProtoReflect.Descriptor instead.
+func (*ActivityListRequest) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{9}
+}
+
+type ActivityListReply struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Activities      []*ActivityData        `protobuf:"bytes,1,rep,name=activities,proto3" json:"activities,omitempty"`
+	ActivityWindows []*ActivityWindow      `protobuf:"bytes,2,rep,name=activity_windows,json=activityWindows,proto3" json:"activity_windows,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ActivityListReply) Reset() {
+	*x = ActivityListReply{}
+	mi := &file_activitypb_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ActivityListReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ActivityListReply) ProtoMessage() {}
+
+func (x *ActivityListReply) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ActivityListReply.ProtoReflect.Descriptor instead.
+func (*ActivityListReply) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ActivityListReply) GetActivities() []*ActivityData {
+	if x != nil {
+		return x.Activities
+	}
+	return nil
+}
+
+func (x *ActivityListReply) GetActivityWindows() []*ActivityWindow {
+	if x != nil {
+		return x.ActivityWindows
+	}
+	return nil
+}
+
+type SetSplashedRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ActivityId    int64                  `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetSplashedRequest) Reset() {
+	*x = SetSplashedRequest{}
+	mi := &file_activitypb_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetSplashedRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetSplashedRequest) ProtoMessage() {}
+
+func (x *SetSplashedRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetSplashedRequest.ProtoReflect.Descriptor instead.
+func (*SetSplashedRequest) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SetSplashedRequest) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+type SetSplashedReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetSplashedReply) Reset() {
+	*x = SetSplashedReply{}
+	mi := &file_activitypb_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetSplashedReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetSplashedReply) ProtoMessage() {}
+
+func (x *SetSplashedReply) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetSplashedReply.ProtoReflect.Descriptor instead.
+func (*SetSplashedReply) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{12}
+}
+
+type GetGroupRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GroupId       int64                  `protobuf:"varint,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGroupRequest) Reset() {
+	*x = GetGroupRequest{}
+	mi := &file_activitypb_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGroupRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGroupRequest) ProtoMessage() {}
+
+func (x *GetGroupRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGroupRequest.ProtoReflect.Descriptor instead.
+func (*GetGroupRequest) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *GetGroupRequest) GetGroupId() int64 {
+	if x != nil {
+		return x.GroupId
+	}
+	return 0
+}
+
+type GetGroupReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Group         *ActivityData          `protobuf:"bytes,1,opt,name=group,proto3" json:"group,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGroupReply) Reset() {
+	*x = GetGroupReply{}
+	mi := &file_activitypb_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGroupReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGroupReply) ProtoMessage() {}
+
+func (x *GetGroupReply) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGroupReply.ProtoReflect.Descriptor instead.
+func (*GetGroupReply) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetGroupReply) GetGroup() *ActivityData {
+	if x != nil {
+		return x.Group
 	}
 	return nil
 }
@@ -704,7 +1044,7 @@ type QingMeiDailySeedGrant struct {
 
 func (x *QingMeiDailySeedGrant) Reset() {
 	*x = QingMeiDailySeedGrant{}
-	mi := &file_activitypb_proto_msgTypes[8]
+	mi := &file_activitypb_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -716,7 +1056,7 @@ func (x *QingMeiDailySeedGrant) String() string {
 func (*QingMeiDailySeedGrant) ProtoMessage() {}
 
 func (x *QingMeiDailySeedGrant) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[8]
+	mi := &file_activitypb_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -729,7 +1069,7 @@ func (x *QingMeiDailySeedGrant) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiDailySeedGrant.ProtoReflect.Descriptor instead.
 func (*QingMeiDailySeedGrant) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{8}
+	return file_activitypb_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *QingMeiDailySeedGrant) GetGrantId() int64 {
@@ -756,7 +1096,7 @@ type QingMeiDailySeedData struct {
 
 func (x *QingMeiDailySeedData) Reset() {
 	*x = QingMeiDailySeedData{}
-	mi := &file_activitypb_proto_msgTypes[9]
+	mi := &file_activitypb_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -768,7 +1108,7 @@ func (x *QingMeiDailySeedData) String() string {
 func (*QingMeiDailySeedData) ProtoMessage() {}
 
 func (x *QingMeiDailySeedData) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[9]
+	mi := &file_activitypb_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -781,7 +1121,7 @@ func (x *QingMeiDailySeedData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiDailySeedData.ProtoReflect.Descriptor instead.
 func (*QingMeiDailySeedData) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{9}
+	return file_activitypb_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *QingMeiDailySeedData) GetClaimed() bool {
@@ -815,7 +1155,7 @@ type QingMeiBrewData struct {
 
 func (x *QingMeiBrewData) Reset() {
 	*x = QingMeiBrewData{}
-	mi := &file_activitypb_proto_msgTypes[10]
+	mi := &file_activitypb_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -827,7 +1167,7 @@ func (x *QingMeiBrewData) String() string {
 func (*QingMeiBrewData) ProtoMessage() {}
 
 func (x *QingMeiBrewData) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[10]
+	mi := &file_activitypb_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -840,7 +1180,7 @@ func (x *QingMeiBrewData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiBrewData.ProtoReflect.Descriptor instead.
 func (*QingMeiBrewData) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{10}
+	return file_activitypb_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *QingMeiBrewData) GetBaseGold() int64 {
@@ -906,6 +1246,270 @@ func (x *QingMeiBrewData) GetGuaranteedPrice() int64 {
 	return 0
 }
 
+type QixiBridgeStage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Stage         int64                  `protobuf:"varint,1,opt,name=stage,proto3" json:"stage,omitempty"`
+	Cost          *ActivityItem          `protobuf:"bytes,2,opt,name=cost,proto3" json:"cost,omitempty"`
+	Rewards       []*ActivityItem        `protobuf:"bytes,3,rep,name=rewards,proto3" json:"rewards,omitempty"`
+	Status        int64                  `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QixiBridgeStage) Reset() {
+	*x = QixiBridgeStage{}
+	mi := &file_activitypb_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QixiBridgeStage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QixiBridgeStage) ProtoMessage() {}
+
+func (x *QixiBridgeStage) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QixiBridgeStage.ProtoReflect.Descriptor instead.
+func (*QixiBridgeStage) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *QixiBridgeStage) GetStage() int64 {
+	if x != nil {
+		return x.Stage
+	}
+	return 0
+}
+
+func (x *QixiBridgeStage) GetCost() *ActivityItem {
+	if x != nil {
+		return x.Cost
+	}
+	return nil
+}
+
+func (x *QixiBridgeStage) GetRewards() []*ActivityItem {
+	if x != nil {
+		return x.Rewards
+	}
+	return nil
+}
+
+func (x *QixiBridgeStage) GetStatus() int64 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+type QixiBridgeConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DisplayItems  []*ActivityItem        `protobuf:"bytes,1,rep,name=display_items,json=displayItems,proto3" json:"display_items,omitempty"`
+	Stages        []*QixiBridgeStage     `protobuf:"bytes,2,rep,name=stages,proto3" json:"stages,omitempty"`
+	CurrentStage  int64                  `protobuf:"varint,3,opt,name=current_stage,json=currentStage,proto3" json:"current_stage,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QixiBridgeConfig) Reset() {
+	*x = QixiBridgeConfig{}
+	mi := &file_activitypb_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QixiBridgeConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QixiBridgeConfig) ProtoMessage() {}
+
+func (x *QixiBridgeConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QixiBridgeConfig.ProtoReflect.Descriptor instead.
+func (*QixiBridgeConfig) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *QixiBridgeConfig) GetDisplayItems() []*ActivityItem {
+	if x != nil {
+		return x.DisplayItems
+	}
+	return nil
+}
+
+func (x *QixiBridgeConfig) GetStages() []*QixiBridgeStage {
+	if x != nil {
+		return x.Stages
+	}
+	return nil
+}
+
+func (x *QixiBridgeConfig) GetCurrentStage() int64 {
+	if x != nil {
+		return x.CurrentStage
+	}
+	return 0
+}
+
+type QixiGiftExchange struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SentItem      *ActivityItem          `protobuf:"bytes,1,opt,name=sent_item,json=sentItem,proto3" json:"sent_item,omitempty"`
+	ReceivedItem  *ActivityItem          `protobuf:"bytes,2,opt,name=received_item,json=receivedItem,proto3" json:"received_item,omitempty"`
+	Field_3       bool                   `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"`
+	Enabled       bool                   `protobuf:"varint,4,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QixiGiftExchange) Reset() {
+	*x = QixiGiftExchange{}
+	mi := &file_activitypb_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QixiGiftExchange) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QixiGiftExchange) ProtoMessage() {}
+
+func (x *QixiGiftExchange) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QixiGiftExchange.ProtoReflect.Descriptor instead.
+func (*QixiGiftExchange) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *QixiGiftExchange) GetSentItem() *ActivityItem {
+	if x != nil {
+		return x.SentItem
+	}
+	return nil
+}
+
+func (x *QixiGiftExchange) GetReceivedItem() *ActivityItem {
+	if x != nil {
+		return x.ReceivedItem
+	}
+	return nil
+}
+
+func (x *QixiGiftExchange) GetField_3() bool {
+	if x != nil {
+		return x.Field_3
+	}
+	return false
+}
+
+func (x *QixiGiftExchange) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+type QixiGiftProgress struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SentCount     int64                  `protobuf:"varint,1,opt,name=sent_count,json=sentCount,proto3" json:"sent_count,omitempty"`
+	Field_2       int64                  `protobuf:"varint,2,opt,name=field_2,json=field2,proto3" json:"field_2,omitempty"`
+	Field_3       int64                  `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"`
+	Exchange      *QixiGiftExchange      `protobuf:"bytes,4,opt,name=exchange,proto3" json:"exchange,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QixiGiftProgress) Reset() {
+	*x = QixiGiftProgress{}
+	mi := &file_activitypb_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QixiGiftProgress) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QixiGiftProgress) ProtoMessage() {}
+
+func (x *QixiGiftProgress) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QixiGiftProgress.ProtoReflect.Descriptor instead.
+func (*QixiGiftProgress) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *QixiGiftProgress) GetSentCount() int64 {
+	if x != nil {
+		return x.SentCount
+	}
+	return 0
+}
+
+func (x *QixiGiftProgress) GetField_2() int64 {
+	if x != nil {
+		return x.Field_2
+	}
+	return 0
+}
+
+func (x *QixiGiftProgress) GetField_3() int64 {
+	if x != nil {
+		return x.Field_3
+	}
+	return 0
+}
+
+func (x *QixiGiftProgress) GetExchange() *QixiGiftExchange {
+	if x != nil {
+		return x.Exchange
+	}
+	return nil
+}
+
 type QingMeiBrewStarted struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BaseGold      int64                  `protobuf:"varint,1,opt,name=base_gold,json=baseGold,proto3" json:"base_gold,omitempty"`
@@ -915,7 +1519,7 @@ type QingMeiBrewStarted struct {
 
 func (x *QingMeiBrewStarted) Reset() {
 	*x = QingMeiBrewStarted{}
-	mi := &file_activitypb_proto_msgTypes[11]
+	mi := &file_activitypb_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -927,7 +1531,7 @@ func (x *QingMeiBrewStarted) String() string {
 func (*QingMeiBrewStarted) ProtoMessage() {}
 
 func (x *QingMeiBrewStarted) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[11]
+	mi := &file_activitypb_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -940,7 +1544,7 @@ func (x *QingMeiBrewStarted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiBrewStarted.ProtoReflect.Descriptor instead.
 func (*QingMeiBrewStarted) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{11}
+	return file_activitypb_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *QingMeiBrewStarted) GetBaseGold() int64 {
@@ -962,7 +1566,7 @@ type QingMeiQuote struct {
 
 func (x *QingMeiQuote) Reset() {
 	*x = QingMeiQuote{}
-	mi := &file_activitypb_proto_msgTypes[12]
+	mi := &file_activitypb_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -974,7 +1578,7 @@ func (x *QingMeiQuote) String() string {
 func (*QingMeiQuote) ProtoMessage() {}
 
 func (x *QingMeiQuote) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[12]
+	mi := &file_activitypb_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -987,7 +1591,7 @@ func (x *QingMeiQuote) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiQuote.ProtoReflect.Descriptor instead.
 func (*QingMeiQuote) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{12}
+	return file_activitypb_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *QingMeiQuote) GetRound() int64 {
@@ -1029,7 +1633,7 @@ type QingMeiSettlement struct {
 
 func (x *QingMeiSettlement) Reset() {
 	*x = QingMeiSettlement{}
-	mi := &file_activitypb_proto_msgTypes[13]
+	mi := &file_activitypb_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1041,7 +1645,7 @@ func (x *QingMeiSettlement) String() string {
 func (*QingMeiSettlement) ProtoMessage() {}
 
 func (x *QingMeiSettlement) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[13]
+	mi := &file_activitypb_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1054,7 +1658,7 @@ func (x *QingMeiSettlement) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiSettlement.ProtoReflect.Descriptor instead.
 func (*QingMeiSettlement) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{13}
+	return file_activitypb_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *QingMeiSettlement) GetSettlementMode() int64 {
@@ -1090,7 +1694,7 @@ type QueryActivityRequest struct {
 
 func (x *QueryActivityRequest) Reset() {
 	*x = QueryActivityRequest{}
-	mi := &file_activitypb_proto_msgTypes[14]
+	mi := &file_activitypb_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1102,7 +1706,7 @@ func (x *QueryActivityRequest) String() string {
 func (*QueryActivityRequest) ProtoMessage() {}
 
 func (x *QueryActivityRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[14]
+	mi := &file_activitypb_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1115,7 +1719,7 @@ func (x *QueryActivityRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryActivityRequest.ProtoReflect.Descriptor instead.
 func (*QueryActivityRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{14}
+	return file_activitypb_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *QueryActivityRequest) GetActivityId() int64 {
@@ -1142,7 +1746,7 @@ type ExchangeShopOperateParams struct {
 
 func (x *ExchangeShopOperateParams) Reset() {
 	*x = ExchangeShopOperateParams{}
-	mi := &file_activitypb_proto_msgTypes[15]
+	mi := &file_activitypb_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1154,7 +1758,7 @@ func (x *ExchangeShopOperateParams) String() string {
 func (*ExchangeShopOperateParams) ProtoMessage() {}
 
 func (x *ExchangeShopOperateParams) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[15]
+	mi := &file_activitypb_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1167,7 +1771,7 @@ func (x *ExchangeShopOperateParams) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExchangeShopOperateParams.ProtoReflect.Descriptor instead.
 func (*ExchangeShopOperateParams) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{15}
+	return file_activitypb_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *ExchangeShopOperateParams) GetGoodsId() int64 {
@@ -1195,7 +1799,7 @@ type ExchangeShopRequest struct {
 
 func (x *ExchangeShopRequest) Reset() {
 	*x = ExchangeShopRequest{}
-	mi := &file_activitypb_proto_msgTypes[16]
+	mi := &file_activitypb_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1207,7 +1811,7 @@ func (x *ExchangeShopRequest) String() string {
 func (*ExchangeShopRequest) ProtoMessage() {}
 
 func (x *ExchangeShopRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[16]
+	mi := &file_activitypb_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1220,7 +1824,7 @@ func (x *ExchangeShopRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExchangeShopRequest.ProtoReflect.Descriptor instead.
 func (*ExchangeShopRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{16}
+	return file_activitypb_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ExchangeShopRequest) GetActivityId() int64 {
@@ -1255,7 +1859,7 @@ type OperateConstellationRequest struct {
 
 func (x *OperateConstellationRequest) Reset() {
 	*x = OperateConstellationRequest{}
-	mi := &file_activitypb_proto_msgTypes[17]
+	mi := &file_activitypb_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1267,7 +1871,7 @@ func (x *OperateConstellationRequest) String() string {
 func (*OperateConstellationRequest) ProtoMessage() {}
 
 func (x *OperateConstellationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[17]
+	mi := &file_activitypb_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1280,7 +1884,7 @@ func (x *OperateConstellationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperateConstellationRequest.ProtoReflect.Descriptor instead.
 func (*OperateConstellationRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{17}
+	return file_activitypb_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *OperateConstellationRequest) GetActivityId() int64 {
@@ -1315,7 +1919,7 @@ type ClaimQingMeiDailySeedRequest struct {
 
 func (x *ClaimQingMeiDailySeedRequest) Reset() {
 	*x = ClaimQingMeiDailySeedRequest{}
-	mi := &file_activitypb_proto_msgTypes[18]
+	mi := &file_activitypb_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1327,7 +1931,7 @@ func (x *ClaimQingMeiDailySeedRequest) String() string {
 func (*ClaimQingMeiDailySeedRequest) ProtoMessage() {}
 
 func (x *ClaimQingMeiDailySeedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[18]
+	mi := &file_activitypb_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1340,7 +1944,7 @@ func (x *ClaimQingMeiDailySeedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimQingMeiDailySeedRequest.ProtoReflect.Descriptor instead.
 func (*ClaimQingMeiDailySeedRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{18}
+	return file_activitypb_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ClaimQingMeiDailySeedRequest) GetActivityId() int64 {
@@ -1375,7 +1979,7 @@ type StartQingMeiBrewRequest struct {
 
 func (x *StartQingMeiBrewRequest) Reset() {
 	*x = StartQingMeiBrewRequest{}
-	mi := &file_activitypb_proto_msgTypes[19]
+	mi := &file_activitypb_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1387,7 +1991,7 @@ func (x *StartQingMeiBrewRequest) String() string {
 func (*StartQingMeiBrewRequest) ProtoMessage() {}
 
 func (x *StartQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[19]
+	mi := &file_activitypb_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1400,7 +2004,7 @@ func (x *StartQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartQingMeiBrewRequest.ProtoReflect.Descriptor instead.
 func (*StartQingMeiBrewRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{19}
+	return file_activitypb_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *StartQingMeiBrewRequest) GetActivityId() int64 {
@@ -1435,7 +2039,7 @@ type ContinueQingMeiBrewRequest struct {
 
 func (x *ContinueQingMeiBrewRequest) Reset() {
 	*x = ContinueQingMeiBrewRequest{}
-	mi := &file_activitypb_proto_msgTypes[20]
+	mi := &file_activitypb_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1447,7 +2051,7 @@ func (x *ContinueQingMeiBrewRequest) String() string {
 func (*ContinueQingMeiBrewRequest) ProtoMessage() {}
 
 func (x *ContinueQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[20]
+	mi := &file_activitypb_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1460,7 +2064,7 @@ func (x *ContinueQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContinueQingMeiBrewRequest.ProtoReflect.Descriptor instead.
 func (*ContinueQingMeiBrewRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{20}
+	return file_activitypb_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *ContinueQingMeiBrewRequest) GetActivityId() int64 {
@@ -1495,7 +2099,7 @@ type SettleQingMeiBrewRequest struct {
 
 func (x *SettleQingMeiBrewRequest) Reset() {
 	*x = SettleQingMeiBrewRequest{}
-	mi := &file_activitypb_proto_msgTypes[21]
+	mi := &file_activitypb_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1507,7 +2111,7 @@ func (x *SettleQingMeiBrewRequest) String() string {
 func (*SettleQingMeiBrewRequest) ProtoMessage() {}
 
 func (x *SettleQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[21]
+	mi := &file_activitypb_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1520,7 +2124,7 @@ func (x *SettleQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SettleQingMeiBrewRequest.ProtoReflect.Descriptor instead.
 func (*SettleQingMeiBrewRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{21}
+	return file_activitypb_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *SettleQingMeiBrewRequest) GetActivityId() int64 {
@@ -1544,22 +2148,240 @@ func (x *SettleQingMeiBrewRequest) GetParams() *SettleQingMeiBrewRequest_Params 
 	return nil
 }
 
+type ClaimQixiBridgeRewardsRequest struct {
+	state         protoimpl.MessageState                `protogen:"open.v1"`
+	ActivityId    int64                                 `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	OperateType   int64                                 `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
+	Params        *ClaimQixiBridgeRewardsRequest_Params `protobuf:"bytes,125,opt,name=params,proto3" json:"params,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimQixiBridgeRewardsRequest) Reset() {
+	*x = ClaimQixiBridgeRewardsRequest{}
+	mi := &file_activitypb_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimQixiBridgeRewardsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimQixiBridgeRewardsRequest) ProtoMessage() {}
+
+func (x *ClaimQixiBridgeRewardsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimQixiBridgeRewardsRequest.ProtoReflect.Descriptor instead.
+func (*ClaimQixiBridgeRewardsRequest) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *ClaimQixiBridgeRewardsRequest) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+func (x *ClaimQixiBridgeRewardsRequest) GetOperateType() int64 {
+	if x != nil {
+		return x.OperateType
+	}
+	return 0
+}
+
+func (x *ClaimQixiBridgeRewardsRequest) GetParams() *ClaimQixiBridgeRewardsRequest_Params {
+	if x != nil {
+		return x.Params
+	}
+	return nil
+}
+
+type GiftQixiSachetRequest struct {
+	state         protoimpl.MessageState        `protogen:"open.v1"`
+	ActivityId    int64                         `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	OperateType   int64                         `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
+	Params        *GiftQixiSachetRequest_Params `protobuf:"bytes,124,opt,name=params,proto3" json:"params,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GiftQixiSachetRequest) Reset() {
+	*x = GiftQixiSachetRequest{}
+	mi := &file_activitypb_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GiftQixiSachetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GiftQixiSachetRequest) ProtoMessage() {}
+
+func (x *GiftQixiSachetRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GiftQixiSachetRequest.ProtoReflect.Descriptor instead.
+func (*GiftQixiSachetRequest) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *GiftQixiSachetRequest) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+func (x *GiftQixiSachetRequest) GetOperateType() int64 {
+	if x != nil {
+		return x.OperateType
+	}
+	return 0
+}
+
+func (x *GiftQixiSachetRequest) GetParams() *GiftQixiSachetRequest_Params {
+	if x != nil {
+		return x.Params
+	}
+	return nil
+}
+
+type QixiGiftResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QixiGiftResult) Reset() {
+	*x = QixiGiftResult{}
+	mi := &file_activitypb_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QixiGiftResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QixiGiftResult) ProtoMessage() {}
+
+func (x *QixiGiftResult) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QixiGiftResult.ProtoReflect.Descriptor instead.
+func (*QixiGiftResult) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *QixiGiftResult) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type QixiBridgeRewardResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClaimedStages []int64                `protobuf:"varint,1,rep,packed,name=claimed_stages,json=claimedStages,proto3" json:"claimed_stages,omitempty"`
+	Rewards       []*corepb.Item         `protobuf:"bytes,2,rep,name=rewards,proto3" json:"rewards,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QixiBridgeRewardResult) Reset() {
+	*x = QixiBridgeRewardResult{}
+	mi := &file_activitypb_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QixiBridgeRewardResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QixiBridgeRewardResult) ProtoMessage() {}
+
+func (x *QixiBridgeRewardResult) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QixiBridgeRewardResult.ProtoReflect.Descriptor instead.
+func (*QixiBridgeRewardResult) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *QixiBridgeRewardResult) GetClaimedStages() []int64 {
+	if x != nil {
+		return x.ClaimedStages
+	}
+	return nil
+}
+
+func (x *QixiBridgeRewardResult) GetRewards() []*corepb.Item {
+	if x != nil {
+		return x.Rewards
+	}
+	return nil
+}
+
 type ActivityOperateReply struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	ActivityId         int64                  `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
-	OperateType        int64                  `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
-	Data               *ActivityData          `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
-	Rewards            []*corepb.Item         `protobuf:"bytes,104,rep,name=rewards,proto3" json:"rewards,omitempty"`
-	QingmeiBrewStarted *QingMeiBrewStarted    `protobuf:"bytes,113,opt,name=qingmei_brew_started,json=qingmeiBrewStarted,proto3" json:"qingmei_brew_started,omitempty"`
-	QingmeiQuote       *QingMeiQuote          `protobuf:"bytes,114,opt,name=qingmei_quote,json=qingmeiQuote,proto3" json:"qingmei_quote,omitempty"`
-	QingmeiSettlement  *QingMeiSettlement     `protobuf:"bytes,115,opt,name=qingmei_settlement,json=qingmeiSettlement,proto3" json:"qingmei_settlement,omitempty"`
+	state              protoimpl.MessageState  `protogen:"open.v1"`
+	ActivityId         int64                   `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	OperateType        int64                   `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
+	Data               *ActivityData           `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	Rewards            []*corepb.Item          `protobuf:"bytes,104,rep,name=rewards,proto3" json:"rewards,omitempty"`
+	QingmeiBrewStarted *QingMeiBrewStarted     `protobuf:"bytes,113,opt,name=qingmei_brew_started,json=qingmeiBrewStarted,proto3" json:"qingmei_brew_started,omitempty"`
+	QingmeiQuote       *QingMeiQuote           `protobuf:"bytes,114,opt,name=qingmei_quote,json=qingmeiQuote,proto3" json:"qingmei_quote,omitempty"`
+	QingmeiSettlement  *QingMeiSettlement      `protobuf:"bytes,115,opt,name=qingmei_settlement,json=qingmeiSettlement,proto3" json:"qingmei_settlement,omitempty"`
+	QixiGiftResult     *QixiGiftResult         `protobuf:"bytes,125,opt,name=qixi_gift_result,json=qixiGiftResult,proto3" json:"qixi_gift_result,omitempty"`
+	QixiBridgeResult   *QixiBridgeRewardResult `protobuf:"bytes,126,opt,name=qixi_bridge_result,json=qixiBridgeResult,proto3" json:"qixi_bridge_result,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
 func (x *ActivityOperateReply) Reset() {
 	*x = ActivityOperateReply{}
-	mi := &file_activitypb_proto_msgTypes[22]
+	mi := &file_activitypb_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1571,7 +2393,7 @@ func (x *ActivityOperateReply) String() string {
 func (*ActivityOperateReply) ProtoMessage() {}
 
 func (x *ActivityOperateReply) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[22]
+	mi := &file_activitypb_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1584,7 +2406,7 @@ func (x *ActivityOperateReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActivityOperateReply.ProtoReflect.Descriptor instead.
 func (*ActivityOperateReply) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{22}
+	return file_activitypb_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ActivityOperateReply) GetActivityId() int64 {
@@ -1636,6 +2458,20 @@ func (x *ActivityOperateReply) GetQingmeiSettlement() *QingMeiSettlement {
 	return nil
 }
 
+func (x *ActivityOperateReply) GetQixiGiftResult() *QixiGiftResult {
+	if x != nil {
+		return x.QixiGiftResult
+	}
+	return nil
+}
+
+func (x *ActivityOperateReply) GetQixiBridgeResult() *QixiBridgeRewardResult {
+	if x != nil {
+		return x.QixiBridgeResult
+	}
+	return nil
+}
+
 type ActiviesChangeNotify struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Activities    []*ActivityContent     `protobuf:"bytes,1,rep,name=activities,proto3" json:"activities,omitempty"`
@@ -1645,7 +2481,7 @@ type ActiviesChangeNotify struct {
 
 func (x *ActiviesChangeNotify) Reset() {
 	*x = ActiviesChangeNotify{}
-	mi := &file_activitypb_proto_msgTypes[23]
+	mi := &file_activitypb_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1657,7 +2493,7 @@ func (x *ActiviesChangeNotify) String() string {
 func (*ActiviesChangeNotify) ProtoMessage() {}
 
 func (x *ActiviesChangeNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[23]
+	mi := &file_activitypb_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1670,7 +2506,7 @@ func (x *ActiviesChangeNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActiviesChangeNotify.ProtoReflect.Descriptor instead.
 func (*ActiviesChangeNotify) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{23}
+	return file_activitypb_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *ActiviesChangeNotify) GetActivities() []*ActivityContent {
@@ -1688,7 +2524,7 @@ type OperateConstellationRequest_Empty struct {
 
 func (x *OperateConstellationRequest_Empty) Reset() {
 	*x = OperateConstellationRequest_Empty{}
-	mi := &file_activitypb_proto_msgTypes[24]
+	mi := &file_activitypb_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1700,7 +2536,7 @@ func (x *OperateConstellationRequest_Empty) String() string {
 func (*OperateConstellationRequest_Empty) ProtoMessage() {}
 
 func (x *OperateConstellationRequest_Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[24]
+	mi := &file_activitypb_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1713,7 +2549,7 @@ func (x *OperateConstellationRequest_Empty) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use OperateConstellationRequest_Empty.ProtoReflect.Descriptor instead.
 func (*OperateConstellationRequest_Empty) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{17, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{28, 0}
 }
 
 type ClaimQingMeiDailySeedRequest_Params struct {
@@ -1725,7 +2561,7 @@ type ClaimQingMeiDailySeedRequest_Params struct {
 
 func (x *ClaimQingMeiDailySeedRequest_Params) Reset() {
 	*x = ClaimQingMeiDailySeedRequest_Params{}
-	mi := &file_activitypb_proto_msgTypes[25]
+	mi := &file_activitypb_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1737,7 +2573,7 @@ func (x *ClaimQingMeiDailySeedRequest_Params) String() string {
 func (*ClaimQingMeiDailySeedRequest_Params) ProtoMessage() {}
 
 func (x *ClaimQingMeiDailySeedRequest_Params) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[25]
+	mi := &file_activitypb_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1750,7 +2586,7 @@ func (x *ClaimQingMeiDailySeedRequest_Params) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use ClaimQingMeiDailySeedRequest_Params.ProtoReflect.Descriptor instead.
 func (*ClaimQingMeiDailySeedRequest_Params) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{18, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{29, 0}
 }
 
 func (x *ClaimQingMeiDailySeedRequest_Params) GetGrantId() int64 {
@@ -1770,7 +2606,7 @@ type StartQingMeiBrewRequest_Ingredient struct {
 
 func (x *StartQingMeiBrewRequest_Ingredient) Reset() {
 	*x = StartQingMeiBrewRequest_Ingredient{}
-	mi := &file_activitypb_proto_msgTypes[26]
+	mi := &file_activitypb_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1782,7 +2618,7 @@ func (x *StartQingMeiBrewRequest_Ingredient) String() string {
 func (*StartQingMeiBrewRequest_Ingredient) ProtoMessage() {}
 
 func (x *StartQingMeiBrewRequest_Ingredient) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[26]
+	mi := &file_activitypb_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1795,7 +2631,7 @@ func (x *StartQingMeiBrewRequest_Ingredient) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use StartQingMeiBrewRequest_Ingredient.ProtoReflect.Descriptor instead.
 func (*StartQingMeiBrewRequest_Ingredient) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{19, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{30, 0}
 }
 
 func (x *StartQingMeiBrewRequest_Ingredient) GetUid() int64 {
@@ -1821,7 +2657,7 @@ type StartQingMeiBrewRequest_Params struct {
 
 func (x *StartQingMeiBrewRequest_Params) Reset() {
 	*x = StartQingMeiBrewRequest_Params{}
-	mi := &file_activitypb_proto_msgTypes[27]
+	mi := &file_activitypb_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1833,7 +2669,7 @@ func (x *StartQingMeiBrewRequest_Params) String() string {
 func (*StartQingMeiBrewRequest_Params) ProtoMessage() {}
 
 func (x *StartQingMeiBrewRequest_Params) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[27]
+	mi := &file_activitypb_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1846,7 +2682,7 @@ func (x *StartQingMeiBrewRequest_Params) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartQingMeiBrewRequest_Params.ProtoReflect.Descriptor instead.
 func (*StartQingMeiBrewRequest_Params) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{19, 1}
+	return file_activitypb_proto_rawDescGZIP(), []int{30, 1}
 }
 
 func (x *StartQingMeiBrewRequest_Params) GetIngredients() []*StartQingMeiBrewRequest_Ingredient {
@@ -1864,7 +2700,7 @@ type ContinueQingMeiBrewRequest_Empty struct {
 
 func (x *ContinueQingMeiBrewRequest_Empty) Reset() {
 	*x = ContinueQingMeiBrewRequest_Empty{}
-	mi := &file_activitypb_proto_msgTypes[28]
+	mi := &file_activitypb_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1876,7 +2712,7 @@ func (x *ContinueQingMeiBrewRequest_Empty) String() string {
 func (*ContinueQingMeiBrewRequest_Empty) ProtoMessage() {}
 
 func (x *ContinueQingMeiBrewRequest_Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[28]
+	mi := &file_activitypb_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1889,7 +2725,7 @@ func (x *ContinueQingMeiBrewRequest_Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContinueQingMeiBrewRequest_Empty.ProtoReflect.Descriptor instead.
 func (*ContinueQingMeiBrewRequest_Empty) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{20, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{31, 0}
 }
 
 type SettleQingMeiBrewRequest_Params struct {
@@ -1901,7 +2737,7 @@ type SettleQingMeiBrewRequest_Params struct {
 
 func (x *SettleQingMeiBrewRequest_Params) Reset() {
 	*x = SettleQingMeiBrewRequest_Params{}
-	mi := &file_activitypb_proto_msgTypes[29]
+	mi := &file_activitypb_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1913,7 +2749,7 @@ func (x *SettleQingMeiBrewRequest_Params) String() string {
 func (*SettleQingMeiBrewRequest_Params) ProtoMessage() {}
 
 func (x *SettleQingMeiBrewRequest_Params) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[29]
+	mi := &file_activitypb_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1926,12 +2762,108 @@ func (x *SettleQingMeiBrewRequest_Params) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SettleQingMeiBrewRequest_Params.ProtoReflect.Descriptor instead.
 func (*SettleQingMeiBrewRequest_Params) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{21, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{32, 0}
 }
 
 func (x *SettleQingMeiBrewRequest_Params) GetSettlementMode() int64 {
 	if x != nil {
 		return x.SettlementMode
+	}
+	return 0
+}
+
+type ClaimQixiBridgeRewardsRequest_Params struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClaimMode     int64                  `protobuf:"varint,1,opt,name=claim_mode,json=claimMode,proto3" json:"claim_mode,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimQixiBridgeRewardsRequest_Params) Reset() {
+	*x = ClaimQixiBridgeRewardsRequest_Params{}
+	mi := &file_activitypb_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimQixiBridgeRewardsRequest_Params) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimQixiBridgeRewardsRequest_Params) ProtoMessage() {}
+
+func (x *ClaimQixiBridgeRewardsRequest_Params) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimQixiBridgeRewardsRequest_Params.ProtoReflect.Descriptor instead.
+func (*ClaimQixiBridgeRewardsRequest_Params) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{33, 0}
+}
+
+func (x *ClaimQixiBridgeRewardsRequest_Params) GetClaimMode() int64 {
+	if x != nil {
+		return x.ClaimMode
+	}
+	return 0
+}
+
+type GiftQixiSachetRequest_Params struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FriendGid     int64                  `protobuf:"varint,1,opt,name=friend_gid,json=friendGid,proto3" json:"friend_gid,omitempty"`
+	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GiftQixiSachetRequest_Params) Reset() {
+	*x = GiftQixiSachetRequest_Params{}
+	mi := &file_activitypb_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GiftQixiSachetRequest_Params) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GiftQixiSachetRequest_Params) ProtoMessage() {}
+
+func (x *GiftQixiSachetRequest_Params) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GiftQixiSachetRequest_Params.ProtoReflect.Descriptor instead.
+func (*GiftQixiSachetRequest_Params) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{34, 0}
+}
+
+func (x *GiftQixiSachetRequest_Params) GetFriendGid() int64 {
+	if x != nil {
+		return x.FriendGid
+	}
+	return 0
+}
+
+func (x *GiftQixiSachetRequest_Params) GetCount() int64 {
+	if x != nil {
+		return x.Count
 	}
 	return 0
 }
@@ -1994,15 +2926,38 @@ const file_activitypb_proto_rawDesc = "" +
 	"\afield_2\x18\x02 \x01(\x03R\x06field2\x12\x17\n" +
 	"\afield_3\x18\x03 \x01(\x03R\x06field3\x12:\n" +
 	"\x05nodes\x18\x04 \x03(\v2$.gamepb.activitypb.ConstellationNodeR\x05nodes\x12=\n" +
-	"\x06groups\x18\x05 \x03(\v2%.gamepb.activitypb.ConstellationGroupR\x06groups\"\x97\x04\n" +
+	"\x06groups\x18\x05 \x03(\v2%.gamepb.activitypb.ConstellationGroupR\x06groups\"\x83\x05\n" +
 	"\fActivityData\x12>\n" +
-	"\bactivity\x18\x01 \x01(\v2\".gamepb.activitypb.ActivityContentR\bactivity\x12>\n" +
+	"\bactivity\x18\x01 \x01(\v2\".gamepb.activitypb.ActivityContentR\bactivity\x12;\n" +
+	"\bchildren\x18\x02 \x03(\v2\x1f.gamepb.activitypb.ActivityDataR\bchildren\x12>\n" +
 	"\acatalog\x18f \x01(\v2$.gamepb.activitypb.StarSandGoodsListR\acatalog\x12U\n" +
 	"\x12qingmei_daily_seed\x18g \x01(\v2'.gamepb.activitypb.QingMeiDailySeedDataR\x10qingmeiDailySeed\x12E\n" +
 	"\fqingmei_brew\x18l \x01(\v2\".gamepb.activitypb.QingMeiBrewDataR\vqingmeiBrew\x12J\n" +
-	"\rconstellation\x18n \x01(\v2$.gamepb.activitypb.ConstellationDataR\rconstellation\x12W\n" +
-	"\x14qingmei_brew_started\x18q \x01(\v2%.gamepb.activitypb.QingMeiBrewStartedR\x12qingmeiBrewStarted\x12D\n" +
-	"\rqingmei_quote\x18r \x01(\v2\x1f.gamepb.activitypb.QingMeiQuoteR\fqingmeiQuote\"g\n" +
+	"\rconstellation\x18n \x01(\v2$.gamepb.activitypb.ConstellationDataR\rconstellation\x12D\n" +
+	"\vqixi_bridge\x18p \x01(\v2#.gamepb.activitypb.QixiBridgeConfigR\n" +
+	"qixiBridge\x12@\n" +
+	"\tqixi_gift\x18q \x01(\v2#.gamepb.activitypb.QixiGiftProgressR\bqixiGift\x12D\n" +
+	"\rqingmei_quote\x18r \x01(\v2\x1f.gamepb.activitypb.QingMeiQuoteR\fqingmeiQuote\"n\n" +
+	"\x0eActivityWindow\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"begin_time\x18\x03 \x01(\x03R\tbeginTime\x12\x19\n" +
+	"\bend_time\x18\x04 \x01(\x03R\aendTime\"\x15\n" +
+	"\x13ActivityListRequest\"\xa2\x01\n" +
+	"\x11ActivityListReply\x12?\n" +
+	"\n" +
+	"activities\x18\x01 \x03(\v2\x1f.gamepb.activitypb.ActivityDataR\n" +
+	"activities\x12L\n" +
+	"\x10activity_windows\x18\x02 \x03(\v2!.gamepb.activitypb.ActivityWindowR\x0factivityWindows\"5\n" +
+	"\x12SetSplashedRequest\x12\x1f\n" +
+	"\vactivity_id\x18\x01 \x01(\x03R\n" +
+	"activityId\"\x12\n" +
+	"\x10SetSplashedReply\",\n" +
+	"\x0fGetGroupRequest\x12\x19\n" +
+	"\bgroup_id\x18\x01 \x01(\x03R\agroupId\"F\n" +
+	"\rGetGroupReply\x125\n" +
+	"\x05group\x18\x01 \x01(\v2\x1f.gamepb.activitypb.ActivityDataR\x05group\"g\n" +
 	"\x15QingMeiDailySeedGrant\x12\x19\n" +
 	"\bgrant_id\x18\x01 \x01(\x03R\agrantId\x123\n" +
 	"\x04item\x18\x03 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x04item\"p\n" +
@@ -2020,7 +2975,27 @@ const file_activitypb_proto_rawDesc = "" +
 	"\n" +
 	"base_price\x18\a \x01(\x03R\tbasePrice\x122\n" +
 	"\x13ingredient_item_ids\x18\b \x03(\x03B\x02\x10\x01R\x11ingredientItemIds\x12)\n" +
-	"\x10guaranteed_price\x18\t \x01(\x03R\x0fguaranteedPrice\"1\n" +
+	"\x10guaranteed_price\x18\t \x01(\x03R\x0fguaranteedPrice\"\xaf\x01\n" +
+	"\x0fQixiBridgeStage\x12\x14\n" +
+	"\x05stage\x18\x01 \x01(\x03R\x05stage\x123\n" +
+	"\x04cost\x18\x02 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x04cost\x129\n" +
+	"\arewards\x18\x03 \x03(\v2\x1f.gamepb.activitypb.ActivityItemR\arewards\x12\x16\n" +
+	"\x06status\x18\x04 \x01(\x03R\x06status\"\xb9\x01\n" +
+	"\x10QixiBridgeConfig\x12D\n" +
+	"\rdisplay_items\x18\x01 \x03(\v2\x1f.gamepb.activitypb.ActivityItemR\fdisplayItems\x12:\n" +
+	"\x06stages\x18\x02 \x03(\v2\".gamepb.activitypb.QixiBridgeStageR\x06stages\x12#\n" +
+	"\rcurrent_stage\x18\x03 \x01(\x03R\fcurrentStage\"\xc9\x01\n" +
+	"\x10QixiGiftExchange\x12<\n" +
+	"\tsent_item\x18\x01 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\bsentItem\x12D\n" +
+	"\rreceived_item\x18\x02 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\freceivedItem\x12\x17\n" +
+	"\afield_3\x18\x03 \x01(\bR\x06field3\x12\x18\n" +
+	"\aenabled\x18\x04 \x01(\bR\aenabled\"\xa4\x01\n" +
+	"\x10QixiGiftProgress\x12\x1d\n" +
+	"\n" +
+	"sent_count\x18\x01 \x01(\x03R\tsentCount\x12\x17\n" +
+	"\afield_2\x18\x02 \x01(\x03R\x06field2\x12\x17\n" +
+	"\afield_3\x18\x03 \x01(\x03R\x06field3\x12?\n" +
+	"\bexchange\x18\x04 \x01(\v2#.gamepb.activitypb.QixiGiftExchangeR\bexchange\"1\n" +
 	"\x12QingMeiBrewStarted\x12\x1b\n" +
 	"\tbase_gold\x18\x01 \x01(\x03R\bbaseGold\"|\n" +
 	"\fQingMeiQuote\x12\x14\n" +
@@ -2083,7 +3058,29 @@ const file_activitypb_proto_rawDesc = "" +
 	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12J\n" +
 	"\x06params\x18r \x01(\v22.gamepb.activitypb.SettleQingMeiBrewRequest.ParamsR\x06params\x1a1\n" +
 	"\x06Params\x12'\n" +
-	"\x0fsettlement_mode\x18\x01 \x01(\x03R\x0esettlementMode\"\xab\x03\n" +
+	"\x0fsettlement_mode\x18\x01 \x01(\x03R\x0esettlementMode\"\xdd\x01\n" +
+	"\x1dClaimQixiBridgeRewardsRequest\x12\x1f\n" +
+	"\vactivity_id\x18\x01 \x01(\x03R\n" +
+	"activityId\x12!\n" +
+	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12O\n" +
+	"\x06params\x18} \x01(\v27.gamepb.activitypb.ClaimQixiBridgeRewardsRequest.ParamsR\x06params\x1a'\n" +
+	"\x06Params\x12\x1d\n" +
+	"\n" +
+	"claim_mode\x18\x01 \x01(\x03R\tclaimMode\"\xe3\x01\n" +
+	"\x15GiftQixiSachetRequest\x12\x1f\n" +
+	"\vactivity_id\x18\x01 \x01(\x03R\n" +
+	"activityId\x12!\n" +
+	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12G\n" +
+	"\x06params\x18| \x01(\v2/.gamepb.activitypb.GiftQixiSachetRequest.ParamsR\x06params\x1a=\n" +
+	"\x06Params\x12\x1d\n" +
+	"\n" +
+	"friend_gid\x18\x01 \x01(\x03R\tfriendGid\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\"*\n" +
+	"\x0eQixiGiftResult\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"k\n" +
+	"\x16QixiBridgeRewardResult\x12)\n" +
+	"\x0eclaimed_stages\x18\x01 \x03(\x03B\x02\x10\x01R\rclaimedStages\x12&\n" +
+	"\arewards\x18\x02 \x03(\v2\f.corepb.ItemR\arewards\"\xd1\x04\n" +
 	"\x14ActivityOperateReply\x12\x1f\n" +
 	"\vactivity_id\x18\x01 \x01(\x03R\n" +
 	"activityId\x12!\n" +
@@ -2092,7 +3089,9 @@ const file_activitypb_proto_rawDesc = "" +
 	"\arewards\x18h \x03(\v2\f.corepb.ItemR\arewards\x12W\n" +
 	"\x14qingmei_brew_started\x18q \x01(\v2%.gamepb.activitypb.QingMeiBrewStartedR\x12qingmeiBrewStarted\x12D\n" +
 	"\rqingmei_quote\x18r \x01(\v2\x1f.gamepb.activitypb.QingMeiQuoteR\fqingmeiQuote\x12S\n" +
-	"\x12qingmei_settlement\x18s \x01(\v2$.gamepb.activitypb.QingMeiSettlementR\x11qingmeiSettlement\"Z\n" +
+	"\x12qingmei_settlement\x18s \x01(\v2$.gamepb.activitypb.QingMeiSettlementR\x11qingmeiSettlement\x12K\n" +
+	"\x10qixi_gift_result\x18} \x01(\v2!.gamepb.activitypb.QixiGiftResultR\x0eqixiGiftResult\x12W\n" +
+	"\x12qixi_bridge_result\x18~ \x01(\v2).gamepb.activitypb.QixiBridgeRewardResultR\x10qixiBridgeResult\"Z\n" +
 	"\x14ActiviesChangeNotify\x12B\n" +
 	"\n" +
 	"activities\x18\x01 \x03(\v2\".gamepb.activitypb.ActivityContentR\n" +
@@ -2110,39 +3109,56 @@ func file_activitypb_proto_rawDescGZIP() []byte {
 	return file_activitypb_proto_rawDescData
 }
 
-var file_activitypb_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
+var file_activitypb_proto_msgTypes = make([]protoimpl.MessageInfo, 47)
 var file_activitypb_proto_goTypes = []any{
-	(*ActivityContent)(nil),                     // 0: gamepb.activitypb.ActivityContent
-	(*ActivityItem)(nil),                        // 1: gamepb.activitypb.ActivityItem
-	(*StarSandGoods)(nil),                       // 2: gamepb.activitypb.StarSandGoods
-	(*StarSandGoodsList)(nil),                   // 3: gamepb.activitypb.StarSandGoodsList
-	(*ConstellationNode)(nil),                   // 4: gamepb.activitypb.ConstellationNode
-	(*ConstellationGroup)(nil),                  // 5: gamepb.activitypb.ConstellationGroup
-	(*ConstellationData)(nil),                   // 6: gamepb.activitypb.ConstellationData
-	(*ActivityData)(nil),                        // 7: gamepb.activitypb.ActivityData
-	(*QingMeiDailySeedGrant)(nil),               // 8: gamepb.activitypb.QingMeiDailySeedGrant
-	(*QingMeiDailySeedData)(nil),                // 9: gamepb.activitypb.QingMeiDailySeedData
-	(*QingMeiBrewData)(nil),                     // 10: gamepb.activitypb.QingMeiBrewData
-	(*QingMeiBrewStarted)(nil),                  // 11: gamepb.activitypb.QingMeiBrewStarted
-	(*QingMeiQuote)(nil),                        // 12: gamepb.activitypb.QingMeiQuote
-	(*QingMeiSettlement)(nil),                   // 13: gamepb.activitypb.QingMeiSettlement
-	(*QueryActivityRequest)(nil),                // 14: gamepb.activitypb.QueryActivityRequest
-	(*ExchangeShopOperateParams)(nil),           // 15: gamepb.activitypb.ExchangeShopOperateParams
-	(*ExchangeShopRequest)(nil),                 // 16: gamepb.activitypb.ExchangeShopRequest
-	(*OperateConstellationRequest)(nil),         // 17: gamepb.activitypb.OperateConstellationRequest
-	(*ClaimQingMeiDailySeedRequest)(nil),        // 18: gamepb.activitypb.ClaimQingMeiDailySeedRequest
-	(*StartQingMeiBrewRequest)(nil),             // 19: gamepb.activitypb.StartQingMeiBrewRequest
-	(*ContinueQingMeiBrewRequest)(nil),          // 20: gamepb.activitypb.ContinueQingMeiBrewRequest
-	(*SettleQingMeiBrewRequest)(nil),            // 21: gamepb.activitypb.SettleQingMeiBrewRequest
-	(*ActivityOperateReply)(nil),                // 22: gamepb.activitypb.ActivityOperateReply
-	(*ActiviesChangeNotify)(nil),                // 23: gamepb.activitypb.ActiviesChangeNotify
-	(*OperateConstellationRequest_Empty)(nil),   // 24: gamepb.activitypb.OperateConstellationRequest.Empty
-	(*ClaimQingMeiDailySeedRequest_Params)(nil), // 25: gamepb.activitypb.ClaimQingMeiDailySeedRequest.Params
-	(*StartQingMeiBrewRequest_Ingredient)(nil),  // 26: gamepb.activitypb.StartQingMeiBrewRequest.Ingredient
-	(*StartQingMeiBrewRequest_Params)(nil),      // 27: gamepb.activitypb.StartQingMeiBrewRequest.Params
-	(*ContinueQingMeiBrewRequest_Empty)(nil),    // 28: gamepb.activitypb.ContinueQingMeiBrewRequest.Empty
-	(*SettleQingMeiBrewRequest_Params)(nil),     // 29: gamepb.activitypb.SettleQingMeiBrewRequest.Params
-	(*corepb.Item)(nil),                         // 30: corepb.Item
+	(*ActivityContent)(nil),                      // 0: gamepb.activitypb.ActivityContent
+	(*ActivityItem)(nil),                         // 1: gamepb.activitypb.ActivityItem
+	(*StarSandGoods)(nil),                        // 2: gamepb.activitypb.StarSandGoods
+	(*StarSandGoodsList)(nil),                    // 3: gamepb.activitypb.StarSandGoodsList
+	(*ConstellationNode)(nil),                    // 4: gamepb.activitypb.ConstellationNode
+	(*ConstellationGroup)(nil),                   // 5: gamepb.activitypb.ConstellationGroup
+	(*ConstellationData)(nil),                    // 6: gamepb.activitypb.ConstellationData
+	(*ActivityData)(nil),                         // 7: gamepb.activitypb.ActivityData
+	(*ActivityWindow)(nil),                       // 8: gamepb.activitypb.ActivityWindow
+	(*ActivityListRequest)(nil),                  // 9: gamepb.activitypb.ActivityListRequest
+	(*ActivityListReply)(nil),                    // 10: gamepb.activitypb.ActivityListReply
+	(*SetSplashedRequest)(nil),                   // 11: gamepb.activitypb.SetSplashedRequest
+	(*SetSplashedReply)(nil),                     // 12: gamepb.activitypb.SetSplashedReply
+	(*GetGroupRequest)(nil),                      // 13: gamepb.activitypb.GetGroupRequest
+	(*GetGroupReply)(nil),                        // 14: gamepb.activitypb.GetGroupReply
+	(*QingMeiDailySeedGrant)(nil),                // 15: gamepb.activitypb.QingMeiDailySeedGrant
+	(*QingMeiDailySeedData)(nil),                 // 16: gamepb.activitypb.QingMeiDailySeedData
+	(*QingMeiBrewData)(nil),                      // 17: gamepb.activitypb.QingMeiBrewData
+	(*QixiBridgeStage)(nil),                      // 18: gamepb.activitypb.QixiBridgeStage
+	(*QixiBridgeConfig)(nil),                     // 19: gamepb.activitypb.QixiBridgeConfig
+	(*QixiGiftExchange)(nil),                     // 20: gamepb.activitypb.QixiGiftExchange
+	(*QixiGiftProgress)(nil),                     // 21: gamepb.activitypb.QixiGiftProgress
+	(*QingMeiBrewStarted)(nil),                   // 22: gamepb.activitypb.QingMeiBrewStarted
+	(*QingMeiQuote)(nil),                         // 23: gamepb.activitypb.QingMeiQuote
+	(*QingMeiSettlement)(nil),                    // 24: gamepb.activitypb.QingMeiSettlement
+	(*QueryActivityRequest)(nil),                 // 25: gamepb.activitypb.QueryActivityRequest
+	(*ExchangeShopOperateParams)(nil),            // 26: gamepb.activitypb.ExchangeShopOperateParams
+	(*ExchangeShopRequest)(nil),                  // 27: gamepb.activitypb.ExchangeShopRequest
+	(*OperateConstellationRequest)(nil),          // 28: gamepb.activitypb.OperateConstellationRequest
+	(*ClaimQingMeiDailySeedRequest)(nil),         // 29: gamepb.activitypb.ClaimQingMeiDailySeedRequest
+	(*StartQingMeiBrewRequest)(nil),              // 30: gamepb.activitypb.StartQingMeiBrewRequest
+	(*ContinueQingMeiBrewRequest)(nil),           // 31: gamepb.activitypb.ContinueQingMeiBrewRequest
+	(*SettleQingMeiBrewRequest)(nil),             // 32: gamepb.activitypb.SettleQingMeiBrewRequest
+	(*ClaimQixiBridgeRewardsRequest)(nil),        // 33: gamepb.activitypb.ClaimQixiBridgeRewardsRequest
+	(*GiftQixiSachetRequest)(nil),                // 34: gamepb.activitypb.GiftQixiSachetRequest
+	(*QixiGiftResult)(nil),                       // 35: gamepb.activitypb.QixiGiftResult
+	(*QixiBridgeRewardResult)(nil),               // 36: gamepb.activitypb.QixiBridgeRewardResult
+	(*ActivityOperateReply)(nil),                 // 37: gamepb.activitypb.ActivityOperateReply
+	(*ActiviesChangeNotify)(nil),                 // 38: gamepb.activitypb.ActiviesChangeNotify
+	(*OperateConstellationRequest_Empty)(nil),    // 39: gamepb.activitypb.OperateConstellationRequest.Empty
+	(*ClaimQingMeiDailySeedRequest_Params)(nil),  // 40: gamepb.activitypb.ClaimQingMeiDailySeedRequest.Params
+	(*StartQingMeiBrewRequest_Ingredient)(nil),   // 41: gamepb.activitypb.StartQingMeiBrewRequest.Ingredient
+	(*StartQingMeiBrewRequest_Params)(nil),       // 42: gamepb.activitypb.StartQingMeiBrewRequest.Params
+	(*ContinueQingMeiBrewRequest_Empty)(nil),     // 43: gamepb.activitypb.ContinueQingMeiBrewRequest.Empty
+	(*SettleQingMeiBrewRequest_Params)(nil),      // 44: gamepb.activitypb.SettleQingMeiBrewRequest.Params
+	(*ClaimQixiBridgeRewardsRequest_Params)(nil), // 45: gamepb.activitypb.ClaimQixiBridgeRewardsRequest.Params
+	(*GiftQixiSachetRequest_Params)(nil),         // 46: gamepb.activitypb.GiftQixiSachetRequest.Params
+	(*corepb.Item)(nil),                          // 47: corepb.Item
 }
 var file_activitypb_proto_depIdxs = []int32{
 	1,  // 0: gamepb.activitypb.StarSandGoods.item:type_name -> gamepb.activitypb.ActivityItem
@@ -2152,33 +3168,50 @@ var file_activitypb_proto_depIdxs = []int32{
 	4,  // 4: gamepb.activitypb.ConstellationData.nodes:type_name -> gamepb.activitypb.ConstellationNode
 	5,  // 5: gamepb.activitypb.ConstellationData.groups:type_name -> gamepb.activitypb.ConstellationGroup
 	0,  // 6: gamepb.activitypb.ActivityData.activity:type_name -> gamepb.activitypb.ActivityContent
-	3,  // 7: gamepb.activitypb.ActivityData.catalog:type_name -> gamepb.activitypb.StarSandGoodsList
-	9,  // 8: gamepb.activitypb.ActivityData.qingmei_daily_seed:type_name -> gamepb.activitypb.QingMeiDailySeedData
-	10, // 9: gamepb.activitypb.ActivityData.qingmei_brew:type_name -> gamepb.activitypb.QingMeiBrewData
-	6,  // 10: gamepb.activitypb.ActivityData.constellation:type_name -> gamepb.activitypb.ConstellationData
-	11, // 11: gamepb.activitypb.ActivityData.qingmei_brew_started:type_name -> gamepb.activitypb.QingMeiBrewStarted
-	12, // 12: gamepb.activitypb.ActivityData.qingmei_quote:type_name -> gamepb.activitypb.QingMeiQuote
-	1,  // 13: gamepb.activitypb.QingMeiDailySeedGrant.item:type_name -> gamepb.activitypb.ActivityItem
-	8,  // 14: gamepb.activitypb.QingMeiDailySeedData.grant:type_name -> gamepb.activitypb.QingMeiDailySeedGrant
-	30, // 15: gamepb.activitypb.QingMeiSettlement.reward:type_name -> corepb.Item
-	15, // 16: gamepb.activitypb.ExchangeShopRequest.exchange_shop_operate:type_name -> gamepb.activitypb.ExchangeShopOperateParams
-	24, // 17: gamepb.activitypb.OperateConstellationRequest.field_119:type_name -> gamepb.activitypb.OperateConstellationRequest.Empty
-	25, // 18: gamepb.activitypb.ClaimQingMeiDailySeedRequest.params:type_name -> gamepb.activitypb.ClaimQingMeiDailySeedRequest.Params
-	27, // 19: gamepb.activitypb.StartQingMeiBrewRequest.params:type_name -> gamepb.activitypb.StartQingMeiBrewRequest.Params
-	28, // 20: gamepb.activitypb.ContinueQingMeiBrewRequest.params:type_name -> gamepb.activitypb.ContinueQingMeiBrewRequest.Empty
-	29, // 21: gamepb.activitypb.SettleQingMeiBrewRequest.params:type_name -> gamepb.activitypb.SettleQingMeiBrewRequest.Params
-	7,  // 22: gamepb.activitypb.ActivityOperateReply.data:type_name -> gamepb.activitypb.ActivityData
-	30, // 23: gamepb.activitypb.ActivityOperateReply.rewards:type_name -> corepb.Item
-	11, // 24: gamepb.activitypb.ActivityOperateReply.qingmei_brew_started:type_name -> gamepb.activitypb.QingMeiBrewStarted
-	12, // 25: gamepb.activitypb.ActivityOperateReply.qingmei_quote:type_name -> gamepb.activitypb.QingMeiQuote
-	13, // 26: gamepb.activitypb.ActivityOperateReply.qingmei_settlement:type_name -> gamepb.activitypb.QingMeiSettlement
-	0,  // 27: gamepb.activitypb.ActiviesChangeNotify.activities:type_name -> gamepb.activitypb.ActivityContent
-	26, // 28: gamepb.activitypb.StartQingMeiBrewRequest.Params.ingredients:type_name -> gamepb.activitypb.StartQingMeiBrewRequest.Ingredient
-	29, // [29:29] is the sub-list for method output_type
-	29, // [29:29] is the sub-list for method input_type
-	29, // [29:29] is the sub-list for extension type_name
-	29, // [29:29] is the sub-list for extension extendee
-	0,  // [0:29] is the sub-list for field type_name
+	7,  // 7: gamepb.activitypb.ActivityData.children:type_name -> gamepb.activitypb.ActivityData
+	3,  // 8: gamepb.activitypb.ActivityData.catalog:type_name -> gamepb.activitypb.StarSandGoodsList
+	16, // 9: gamepb.activitypb.ActivityData.qingmei_daily_seed:type_name -> gamepb.activitypb.QingMeiDailySeedData
+	17, // 10: gamepb.activitypb.ActivityData.qingmei_brew:type_name -> gamepb.activitypb.QingMeiBrewData
+	6,  // 11: gamepb.activitypb.ActivityData.constellation:type_name -> gamepb.activitypb.ConstellationData
+	19, // 12: gamepb.activitypb.ActivityData.qixi_bridge:type_name -> gamepb.activitypb.QixiBridgeConfig
+	21, // 13: gamepb.activitypb.ActivityData.qixi_gift:type_name -> gamepb.activitypb.QixiGiftProgress
+	23, // 14: gamepb.activitypb.ActivityData.qingmei_quote:type_name -> gamepb.activitypb.QingMeiQuote
+	7,  // 15: gamepb.activitypb.ActivityListReply.activities:type_name -> gamepb.activitypb.ActivityData
+	8,  // 16: gamepb.activitypb.ActivityListReply.activity_windows:type_name -> gamepb.activitypb.ActivityWindow
+	7,  // 17: gamepb.activitypb.GetGroupReply.group:type_name -> gamepb.activitypb.ActivityData
+	1,  // 18: gamepb.activitypb.QingMeiDailySeedGrant.item:type_name -> gamepb.activitypb.ActivityItem
+	15, // 19: gamepb.activitypb.QingMeiDailySeedData.grant:type_name -> gamepb.activitypb.QingMeiDailySeedGrant
+	1,  // 20: gamepb.activitypb.QixiBridgeStage.cost:type_name -> gamepb.activitypb.ActivityItem
+	1,  // 21: gamepb.activitypb.QixiBridgeStage.rewards:type_name -> gamepb.activitypb.ActivityItem
+	1,  // 22: gamepb.activitypb.QixiBridgeConfig.display_items:type_name -> gamepb.activitypb.ActivityItem
+	18, // 23: gamepb.activitypb.QixiBridgeConfig.stages:type_name -> gamepb.activitypb.QixiBridgeStage
+	1,  // 24: gamepb.activitypb.QixiGiftExchange.sent_item:type_name -> gamepb.activitypb.ActivityItem
+	1,  // 25: gamepb.activitypb.QixiGiftExchange.received_item:type_name -> gamepb.activitypb.ActivityItem
+	20, // 26: gamepb.activitypb.QixiGiftProgress.exchange:type_name -> gamepb.activitypb.QixiGiftExchange
+	47, // 27: gamepb.activitypb.QingMeiSettlement.reward:type_name -> corepb.Item
+	26, // 28: gamepb.activitypb.ExchangeShopRequest.exchange_shop_operate:type_name -> gamepb.activitypb.ExchangeShopOperateParams
+	39, // 29: gamepb.activitypb.OperateConstellationRequest.field_119:type_name -> gamepb.activitypb.OperateConstellationRequest.Empty
+	40, // 30: gamepb.activitypb.ClaimQingMeiDailySeedRequest.params:type_name -> gamepb.activitypb.ClaimQingMeiDailySeedRequest.Params
+	42, // 31: gamepb.activitypb.StartQingMeiBrewRequest.params:type_name -> gamepb.activitypb.StartQingMeiBrewRequest.Params
+	43, // 32: gamepb.activitypb.ContinueQingMeiBrewRequest.params:type_name -> gamepb.activitypb.ContinueQingMeiBrewRequest.Empty
+	44, // 33: gamepb.activitypb.SettleQingMeiBrewRequest.params:type_name -> gamepb.activitypb.SettleQingMeiBrewRequest.Params
+	45, // 34: gamepb.activitypb.ClaimQixiBridgeRewardsRequest.params:type_name -> gamepb.activitypb.ClaimQixiBridgeRewardsRequest.Params
+	46, // 35: gamepb.activitypb.GiftQixiSachetRequest.params:type_name -> gamepb.activitypb.GiftQixiSachetRequest.Params
+	47, // 36: gamepb.activitypb.QixiBridgeRewardResult.rewards:type_name -> corepb.Item
+	7,  // 37: gamepb.activitypb.ActivityOperateReply.data:type_name -> gamepb.activitypb.ActivityData
+	47, // 38: gamepb.activitypb.ActivityOperateReply.rewards:type_name -> corepb.Item
+	22, // 39: gamepb.activitypb.ActivityOperateReply.qingmei_brew_started:type_name -> gamepb.activitypb.QingMeiBrewStarted
+	23, // 40: gamepb.activitypb.ActivityOperateReply.qingmei_quote:type_name -> gamepb.activitypb.QingMeiQuote
+	24, // 41: gamepb.activitypb.ActivityOperateReply.qingmei_settlement:type_name -> gamepb.activitypb.QingMeiSettlement
+	35, // 42: gamepb.activitypb.ActivityOperateReply.qixi_gift_result:type_name -> gamepb.activitypb.QixiGiftResult
+	36, // 43: gamepb.activitypb.ActivityOperateReply.qixi_bridge_result:type_name -> gamepb.activitypb.QixiBridgeRewardResult
+	0,  // 44: gamepb.activitypb.ActiviesChangeNotify.activities:type_name -> gamepb.activitypb.ActivityContent
+	41, // 45: gamepb.activitypb.StartQingMeiBrewRequest.Params.ingredients:type_name -> gamepb.activitypb.StartQingMeiBrewRequest.Ingredient
+	46, // [46:46] is the sub-list for method output_type
+	46, // [46:46] is the sub-list for method input_type
+	46, // [46:46] is the sub-list for extension type_name
+	46, // [46:46] is the sub-list for extension extendee
+	0,  // [0:46] is the sub-list for field type_name
 }
 
 func init() { file_activitypb_proto_init() }
@@ -2192,7 +3225,7 @@ func file_activitypb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_activitypb_proto_rawDesc), len(file_activitypb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   30,
+			NumMessages:   47,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

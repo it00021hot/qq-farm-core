@@ -47,6 +47,8 @@ const (
 	operateStartGreenPlumBrew int64 = 14
 	operateContinueGreenPlum  int64 = 15
 	operateSettleGreenPlum    int64 = 16
+	operateQixiBridge         int64 = 25
+	operateQixiGift           int64 = 26
 
 	// GreenPlumItemID 是青梅物品 id。
 	GreenPlumItemID int64 = 41221
@@ -64,6 +66,14 @@ const (
 	GreenPlumSharedSettlementMode int64 = 2
 	// greenPlumAlreadyClaimedCode 是每日种子已领取的错误码。
 	greenPlumAlreadyClaimedCode = "1034014"
+
+	// 鹊桥寄情（2026-08-18）
+	QixiGroupID              int64 = 2026081800
+	QixiBridgeActivityID     int64 = 2026081801
+	QixiGiftActivityID       int64 = 2026081802
+	QixiFeatherItemID        int64 = 1024
+	QixiSachetItemID         int64 = 1025
+	QixiReceivedSachetItemID int64 = 1026
 )
 
 func ShopActivityType() int64          { return shopActivityType }
@@ -554,4 +564,100 @@ func ParsePositiveInt64(s string) (int64, error) {
 		return 0, fmt.Errorf("invalid int64: %q", s)
 	}
 	return v, nil
+}
+
+// GetActivityGroup fetches an activity group (e.g. 鹊桥寄情).
+func (a *API) GetActivityGroup(ctx context.Context, groupID int64) (*activitypb.GetGroupReply, error) {
+	req := &activitypb.GetGroupRequest{GroupId: groupID}
+	raw, err := a.sendActivity(ctx, "GetGroup", marshalMessage(req))
+	if err != nil {
+		return nil, err
+	}
+	reply := &activitypb.GetGroupReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+// ListActivityWindows fetches activity time windows used by sell conditions
+// and the activity directory.
+func (a *API) ListActivityWindows(ctx context.Context) (*activitypb.ActivityListReply, error) {
+	raw, err := a.sendActivity(ctx, "List", marshalMessage(&activitypb.ActivityListRequest{}))
+	if err != nil {
+		return nil, err
+	}
+	reply := &activitypb.ActivityListReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	windows := make([]logic.ActivityWindow, 0, len(reply.ActivityWindows))
+	for _, row := range reply.ActivityWindows {
+		if row == nil || row.Id == 0 {
+			continue
+		}
+		id := strconv.FormatInt(row.Id, 10)
+		windows = append(windows, logic.ActivityWindow{
+			ID:        id,
+			Name:      strings.TrimSpace(row.Name),
+			BeginTime: row.BeginTime,
+			EndTime:   row.EndTime,
+		})
+		logic.RegisterActivity(logic.ActivityRegistryItem{
+			ActivityID: id,
+			Name:       strings.TrimSpace(row.Name),
+			BeginTime:  row.BeginTime,
+			EndTime:    row.EndTime,
+		})
+	}
+	logic.SetActivityWindows(windows)
+	return reply, nil
+}
+
+// ClaimQixiBridgeRewards claims the current 鹊桥 stage reward (operateType=25).
+func (a *API) ClaimQixiBridgeRewards(ctx context.Context) (*activitypb.ActivityOperateReply, error) {
+	req := &activitypb.ClaimQixiBridgeRewardsRequest{
+		ActivityId:  QixiBridgeActivityID,
+		OperateType: operateQixiBridge,
+		Params:      &activitypb.ClaimQixiBridgeRewardsRequest_Params{ClaimMode: 0},
+	}
+	raw, err := a.sendActivity(ctx, "Operate", marshalMessage(req))
+	if err != nil {
+		return nil, err
+	}
+	reply := &activitypb.ActivityOperateReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	if reply.ActivityId != QixiBridgeActivityID || reply.OperateType != operateQixiBridge {
+		return nil, fmt.Errorf("QIXI_RESPONSE_INVALID: 鹊桥奖励回包不匹配")
+	}
+	return reply, nil
+}
+
+// GiftQixiSachet gifts 鹊羽香囊 to a friend (operateType=26).
+func (a *API) GiftQixiSachet(ctx context.Context, friendGID, count int64) (*activitypb.ActivityOperateReply, error) {
+	req := &activitypb.GiftQixiSachetRequest{
+		ActivityId:  QixiGiftActivityID,
+		OperateType: operateQixiGift,
+		Params: &activitypb.GiftQixiSachetRequest_Params{
+			FriendGid: friendGID,
+			Count:     count,
+		},
+	}
+	raw, err := a.sendActivity(ctx, "Operate", marshalMessage(req))
+	if err != nil {
+		return nil, err
+	}
+	reply := &activitypb.ActivityOperateReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	if reply.ActivityId != QixiGiftActivityID || reply.OperateType != operateQixiGift {
+		return nil, fmt.Errorf("QIXI_RESPONSE_INVALID: 鹊羽香囊回包不匹配")
+	}
+	if reply.QixiGiftResult != nil && !reply.QixiGiftResult.Success {
+		return nil, fmt.Errorf("QIXI_GIFT_FAILED: 鹊羽香囊赠送未成功")
+	}
+	return reply, nil
 }

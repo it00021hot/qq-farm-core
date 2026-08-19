@@ -143,8 +143,8 @@ type ActiveNPC struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	NpcId           int64                  `protobuf:"varint,1,opt,name=npc_id,json=npcId,proto3" json:"npc_id,omitempty"`
 	RewardItemId    int64                  `protobuf:"varint,2,opt,name=reward_item_id,json=rewardItemId,proto3" json:"reward_item_id,omitempty"`
-	RewardCount     int32                  `protobuf:"varint,3,opt,name=reward_count,json=rewardCount,proto3" json:"reward_count,omitempty"`
-	StockCount      int32                  `protobuf:"varint,4,opt,name=stock_count,json=stockCount,proto3" json:"stock_count,omitempty"`
+	UnknownField_3  int32                  `protobuf:"varint,3,opt,name=unknown_field_3,json=unknownField3,proto3" json:"unknown_field_3,omitempty"`
+	RewardCount     int32                  `protobuf:"varint,4,opt,name=reward_count,json=rewardCount,proto3" json:"reward_count,omitempty"`
 	CurrencyItemId  int64                  `protobuf:"varint,5,opt,name=currency_item_id,json=currencyItemId,proto3" json:"currency_item_id,omitempty"`
 	Price           int64                  `protobuf:"varint,6,opt,name=price,proto3" json:"price,omitempty"` // Discounted unit price; multiply by reward_count for the order total.
 	DiscountPercent int32                  `protobuf:"varint,7,opt,name=discount_percent,json=discountPercent,proto3" json:"discount_percent,omitempty"`
@@ -197,16 +197,16 @@ func (x *ActiveNPC) GetRewardItemId() int64 {
 	return 0
 }
 
-func (x *ActiveNPC) GetRewardCount() int32 {
+func (x *ActiveNPC) GetUnknownField_3() int32 {
 	if x != nil {
-		return x.RewardCount
+		return x.UnknownField_3
 	}
 	return 0
 }
 
-func (x *ActiveNPC) GetStockCount() int32 {
+func (x *ActiveNPC) GetRewardCount() int32 {
 	if x != nil {
-		return x.StockCount
+		return x.RewardCount
 	}
 	return 0
 }
@@ -317,13 +317,12 @@ const file_mysteryshoppb_proto_rawDesc = "" +
 	"BuyRequest\x12\x15\n" +
 	"\x06npc_id\x18\x01 \x01(\x03R\x05npcId\"\n" +
 	"\n" +
-	"\bBuyReply\"\xa4\x02\n" +
+	"\bBuyReply\"\xab\x02\n" +
 	"\tActiveNPC\x12\x15\n" +
 	"\x06npc_id\x18\x01 \x01(\x03R\x05npcId\x12$\n" +
-	"\x0ereward_item_id\x18\x02 \x01(\x03R\frewardItemId\x12!\n" +
-	"\freward_count\x18\x03 \x01(\x05R\vrewardCount\x12\x1f\n" +
-	"\vstock_count\x18\x04 \x01(\x05R\n" +
-	"stockCount\x12(\n" +
+	"\x0ereward_item_id\x18\x02 \x01(\x03R\frewardItemId\x12&\n" +
+	"\x0funknown_field_3\x18\x03 \x01(\x05R\runknownField3\x12!\n" +
+	"\freward_count\x18\x04 \x01(\x05R\vrewardCount\x12(\n" +
 	"\x10currency_item_id\x18\x05 \x01(\x03R\x0ecurrencyItemId\x12\x14\n" +
 	"\x05price\x18\x06 \x01(\x03R\x05price\x12)\n" +
 	"\x10discount_percent\x18\a \x01(\x05R\x0fdiscountPercent\x12%\n" +
@@ -337,7 +336,7 @@ const file_mysteryshoppb_proto_rawDesc = "" +
 	"expireTime2\xc1\x01\n" +
 	"\x12MysteryShopService\x12b\n" +
 	"\fGetActiveNPC\x12).gamepb.mysteryshoppb.GetActiveNPCRequest\x1a'.gamepb.mysteryshoppb.GetActiveNPCReply\x12G\n" +
-	"\x03Buy\x12 .gamepb.mysteryshoppb.BuyRequest\x1a\x1e.gamepb.mysteryshoppb.BuyReplyBTZRgithub.com/it00021hot/qq-farm-core/internal/farm/proto/mysteryshoppb;mysteryshoppbb\x06proto3"
+	"\x03Buy\x12 .gamepb.mysteryshoppb.BuyRequest\x1a\x1e.gamepb.mysteryshoppb.BuyReplyb\x06proto3"
 
 var (
 	file_mysteryshoppb_proto_rawDescOnce sync.Once

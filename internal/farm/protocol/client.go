@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -46,6 +47,8 @@ type Client struct {
 	closed     atomic.Bool
 	hbCancel   context.CancelFunc
 	readCancel context.CancelFunc
+	inFlight   chan struct{}
+	queued     atomic.Int32
 }
 
 type rpcResult struct {
@@ -81,6 +84,7 @@ func NewClient(opts Options) *Client {
 		onDisconnect:   opts.OnDisconnect,
 		pending:        make(map[int64]chan rpcResult),
 		clientSeq:      1,
+		inFlight:       make(chan struct{}, 5),
 	}
 }
 
@@ -146,8 +150,30 @@ func (c *Client) Close() error {
 	return nil
 }
 
+const (
+	maxInFlightRequests = 5
+	maxQueuedRequests   = 100
+)
+
 // Send performs a request/response RPC wrapped in gatepb.Message.
 func (c *Client) Send(ctx context.Context, service, method string, body []byte) ([]byte, *gatepb.Meta, error) {
+	if !strings.EqualFold(method, "Heartbeat") {
+		if int(c.queued.Load()) >= maxQueuedRequests {
+			return nil, nil, fmt.Errorf("请求等待队列已满: %s (queued=%d)", method, c.queued.Load())
+		}
+		c.queued.Add(1)
+		defer c.queued.Add(-1)
+		select {
+		case c.inFlight <- struct{}{}:
+			defer func() { <-c.inFlight }()
+		case <-ctx.Done():
+			return nil, nil, ctx.Err()
+		}
+	}
+	return c.sendNow(ctx, service, method, body)
+}
+
+func (c *Client) sendNow(ctx context.Context, service, method string, body []byte) ([]byte, *gatepb.Meta, error) {
 	seq, ch, err := c.writeRequest(body, service, method, true)
 	if err != nil {
 		return nil, nil, err

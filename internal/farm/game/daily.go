@@ -67,7 +67,7 @@ func (a *API) ClaimEmail(ctx context.Context, boxType int32, emailID string) (*e
 
 // BatchClaimEmail batch-claims email rewards.
 func (a *API) BatchClaimEmail(ctx context.Context, boxType int32, emailID string) (*emailpb.BatchClaimEmailReply, error) {
-	req := &emailpb.BatchClaimEmailRequest{BoxType: boxType, EmailId: emailID}
+	req := &emailpb.BatchClaimEmailRequest{BoxType: boxType, EmailIds: []string{emailID}}
 	raw, err := a.sendEmail(ctx, "BatchClaimEmail", marshalMessage(req))
 	if err != nil {
 		return nil, err
@@ -153,26 +153,57 @@ func (a *API) GetInviteAward(ctx context.Context, shareCfgID int64) (*sharepb.Ge
 	return reply, nil
 }
 
-// GetDailyGiftStatus fetches QQ VIP daily gift status.
-func (a *API) GetDailyGiftStatus(ctx context.Context) (*qqvippb.GetDailyGiftStatusReply, error) {
-	raw, err := a.sendQQVip(ctx, "GetDailyGiftStatus", marshalMessage(&qqvippb.GetDailyGiftStatusRequest{}))
+// DailyGiftStatus is a panel-facing summary of QQ VIP rewards.
+type DailyGiftStatus struct {
+	HasGift     bool
+	CanClaim    bool
+	RewardTypes []int32
+}
+
+// GetDailyGiftStatus fetches QQ VIP reward status and collapses it into a
+// simple has/can-claim view used by daily automation and the gifts panel.
+func (a *API) GetDailyGiftStatus(ctx context.Context) (*DailyGiftStatus, error) {
+	_, _ = a.sendQQVip(ctx, "RefreshVipInfo", marshalMessage(&qqvippb.RefreshVipInfoRequest{}))
+	raw, err := a.sendQQVip(ctx, "GetQQVipRewardsStatus", marshalMessage(&qqvippb.GetQQVipRewardsStatusRequest{}))
 	if err != nil {
 		return nil, err
 	}
-	reply := &qqvippb.GetDailyGiftStatusReply{}
+	reply := &qqvippb.GetQQVipRewardsStatusReply{}
 	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
-	return reply, nil
+	out := &DailyGiftStatus{}
+	for _, item := range reply.RewardStatuses {
+		if item == nil {
+			continue
+		}
+		if item.Enabled {
+			out.HasGift = true
+		}
+		if item.Enabled && item.CanClaim && item.RewardType > 0 {
+			out.CanClaim = true
+			out.RewardTypes = append(out.RewardTypes, item.RewardType)
+		}
+	}
+	return out, nil
 }
 
-// ClaimDailyGift claims the QQ VIP daily gift.
-func (a *API) ClaimDailyGift(ctx context.Context) (*qqvippb.ClaimDailyGiftReply, error) {
-	raw, err := a.sendQQVip(ctx, "ClaimDailyGift", marshalMessage(&qqvippb.ClaimDailyGiftRequest{}))
+// ClaimDailyGift claims every currently claimable QQ VIP reward type.
+func (a *API) ClaimDailyGift(ctx context.Context) (*qqvippb.ClaimQQVipRewardsReply, error) {
+	status, err := a.GetDailyGiftStatus(ctx)
 	if err != nil {
 		return nil, err
 	}
-	reply := &qqvippb.ClaimDailyGiftReply{}
+	if status == nil || len(status.RewardTypes) == 0 {
+		return &qqvippb.ClaimQQVipRewardsReply{}, nil
+	}
+	raw, err := a.sendQQVip(ctx, "ClaimQQVipRewards", marshalMessage(&qqvippb.ClaimQQVipRewardsRequest{
+		RewardTypes: status.RewardTypes,
+	}))
+	if err != nil {
+		return nil, err
+	}
+	reply := &qqvippb.ClaimQQVipRewardsReply{}
 	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}

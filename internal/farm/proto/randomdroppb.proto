@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.randomdroppb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/randomdroppb;randomdroppb";
 import "corepb.proto";
 
 // ============ 随机掉落活动服务 ============

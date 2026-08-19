@@ -81,6 +81,9 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Post("/activity/solar-terms/claim", activity.Activity.ClaimSolarTerm).Name("领取节令")
 		router.Post("/activity/task/claim", activity.Activity.ClaimTask).Name("领取任务")
 		router.Post("/activity/gift/claim", activity.Activity.ClaimGift).Name("领取礼包")
+		router.Get("/activity/qixi", activity.Activity.Qixi).Name("鹊桥寄情")
+		router.Post("/activity/qixi/bridge/claim", activity.Activity.ClaimQixiBridge).Name("领取鹊桥奖励")
+		router.Post("/activity/qixi/gift", activity.Activity.GiftQixiSachet).Name("赠送鹊羽香囊")
 
 		router.Get("/analytics/detail", analytics.Analytics.Detail).Name("分析详情")
 		router.Get("/game-config/list", gameconfig.GameConfig.List).Name("游戏配置列表")

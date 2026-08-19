@@ -365,6 +365,7 @@ func (*GetInteractInfoRequest) Descriptor() ([]byte, []int) {
 type GetInteractInfoReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Infos         []*InteractInfo        `protobuf:"bytes,1,rep,name=infos,proto3" json:"infos,omitempty"`
+	ServerTime    int64                  `protobuf:"varint,2,opt,name=server_time,json=serverTime,proto3" json:"server_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -404,6 +405,13 @@ func (x *GetInteractInfoReply) GetInfos() []*InteractInfo {
 		return x.Infos
 	}
 	return nil
+}
+
+func (x *GetInteractInfoReply) GetServerTime() int64 {
+	if x != nil {
+		return x.ServerTime
+	}
+	return 0
 }
 
 // --- 获取互动摘要 ---
@@ -748,9 +756,11 @@ const file_interactpb_proto_rawDesc = "" +
 	"\n" +
 	"crop_count\x18\a \x01(\x05R\tcropCount\x12\x14\n" +
 	"\x05level\x18\b \x01(\x05R\x05level\"\x18\n" +
-	"\x16GetInteractInfoRequest\"M\n" +
+	"\x16GetInteractInfoRequest\"n\n" +
 	"\x14GetInteractInfoReply\x125\n" +
-	"\x05infos\x18\x01 \x03(\v2\x1f.gamepb.interactpb.InteractInfoR\x05infos\"\xe7\x01\n" +
+	"\x05infos\x18\x01 \x03(\v2\x1f.gamepb.interactpb.InteractInfoR\x05infos\x12\x1f\n" +
+	"\vserver_time\x18\x02 \x01(\x03R\n" +
+	"serverTime\"\xe7\x01\n" +
 	"\x0fInteractSummary\x12\x1f\n" +
 	"\vtotal_water\x18\x01 \x01(\x03R\n" +
 	"totalWater\x12+\n" +
@@ -765,7 +775,7 @@ const file_interactpb_proto_rawDesc = "" +
 	"\x17GetInteractSummaryReply\x12<\n" +
 	"\asummary\x18\x01 \x01(\v2\".gamepb.interactpb.InteractSummaryR\asummary\"\x1d\n" +
 	"\x1bDismissInteractPopupRequest\"\x1b\n" +
-	"\x19DismissInteractPopupReplyBNZLgithub.com/it00021hot/qq-farm-core/internal/farm/proto/interactpb;interactpbb\x06proto3"
+	"\x19DismissInteractPopupReplyb\x06proto3"
 
 var (
 	file_interactpb_proto_rawDescOnce sync.Once

@@ -382,7 +382,7 @@ const file_game_proto_rawDesc = "" +
 	"\aRequest\x10\x01\x12\f\n" +
 	"\bResponse\x10\x02\x12\n" +
 	"\n" +
-	"\x06Notify\x10\x03BFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/gatepb;gatepbb\x06proto3"
+	"\x06Notify\x10\x03b\x06proto3"
 
 var (
 	file_game_proto_rawDescOnce sync.Once

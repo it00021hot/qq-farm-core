@@ -25,6 +25,7 @@ const (
 type SkinItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SkinId        int64                  `protobuf:"varint,1,opt,name=skin_id,json=skinId,proto3" json:"skin_id,omitempty"`
+	IsNew         bool                   `protobuf:"varint,3,opt,name=is_new,json=isNew,proto3" json:"is_new,omitempty"`
 	SlotType      int64                  `protobuf:"varint,2,opt,name=slot_type,json=slotType,proto3" json:"slot_type,omitempty"` // 装备槽位类型
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -65,6 +66,13 @@ func (x *SkinItem) GetSkinId() int64 {
 		return x.SkinId
 	}
 	return 0
+}
+
+func (x *SkinItem) GetIsNew() bool {
+	if x != nil {
+		return x.IsNew
+	}
+	return false
 }
 
 func (x *SkinItem) GetSlotType() int64 {
@@ -193,10 +201,11 @@ func (*SkinsEquippedRequest) Descriptor() ([]byte, []int) {
 }
 
 type SkinsEquippedReply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Skins         []*SkinItem            `protobuf:"bytes,1,rep,name=skins,proto3" json:"skins,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Skins           []*SkinItem            `protobuf:"bytes,1,rep,name=skins,proto3" json:"skins,omitempty"`
+	EffectSelection *SkinEffectSelection   `protobuf:"bytes,2,opt,name=effect_selection,json=effectSelection,proto3" json:"effect_selection,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *SkinsEquippedReply) Reset() {
@@ -236,6 +245,249 @@ func (x *SkinsEquippedReply) GetSkins() []*SkinItem {
 	return nil
 }
 
+func (x *SkinsEquippedReply) GetEffectSelection() *SkinEffectSelection {
+	if x != nil {
+		return x.EffectSelection
+	}
+	return nil
+}
+
+type SkinEffectSelection struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EffectType    int64                  `protobuf:"varint,1,opt,name=effect_type,json=effectType,proto3" json:"effect_type,omitempty"`
+	EffectValue   int64                  `protobuf:"varint,2,opt,name=effect_value,json=effectValue,proto3" json:"effect_value,omitempty"`
+	Enabled       bool                   `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SkinEffectSelection) Reset() {
+	*x = SkinEffectSelection{}
+	mi := &file_skinpb_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SkinEffectSelection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SkinEffectSelection) ProtoMessage() {}
+
+func (x *SkinEffectSelection) ProtoReflect() protoreflect.Message {
+	mi := &file_skinpb_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SkinEffectSelection.ProtoReflect.Descriptor instead.
+func (*SkinEffectSelection) Descriptor() ([]byte, []int) {
+	return file_skinpb_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *SkinEffectSelection) GetEffectType() int64 {
+	if x != nil {
+		return x.EffectType
+	}
+	return 0
+}
+
+func (x *SkinEffectSelection) GetEffectValue() int64 {
+	if x != nil {
+		return x.EffectValue
+	}
+	return 0
+}
+
+func (x *SkinEffectSelection) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+type SkinEffectParams struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value         int64                  `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SkinEffectParams) Reset() {
+	*x = SkinEffectParams{}
+	mi := &file_skinpb_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SkinEffectParams) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SkinEffectParams) ProtoMessage() {}
+
+func (x *SkinEffectParams) ProtoReflect() protoreflect.Message {
+	mi := &file_skinpb_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SkinEffectParams.ProtoReflect.Descriptor instead.
+func (*SkinEffectParams) Descriptor() ([]byte, []int) {
+	return file_skinpb_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SkinEffectParams) GetValue() int64 {
+	if x != nil {
+		return x.Value
+	}
+	return 0
+}
+
+type SkinEffectTypeParam struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EffectType    int64                  `protobuf:"varint,1,opt,name=effect_type,json=effectType,proto3" json:"effect_type,omitempty"`
+	Params        *SkinEffectParams      `protobuf:"bytes,2,opt,name=params,proto3" json:"params,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SkinEffectTypeParam) Reset() {
+	*x = SkinEffectTypeParam{}
+	mi := &file_skinpb_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SkinEffectTypeParam) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SkinEffectTypeParam) ProtoMessage() {}
+
+func (x *SkinEffectTypeParam) ProtoReflect() protoreflect.Message {
+	mi := &file_skinpb_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SkinEffectTypeParam.ProtoReflect.Descriptor instead.
+func (*SkinEffectTypeParam) Descriptor() ([]byte, []int) {
+	return file_skinpb_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SkinEffectTypeParam) GetEffectType() int64 {
+	if x != nil {
+		return x.EffectType
+	}
+	return 0
+}
+
+func (x *SkinEffectTypeParam) GetParams() *SkinEffectParams {
+	if x != nil {
+		return x.Params
+	}
+	return nil
+}
+
+type GetSkinEffectTypeParamsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSkinEffectTypeParamsRequest) Reset() {
+	*x = GetSkinEffectTypeParamsRequest{}
+	mi := &file_skinpb_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSkinEffectTypeParamsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSkinEffectTypeParamsRequest) ProtoMessage() {}
+
+func (x *GetSkinEffectTypeParamsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_skinpb_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSkinEffectTypeParamsRequest.ProtoReflect.Descriptor instead.
+func (*GetSkinEffectTypeParamsRequest) Descriptor() ([]byte, []int) {
+	return file_skinpb_proto_rawDescGZIP(), []int{8}
+}
+
+type GetSkinEffectTypeParamsReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Params        []*SkinEffectTypeParam `protobuf:"bytes,1,rep,name=params,proto3" json:"params,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSkinEffectTypeParamsReply) Reset() {
+	*x = GetSkinEffectTypeParamsReply{}
+	mi := &file_skinpb_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSkinEffectTypeParamsReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSkinEffectTypeParamsReply) ProtoMessage() {}
+
+func (x *GetSkinEffectTypeParamsReply) ProtoReflect() protoreflect.Message {
+	mi := &file_skinpb_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSkinEffectTypeParamsReply.ProtoReflect.Descriptor instead.
+func (*GetSkinEffectTypeParamsReply) Descriptor() ([]byte, []int) {
+	return file_skinpb_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *GetSkinEffectTypeParamsReply) GetParams() []*SkinEffectTypeParam {
+	if x != nil {
+		return x.Params
+	}
+	return nil
+}
+
 // --- 装备皮肤 ---
 type EquipRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -247,7 +499,7 @@ type EquipRequest struct {
 
 func (x *EquipRequest) Reset() {
 	*x = EquipRequest{}
-	mi := &file_skinpb_proto_msgTypes[5]
+	mi := &file_skinpb_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -259,7 +511,7 @@ func (x *EquipRequest) String() string {
 func (*EquipRequest) ProtoMessage() {}
 
 func (x *EquipRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_skinpb_proto_msgTypes[5]
+	mi := &file_skinpb_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -272,7 +524,7 @@ func (x *EquipRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EquipRequest.ProtoReflect.Descriptor instead.
 func (*EquipRequest) Descriptor() ([]byte, []int) {
-	return file_skinpb_proto_rawDescGZIP(), []int{5}
+	return file_skinpb_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *EquipRequest) GetSkinId() int64 {
@@ -298,7 +550,7 @@ type EquipReply struct {
 
 func (x *EquipReply) Reset() {
 	*x = EquipReply{}
-	mi := &file_skinpb_proto_msgTypes[6]
+	mi := &file_skinpb_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -310,7 +562,7 @@ func (x *EquipReply) String() string {
 func (*EquipReply) ProtoMessage() {}
 
 func (x *EquipReply) ProtoReflect() protoreflect.Message {
-	mi := &file_skinpb_proto_msgTypes[6]
+	mi := &file_skinpb_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -323,7 +575,7 @@ func (x *EquipReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EquipReply.ProtoReflect.Descriptor instead.
 func (*EquipReply) Descriptor() ([]byte, []int) {
-	return file_skinpb_proto_rawDescGZIP(), []int{6}
+	return file_skinpb_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *EquipReply) GetSkins() []*SkinItem {
@@ -343,7 +595,7 @@ type MarkAsViewedRequest struct {
 
 func (x *MarkAsViewedRequest) Reset() {
 	*x = MarkAsViewedRequest{}
-	mi := &file_skinpb_proto_msgTypes[7]
+	mi := &file_skinpb_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -355,7 +607,7 @@ func (x *MarkAsViewedRequest) String() string {
 func (*MarkAsViewedRequest) ProtoMessage() {}
 
 func (x *MarkAsViewedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_skinpb_proto_msgTypes[7]
+	mi := &file_skinpb_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -368,7 +620,7 @@ func (x *MarkAsViewedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkAsViewedRequest.ProtoReflect.Descriptor instead.
 func (*MarkAsViewedRequest) Descriptor() ([]byte, []int) {
-	return file_skinpb_proto_rawDescGZIP(), []int{7}
+	return file_skinpb_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *MarkAsViewedRequest) GetSkinIds() []int64 {
@@ -386,7 +638,7 @@ type MarkAsViewedReply struct {
 
 func (x *MarkAsViewedReply) Reset() {
 	*x = MarkAsViewedReply{}
-	mi := &file_skinpb_proto_msgTypes[8]
+	mi := &file_skinpb_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -398,7 +650,7 @@ func (x *MarkAsViewedReply) String() string {
 func (*MarkAsViewedReply) ProtoMessage() {}
 
 func (x *MarkAsViewedReply) ProtoReflect() protoreflect.Message {
-	mi := &file_skinpb_proto_msgTypes[8]
+	mi := &file_skinpb_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -411,7 +663,7 @@ func (x *MarkAsViewedReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MarkAsViewedReply.ProtoReflect.Descriptor instead.
 func (*MarkAsViewedReply) Descriptor() ([]byte, []int) {
-	return file_skinpb_proto_rawDescGZIP(), []int{8}
+	return file_skinpb_proto_rawDescGZIP(), []int{13}
 }
 
 // 皮肤变更通知
@@ -424,7 +676,7 @@ type SkinChangeNotify struct {
 
 func (x *SkinChangeNotify) Reset() {
 	*x = SkinChangeNotify{}
-	mi := &file_skinpb_proto_msgTypes[9]
+	mi := &file_skinpb_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -436,7 +688,7 @@ func (x *SkinChangeNotify) String() string {
 func (*SkinChangeNotify) ProtoMessage() {}
 
 func (x *SkinChangeNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_skinpb_proto_msgTypes[9]
+	mi := &file_skinpb_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -449,7 +701,7 @@ func (x *SkinChangeNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SkinChangeNotify.ProtoReflect.Descriptor instead.
 func (*SkinChangeNotify) Descriptor() ([]byte, []int) {
-	return file_skinpb_proto_rawDescGZIP(), []int{9}
+	return file_skinpb_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *SkinChangeNotify) GetSkins() []*SkinItem {
@@ -463,16 +715,32 @@ var File_skinpb_proto protoreflect.FileDescriptor
 
 const file_skinpb_proto_rawDesc = "" +
 	"\n" +
-	"\fskinpb.proto\x12\rgamepb.skinpb\"@\n" +
+	"\fskinpb.proto\x12\rgamepb.skinpb\"W\n" +
 	"\bSkinItem\x12\x17\n" +
-	"\askin_id\x18\x01 \x01(\x03R\x06skinId\x12\x1b\n" +
+	"\askin_id\x18\x01 \x01(\x03R\x06skinId\x12\x15\n" +
+	"\x06is_new\x18\x03 \x01(\bR\x05isNew\x12\x1b\n" +
 	"\tslot_type\x18\x02 \x01(\x03R\bslotType\"\x13\n" +
 	"\x11SkinsOwnedRequest\"@\n" +
 	"\x0fSkinsOwnedReply\x12-\n" +
 	"\x05skins\x18\x01 \x03(\v2\x17.gamepb.skinpb.SkinItemR\x05skins\"\x16\n" +
-	"\x14SkinsEquippedRequest\"C\n" +
+	"\x14SkinsEquippedRequest\"\x92\x01\n" +
 	"\x12SkinsEquippedReply\x12-\n" +
-	"\x05skins\x18\x01 \x03(\v2\x17.gamepb.skinpb.SkinItemR\x05skins\"D\n" +
+	"\x05skins\x18\x01 \x03(\v2\x17.gamepb.skinpb.SkinItemR\x05skins\x12M\n" +
+	"\x10effect_selection\x18\x02 \x01(\v2\".gamepb.skinpb.SkinEffectSelectionR\x0feffectSelection\"s\n" +
+	"\x13SkinEffectSelection\x12\x1f\n" +
+	"\veffect_type\x18\x01 \x01(\x03R\n" +
+	"effectType\x12!\n" +
+	"\feffect_value\x18\x02 \x01(\x03R\veffectValue\x12\x18\n" +
+	"\aenabled\x18\x03 \x01(\bR\aenabled\"(\n" +
+	"\x10SkinEffectParams\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\x03R\x05value\"o\n" +
+	"\x13SkinEffectTypeParam\x12\x1f\n" +
+	"\veffect_type\x18\x01 \x01(\x03R\n" +
+	"effectType\x127\n" +
+	"\x06params\x18\x02 \x01(\v2\x1f.gamepb.skinpb.SkinEffectParamsR\x06params\" \n" +
+	"\x1eGetSkinEffectTypeParamsRequest\"Z\n" +
+	"\x1cGetSkinEffectTypeParamsReply\x12:\n" +
+	"\x06params\x18\x01 \x03(\v2\".gamepb.skinpb.SkinEffectTypeParamR\x06params\"D\n" +
 	"\fEquipRequest\x12\x17\n" +
 	"\askin_id\x18\x01 \x01(\x03R\x06skinId\x12\x1b\n" +
 	"\tslot_type\x18\x02 \x01(\x03R\bslotType\";\n" +
@@ -483,7 +751,7 @@ const file_skinpb_proto_rawDesc = "" +
 	"\bskin_ids\x18\x01 \x03(\x03R\askinIds\"\x13\n" +
 	"\x11MarkAsViewedReply\"A\n" +
 	"\x10SkinChangeNotify\x12-\n" +
-	"\x05skins\x18\x01 \x03(\v2\x17.gamepb.skinpb.SkinItemR\x05skinsBFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/skinpb;skinpbb\x06proto3"
+	"\x05skins\x18\x01 \x03(\v2\x17.gamepb.skinpb.SkinItemR\x05skinsb\x06proto3"
 
 var (
 	file_skinpb_proto_rawDescOnce sync.Once
@@ -497,29 +765,37 @@ func file_skinpb_proto_rawDescGZIP() []byte {
 	return file_skinpb_proto_rawDescData
 }
 
-var file_skinpb_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_skinpb_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_skinpb_proto_goTypes = []any{
-	(*SkinItem)(nil),             // 0: gamepb.skinpb.SkinItem
-	(*SkinsOwnedRequest)(nil),    // 1: gamepb.skinpb.SkinsOwnedRequest
-	(*SkinsOwnedReply)(nil),      // 2: gamepb.skinpb.SkinsOwnedReply
-	(*SkinsEquippedRequest)(nil), // 3: gamepb.skinpb.SkinsEquippedRequest
-	(*SkinsEquippedReply)(nil),   // 4: gamepb.skinpb.SkinsEquippedReply
-	(*EquipRequest)(nil),         // 5: gamepb.skinpb.EquipRequest
-	(*EquipReply)(nil),           // 6: gamepb.skinpb.EquipReply
-	(*MarkAsViewedRequest)(nil),  // 7: gamepb.skinpb.MarkAsViewedRequest
-	(*MarkAsViewedReply)(nil),    // 8: gamepb.skinpb.MarkAsViewedReply
-	(*SkinChangeNotify)(nil),     // 9: gamepb.skinpb.SkinChangeNotify
+	(*SkinItem)(nil),                       // 0: gamepb.skinpb.SkinItem
+	(*SkinsOwnedRequest)(nil),              // 1: gamepb.skinpb.SkinsOwnedRequest
+	(*SkinsOwnedReply)(nil),                // 2: gamepb.skinpb.SkinsOwnedReply
+	(*SkinsEquippedRequest)(nil),           // 3: gamepb.skinpb.SkinsEquippedRequest
+	(*SkinsEquippedReply)(nil),             // 4: gamepb.skinpb.SkinsEquippedReply
+	(*SkinEffectSelection)(nil),            // 5: gamepb.skinpb.SkinEffectSelection
+	(*SkinEffectParams)(nil),               // 6: gamepb.skinpb.SkinEffectParams
+	(*SkinEffectTypeParam)(nil),            // 7: gamepb.skinpb.SkinEffectTypeParam
+	(*GetSkinEffectTypeParamsRequest)(nil), // 8: gamepb.skinpb.GetSkinEffectTypeParamsRequest
+	(*GetSkinEffectTypeParamsReply)(nil),   // 9: gamepb.skinpb.GetSkinEffectTypeParamsReply
+	(*EquipRequest)(nil),                   // 10: gamepb.skinpb.EquipRequest
+	(*EquipReply)(nil),                     // 11: gamepb.skinpb.EquipReply
+	(*MarkAsViewedRequest)(nil),            // 12: gamepb.skinpb.MarkAsViewedRequest
+	(*MarkAsViewedReply)(nil),              // 13: gamepb.skinpb.MarkAsViewedReply
+	(*SkinChangeNotify)(nil),               // 14: gamepb.skinpb.SkinChangeNotify
 }
 var file_skinpb_proto_depIdxs = []int32{
 	0, // 0: gamepb.skinpb.SkinsOwnedReply.skins:type_name -> gamepb.skinpb.SkinItem
 	0, // 1: gamepb.skinpb.SkinsEquippedReply.skins:type_name -> gamepb.skinpb.SkinItem
-	0, // 2: gamepb.skinpb.EquipReply.skins:type_name -> gamepb.skinpb.SkinItem
-	0, // 3: gamepb.skinpb.SkinChangeNotify.skins:type_name -> gamepb.skinpb.SkinItem
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	5, // 2: gamepb.skinpb.SkinsEquippedReply.effect_selection:type_name -> gamepb.skinpb.SkinEffectSelection
+	6, // 3: gamepb.skinpb.SkinEffectTypeParam.params:type_name -> gamepb.skinpb.SkinEffectParams
+	7, // 4: gamepb.skinpb.GetSkinEffectTypeParamsReply.params:type_name -> gamepb.skinpb.SkinEffectTypeParam
+	0, // 5: gamepb.skinpb.EquipReply.skins:type_name -> gamepb.skinpb.SkinItem
+	0, // 6: gamepb.skinpb.SkinChangeNotify.skins:type_name -> gamepb.skinpb.SkinItem
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_skinpb_proto_init() }
@@ -533,7 +809,7 @@ func file_skinpb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_skinpb_proto_rawDesc), len(file_skinpb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

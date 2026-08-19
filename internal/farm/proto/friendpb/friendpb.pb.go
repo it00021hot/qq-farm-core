@@ -7,6 +7,7 @@
 package friendpb
 
 import (
+	avatarframepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/avatarframepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -185,19 +186,26 @@ func (x *Tags) GetIsFollow() bool {
 
 // ============ 好友信息 ============
 type GameFriend struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Gid              int64                  `protobuf:"varint,1,opt,name=gid,proto3" json:"gid,omitempty"`
-	OpenId           string                 `protobuf:"bytes,2,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
-	Name             string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	AvatarUrl        string                 `protobuf:"bytes,4,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
-	Remark           string                 `protobuf:"bytes,5,opt,name=remark,proto3" json:"remark,omitempty"`
-	Level            int64                  `protobuf:"varint,6,opt,name=level,proto3" json:"level,omitempty"`
-	Gold             int64                  `protobuf:"varint,7,opt,name=gold,proto3" json:"gold,omitempty"`
-	Tags             *Tags                  `protobuf:"bytes,8,opt,name=tags,proto3" json:"tags,omitempty"`
-	Plant            *Plant                 `protobuf:"bytes,9,opt,name=plant,proto3" json:"plant,omitempty"`
-	AuthorizedStatus int32                  `protobuf:"varint,10,opt,name=authorized_status,json=authorizedStatus,proto3" json:"authorized_status,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state             protoimpl.MessageState       `protogen:"open.v1"`
+	Gid               int64                        `protobuf:"varint,1,opt,name=gid,proto3" json:"gid,omitempty"`
+	OpenId            string                       `protobuf:"bytes,2,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
+	Name              string                       `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	AvatarUrl         string                       `protobuf:"bytes,4,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
+	Remark            string                       `protobuf:"bytes,5,opt,name=remark,proto3" json:"remark,omitempty"`
+	Level             int64                        `protobuf:"varint,6,opt,name=level,proto3" json:"level,omitempty"`
+	Gold              int64                        `protobuf:"varint,7,opt,name=gold,proto3" json:"gold,omitempty"`
+	Tags              *Tags                        `protobuf:"bytes,8,opt,name=tags,proto3" json:"tags,omitempty"`
+	Plant             *Plant                       `protobuf:"bytes,9,opt,name=plant,proto3" json:"plant,omitempty"`
+	AuthorizedStatus  int32                        `protobuf:"varint,10,opt,name=authorized_status,json=authorizedStatus,proto3" json:"authorized_status,omitempty"`
+	Illustrated       *FriendIllustrated           `protobuf:"bytes,12,opt,name=illustrated,proto3" json:"illustrated,omitempty"`
+	EquipAvatarFrames []*avatarframepb.AvatarFrame `protobuf:"bytes,13,rep,name=equip_avatar_frames,json=equipAvatarFrames,proto3" json:"equip_avatar_frames,omitempty"`
+	Exp               int64                        `protobuf:"varint,14,opt,name=exp,proto3" json:"exp,omitempty"`
+	Field_15          bool                         `protobuf:"varint,15,opt,name=field_15,json=field15,proto3" json:"field_15,omitempty"`
+	Title             *FriendTitle                 `protobuf:"bytes,16,opt,name=title,proto3" json:"title,omitempty"`
+	Activity          *FriendActivity              `protobuf:"bytes,18,opt,name=activity,proto3" json:"activity,omitempty"`
+	LastActiveTime    int64                        `protobuf:"varint,19,opt,name=last_active_time,json=lastActiveTime,proto3" json:"last_active_time,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *GameFriend) Reset() {
@@ -300,6 +308,295 @@ func (x *GameFriend) GetAuthorizedStatus() int32 {
 	return 0
 }
 
+func (x *GameFriend) GetIllustrated() *FriendIllustrated {
+	if x != nil {
+		return x.Illustrated
+	}
+	return nil
+}
+
+func (x *GameFriend) GetEquipAvatarFrames() []*avatarframepb.AvatarFrame {
+	if x != nil {
+		return x.EquipAvatarFrames
+	}
+	return nil
+}
+
+func (x *GameFriend) GetExp() int64 {
+	if x != nil {
+		return x.Exp
+	}
+	return 0
+}
+
+func (x *GameFriend) GetField_15() bool {
+	if x != nil {
+		return x.Field_15
+	}
+	return false
+}
+
+func (x *GameFriend) GetTitle() *FriendTitle {
+	if x != nil {
+		return x.Title
+	}
+	return nil
+}
+
+func (x *GameFriend) GetActivity() *FriendActivity {
+	if x != nil {
+		return x.Activity
+	}
+	return nil
+}
+
+func (x *GameFriend) GetLastActiveTime() int64 {
+	if x != nil {
+		return x.LastActiveTime
+	}
+	return 0
+}
+
+type FriendIllustrated struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Current       int64                  `protobuf:"varint,1,opt,name=current,proto3" json:"current,omitempty"`
+	Target        int64                  `protobuf:"varint,2,opt,name=target,proto3" json:"target,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FriendIllustrated) Reset() {
+	*x = FriendIllustrated{}
+	mi := &file_friendpb_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FriendIllustrated) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FriendIllustrated) ProtoMessage() {}
+
+func (x *FriendIllustrated) ProtoReflect() protoreflect.Message {
+	mi := &file_friendpb_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FriendIllustrated.ProtoReflect.Descriptor instead.
+func (*FriendIllustrated) Descriptor() ([]byte, []int) {
+	return file_friendpb_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *FriendIllustrated) GetCurrent() int64 {
+	if x != nil {
+		return x.Current
+	}
+	return 0
+}
+
+func (x *FriendIllustrated) GetTarget() int64 {
+	if x != nil {
+		return x.Target
+	}
+	return 0
+}
+
+type FriendTitle struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TitleId       int64                  `protobuf:"varint,1,opt,name=title_id,json=titleId,proto3" json:"title_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FriendTitle) Reset() {
+	*x = FriendTitle{}
+	mi := &file_friendpb_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FriendTitle) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FriendTitle) ProtoMessage() {}
+
+func (x *FriendTitle) ProtoReflect() protoreflect.Message {
+	mi := &file_friendpb_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FriendTitle.ProtoReflect.Descriptor instead.
+func (*FriendTitle) Descriptor() ([]byte, []int) {
+	return file_friendpb_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *FriendTitle) GetTitleId() int64 {
+	if x != nil {
+		return x.TitleId
+	}
+	return 0
+}
+
+type FriendActivity struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ActivityId    int64                  `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	Progress      int64                  `protobuf:"varint,2,opt,name=progress,proto3" json:"progress,omitempty"`
+	UpdatedAt     int64                  `protobuf:"varint,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FriendActivity) Reset() {
+	*x = FriendActivity{}
+	mi := &file_friendpb_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FriendActivity) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FriendActivity) ProtoMessage() {}
+
+func (x *FriendActivity) ProtoReflect() protoreflect.Message {
+	mi := &file_friendpb_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FriendActivity.ProtoReflect.Descriptor instead.
+func (*FriendActivity) Descriptor() ([]byte, []int) {
+	return file_friendpb_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *FriendActivity) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+func (x *FriendActivity) GetProgress() int64 {
+	if x != nil {
+		return x.Progress
+	}
+	return 0
+}
+
+func (x *FriendActivity) GetUpdatedAt() int64 {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return 0
+}
+
+type RecommendedFriend struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Gid           int64                  `protobuf:"varint,1,opt,name=gid,proto3" json:"gid,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	AvatarUrl     string                 `protobuf:"bytes,3,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
+	Level         int64                  `protobuf:"varint,4,opt,name=level,proto3" json:"level,omitempty"`
+	UpdatedAt     int64                  `protobuf:"varint,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	OpenId        string                 `protobuf:"bytes,6,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecommendedFriend) Reset() {
+	*x = RecommendedFriend{}
+	mi := &file_friendpb_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecommendedFriend) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecommendedFriend) ProtoMessage() {}
+
+func (x *RecommendedFriend) ProtoReflect() protoreflect.Message {
+	mi := &file_friendpb_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecommendedFriend.ProtoReflect.Descriptor instead.
+func (*RecommendedFriend) Descriptor() ([]byte, []int) {
+	return file_friendpb_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *RecommendedFriend) GetGid() int64 {
+	if x != nil {
+		return x.Gid
+	}
+	return 0
+}
+
+func (x *RecommendedFriend) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *RecommendedFriend) GetAvatarUrl() string {
+	if x != nil {
+		return x.AvatarUrl
+	}
+	return ""
+}
+
+func (x *RecommendedFriend) GetLevel() int64 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *RecommendedFriend) GetUpdatedAt() int64 {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return 0
+}
+
+func (x *RecommendedFriend) GetOpenId() string {
+	if x != nil {
+		return x.OpenId
+	}
+	return ""
+}
+
 // --- 获取所有好友 ---
 type GetAllRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -309,7 +606,7 @@ type GetAllRequest struct {
 
 func (x *GetAllRequest) Reset() {
 	*x = GetAllRequest{}
-	mi := &file_friendpb_proto_msgTypes[3]
+	mi := &file_friendpb_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -321,7 +618,7 @@ func (x *GetAllRequest) String() string {
 func (*GetAllRequest) ProtoMessage() {}
 
 func (x *GetAllRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[3]
+	mi := &file_friendpb_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -334,7 +631,7 @@ func (x *GetAllRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAllRequest.ProtoReflect.Descriptor instead.
 func (*GetAllRequest) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{3}
+	return file_friendpb_proto_rawDescGZIP(), []int{7}
 }
 
 type GetAllReply struct {
@@ -348,7 +645,7 @@ type GetAllReply struct {
 
 func (x *GetAllReply) Reset() {
 	*x = GetAllReply{}
-	mi := &file_friendpb_proto_msgTypes[4]
+	mi := &file_friendpb_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -360,7 +657,7 @@ func (x *GetAllReply) String() string {
 func (*GetAllReply) ProtoMessage() {}
 
 func (x *GetAllReply) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[4]
+	mi := &file_friendpb_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -373,7 +670,7 @@ func (x *GetAllReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAllReply.ProtoReflect.Descriptor instead.
 func (*GetAllReply) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{4}
+	return file_friendpb_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetAllReply) GetGameFriends() []*GameFriend {
@@ -400,7 +697,7 @@ type GetGameFriendsRequest struct {
 
 func (x *GetGameFriendsRequest) Reset() {
 	*x = GetGameFriendsRequest{}
-	mi := &file_friendpb_proto_msgTypes[5]
+	mi := &file_friendpb_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -412,7 +709,7 @@ func (x *GetGameFriendsRequest) String() string {
 func (*GetGameFriendsRequest) ProtoMessage() {}
 
 func (x *GetGameFriendsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[5]
+	mi := &file_friendpb_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -425,7 +722,7 @@ func (x *GetGameFriendsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGameFriendsRequest.ProtoReflect.Descriptor instead.
 func (*GetGameFriendsRequest) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{5}
+	return file_friendpb_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetGameFriendsRequest) GetGids() []int64 {
@@ -445,7 +742,7 @@ type GetGameFriendsReply struct {
 
 func (x *GetGameFriendsReply) Reset() {
 	*x = GetGameFriendsReply{}
-	mi := &file_friendpb_proto_msgTypes[6]
+	mi := &file_friendpb_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -457,7 +754,7 @@ func (x *GetGameFriendsReply) String() string {
 func (*GetGameFriendsReply) ProtoMessage() {}
 
 func (x *GetGameFriendsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[6]
+	mi := &file_friendpb_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -470,7 +767,7 @@ func (x *GetGameFriendsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGameFriendsReply.ProtoReflect.Descriptor instead.
 func (*GetGameFriendsReply) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{6}
+	return file_friendpb_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetGameFriendsReply) GetGameFriends() []*GameFriend {
@@ -498,7 +795,7 @@ type SyncAllRequest struct {
 
 func (x *SyncAllRequest) Reset() {
 	*x = SyncAllRequest{}
-	mi := &file_friendpb_proto_msgTypes[7]
+	mi := &file_friendpb_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -510,7 +807,7 @@ func (x *SyncAllRequest) String() string {
 func (*SyncAllRequest) ProtoMessage() {}
 
 func (x *SyncAllRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[7]
+	mi := &file_friendpb_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -523,7 +820,7 @@ func (x *SyncAllRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncAllRequest.ProtoReflect.Descriptor instead.
 func (*SyncAllRequest) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{7}
+	return file_friendpb_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *SyncAllRequest) GetOpenIds() []string {
@@ -537,14 +834,15 @@ type SyncAllReply struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	GameFriends []*GameFriend          `protobuf:"bytes,1,rep,name=game_friends,json=gameFriends,proto3" json:"game_friends,omitempty"`
 	// repeated Invitation invitations = 2;  // 略
-	ApplicationCount int64 `protobuf:"varint,3,opt,name=application_count,json=applicationCount,proto3" json:"application_count,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	ApplicationCount   int64                `protobuf:"varint,3,opt,name=application_count,json=applicationCount,proto3" json:"application_count,omitempty"`
+	RecommendedFriends []*RecommendedFriend `protobuf:"bytes,5,rep,name=recommended_friends,json=recommendedFriends,proto3" json:"recommended_friends,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *SyncAllReply) Reset() {
 	*x = SyncAllReply{}
-	mi := &file_friendpb_proto_msgTypes[8]
+	mi := &file_friendpb_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -556,7 +854,7 @@ func (x *SyncAllReply) String() string {
 func (*SyncAllReply) ProtoMessage() {}
 
 func (x *SyncAllReply) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[8]
+	mi := &file_friendpb_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -569,7 +867,7 @@ func (x *SyncAllReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncAllReply.ProtoReflect.Descriptor instead.
 func (*SyncAllReply) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{8}
+	return file_friendpb_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *SyncAllReply) GetGameFriends() []*GameFriend {
@@ -584,6 +882,13 @@ func (x *SyncAllReply) GetApplicationCount() int64 {
 		return x.ApplicationCount
 	}
 	return 0
+}
+
+func (x *SyncAllReply) GetRecommendedFriends() []*RecommendedFriend {
+	if x != nil {
+		return x.RecommendedFriends
+	}
+	return nil
 }
 
 // 申请信息
@@ -601,7 +906,7 @@ type Application struct {
 
 func (x *Application) Reset() {
 	*x = Application{}
-	mi := &file_friendpb_proto_msgTypes[9]
+	mi := &file_friendpb_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -613,7 +918,7 @@ func (x *Application) String() string {
 func (*Application) ProtoMessage() {}
 
 func (x *Application) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[9]
+	mi := &file_friendpb_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -626,7 +931,7 @@ func (x *Application) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Application.ProtoReflect.Descriptor instead.
 func (*Application) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{9}
+	return file_friendpb_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Application) GetGid() int64 {
@@ -680,7 +985,7 @@ type GetApplicationsRequest struct {
 
 func (x *GetApplicationsRequest) Reset() {
 	*x = GetApplicationsRequest{}
-	mi := &file_friendpb_proto_msgTypes[10]
+	mi := &file_friendpb_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -692,7 +997,7 @@ func (x *GetApplicationsRequest) String() string {
 func (*GetApplicationsRequest) ProtoMessage() {}
 
 func (x *GetApplicationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[10]
+	mi := &file_friendpb_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -705,7 +1010,7 @@ func (x *GetApplicationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetApplicationsRequest.ProtoReflect.Descriptor instead.
 func (*GetApplicationsRequest) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{10}
+	return file_friendpb_proto_rawDescGZIP(), []int{14}
 }
 
 type GetApplicationsReply struct {
@@ -718,7 +1023,7 @@ type GetApplicationsReply struct {
 
 func (x *GetApplicationsReply) Reset() {
 	*x = GetApplicationsReply{}
-	mi := &file_friendpb_proto_msgTypes[11]
+	mi := &file_friendpb_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -730,7 +1035,7 @@ func (x *GetApplicationsReply) String() string {
 func (*GetApplicationsReply) ProtoMessage() {}
 
 func (x *GetApplicationsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[11]
+	mi := &file_friendpb_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -743,7 +1048,7 @@ func (x *GetApplicationsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetApplicationsReply.ProtoReflect.Descriptor instead.
 func (*GetApplicationsReply) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{11}
+	return file_friendpb_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetApplicationsReply) GetApplications() []*Application {
@@ -770,7 +1075,7 @@ type AcceptFriendsRequest struct {
 
 func (x *AcceptFriendsRequest) Reset() {
 	*x = AcceptFriendsRequest{}
-	mi := &file_friendpb_proto_msgTypes[12]
+	mi := &file_friendpb_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -782,7 +1087,7 @@ func (x *AcceptFriendsRequest) String() string {
 func (*AcceptFriendsRequest) ProtoMessage() {}
 
 func (x *AcceptFriendsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[12]
+	mi := &file_friendpb_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -795,7 +1100,7 @@ func (x *AcceptFriendsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptFriendsRequest.ProtoReflect.Descriptor instead.
 func (*AcceptFriendsRequest) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{12}
+	return file_friendpb_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *AcceptFriendsRequest) GetFriendGids() []int64 {
@@ -814,7 +1119,7 @@ type AcceptFriendsReply struct {
 
 func (x *AcceptFriendsReply) Reset() {
 	*x = AcceptFriendsReply{}
-	mi := &file_friendpb_proto_msgTypes[13]
+	mi := &file_friendpb_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -826,7 +1131,7 @@ func (x *AcceptFriendsReply) String() string {
 func (*AcceptFriendsReply) ProtoMessage() {}
 
 func (x *AcceptFriendsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[13]
+	mi := &file_friendpb_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -839,7 +1144,7 @@ func (x *AcceptFriendsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptFriendsReply.ProtoReflect.Descriptor instead.
 func (*AcceptFriendsReply) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{13}
+	return file_friendpb_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *AcceptFriendsReply) GetFriends() []*GameFriend {
@@ -859,7 +1164,7 @@ type RejectFriendsRequest struct {
 
 func (x *RejectFriendsRequest) Reset() {
 	*x = RejectFriendsRequest{}
-	mi := &file_friendpb_proto_msgTypes[14]
+	mi := &file_friendpb_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -871,7 +1176,7 @@ func (x *RejectFriendsRequest) String() string {
 func (*RejectFriendsRequest) ProtoMessage() {}
 
 func (x *RejectFriendsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[14]
+	mi := &file_friendpb_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -884,7 +1189,7 @@ func (x *RejectFriendsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RejectFriendsRequest.ProtoReflect.Descriptor instead.
 func (*RejectFriendsRequest) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{14}
+	return file_friendpb_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *RejectFriendsRequest) GetFriendGids() []int64 {
@@ -902,7 +1207,7 @@ type RejectFriendsReply struct {
 
 func (x *RejectFriendsReply) Reset() {
 	*x = RejectFriendsReply{}
-	mi := &file_friendpb_proto_msgTypes[15]
+	mi := &file_friendpb_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -914,7 +1219,7 @@ func (x *RejectFriendsReply) String() string {
 func (*RejectFriendsReply) ProtoMessage() {}
 
 func (x *RejectFriendsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[15]
+	mi := &file_friendpb_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -927,7 +1232,7 @@ func (x *RejectFriendsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RejectFriendsReply.ProtoReflect.Descriptor instead.
 func (*RejectFriendsReply) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{15}
+	return file_friendpb_proto_rawDescGZIP(), []int{19}
 }
 
 // --- 设置屏蔽申请 ---
@@ -940,7 +1245,7 @@ type SetBlockApplicationsRequest struct {
 
 func (x *SetBlockApplicationsRequest) Reset() {
 	*x = SetBlockApplicationsRequest{}
-	mi := &file_friendpb_proto_msgTypes[16]
+	mi := &file_friendpb_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -952,7 +1257,7 @@ func (x *SetBlockApplicationsRequest) String() string {
 func (*SetBlockApplicationsRequest) ProtoMessage() {}
 
 func (x *SetBlockApplicationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[16]
+	mi := &file_friendpb_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -965,7 +1270,7 @@ func (x *SetBlockApplicationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetBlockApplicationsRequest.ProtoReflect.Descriptor instead.
 func (*SetBlockApplicationsRequest) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{16}
+	return file_friendpb_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *SetBlockApplicationsRequest) GetBlock() bool {
@@ -984,7 +1289,7 @@ type SetBlockApplicationsReply struct {
 
 func (x *SetBlockApplicationsReply) Reset() {
 	*x = SetBlockApplicationsReply{}
-	mi := &file_friendpb_proto_msgTypes[17]
+	mi := &file_friendpb_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -996,7 +1301,7 @@ func (x *SetBlockApplicationsReply) String() string {
 func (*SetBlockApplicationsReply) ProtoMessage() {}
 
 func (x *SetBlockApplicationsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[17]
+	mi := &file_friendpb_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1009,7 +1314,7 @@ func (x *SetBlockApplicationsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetBlockApplicationsReply.ProtoReflect.Descriptor instead.
 func (*SetBlockApplicationsReply) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{17}
+	return file_friendpb_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *SetBlockApplicationsReply) GetBlock() bool {
@@ -1029,7 +1334,7 @@ type GetShareKeyRequest struct {
 
 func (x *GetShareKeyRequest) Reset() {
 	*x = GetShareKeyRequest{}
-	mi := &file_friendpb_proto_msgTypes[18]
+	mi := &file_friendpb_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1041,7 +1346,7 @@ func (x *GetShareKeyRequest) String() string {
 func (*GetShareKeyRequest) ProtoMessage() {}
 
 func (x *GetShareKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[18]
+	mi := &file_friendpb_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1054,7 +1359,7 @@ func (x *GetShareKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetShareKeyRequest.ProtoReflect.Descriptor instead.
 func (*GetShareKeyRequest) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{18}
+	return file_friendpb_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetShareKeyRequest) GetShareCfgId() int64 {
@@ -1075,7 +1380,7 @@ type GetShareKeyReply struct {
 
 func (x *GetShareKeyReply) Reset() {
 	*x = GetShareKeyReply{}
-	mi := &file_friendpb_proto_msgTypes[19]
+	mi := &file_friendpb_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1087,7 +1392,7 @@ func (x *GetShareKeyReply) String() string {
 func (*GetShareKeyReply) ProtoMessage() {}
 
 func (x *GetShareKeyReply) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[19]
+	mi := &file_friendpb_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1100,7 +1405,7 @@ func (x *GetShareKeyReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetShareKeyReply.ProtoReflect.Descriptor instead.
 func (*GetShareKeyReply) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{19}
+	return file_friendpb_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetShareKeyReply) GetShareKey() string {
@@ -1134,7 +1439,7 @@ type FriendApplicationReceivedNotify struct {
 
 func (x *FriendApplicationReceivedNotify) Reset() {
 	*x = FriendApplicationReceivedNotify{}
-	mi := &file_friendpb_proto_msgTypes[20]
+	mi := &file_friendpb_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1146,7 +1451,7 @@ func (x *FriendApplicationReceivedNotify) String() string {
 func (*FriendApplicationReceivedNotify) ProtoMessage() {}
 
 func (x *FriendApplicationReceivedNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[20]
+	mi := &file_friendpb_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1159,7 +1464,7 @@ func (x *FriendApplicationReceivedNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FriendApplicationReceivedNotify.ProtoReflect.Descriptor instead.
 func (*FriendApplicationReceivedNotify) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{20}
+	return file_friendpb_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *FriendApplicationReceivedNotify) GetApplications() []*Application {
@@ -1179,7 +1484,7 @@ type FriendAddedNotify struct {
 
 func (x *FriendAddedNotify) Reset() {
 	*x = FriendAddedNotify{}
-	mi := &file_friendpb_proto_msgTypes[21]
+	mi := &file_friendpb_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1191,7 +1496,7 @@ func (x *FriendAddedNotify) String() string {
 func (*FriendAddedNotify) ProtoMessage() {}
 
 func (x *FriendAddedNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[21]
+	mi := &file_friendpb_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1204,7 +1509,7 @@ func (x *FriendAddedNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FriendAddedNotify.ProtoReflect.Descriptor instead.
 func (*FriendAddedNotify) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{21}
+	return file_friendpb_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *FriendAddedNotify) GetFriends() []*GameFriend {
@@ -1218,7 +1523,7 @@ var File_friendpb_proto protoreflect.FileDescriptor
 
 const file_friendpb_proto_rawDesc = "" +
 	"\n" +
-	"\x0efriendpb.proto\x12\x0fgamepb.friendpb\"\xb8\x02\n" +
+	"\x0efriendpb.proto\x12\x0fgamepb.friendpb\x1a\x13avatarframepb.proto\"\xb8\x02\n" +
 	"\x05Plant\x12 \n" +
 	"\fdry_time_sec\x18\x01 \x01(\x03R\n" +
 	"dryTimeSec\x12\"\n" +
@@ -1233,7 +1538,7 @@ const file_friendpb_proto_rawDesc = "" +
 	"insect_num\x18\t \x01(\x03R\tinsectNum\":\n" +
 	"\x04Tags\x12\x15\n" +
 	"\x06is_new\x18\x01 \x01(\bR\x05isNew\x12\x1b\n" +
-	"\tis_follow\x18\x02 \x01(\bR\bisFollow\"\xb2\x02\n" +
+	"\tis_follow\x18\x02 \x01(\bR\bisFollow\"\x93\x05\n" +
 	"\n" +
 	"GameFriend\x12\x10\n" +
 	"\x03gid\x18\x01 \x01(\x03R\x03gid\x12\x17\n" +
@@ -1247,7 +1552,34 @@ const file_friendpb_proto_rawDesc = "" +
 	"\x04tags\x18\b \x01(\v2\x15.gamepb.friendpb.TagsR\x04tags\x12,\n" +
 	"\x05plant\x18\t \x01(\v2\x16.gamepb.friendpb.PlantR\x05plant\x12+\n" +
 	"\x11authorized_status\x18\n" +
-	" \x01(\x05R\x10authorizedStatus\"\x0f\n" +
+	" \x01(\x05R\x10authorizedStatus\x12D\n" +
+	"\villustrated\x18\f \x01(\v2\".gamepb.friendpb.FriendIllustratedR\villustrated\x12Q\n" +
+	"\x13equip_avatar_frames\x18\r \x03(\v2!.gamepb.avatarframepb.AvatarFrameR\x11equipAvatarFrames\x12\x10\n" +
+	"\x03exp\x18\x0e \x01(\x03R\x03exp\x12\x19\n" +
+	"\bfield_15\x18\x0f \x01(\bR\afield15\x122\n" +
+	"\x05title\x18\x10 \x01(\v2\x1c.gamepb.friendpb.FriendTitleR\x05title\x12;\n" +
+	"\bactivity\x18\x12 \x01(\v2\x1f.gamepb.friendpb.FriendActivityR\bactivity\x12(\n" +
+	"\x10last_active_time\x18\x13 \x01(\x03R\x0elastActiveTime\"E\n" +
+	"\x11FriendIllustrated\x12\x18\n" +
+	"\acurrent\x18\x01 \x01(\x03R\acurrent\x12\x16\n" +
+	"\x06target\x18\x02 \x01(\x03R\x06target\"(\n" +
+	"\vFriendTitle\x12\x19\n" +
+	"\btitle_id\x18\x01 \x01(\x03R\atitleId\"l\n" +
+	"\x0eFriendActivity\x12\x1f\n" +
+	"\vactivity_id\x18\x01 \x01(\x03R\n" +
+	"activityId\x12\x1a\n" +
+	"\bprogress\x18\x02 \x01(\x03R\bprogress\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x03 \x01(\x03R\tupdatedAt\"\xa6\x01\n" +
+	"\x11RecommendedFriend\x12\x10\n" +
+	"\x03gid\x18\x01 \x01(\x03R\x03gid\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"avatar_url\x18\x03 \x01(\tR\tavatarUrl\x12\x14\n" +
+	"\x05level\x18\x04 \x01(\x03R\x05level\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x05 \x01(\x03R\tupdatedAt\x12\x17\n" +
+	"\aopen_id\x18\x06 \x01(\tR\x06openId\"\x0f\n" +
 	"\rGetAllRequest\"z\n" +
 	"\vGetAllReply\x12>\n" +
 	"\fgame_friends\x18\x01 \x03(\v2\x1b.gamepb.friendpb.GameFriendR\vgameFriends\x12+\n" +
@@ -1258,10 +1590,11 @@ const file_friendpb_proto_rawDesc = "" +
 	"\fgame_friends\x18\x01 \x03(\v2\x1b.gamepb.friendpb.GameFriendR\vgameFriends\x12+\n" +
 	"\x11application_count\x18\x03 \x01(\x03R\x10applicationCount\"+\n" +
 	"\x0eSyncAllRequest\x12\x19\n" +
-	"\bopen_ids\x18\x02 \x03(\tR\aopenIds\"{\n" +
+	"\bopen_ids\x18\x02 \x03(\tR\aopenIds\"\xd0\x01\n" +
 	"\fSyncAllReply\x12>\n" +
 	"\fgame_friends\x18\x01 \x03(\v2\x1b.gamepb.friendpb.GameFriendR\vgameFriends\x12+\n" +
-	"\x11application_count\x18\x03 \x01(\x03R\x10applicationCount\"\x9a\x01\n" +
+	"\x11application_count\x18\x03 \x01(\x03R\x10applicationCount\x12S\n" +
+	"\x13recommended_friends\x18\x05 \x03(\v2\".gamepb.friendpb.RecommendedFriendR\x12recommendedFriends\"\x9a\x01\n" +
 	"\vApplication\x12\x10\n" +
 	"\x03gid\x18\x01 \x01(\x03R\x03gid\x12\x17\n" +
 	"\atime_at\x18\x02 \x01(\x03R\x06timeAt\x12\x17\n" +
@@ -1298,7 +1631,7 @@ const file_friendpb_proto_rawDesc = "" +
 	"\x1fFriendApplicationReceivedNotify\x12@\n" +
 	"\fapplications\x18\x01 \x03(\v2\x1c.gamepb.friendpb.ApplicationR\fapplications\"J\n" +
 	"\x11FriendAddedNotify\x125\n" +
-	"\afriends\x18\x01 \x03(\v2\x1b.gamepb.friendpb.GameFriendR\afriendsBJZHgithub.com/it00021hot/qq-farm-core/internal/farm/proto/friendpb;friendpbb\x06proto3"
+	"\afriends\x18\x01 \x03(\v2\x1b.gamepb.friendpb.GameFriendR\afriendsb\x06proto3"
 
 var (
 	file_friendpb_proto_rawDescOnce sync.Once
@@ -1312,46 +1645,56 @@ func file_friendpb_proto_rawDescGZIP() []byte {
 	return file_friendpb_proto_rawDescData
 }
 
-var file_friendpb_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_friendpb_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_friendpb_proto_goTypes = []any{
 	(*Plant)(nil),                           // 0: gamepb.friendpb.Plant
 	(*Tags)(nil),                            // 1: gamepb.friendpb.Tags
 	(*GameFriend)(nil),                      // 2: gamepb.friendpb.GameFriend
-	(*GetAllRequest)(nil),                   // 3: gamepb.friendpb.GetAllRequest
-	(*GetAllReply)(nil),                     // 4: gamepb.friendpb.GetAllReply
-	(*GetGameFriendsRequest)(nil),           // 5: gamepb.friendpb.GetGameFriendsRequest
-	(*GetGameFriendsReply)(nil),             // 6: gamepb.friendpb.GetGameFriendsReply
-	(*SyncAllRequest)(nil),                  // 7: gamepb.friendpb.SyncAllRequest
-	(*SyncAllReply)(nil),                    // 8: gamepb.friendpb.SyncAllReply
-	(*Application)(nil),                     // 9: gamepb.friendpb.Application
-	(*GetApplicationsRequest)(nil),          // 10: gamepb.friendpb.GetApplicationsRequest
-	(*GetApplicationsReply)(nil),            // 11: gamepb.friendpb.GetApplicationsReply
-	(*AcceptFriendsRequest)(nil),            // 12: gamepb.friendpb.AcceptFriendsRequest
-	(*AcceptFriendsReply)(nil),              // 13: gamepb.friendpb.AcceptFriendsReply
-	(*RejectFriendsRequest)(nil),            // 14: gamepb.friendpb.RejectFriendsRequest
-	(*RejectFriendsReply)(nil),              // 15: gamepb.friendpb.RejectFriendsReply
-	(*SetBlockApplicationsRequest)(nil),     // 16: gamepb.friendpb.SetBlockApplicationsRequest
-	(*SetBlockApplicationsReply)(nil),       // 17: gamepb.friendpb.SetBlockApplicationsReply
-	(*GetShareKeyRequest)(nil),              // 18: gamepb.friendpb.GetShareKeyRequest
-	(*GetShareKeyReply)(nil),                // 19: gamepb.friendpb.GetShareKeyReply
-	(*FriendApplicationReceivedNotify)(nil), // 20: gamepb.friendpb.FriendApplicationReceivedNotify
-	(*FriendAddedNotify)(nil),               // 21: gamepb.friendpb.FriendAddedNotify
+	(*FriendIllustrated)(nil),               // 3: gamepb.friendpb.FriendIllustrated
+	(*FriendTitle)(nil),                     // 4: gamepb.friendpb.FriendTitle
+	(*FriendActivity)(nil),                  // 5: gamepb.friendpb.FriendActivity
+	(*RecommendedFriend)(nil),               // 6: gamepb.friendpb.RecommendedFriend
+	(*GetAllRequest)(nil),                   // 7: gamepb.friendpb.GetAllRequest
+	(*GetAllReply)(nil),                     // 8: gamepb.friendpb.GetAllReply
+	(*GetGameFriendsRequest)(nil),           // 9: gamepb.friendpb.GetGameFriendsRequest
+	(*GetGameFriendsReply)(nil),             // 10: gamepb.friendpb.GetGameFriendsReply
+	(*SyncAllRequest)(nil),                  // 11: gamepb.friendpb.SyncAllRequest
+	(*SyncAllReply)(nil),                    // 12: gamepb.friendpb.SyncAllReply
+	(*Application)(nil),                     // 13: gamepb.friendpb.Application
+	(*GetApplicationsRequest)(nil),          // 14: gamepb.friendpb.GetApplicationsRequest
+	(*GetApplicationsReply)(nil),            // 15: gamepb.friendpb.GetApplicationsReply
+	(*AcceptFriendsRequest)(nil),            // 16: gamepb.friendpb.AcceptFriendsRequest
+	(*AcceptFriendsReply)(nil),              // 17: gamepb.friendpb.AcceptFriendsReply
+	(*RejectFriendsRequest)(nil),            // 18: gamepb.friendpb.RejectFriendsRequest
+	(*RejectFriendsReply)(nil),              // 19: gamepb.friendpb.RejectFriendsReply
+	(*SetBlockApplicationsRequest)(nil),     // 20: gamepb.friendpb.SetBlockApplicationsRequest
+	(*SetBlockApplicationsReply)(nil),       // 21: gamepb.friendpb.SetBlockApplicationsReply
+	(*GetShareKeyRequest)(nil),              // 22: gamepb.friendpb.GetShareKeyRequest
+	(*GetShareKeyReply)(nil),                // 23: gamepb.friendpb.GetShareKeyReply
+	(*FriendApplicationReceivedNotify)(nil), // 24: gamepb.friendpb.FriendApplicationReceivedNotify
+	(*FriendAddedNotify)(nil),               // 25: gamepb.friendpb.FriendAddedNotify
+	(*avatarframepb.AvatarFrame)(nil),       // 26: gamepb.avatarframepb.AvatarFrame
 }
 var file_friendpb_proto_depIdxs = []int32{
-	1, // 0: gamepb.friendpb.GameFriend.tags:type_name -> gamepb.friendpb.Tags
-	0, // 1: gamepb.friendpb.GameFriend.plant:type_name -> gamepb.friendpb.Plant
-	2, // 2: gamepb.friendpb.GetAllReply.game_friends:type_name -> gamepb.friendpb.GameFriend
-	2, // 3: gamepb.friendpb.GetGameFriendsReply.game_friends:type_name -> gamepb.friendpb.GameFriend
-	2, // 4: gamepb.friendpb.SyncAllReply.game_friends:type_name -> gamepb.friendpb.GameFriend
-	9, // 5: gamepb.friendpb.GetApplicationsReply.applications:type_name -> gamepb.friendpb.Application
-	2, // 6: gamepb.friendpb.AcceptFriendsReply.friends:type_name -> gamepb.friendpb.GameFriend
-	9, // 7: gamepb.friendpb.FriendApplicationReceivedNotify.applications:type_name -> gamepb.friendpb.Application
-	2, // 8: gamepb.friendpb.FriendAddedNotify.friends:type_name -> gamepb.friendpb.GameFriend
-	9, // [9:9] is the sub-list for method output_type
-	9, // [9:9] is the sub-list for method input_type
-	9, // [9:9] is the sub-list for extension type_name
-	9, // [9:9] is the sub-list for extension extendee
-	0, // [0:9] is the sub-list for field type_name
+	1,  // 0: gamepb.friendpb.GameFriend.tags:type_name -> gamepb.friendpb.Tags
+	0,  // 1: gamepb.friendpb.GameFriend.plant:type_name -> gamepb.friendpb.Plant
+	3,  // 2: gamepb.friendpb.GameFriend.illustrated:type_name -> gamepb.friendpb.FriendIllustrated
+	26, // 3: gamepb.friendpb.GameFriend.equip_avatar_frames:type_name -> gamepb.avatarframepb.AvatarFrame
+	4,  // 4: gamepb.friendpb.GameFriend.title:type_name -> gamepb.friendpb.FriendTitle
+	5,  // 5: gamepb.friendpb.GameFriend.activity:type_name -> gamepb.friendpb.FriendActivity
+	2,  // 6: gamepb.friendpb.GetAllReply.game_friends:type_name -> gamepb.friendpb.GameFriend
+	2,  // 7: gamepb.friendpb.GetGameFriendsReply.game_friends:type_name -> gamepb.friendpb.GameFriend
+	2,  // 8: gamepb.friendpb.SyncAllReply.game_friends:type_name -> gamepb.friendpb.GameFriend
+	6,  // 9: gamepb.friendpb.SyncAllReply.recommended_friends:type_name -> gamepb.friendpb.RecommendedFriend
+	13, // 10: gamepb.friendpb.GetApplicationsReply.applications:type_name -> gamepb.friendpb.Application
+	2,  // 11: gamepb.friendpb.AcceptFriendsReply.friends:type_name -> gamepb.friendpb.GameFriend
+	13, // 12: gamepb.friendpb.FriendApplicationReceivedNotify.applications:type_name -> gamepb.friendpb.Application
+	2,  // 13: gamepb.friendpb.FriendAddedNotify.friends:type_name -> gamepb.friendpb.GameFriend
+	14, // [14:14] is the sub-list for method output_type
+	14, // [14:14] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_friendpb_proto_init() }
@@ -1365,7 +1708,7 @@ func file_friendpb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_friendpb_proto_rawDesc), len(file_friendpb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   22,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

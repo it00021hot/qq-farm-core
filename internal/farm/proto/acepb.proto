@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.acepb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/acepb;acepb";
 // ============ 反作弊服务 ============
 
 message AntiDataRequest {

@@ -259,18 +259,11 @@ func uniquePositiveIDs(ids []int64) []int64 {
 	return out
 }
 
-// CheckCanOperate checks whether an operation is allowed on a farm.
-func (a *API) CheckCanOperate(ctx context.Context, hostGID, operationID int64) (bool, int64, error) {
-	req := &plantpb.CheckCanOperateRequest{HostGid: hostGID, OperationId: operationID}
-	raw, err := a.sendPlant(ctx, "CheckCanOperate", marshalMessage(req))
-	if err != nil {
-		return false, 0, err
-	}
-	reply := &plantpb.CheckCanOperateReply{}
-	if err := unmarshalMessage(raw, reply); err != nil {
-		return false, 0, err
-	}
-	return reply.CanOperate, reply.CanStealNum, nil
+// CheckCanOperate used to hit PlantService.CheckCanOperate. The current game
+// proto no longer exposes that RPC; quotas now come from OperationLimit on
+// land replies. Callers treat this as fail-open.
+func (a *API) CheckCanOperate(_ context.Context, _, _ int64) (bool, int64, error) {
+	return true, 0, nil
 }
 
 // PutSocialItem places a social item (e.g. friendship fruit) on a friend's land.

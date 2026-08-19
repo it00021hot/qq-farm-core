@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.paypb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/paypb;paypb";
 service PayService {
     rpc GetRechargeInfo(GetRechargeInfoRequest) returns (GetRechargeInfoReply);
 }
@@ -22,5 +20,6 @@ message GetRechargeInfoReply {
 }
 
 message RechargeInfoNotify {
-    int64 status = 1;
+    string transaction_id = 1;
+    string source = 2;
 }

@@ -320,7 +320,7 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 		ver = vars.Config.GetString("farm.clientVersion")
 	}
 	if ver == "" {
-		ver = "1.13.0.5_20260723"
+		ver = "1.13.2.8_20260723"
 	}
 	sep := "?"
 	if strings.Contains(url, "?") {
@@ -419,7 +419,7 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 
 func (s *Session) doLogin(ctx context.Context, client *protocol.Client, ver string, dev deviceprofile.Profile) error {
 	if ver == "" {
-		ver = "1.13.0.5_20260723"
+		ver = "1.13.2.8_20260723"
 	}
 	// Exact LoginRequest shape from network.ts sendLogin — sparse DeviceInfo only.
 	sysSoft := dev.SysSoftware
@@ -560,7 +560,7 @@ func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 				continue
 			}
 			if ver == "" {
-				ver = "1.13.0.5_20260723"
+				ver = "1.13.2.8_20260723"
 			}
 
 			silence := time.Since(lastResponse)

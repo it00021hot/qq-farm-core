@@ -4,9 +4,11 @@ package game
 import (
 	"context"
 	"fmt"
+	"sync"
 	"sync/atomic"
 
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/gatepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/itempb"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -64,7 +66,16 @@ type API struct {
 	// the first lookup discovers them from the live registry/API; dated
 	// hard-coded ids are no longer used as a fallback after the event rotates.
 	greenPlumDailyActivityID atomic.Int64
-	greenPlumBrewActivityID   atomic.Int64
+	greenPlumBrewActivityID  atomic.Int64
+
+	bagMu      sync.Mutex
+	pendingBag *bagFlight
+}
+
+type bagFlight struct {
+	done  chan struct{}
+	reply *itempb.BagReply
+	err   error
 }
 
 func (a *API) requireSender() error {

@@ -5,8 +5,6 @@ syntax = "proto3";
 
 package gatepb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/gatepb;gatepb";
 // Meta.Type 枚举
 enum MessageType {
     None = 0;

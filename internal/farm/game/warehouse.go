@@ -17,8 +17,33 @@ func (a *API) sendItem(ctx context.Context, method string, body []byte) ([]byte,
 	return raw, err
 }
 
-// Bag fetches the player bag.
+// Bag fetches the player bag. Concurrent callers share one in-flight RPC.
 func (a *API) Bag(ctx context.Context) (*itempb.BagReply, error) {
+	a.bagMu.Lock()
+	if a.pendingBag != nil {
+		flight := a.pendingBag
+		a.bagMu.Unlock()
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-flight.done:
+			return flight.reply, flight.err
+		}
+	}
+	flight := &bagFlight{done: make(chan struct{})}
+	a.pendingBag = flight
+	a.bagMu.Unlock()
+
+	reply, err := a.bagUncached(ctx)
+	a.bagMu.Lock()
+	flight.reply, flight.err = reply, err
+	close(flight.done)
+	a.pendingBag = nil
+	a.bagMu.Unlock()
+	return reply, err
+}
+
+func (a *API) bagUncached(ctx context.Context) (*itempb.BagReply, error) {
 	raw, err := a.sendItem(ctx, "Bag", marshalMessage(&itempb.BagRequest{}))
 	if err != nil {
 		return nil, err

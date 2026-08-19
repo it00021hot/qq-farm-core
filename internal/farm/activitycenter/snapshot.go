@@ -40,6 +40,8 @@ type Snapshot struct {
 	Shop          map[string]any            `json:"shop"`
 	SolarTerms    map[string]any            `json:"solarTerms"`
 	GreenPlum     map[string]any            `json:"greenPlum"`
+	Qixi          map[string]any            `json:"qixi"`
+	Activities    []map[string]any          `json:"activities"`
 	Capabilities  map[string]bool           `json:"capabilities"`
 	Actions       map[string]map[string]any `json:"actions"`
 	Errors        map[string]string         `json:"errors,omitempty"`
@@ -52,13 +54,17 @@ func BuildSnapshot(ctx context.Context, api *game.API) Snapshot {
 		Constellation: map[string]any{},
 		Shop:          map[string]any{},
 		SolarTerms:    map[string]any{},
-		GreenPlum:     buildGreenPlum(ctx, api),
+		GreenPlum:     map[string]any{},
+		Qixi:          map[string]any{},
+		Activities:    []map[string]any{},
 		Capabilities: map[string]bool{
 			"claimPass":          false,
 			"lightConstellation": false,
 			"claimSolar":         false,
 			"exchange":           false,
 			"claimGreenPlum":     false,
+			"claimQixiBridge":    false,
+			"giftQixiSachet":     false,
 		},
 		Actions: map[string]map[string]any{},
 		Errors:  map[string]string{},
@@ -99,7 +105,37 @@ func BuildSnapshot(ctx context.Context, api *game.API) Snapshot {
 		out.SolarTerms = normalizeSolarTerms(solarReply)
 	}
 
+	if _, listErr := api.ListActivityWindows(ctx); listErr != nil {
+		out.Errors["activities"] = listErr.Error()
+	}
+
+	out.GreenPlum = buildGreenPlum(ctx, api)
+
+	qixi, qixiErr := BuildQixi(ctx, api)
+	if qixiErr != nil {
+		out.Errors["qixi"] = qixiErr.Error()
+	} else if qixi != nil {
+		out.Qixi = qixi
+	}
+
+	out.Activities = buildActivityDirectory(logic.ActivityWindowsSnapshot(), out.Season, out.Shop, out.SolarTerms, out.Constellation, out.Qixi)
 	out.Actions = buildActions(out.Season, out.SolarTerms, out.Constellation, out.Shop, out.GreenPlum)
+	if qixiActions, ok := out.Qixi["actions"].(map[string]any); ok {
+		if bridge, ok := qixiActions["bridge"].(map[string]any); ok {
+			out.Actions["qixiBridge"] = map[string]any{
+				"enabled":           bridge["enabled"],
+				"available":         bridge["available"],
+				"availabilityKnown": bridge["availabilityKnown"],
+			}
+		}
+		if gift, ok := qixiActions["gift"].(map[string]any); ok {
+			out.Actions["qixiGift"] = map[string]any{
+				"enabled":           gift["enabled"],
+				"available":         gift["available"],
+				"availabilityKnown": gift["availabilityKnown"],
+			}
+		}
+	}
 
 	// capabilities remain actionable bools for Vue clients that have not migrated to actions yet
 	if pass, ok := out.Season["pass"].(map[string]any); ok {
@@ -118,6 +154,16 @@ func BuildSnapshot(ctx context.Context, api *game.API) Snapshot {
 	}
 	if enabled, _ := out.Actions["claimGreenPlum"]["enabled"].(bool); enabled {
 		out.Capabilities["claimGreenPlum"] = true
+	}
+	if qixiBridge, ok := out.Actions["qixiBridge"]; ok {
+		if enabled, _ := qixiBridge["enabled"].(bool); enabled {
+			out.Capabilities["claimQixiBridge"] = true
+		}
+	}
+	if qixiGift, ok := out.Actions["qixiGift"]; ok {
+		if enabled, _ := qixiGift["enabled"].(bool); enabled {
+			out.Capabilities["giftQixiSachet"] = true
+		}
 	}
 
 	return out

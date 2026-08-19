@@ -86,8 +86,8 @@ func (x *TextResult) GetUid() string {
 // ============ 请求/回复 ============
 type TextItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Uid           string                 `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
-	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
+	Text          string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	Uid           string                 `protobuf:"bytes,2,opt,name=uid,proto3" json:"uid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -122,16 +122,16 @@ func (*TextItem) Descriptor() ([]byte, []int) {
 	return file_uicproxypb_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *TextItem) GetUid() string {
+func (x *TextItem) GetText() string {
 	if x != nil {
-		return x.Uid
+		return x.Text
 	}
 	return ""
 }
 
-func (x *TextItem) GetText() string {
+func (x *TextItem) GetUid() string {
 	if x != nil {
-		return x.Text
+		return x.Uid
 	}
 	return ""
 }
@@ -234,13 +234,13 @@ const file_uicproxypb_proto_rawDesc = "" +
 	"\x06status\x18\x01 \x01(\x05R\x06status\x12\x12\n" +
 	"\x04text\x18\x02 \x01(\tR\x04text\x12\x10\n" +
 	"\x03uid\x18\x04 \x01(\tR\x03uid\"0\n" +
-	"\bTextItem\x12\x10\n" +
-	"\x03uid\x18\x01 \x01(\tR\x03uid\x12\x12\n" +
-	"\x04text\x18\x02 \x01(\tR\x04text\"M\n" +
+	"\bTextItem\x12\x12\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\x12\x10\n" +
+	"\x03uid\x18\x02 \x01(\tR\x03uid\"M\n" +
 	"\x18BatchModerateTextRequest\x121\n" +
 	"\x05items\x18\x01 \x03(\v2\x1b.gamepb.uicproxypb.TextItemR\x05items\"Q\n" +
 	"\x16BatchModerateTextReply\x127\n" +
-	"\aresults\x18\x01 \x03(\v2\x1d.gamepb.uicproxypb.TextResultR\aresultsBNZLgithub.com/it00021hot/qq-farm-core/internal/farm/proto/uicproxypb;uicproxypbb\x06proto3"
+	"\aresults\x18\x01 \x03(\v2\x1d.gamepb.uicproxypb.TextResultR\aresultsb\x06proto3"
 
 var (
 	file_uicproxypb_proto_rawDescOnce sync.Once

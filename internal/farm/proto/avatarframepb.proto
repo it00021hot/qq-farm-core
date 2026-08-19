@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.avatarframepb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/avatarframepb;avatarframepb";
 // ============ 头像框信息 ============
 message AvatarFrame {
     int64 frame_id = 1;
@@ -13,7 +11,9 @@ message AvatarFrame {
 }
 
 // ============ 请求/回复 ============
-message AvatarFramesOwnedRequest {}
+message AvatarFramesOwnedRequest {
+    int32 frame_type = 1;
+}
 
 message AvatarFramesOwnedReply {
     repeated AvatarFrame frames = 1;
@@ -21,5 +21,6 @@ message AvatarFramesOwnedReply {
 
 // ============ 通知 ============
 message AvatarFrameRedDotNotify {
+    int32 frame_type = 2;
     // 红点通知 (空消息体)
 }

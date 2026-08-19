@@ -73,7 +73,9 @@ type EmailItem struct {
 	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	Claimed       bool                   `protobuf:"varint,4,opt,name=claimed,proto3" json:"claimed,omitempty"`
 	HasReward     bool                   `protobuf:"varint,5,opt,name=has_reward,json=hasReward,proto3" json:"has_reward,omitempty"`
+	SentAt        int64                  `protobuf:"varint,6,opt,name=sent_at,json=sentAt,proto3" json:"sent_at,omitempty"`
 	Subtitle      string                 `protobuf:"bytes,7,opt,name=subtitle,proto3" json:"subtitle,omitempty"`
+	StatusTime    int64                  `protobuf:"varint,8,opt,name=status_time,json=statusTime,proto3" json:"status_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -143,11 +145,25 @@ func (x *EmailItem) GetHasReward() bool {
 	return false
 }
 
+func (x *EmailItem) GetSentAt() int64 {
+	if x != nil {
+		return x.SentAt
+	}
+	return 0
+}
+
 func (x *EmailItem) GetSubtitle() string {
 	if x != nil {
 		return x.Subtitle
 	}
 	return ""
+}
+
+func (x *EmailItem) GetStatusTime() int64 {
+	if x != nil {
+		return x.StatusTime
+	}
+	return 0
 }
 
 type GetEmailListReply struct {
@@ -381,7 +397,7 @@ func (x *ClaimEmailReply) GetItems() []*corepb.Item {
 type BatchClaimEmailRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BoxType       int32                  `protobuf:"varint,1,opt,name=box_type,json=boxType,proto3" json:"box_type,omitempty"`
-	EmailId       string                 `protobuf:"bytes,2,opt,name=email_id,json=emailId,proto3" json:"email_id,omitempty"`
+	EmailIds      []string               `protobuf:"bytes,2,rep,name=email_ids,json=emailIds,proto3" json:"email_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -423,16 +439,15 @@ func (x *BatchClaimEmailRequest) GetBoxType() int32 {
 	return 0
 }
 
-func (x *BatchClaimEmailRequest) GetEmailId() string {
+func (x *BatchClaimEmailRequest) GetEmailIds() []string {
 	if x != nil {
-		return x.EmailId
+		return x.EmailIds
 	}
-	return ""
+	return nil
 }
 
 type BatchClaimEmailReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*corepb.Item         `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -465,13 +480,6 @@ func (x *BatchClaimEmailReply) ProtoReflect() protoreflect.Message {
 // Deprecated: Use BatchClaimEmailReply.ProtoReflect.Descriptor instead.
 func (*BatchClaimEmailReply) Descriptor() ([]byte, []int) {
 	return file_emailpb_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *BatchClaimEmailReply) GetItems() []*corepb.Item {
-	if x != nil {
-		return x.Items
-	}
-	return nil
 }
 
 // --- 批量删除邮件 ---
@@ -529,7 +537,6 @@ func (x *BatchDeleteEmailRequest) GetEmailIds() []string {
 
 type BatchDeleteEmailReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -564,28 +571,24 @@ func (*BatchDeleteEmailReply) Descriptor() ([]byte, []int) {
 	return file_emailpb_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *BatchDeleteEmailReply) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
 var File_emailpb_proto protoreflect.FileDescriptor
 
 const file_emailpb_proto_rawDesc = "" +
 	"\n" +
 	"\remailpb.proto\x12\x0egamepb.emailpb\x1a\fcorepb.proto\"0\n" +
 	"\x13GetEmailListRequest\x12\x19\n" +
-	"\bbox_type\x18\x01 \x01(\x05R\aboxType\"\xa3\x01\n" +
+	"\bbox_type\x18\x01 \x01(\x05R\aboxType\"\xdd\x01\n" +
 	"\tEmailItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\tmail_type\x18\x02 \x01(\x05R\bmailType\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12\x18\n" +
 	"\aclaimed\x18\x04 \x01(\bR\aclaimed\x12\x1d\n" +
 	"\n" +
-	"has_reward\x18\x05 \x01(\bR\thasReward\x12\x1a\n" +
-	"\bsubtitle\x18\a \x01(\tR\bsubtitle\"F\n" +
+	"has_reward\x18\x05 \x01(\bR\thasReward\x12\x17\n" +
+	"\asent_at\x18\x06 \x01(\x03R\x06sentAt\x12\x1a\n" +
+	"\bsubtitle\x18\a \x01(\tR\bsubtitle\x12\x1f\n" +
+	"\vstatus_time\x18\b \x01(\x03R\n" +
+	"statusTime\"F\n" +
 	"\x11GetEmailListReply\x121\n" +
 	"\x06emails\x18\x01 \x03(\v2\x19.gamepb.emailpb.EmailItemR\x06emails\"H\n" +
 	"\x10ReadEmailRequest\x12\x19\n" +
@@ -596,17 +599,15 @@ const file_emailpb_proto_rawDesc = "" +
 	"\bbox_type\x18\x01 \x01(\x05R\aboxType\x12\x19\n" +
 	"\bemail_id\x18\x02 \x01(\tR\aemailId\"5\n" +
 	"\x0fClaimEmailReply\x12\"\n" +
-	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"N\n" +
+	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"P\n" +
 	"\x16BatchClaimEmailRequest\x12\x19\n" +
-	"\bbox_type\x18\x01 \x01(\x05R\aboxType\x12\x19\n" +
-	"\bemail_id\x18\x02 \x01(\tR\aemailId\":\n" +
-	"\x14BatchClaimEmailReply\x12\"\n" +
-	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"Q\n" +
+	"\bbox_type\x18\x01 \x01(\x05R\aboxType\x12\x1b\n" +
+	"\temail_ids\x18\x02 \x03(\tR\bemailIds\"\x16\n" +
+	"\x14BatchClaimEmailReply\"Q\n" +
 	"\x17BatchDeleteEmailRequest\x12\x19\n" +
 	"\bbox_type\x18\x01 \x01(\x05R\aboxType\x12\x1b\n" +
-	"\temail_ids\x18\x02 \x03(\tR\bemailIds\"1\n" +
-	"\x15BatchDeleteEmailReply\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccessBHZFgithub.com/it00021hot/qq-farm-core/internal/farm/proto/emailpb;emailpbb\x06proto3"
+	"\temail_ids\x18\x02 \x03(\tR\bemailIds\"\x17\n" +
+	"\x15BatchDeleteEmailReplyb\x06proto3"
 
 var (
 	file_emailpb_proto_rawDescOnce sync.Once
@@ -638,12 +639,11 @@ var file_emailpb_proto_goTypes = []any{
 var file_emailpb_proto_depIdxs = []int32{
 	1,  // 0: gamepb.emailpb.GetEmailListReply.emails:type_name -> gamepb.emailpb.EmailItem
 	11, // 1: gamepb.emailpb.ClaimEmailReply.items:type_name -> corepb.Item
-	11, // 2: gamepb.emailpb.BatchClaimEmailReply.items:type_name -> corepb.Item
-	3,  // [3:3] is the sub-list for method output_type
-	3,  // [3:3] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	2,  // [2:2] is the sub-list for method output_type
+	2,  // [2:2] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_emailpb_proto_init() }

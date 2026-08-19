@@ -93,6 +93,7 @@ func (x *AvatarFrame) GetExpireTime() int64 {
 // ============ 请求/回复 ============
 type AvatarFramesOwnedRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	FrameType     int32                  `protobuf:"varint,1,opt,name=frame_type,json=frameType,proto3" json:"frame_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -125,6 +126,13 @@ func (x *AvatarFramesOwnedRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use AvatarFramesOwnedRequest.ProtoReflect.Descriptor instead.
 func (*AvatarFramesOwnedRequest) Descriptor() ([]byte, []int) {
 	return file_avatarframepb_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *AvatarFramesOwnedRequest) GetFrameType() int32 {
+	if x != nil {
+		return x.FrameType
+	}
+	return 0
 }
 
 type AvatarFramesOwnedReply struct {
@@ -174,6 +182,7 @@ func (x *AvatarFramesOwnedReply) GetFrames() []*AvatarFrame {
 // ============ 通知 ============
 type AvatarFrameRedDotNotify struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	FrameType     int32                  `protobuf:"varint,2,opt,name=frame_type,json=frameType,proto3" json:"frame_type,omitempty"` // 红点通知 (空消息体)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -208,6 +217,13 @@ func (*AvatarFrameRedDotNotify) Descriptor() ([]byte, []int) {
 	return file_avatarframepb_proto_rawDescGZIP(), []int{3}
 }
 
+func (x *AvatarFrameRedDotNotify) GetFrameType() int32 {
+	if x != nil {
+		return x.FrameType
+	}
+	return 0
+}
+
 var File_avatarframepb_proto protoreflect.FileDescriptor
 
 const file_avatarframepb_proto_rawDesc = "" +
@@ -218,11 +234,15 @@ const file_avatarframepb_proto_rawDesc = "" +
 	"\x06status\x18\x02 \x01(\x03R\x06status\x12\x1a\n" +
 	"\bequipped\x18\x03 \x01(\x03R\bequipped\x12\x1f\n" +
 	"\vexpire_time\x18\x04 \x01(\x03R\n" +
-	"expireTime\"\x1a\n" +
-	"\x18AvatarFramesOwnedRequest\"S\n" +
+	"expireTime\"9\n" +
+	"\x18AvatarFramesOwnedRequest\x12\x1d\n" +
+	"\n" +
+	"frame_type\x18\x01 \x01(\x05R\tframeType\"S\n" +
 	"\x16AvatarFramesOwnedReply\x129\n" +
-	"\x06frames\x18\x01 \x03(\v2!.gamepb.avatarframepb.AvatarFrameR\x06frames\"\x19\n" +
-	"\x17AvatarFrameRedDotNotifyBTZRgithub.com/it00021hot/qq-farm-core/internal/farm/proto/avatarframepb;avatarframepbb\x06proto3"
+	"\x06frames\x18\x01 \x03(\v2!.gamepb.avatarframepb.AvatarFrameR\x06frames\"8\n" +
+	"\x17AvatarFrameRedDotNotify\x12\x1d\n" +
+	"\n" +
+	"frame_type\x18\x02 \x01(\x05R\tframeTypeb\x06proto3"
 
 var (
 	file_avatarframepb_proto_rawDescOnce sync.Once

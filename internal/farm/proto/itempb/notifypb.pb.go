@@ -67,6 +67,170 @@ func (x *ItemNotify) GetItems() []*corepb.ItemChg {
 	return nil
 }
 
+type ItemUseDailyLimit struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Current       int64                  `protobuf:"varint,1,opt,name=current,proto3" json:"current,omitempty"`
+	Limit         int64                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	ItemIds       []int64                `protobuf:"varint,3,rep,packed,name=item_ids,json=itemIds,proto3" json:"item_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ItemUseDailyLimit) Reset() {
+	*x = ItemUseDailyLimit{}
+	mi := &file_notifypb_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ItemUseDailyLimit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ItemUseDailyLimit) ProtoMessage() {}
+
+func (x *ItemUseDailyLimit) ProtoReflect() protoreflect.Message {
+	mi := &file_notifypb_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ItemUseDailyLimit.ProtoReflect.Descriptor instead.
+func (*ItemUseDailyLimit) Descriptor() ([]byte, []int) {
+	return file_notifypb_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ItemUseDailyLimit) GetCurrent() int64 {
+	if x != nil {
+		return x.Current
+	}
+	return 0
+}
+
+func (x *ItemUseDailyLimit) GetLimit() int64 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *ItemUseDailyLimit) GetItemIds() []int64 {
+	if x != nil {
+		return x.ItemIds
+	}
+	return nil
+}
+
+type ItemUseDailyEntry struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          int64                  `protobuf:"varint,1,opt,name=type,proto3" json:"type,omitempty"`
+	Value         *ItemUseDailyLimit     `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ItemUseDailyEntry) Reset() {
+	*x = ItemUseDailyEntry{}
+	mi := &file_notifypb_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ItemUseDailyEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ItemUseDailyEntry) ProtoMessage() {}
+
+func (x *ItemUseDailyEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_notifypb_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ItemUseDailyEntry.ProtoReflect.Descriptor instead.
+func (*ItemUseDailyEntry) Descriptor() ([]byte, []int) {
+	return file_notifypb_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ItemUseDailyEntry) GetType() int64 {
+	if x != nil {
+		return x.Type
+	}
+	return 0
+}
+
+func (x *ItemUseDailyEntry) GetValue() *ItemUseDailyLimit {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type ItemUseDailyNotify struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Previous      []*ItemUseDailyEntry   `protobuf:"bytes,1,rep,name=previous,proto3" json:"previous,omitempty"`
+	Current       []*ItemUseDailyEntry   `protobuf:"bytes,2,rep,name=current,proto3" json:"current,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ItemUseDailyNotify) Reset() {
+	*x = ItemUseDailyNotify{}
+	mi := &file_notifypb_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ItemUseDailyNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ItemUseDailyNotify) ProtoMessage() {}
+
+func (x *ItemUseDailyNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_notifypb_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ItemUseDailyNotify.ProtoReflect.Descriptor instead.
+func (*ItemUseDailyNotify) Descriptor() ([]byte, []int) {
+	return file_notifypb_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ItemUseDailyNotify) GetPrevious() []*ItemUseDailyEntry {
+	if x != nil {
+		return x.Previous
+	}
+	return nil
+}
+
+func (x *ItemUseDailyNotify) GetCurrent() []*ItemUseDailyEntry {
+	if x != nil {
+		return x.Current
+	}
+	return nil
+}
+
 var File_notifypb_proto protoreflect.FileDescriptor
 
 const file_notifypb_proto_rawDesc = "" +
@@ -74,7 +238,17 @@ const file_notifypb_proto_rawDesc = "" +
 	"\x0enotifypb.proto\x12\rgamepb.itempb\x1a\fcorepb.proto\"3\n" +
 	"\n" +
 	"ItemNotify\x12%\n" +
-	"\x05items\x18\x01 \x03(\v2\x0f.corepb.ItemChgR\x05itemsBFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/itempb;itempbb\x06proto3"
+	"\x05items\x18\x01 \x03(\v2\x0f.corepb.ItemChgR\x05items\"b\n" +
+	"\x11ItemUseDailyLimit\x12\x18\n" +
+	"\acurrent\x18\x01 \x01(\x03R\acurrent\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x03R\x05limit\x12\x1d\n" +
+	"\bitem_ids\x18\x03 \x03(\x03B\x02\x10\x01R\aitemIds\"_\n" +
+	"\x11ItemUseDailyEntry\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\x03R\x04type\x126\n" +
+	"\x05value\x18\x02 \x01(\v2 .gamepb.itempb.ItemUseDailyLimitR\x05value\"\x8e\x01\n" +
+	"\x12ItemUseDailyNotify\x12<\n" +
+	"\bprevious\x18\x01 \x03(\v2 .gamepb.itempb.ItemUseDailyEntryR\bprevious\x12:\n" +
+	"\acurrent\x18\x02 \x03(\v2 .gamepb.itempb.ItemUseDailyEntryR\acurrentb\x06proto3"
 
 var (
 	file_notifypb_proto_rawDescOnce sync.Once
@@ -88,18 +262,24 @@ func file_notifypb_proto_rawDescGZIP() []byte {
 	return file_notifypb_proto_rawDescData
 }
 
-var file_notifypb_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_notifypb_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_notifypb_proto_goTypes = []any{
-	(*ItemNotify)(nil),     // 0: gamepb.itempb.ItemNotify
-	(*corepb.ItemChg)(nil), // 1: corepb.ItemChg
+	(*ItemNotify)(nil),         // 0: gamepb.itempb.ItemNotify
+	(*ItemUseDailyLimit)(nil),  // 1: gamepb.itempb.ItemUseDailyLimit
+	(*ItemUseDailyEntry)(nil),  // 2: gamepb.itempb.ItemUseDailyEntry
+	(*ItemUseDailyNotify)(nil), // 3: gamepb.itempb.ItemUseDailyNotify
+	(*corepb.ItemChg)(nil),     // 4: corepb.ItemChg
 }
 var file_notifypb_proto_depIdxs = []int32{
-	1, // 0: gamepb.itempb.ItemNotify.items:type_name -> corepb.ItemChg
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	4, // 0: gamepb.itempb.ItemNotify.items:type_name -> corepb.ItemChg
+	1, // 1: gamepb.itempb.ItemUseDailyEntry.value:type_name -> gamepb.itempb.ItemUseDailyLimit
+	2, // 2: gamepb.itempb.ItemUseDailyNotify.previous:type_name -> gamepb.itempb.ItemUseDailyEntry
+	2, // 3: gamepb.itempb.ItemUseDailyNotify.current:type_name -> gamepb.itempb.ItemUseDailyEntry
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_notifypb_proto_init() }
@@ -113,7 +293,7 @@ func file_notifypb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_notifypb_proto_rawDesc), len(file_notifypb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

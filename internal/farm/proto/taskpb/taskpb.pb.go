@@ -126,6 +126,7 @@ func (ActiveStatus) EnumDescriptor() ([]byte, []int) {
 // ============ 单个任务 ============
 type Task struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	ExtraRewards  []*corepb.Item         `protobuf:"bytes,14,rep,name=extra_rewards,json=extraRewards,proto3" json:"extra_rewards,omitempty"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`                                            // 任务ID
 	Progress      int64                  `protobuf:"varint,2,opt,name=progress,proto3" json:"progress,omitempty"`                                // 当前进度
 	IsClaimed     bool                   `protobuf:"varint,3,opt,name=is_claimed,json=isClaimed,proto3" json:"is_claimed,omitempty"`             // 是否已领取
@@ -171,6 +172,13 @@ func (x *Task) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Task.ProtoReflect.Descriptor instead.
 func (*Task) Descriptor() ([]byte, []int) {
 	return file_taskpb_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Task) GetExtraRewards() []*corepb.Item {
+	if x != nil {
+		return x.ExtraRewards
+	}
+	return nil
 }
 
 func (x *Task) GetId() int64 {
@@ -1029,8 +1037,9 @@ var File_taskpb_proto protoreflect.FileDescriptor
 
 const file_taskpb_proto_rawDesc = "" +
 	"\n" +
-	"\ftaskpb.proto\x12\rgamepb.taskpb\x1a\fcorepb.proto\"\x86\x03\n" +
-	"\x04Task\x12\x0e\n" +
+	"\ftaskpb.proto\x12\rgamepb.taskpb\x1a\fcorepb.proto\"\xb9\x03\n" +
+	"\x04Task\x121\n" +
+	"\rextra_rewards\x18\x0e \x03(\v2\f.corepb.ItemR\fextraRewards\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
 	"\bprogress\x18\x02 \x01(\x03R\bprogress\x12\x1d\n" +
 	"\n" +
@@ -1102,7 +1111,7 @@ const file_taskpb_proto_rawDesc = "" +
 	"\fActiveStatus\x12\x10\n" +
 	"\fNONE_UNKNOWN\x10\x00\x12\b\n" +
 	"\x04WAIT\x10\x01\x12\b\n" +
-	"\x04DONE\x10\x02BFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/taskpb;taskpbb\x06proto3"
+	"\x04DONE\x10\x02b\x06proto3"
 
 var (
 	file_taskpb_proto_rawDescOnce sync.Once
@@ -1139,30 +1148,31 @@ var file_taskpb_proto_goTypes = []any{
 	(*corepb.Item)(nil),                 // 17: corepb.Item
 }
 var file_taskpb_proto_depIdxs = []int32{
-	17, // 0: gamepb.taskpb.Task.rewards:type_name -> corepb.Item
-	17, // 1: gamepb.taskpb.ActiveReward.rewards:type_name -> corepb.Item
-	3,  // 2: gamepb.taskpb.Active.rewards:type_name -> gamepb.taskpb.ActiveReward
-	2,  // 3: gamepb.taskpb.TaskInfo.growth_tasks:type_name -> gamepb.taskpb.Task
-	2,  // 4: gamepb.taskpb.TaskInfo.daily_tasks:type_name -> gamepb.taskpb.Task
-	2,  // 5: gamepb.taskpb.TaskInfo.tasks:type_name -> gamepb.taskpb.Task
-	4,  // 6: gamepb.taskpb.TaskInfo.actives:type_name -> gamepb.taskpb.Active
-	5,  // 7: gamepb.taskpb.TaskInfoReply.task_info:type_name -> gamepb.taskpb.TaskInfo
-	17, // 8: gamepb.taskpb.ClaimTaskRewardReply.items:type_name -> corepb.Item
-	5,  // 9: gamepb.taskpb.ClaimTaskRewardReply.task_info:type_name -> gamepb.taskpb.TaskInfo
-	17, // 10: gamepb.taskpb.ClaimTaskRewardReply.compensated_items:type_name -> corepb.Item
-	17, // 11: gamepb.taskpb.BatchClaimTaskRewardReply.items:type_name -> corepb.Item
-	5,  // 12: gamepb.taskpb.BatchClaimTaskRewardReply.task_info:type_name -> gamepb.taskpb.TaskInfo
-	17, // 13: gamepb.taskpb.BatchClaimTaskRewardReply.compensated_items:type_name -> corepb.Item
-	17, // 14: gamepb.taskpb.ClaimDailyRewardReply.items:type_name -> corepb.Item
-	5,  // 15: gamepb.taskpb.ClaimDailyRewardReply.task_info:type_name -> gamepb.taskpb.TaskInfo
-	17, // 16: gamepb.taskpb.ClaimDailyRewardReply.compensated_items:type_name -> corepb.Item
-	5,  // 17: gamepb.taskpb.ClientReportProgressReply.task_info:type_name -> gamepb.taskpb.TaskInfo
-	5,  // 18: gamepb.taskpb.TaskInfoNotify.task_info:type_name -> gamepb.taskpb.TaskInfo
-	19, // [19:19] is the sub-list for method output_type
-	19, // [19:19] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	17, // 0: gamepb.taskpb.Task.extra_rewards:type_name -> corepb.Item
+	17, // 1: gamepb.taskpb.Task.rewards:type_name -> corepb.Item
+	17, // 2: gamepb.taskpb.ActiveReward.rewards:type_name -> corepb.Item
+	3,  // 3: gamepb.taskpb.Active.rewards:type_name -> gamepb.taskpb.ActiveReward
+	2,  // 4: gamepb.taskpb.TaskInfo.growth_tasks:type_name -> gamepb.taskpb.Task
+	2,  // 5: gamepb.taskpb.TaskInfo.daily_tasks:type_name -> gamepb.taskpb.Task
+	2,  // 6: gamepb.taskpb.TaskInfo.tasks:type_name -> gamepb.taskpb.Task
+	4,  // 7: gamepb.taskpb.TaskInfo.actives:type_name -> gamepb.taskpb.Active
+	5,  // 8: gamepb.taskpb.TaskInfoReply.task_info:type_name -> gamepb.taskpb.TaskInfo
+	17, // 9: gamepb.taskpb.ClaimTaskRewardReply.items:type_name -> corepb.Item
+	5,  // 10: gamepb.taskpb.ClaimTaskRewardReply.task_info:type_name -> gamepb.taskpb.TaskInfo
+	17, // 11: gamepb.taskpb.ClaimTaskRewardReply.compensated_items:type_name -> corepb.Item
+	17, // 12: gamepb.taskpb.BatchClaimTaskRewardReply.items:type_name -> corepb.Item
+	5,  // 13: gamepb.taskpb.BatchClaimTaskRewardReply.task_info:type_name -> gamepb.taskpb.TaskInfo
+	17, // 14: gamepb.taskpb.BatchClaimTaskRewardReply.compensated_items:type_name -> corepb.Item
+	17, // 15: gamepb.taskpb.ClaimDailyRewardReply.items:type_name -> corepb.Item
+	5,  // 16: gamepb.taskpb.ClaimDailyRewardReply.task_info:type_name -> gamepb.taskpb.TaskInfo
+	17, // 17: gamepb.taskpb.ClaimDailyRewardReply.compensated_items:type_name -> corepb.Item
+	5,  // 18: gamepb.taskpb.ClientReportProgressReply.task_info:type_name -> gamepb.taskpb.TaskInfo
+	5,  // 19: gamepb.taskpb.TaskInfoNotify.task_info:type_name -> gamepb.taskpb.TaskInfo
+	20, // [20:20] is the sub-list for method output_type
+	20, // [20:20] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_taskpb_proto_init() }

@@ -45,6 +45,8 @@ func (s *Service) Snapshot(ctx fiber.Ctx, req farmtypes.ActivitySnapshotReq) (ma
 		"solarTerms":    map[string]any{},
 		"constellation": map[string]any{},
 		"greenPlum":     map[string]any{},
+		"qixi":          map[string]any{},
+		"activities":    []map[string]any{},
 	}
 
 	session, err := s.session(ctx, req.AccountID)
@@ -530,6 +532,58 @@ func (s *Service) ClaimGift(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map
 	}, nil
 }
 
+func (s *Service) Qixi(ctx fiber.Ctx, req farmtypes.ActivitySnapshotReq) (map[string]any, error) {
+	_, api, callCtx, cancel, err := s.liveAPI(ctx, req.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+	activity, err := activitycenter.BuildQixi(callCtx, api)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"accountId": req.AccountID, "qixi": activity}, nil
+}
+
+func (s *Service) ClaimQixiBridge(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map[string]any, error) {
+	_, api, callCtx, cancel, err := s.liveAPI(ctx, req.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+	extra, err := activitycenter.ClaimQixiBridge(callCtx, api)
+	if err != nil {
+		return nil, err
+	}
+	snap := activitycenter.BuildSnapshot(callCtx, api)
+	return s.attachSnapshot(ctx, req.AccountID, snap, extra)
+}
+
+func (s *Service) GiftQixiSachet(ctx fiber.Ctx, req farmtypes.ActivityActionReq) (map[string]any, error) {
+	friendGID, err := game.ParsePositiveInt64(req.FriendGID)
+	if err != nil {
+		return nil, errors.New("INVALID_QIXI_FRIEND_GID: 好友 GID 必须是正十进制整数")
+	}
+	count := req.SachetCount
+	if count <= 0 {
+		count = req.Count
+	}
+	if count <= 0 {
+		return nil, errors.New("INVALID_QIXI_SACHET_COUNT: 赠送数量必须是正十进制整数")
+	}
+	_, api, callCtx, cancel, err := s.liveAPI(ctx, req.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+	extra, err := activitycenter.GiftQixiSachet(callCtx, api, friendGID, count)
+	if err != nil {
+		return nil, err
+	}
+	snap := activitycenter.BuildSnapshot(callCtx, api)
+	return s.attachSnapshot(ctx, req.AccountID, snap, extra)
+}
+
 func (s *Service) attachSnapshot(ctx fiber.Ctx, accountID uint64, snap activitycenter.Snapshot, extra map[string]any) (map[string]any, error) {
 	db := vars.DB
 	now := uint(time.Now().Unix())
@@ -546,6 +600,8 @@ func (s *Service) attachSnapshot(ctx fiber.Ctx, accountID uint64, snap activityc
 		"solarTerms":    snap.SolarTerms,
 		"constellation": snap.Constellation,
 		"greenPlum":     snap.GreenPlum,
+		"qixi":          snap.Qixi,
+		"activities":    snap.Activities,
 		"capabilities":  snap.Capabilities,
 		"actions":       snap.Actions,
 	}
@@ -562,6 +618,8 @@ func (s *Service) attachSnapshot(ctx fiber.Ctx, accountID uint64, snap activityc
 		"solarTerms":    snap.SolarTerms,
 		"constellation": snap.Constellation,
 		"greenPlum":     snap.GreenPlum,
+		"qixi":          snap.Qixi,
+		"activities":    snap.Activities,
 		"capabilities":  snap.Capabilities,
 		"actions":       snap.Actions,
 		"errors":        snap.Errors,

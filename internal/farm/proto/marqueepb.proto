@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.marqueepb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/marqueepb;marqueepb";
 // ============ 跑马灯/滚动消息 ============
 message GetMarqueeRequest {}
 

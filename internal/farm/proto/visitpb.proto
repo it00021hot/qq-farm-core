@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.visitpb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/visitpb;visitpb";
 import "plantpb.proto";
 import "userpb.proto";
 

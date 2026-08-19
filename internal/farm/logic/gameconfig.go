@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // PlantItem is a Plant.json row (fields used by logic).
@@ -579,9 +580,15 @@ type EffectiveSellInfo struct {
 // getEffectiveSellInfo fix for fruits that appeared sellable with a cond_sells
 // fallback price.
 func GetEffectiveSellInfo(item *ItemInfo) EffectiveSellInfo {
+	return GetEffectiveSellInfoAt(item, DefaultSellConditionContext(time.Now().Unix()), 0)
+}
+
+// GetEffectiveSellInfoAt resolves sellability with an explicit condition context.
+func GetEffectiveSellInfoAt(item *ItemInfo, ctx SellConditionContext, expireTime int64) EffectiveSellInfo {
 	if item == nil {
 		return EffectiveSellInfo{Status: SellStatusUnavailable}
 	}
+	ctx.ExpireTime = expireTime
 	var normal []SellEntry
 	if item.Sells != nil {
 		for _, sell := range ParseSells(*item.Sells) {
@@ -601,6 +608,9 @@ func GetEffectiveSellInfo(item *ItemInfo) EffectiveSellInfo {
 				conditional = append(conditional, sell)
 			}
 		}
+	}
+	if condition != "" && len(conditional) > 0 && IsSellConditionSatisfied(condition, ctx) {
+		return EffectiveSellInfo{Sellable: true, Status: SellStatusAvailable, Condition: condition, Sells: conditional}
 	}
 	if len(normal) > 0 {
 		return EffectiveSellInfo{Sellable: true, Status: SellStatusAvailable, Condition: condition, Sells: normal}

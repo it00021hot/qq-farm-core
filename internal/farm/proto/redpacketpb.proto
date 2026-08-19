@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.redpacketpb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/redpacketpb;redpacketpb";
 import "corepb.proto";
 
 service RedPacketService {

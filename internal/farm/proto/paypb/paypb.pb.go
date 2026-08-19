@@ -163,7 +163,8 @@ func (x *GetRechargeInfoReply) GetRechargeInfos() []*RechargeInfo {
 
 type RechargeInfoNotify struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        int64                  `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
+	TransactionId string                 `protobuf:"bytes,1,opt,name=transaction_id,json=transactionId,proto3" json:"transaction_id,omitempty"`
+	Source        string                 `protobuf:"bytes,2,opt,name=source,proto3" json:"source,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -198,11 +199,18 @@ func (*RechargeInfoNotify) Descriptor() ([]byte, []int) {
 	return file_paypb_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *RechargeInfoNotify) GetStatus() int64 {
+func (x *RechargeInfoNotify) GetTransactionId() string {
 	if x != nil {
-		return x.Status
+		return x.TransactionId
 	}
-	return 0
+	return ""
+}
+
+func (x *RechargeInfoNotify) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
 }
 
 var File_paypb_proto protoreflect.FileDescriptor
@@ -216,12 +224,13 @@ const file_paypb_proto_rawDesc = "" +
 	"\abalance\x18\x01 \x01(\x03R\abalance\x12\x17\n" +
 	"\afield_3\x18\x03 \x01(\x03R\x06field3\"Y\n" +
 	"\x14GetRechargeInfoReply\x12A\n" +
-	"\x0erecharge_infos\x18\x01 \x03(\v2\x1a.gamepb.paypb.RechargeInfoR\rrechargeInfos\",\n" +
-	"\x12RechargeInfoNotify\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\x03R\x06status2i\n" +
+	"\x0erecharge_infos\x18\x01 \x03(\v2\x1a.gamepb.paypb.RechargeInfoR\rrechargeInfos\"S\n" +
+	"\x12RechargeInfoNotify\x12%\n" +
+	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12\x16\n" +
+	"\x06source\x18\x02 \x01(\tR\x06source2i\n" +
 	"\n" +
 	"PayService\x12[\n" +
-	"\x0fGetRechargeInfo\x12$.gamepb.paypb.GetRechargeInfoRequest\x1a\".gamepb.paypb.GetRechargeInfoReplyBDZBgithub.com/it00021hot/qq-farm-core/internal/farm/proto/paypb;paypbb\x06proto3"
+	"\x0fGetRechargeInfo\x12$.gamepb.paypb.GetRechargeInfoRequest\x1a\".gamepb.paypb.GetRechargeInfoReplyb\x06proto3"
 
 var (
 	file_paypb_proto_rawDescOnce sync.Once

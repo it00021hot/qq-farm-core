@@ -192,7 +192,7 @@ const file_careerpb_proto_rawDesc = "" +
 	"\x06status\x18\x05 \x01(\x05R\x06status\"\x16\n" +
 	"\x14CareerInfoGetRequest\"K\n" +
 	"\x12CareerInfoGetReply\x125\n" +
-	"\acareers\x18\x01 \x03(\v2\x1b.gamepb.careerpb.CareerInfoR\acareersBJZHgithub.com/it00021hot/qq-farm-core/internal/farm/proto/careerpb;careerpbb\x06proto3"
+	"\acareers\x18\x01 \x03(\v2\x1b.gamepb.careerpb.CareerInfoR\acareersb\x06proto3"
 
 var (
 	file_careerpb_proto_rawDescOnce sync.Once

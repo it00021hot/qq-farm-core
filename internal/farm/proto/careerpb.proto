@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.careerpb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/careerpb;careerpb";
 // ============ 职业/生涯服务 ============
 
 message CareerInfo {

@@ -102,7 +102,7 @@ const file_mutantpb_proto_rawDesc = "" +
 	"\x15ReadMutantBookRequest\"\x15\n" +
 	"\x13ReadMutantBookReply2o\n" +
 	"\rMutantService\x12^\n" +
-	"\x0eReadMutantBook\x12&.gamepb.mutantpb.ReadMutantBookRequest\x1a$.gamepb.mutantpb.ReadMutantBookReplyBJZHgithub.com/it00021hot/qq-farm-core/internal/farm/proto/mutantpb;mutantpbb\x06proto3"
+	"\x0eReadMutantBook\x12&.gamepb.mutantpb.ReadMutantBookRequest\x1a$.gamepb.mutantpb.ReadMutantBookReplyb\x06proto3"
 
 var (
 	file_mutantpb_proto_rawDescOnce sync.Once

@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.interactpb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/interactpb;interactpb";
 message InteractRecord {
     int64 server_time = 1;
     int32 action_type = 2;
@@ -47,6 +45,7 @@ message GetInteractInfoRequest {}
 
 message GetInteractInfoReply {
     repeated InteractInfo infos = 1;
+    int64 server_time = 2;
 }
 
 // --- 获取互动摘要 ---

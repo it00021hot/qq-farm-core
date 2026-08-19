@@ -959,15 +959,6 @@ func applyHarvestReply(acc *harvestRewardAccum, requested []int64, reply *plantp
 		seen[id] = struct{}{}
 		acc.stolenIDs = append(acc.stolenIDs, id)
 	}
-	if reply != nil {
-		for _, it := range reply.Items {
-			if it == nil || it.Id <= 0 || it.Count <= 0 {
-				continue
-			}
-			cp := *it
-			acc.items = append(acc.items, &cp)
-		}
-	}
 }
 
 func isUnstealableError(err error) bool {

@@ -2,11 +2,10 @@ syntax = "proto3";
 
 package gamepb.skinpb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/skinpb;skinpb";
 // ============ 皮肤信息 ============
 message SkinItem {
     int64 skin_id = 1;
+    bool is_new = 3;
     int64 slot_type = 2;    // 装备槽位类型
 }
 
@@ -24,6 +23,28 @@ message SkinsEquippedRequest {}
 
 message SkinsEquippedReply {
     repeated SkinItem skins = 1;
+    SkinEffectSelection effect_selection = 2;
+}
+
+message SkinEffectSelection {
+    int64 effect_type = 1;
+    int64 effect_value = 2;
+    bool enabled = 3;
+}
+
+message SkinEffectParams {
+    int64 value = 1;
+}
+
+message SkinEffectTypeParam {
+    int64 effect_type = 1;
+    SkinEffectParams params = 2;
+}
+
+message GetSkinEffectTypeParamsRequest {}
+
+message GetSkinEffectTypeParamsReply {
+    repeated SkinEffectTypeParam params = 1;
 }
 
 // --- 装备皮肤 ---

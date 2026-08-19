@@ -1,5 +1,9 @@
 # QQ 农场 · 后端（qq-farm-core）
 
+> 维护状态：该 Go 后端已停止持续维护，仅保留历史实现。
+>
+> 当前维护中的版本请见 Rust 仓库：[`it00021hot/qq-farm-rust`](https://github.com/it00021hot/qq-farm-rust)
+
 QQ 农场智能助手后端：多账号托管、自动化种地/好友互动、活动与商城，以及管理端 API。
 
 - 仓库：[github.com/it00021hot/qq-farm-core](https://github.com/it00021hot/qq-farm-core)

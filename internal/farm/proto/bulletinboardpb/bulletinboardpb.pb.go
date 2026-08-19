@@ -94,6 +94,7 @@ func (x *BulletinItem) GetType() int64 {
 // ============ 请求/回复 ============
 type GetBulletinListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	PageSize      int64                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	Count         int64                  `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"` // 获取数量
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -127,6 +128,13 @@ func (x *GetBulletinListRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use GetBulletinListRequest.ProtoReflect.Descriptor instead.
 func (*GetBulletinListRequest) Descriptor() ([]byte, []int) {
 	return file_bulletinboardpb_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GetBulletinListRequest) GetPageSize() int64 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
 }
 
 func (x *GetBulletinListRequest) GetCount() int64 {
@@ -303,7 +311,11 @@ func (x *BulletinDetail) GetType() int64 {
 
 type GetBulletinDetailReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Detail        *BulletinDetail        `protobuf:"bytes,1,opt,name=detail,proto3" json:"detail,omitempty"`
+	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	BeginTime     string                 `protobuf:"bytes,3,opt,name=begin_time,json=beginTime,proto3" json:"begin_time,omitempty"`
+	EndTime       string                 `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	ImageUrl      string                 `protobuf:"bytes,5,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -338,11 +350,39 @@ func (*GetBulletinDetailReply) Descriptor() ([]byte, []int) {
 	return file_bulletinboardpb_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *GetBulletinDetailReply) GetDetail() *BulletinDetail {
+func (x *GetBulletinDetailReply) GetTitle() string {
 	if x != nil {
-		return x.Detail
+		return x.Title
 	}
-	return nil
+	return ""
+}
+
+func (x *GetBulletinDetailReply) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *GetBulletinDetailReply) GetBeginTime() string {
+	if x != nil {
+		return x.BeginTime
+	}
+	return ""
+}
+
+func (x *GetBulletinDetailReply) GetEndTime() string {
+	if x != nil {
+		return x.EndTime
+	}
+	return ""
+}
+
+func (x *GetBulletinDetailReply) GetImageUrl() string {
+	if x != nil {
+		return x.ImageUrl
+	}
+	return ""
 }
 
 // ============ 通知 ============
@@ -399,8 +439,9 @@ const file_bulletinboardpb_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
 	"\x06status\x18\x03 \x01(\x03R\x06status\x12\x12\n" +
-	"\x04type\x18\x05 \x01(\x03R\x04type\".\n" +
-	"\x16GetBulletinListRequest\x12\x14\n" +
+	"\x04type\x18\x05 \x01(\x03R\x04type\"K\n" +
+	"\x16GetBulletinListRequest\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x03R\bpageSize\x12\x14\n" +
 	"\x05count\x18\x01 \x01(\x03R\x05count\"Z\n" +
 	"\x14GetBulletinListReply\x12B\n" +
 	"\tbulletins\x18\x01 \x03(\v2$.gamepb.bulletinboardpb.BulletinItemR\tbulletins\"*\n" +
@@ -411,11 +452,16 @@ const file_bulletinboardpb_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
 	"\acontent\x18\x03 \x01(\tR\acontent\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\x03R\x06status\x12\x12\n" +
-	"\x04type\x18\x05 \x01(\x03R\x04type\"X\n" +
-	"\x16GetBulletinDetailReply\x12>\n" +
-	"\x06detail\x18\x01 \x01(\v2&.gamepb.bulletinboardpb.BulletinDetailR\x06detail\"\\\n" +
+	"\x04type\x18\x05 \x01(\x03R\x04type\"\x9f\x01\n" +
+	"\x16GetBulletinDetailReply\x12\x14\n" +
+	"\x05title\x18\x01 \x01(\tR\x05title\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\x12\x1d\n" +
+	"\n" +
+	"begin_time\x18\x03 \x01(\tR\tbeginTime\x12\x19\n" +
+	"\bend_time\x18\x04 \x01(\tR\aendTime\x12\x1b\n" +
+	"\timage_url\x18\x05 \x01(\tR\bimageUrl\"\\\n" +
 	"\x16BulletinListChangedNTF\x12B\n" +
-	"\tbulletins\x18\x01 \x03(\v2$.gamepb.bulletinboardpb.BulletinItemR\tbulletinsBXZVgithub.com/it00021hot/qq-farm-core/internal/farm/proto/bulletinboardpb;bulletinboardpbb\x06proto3"
+	"\tbulletins\x18\x01 \x03(\v2$.gamepb.bulletinboardpb.BulletinItemR\tbulletinsb\x06proto3"
 
 var (
 	file_bulletinboardpb_proto_rawDescOnce sync.Once
@@ -441,13 +487,12 @@ var file_bulletinboardpb_proto_goTypes = []any{
 }
 var file_bulletinboardpb_proto_depIdxs = []int32{
 	0, // 0: gamepb.bulletinboardpb.GetBulletinListReply.bulletins:type_name -> gamepb.bulletinboardpb.BulletinItem
-	4, // 1: gamepb.bulletinboardpb.GetBulletinDetailReply.detail:type_name -> gamepb.bulletinboardpb.BulletinDetail
-	0, // 2: gamepb.bulletinboardpb.BulletinListChangedNTF.bulletins:type_name -> gamepb.bulletinboardpb.BulletinItem
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	0, // 1: gamepb.bulletinboardpb.BulletinListChangedNTF.bulletins:type_name -> gamepb.bulletinboardpb.BulletinItem
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_bulletinboardpb_proto_init() }

@@ -153,3 +153,39 @@ func (c *Controller) SettleGreenPlumBrew(ctx fiber.Ctx) error {
 	}
 	return response.SuccessJSON(ctx, "", info)
 }
+
+func (c *Controller) Qixi(ctx fiber.Ctx) error {
+	var req farmtypes.ActivitySnapshotReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.Qixi(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) ClaimQixiBridge(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityActionReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.ClaimQixiBridge(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) GiftQixiSachet(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityActionReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.GiftQixiSachet(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}

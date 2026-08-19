@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package gamepb.bulletinboardpb;
 
-
-option go_package = "github.com/it00021hot/qq-farm-core/internal/farm/proto/bulletinboardpb;bulletinboardpb";
 // ============ 公告信息 ============
 message BulletinItem {
     int64 id = 1;
@@ -15,6 +13,7 @@ message BulletinItem {
 
 // ============ 请求/回复 ============
 message GetBulletinListRequest {
+    int64 page_size = 2;
     int64 count = 1;        // 获取数量
 }
 
@@ -37,7 +36,11 @@ message BulletinDetail {
 }
 
 message GetBulletinDetailReply {
-    BulletinDetail detail = 1;
+    string title = 1;
+    string content = 2;
+    string begin_time = 3;
+    string end_time = 4;
+    string image_url = 5;
 }
 
 // ============ 通知 ============

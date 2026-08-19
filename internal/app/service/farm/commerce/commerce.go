@@ -154,7 +154,7 @@ func (s *Service) loadMysteryShop(ctx context.Context, session *farmruntime.Sess
 	result.NPC = &farmtypes.MysteryNPC{
 		ID:                npc.GetNpcId(),
 		Reward:            commerceItem(npc.GetRewardItemId(), rewardCount, "神秘商品"),
-		Stock:             max32(npc.GetStockCount()),
+		Stock:             0,
 		Price:             commercePrice(npc.GetCurrencyItemId(), unitPrice*rewardCount, balances),
 		OriginalPrice:     unitOriginal * rewardCount,
 		UnitPrice:         unitPrice,

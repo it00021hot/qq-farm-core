@@ -7,6 +7,8 @@
 package userpb
 
 import (
+	avatarframepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/avatarframepb"
+	corepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -31,6 +33,7 @@ type LoginRequest struct {
 	ShareCfgId    int64       `protobuf:"varint,6,opt,name=share_cfg_id,json=shareCfgId,proto3" json:"share_cfg_id,omitempty"`
 	SceneId       string      `protobuf:"bytes,7,opt,name=scene_id,json=sceneId,proto3" json:"scene_id,omitempty"`
 	ReportData    *ReportData `protobuf:"bytes,8,opt,name=report_data,json=reportData,proto3" json:"report_data,omitempty"`
+	Extra         []byte      `protobuf:"bytes,9,opt,name=extra,proto3" json:"extra,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -103,6 +106,13 @@ func (x *LoginRequest) GetSceneId() string {
 func (x *LoginRequest) GetReportData() *ReportData {
 	if x != nil {
 		return x.ReportData
+	}
+	return nil
+}
+
+func (x *LoginRequest) GetExtra() []byte {
+	if x != nil {
+		return x.Extra
 	}
 	return nil
 }
@@ -365,27 +375,652 @@ func (x *ReportData) GetTrackid() string {
 	return ""
 }
 
+type GuideNode struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NodeId        int64                  `protobuf:"varint,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	Status        int64                  `protobuf:"varint,2,opt,name=status,proto3" json:"status,omitempty"`
+	Reward        *corepb.Item           `protobuf:"bytes,3,opt,name=reward,proto3" json:"reward,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GuideNode) Reset() {
+	*x = GuideNode{}
+	mi := &file_userpb_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GuideNode) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GuideNode) ProtoMessage() {}
+
+func (x *GuideNode) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GuideNode.ProtoReflect.Descriptor instead.
+func (*GuideNode) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GuideNode) GetNodeId() int64 {
+	if x != nil {
+		return x.NodeId
+	}
+	return 0
+}
+
+func (x *GuideNode) GetStatus() int64 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *GuideNode) GetReward() *corepb.Item {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+type GuideInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GuideId       int64                  `protobuf:"varint,1,opt,name=guide_id,json=guideId,proto3" json:"guide_id,omitempty"`
+	Nodes         []*GuideNode           `protobuf:"bytes,2,rep,name=nodes,proto3" json:"nodes,omitempty"`
+	Completed     bool                   `protobuf:"varint,3,opt,name=completed,proto3" json:"completed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GuideInfo) Reset() {
+	*x = GuideInfo{}
+	mi := &file_userpb_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GuideInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GuideInfo) ProtoMessage() {}
+
+func (x *GuideInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GuideInfo.ProtoReflect.Descriptor instead.
+func (*GuideInfo) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GuideInfo) GetGuideId() int64 {
+	if x != nil {
+		return x.GuideId
+	}
+	return 0
+}
+
+func (x *GuideInfo) GetNodes() []*GuideNode {
+	if x != nil {
+		return x.Nodes
+	}
+	return nil
+}
+
+func (x *GuideInfo) GetCompleted() bool {
+	if x != nil {
+		return x.Completed
+	}
+	return false
+}
+
+type IllustratedInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Current       int64                  `protobuf:"varint,1,opt,name=current,proto3" json:"current,omitempty"`
+	Target        int64                  `protobuf:"varint,2,opt,name=target,proto3" json:"target,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IllustratedInfo) Reset() {
+	*x = IllustratedInfo{}
+	mi := &file_userpb_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IllustratedInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IllustratedInfo) ProtoMessage() {}
+
+func (x *IllustratedInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IllustratedInfo.ProtoReflect.Descriptor instead.
+func (*IllustratedInfo) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *IllustratedInfo) GetCurrent() int64 {
+	if x != nil {
+		return x.Current
+	}
+	return 0
+}
+
+func (x *IllustratedInfo) GetTarget() int64 {
+	if x != nil {
+		return x.Target
+	}
+	return 0
+}
+
+type SystemUnlockItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UnlockType    int64                  `protobuf:"varint,1,opt,name=unlock_type,json=unlockType,proto3" json:"unlock_type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SystemUnlockItem) Reset() {
+	*x = SystemUnlockItem{}
+	mi := &file_userpb_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SystemUnlockItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SystemUnlockItem) ProtoMessage() {}
+
+func (x *SystemUnlockItem) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SystemUnlockItem.ProtoReflect.Descriptor instead.
+func (*SystemUnlockItem) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SystemUnlockItem) GetUnlockType() int64 {
+	if x != nil {
+		return x.UnlockType
+	}
+	return 0
+}
+
+type MallMsg struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        int64                  `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MallMsg) Reset() {
+	*x = MallMsg{}
+	mi := &file_userpb_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MallMsg) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MallMsg) ProtoMessage() {}
+
+func (x *MallMsg) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MallMsg.ProtoReflect.Descriptor instead.
+func (*MallMsg) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *MallMsg) GetStatus() int64 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+type ActivityWindowStatus struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ActivityId    int64                  `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	BeginTime     int64                  `protobuf:"varint,2,opt,name=begin_time,json=beginTime,proto3" json:"begin_time,omitempty"`
+	EndTime       int64                  `protobuf:"varint,3,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	ConfigId      int64                  `protobuf:"varint,4,opt,name=config_id,json=configId,proto3" json:"config_id,omitempty"`
+	Enabled       bool                   `protobuf:"varint,5,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ActivityWindowStatus) Reset() {
+	*x = ActivityWindowStatus{}
+	mi := &file_userpb_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ActivityWindowStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ActivityWindowStatus) ProtoMessage() {}
+
+func (x *ActivityWindowStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ActivityWindowStatus.ProtoReflect.Descriptor instead.
+func (*ActivityWindowStatus) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ActivityWindowStatus) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+func (x *ActivityWindowStatus) GetBeginTime() int64 {
+	if x != nil {
+		return x.BeginTime
+	}
+	return 0
+}
+
+func (x *ActivityWindowStatus) GetEndTime() int64 {
+	if x != nil {
+		return x.EndTime
+	}
+	return 0
+}
+
+func (x *ActivityWindowStatus) GetConfigId() int64 {
+	if x != nil {
+		return x.ConfigId
+	}
+	return 0
+}
+
+func (x *ActivityWindowStatus) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+type PolicyInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PolicyInfo) Reset() {
+	*x = PolicyInfo{}
+	mi := &file_userpb_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PolicyInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PolicyInfo) ProtoMessage() {}
+
+func (x *PolicyInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PolicyInfo.ProtoReflect.Descriptor instead.
+func (*PolicyInfo) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *PolicyInfo) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type SceneEffect struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	EffectName     string                 `protobuf:"bytes,3,opt,name=effect_name,json=effectName,proto3" json:"effect_name,omitempty"`
+	TransitionName string                 `protobuf:"bytes,4,opt,name=transition_name,json=transitionName,proto3" json:"transition_name,omitempty"`
+	IsDefault      bool                   `protobuf:"varint,5,opt,name=is_default,json=isDefault,proto3" json:"is_default,omitempty"`
+	BeginTime      string                 `protobuf:"bytes,6,opt,name=begin_time,json=beginTime,proto3" json:"begin_time,omitempty"`
+	EndTime        string                 `protobuf:"bytes,7,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *SceneEffect) Reset() {
+	*x = SceneEffect{}
+	mi := &file_userpb_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SceneEffect) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SceneEffect) ProtoMessage() {}
+
+func (x *SceneEffect) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SceneEffect.ProtoReflect.Descriptor instead.
+func (*SceneEffect) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *SceneEffect) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *SceneEffect) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *SceneEffect) GetEffectName() string {
+	if x != nil {
+		return x.EffectName
+	}
+	return ""
+}
+
+func (x *SceneEffect) GetTransitionName() string {
+	if x != nil {
+		return x.TransitionName
+	}
+	return ""
+}
+
+func (x *SceneEffect) GetIsDefault() bool {
+	if x != nil {
+		return x.IsDefault
+	}
+	return false
+}
+
+func (x *SceneEffect) GetBeginTime() string {
+	if x != nil {
+		return x.BeginTime
+	}
+	return ""
+}
+
+func (x *SceneEffect) GetEndTime() string {
+	if x != nil {
+		return x.EndTime
+	}
+	return ""
+}
+
+type SceneEffectValue struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value         int64                  `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SceneEffectValue) Reset() {
+	*x = SceneEffectValue{}
+	mi := &file_userpb_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SceneEffectValue) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SceneEffectValue) ProtoMessage() {}
+
+func (x *SceneEffectValue) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SceneEffectValue.ProtoReflect.Descriptor instead.
+func (*SceneEffectValue) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SceneEffectValue) GetValue() int64 {
+	if x != nil {
+		return x.Value
+	}
+	return 0
+}
+
+type SceneEffectSelection struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EffectType    int64                  `protobuf:"varint,1,opt,name=effect_type,json=effectType,proto3" json:"effect_type,omitempty"`
+	Value         *SceneEffectValue      `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SceneEffectSelection) Reset() {
+	*x = SceneEffectSelection{}
+	mi := &file_userpb_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SceneEffectSelection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SceneEffectSelection) ProtoMessage() {}
+
+func (x *SceneEffectSelection) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SceneEffectSelection.ProtoReflect.Descriptor instead.
+func (*SceneEffectSelection) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *SceneEffectSelection) GetEffectType() int64 {
+	if x != nil {
+		return x.EffectType
+	}
+	return 0
+}
+
+func (x *SceneEffectSelection) GetValue() *SceneEffectValue {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type SceneEffectConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Effects       []*SceneEffect         `protobuf:"bytes,1,rep,name=effects,proto3" json:"effects,omitempty"`
+	Selection     *SceneEffectSelection  `protobuf:"bytes,2,opt,name=selection,proto3" json:"selection,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SceneEffectConfig) Reset() {
+	*x = SceneEffectConfig{}
+	mi := &file_userpb_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SceneEffectConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SceneEffectConfig) ProtoMessage() {}
+
+func (x *SceneEffectConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SceneEffectConfig.ProtoReflect.Descriptor instead.
+func (*SceneEffectConfig) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *SceneEffectConfig) GetEffects() []*SceneEffect {
+	if x != nil {
+		return x.Effects
+	}
+	return nil
+}
+
+func (x *SceneEffectConfig) GetSelection() *SceneEffectSelection {
+	if x != nil {
+		return x.Selection
+	}
+	return nil
+}
+
 // ============ 登录回复 ============
 type LoginReply struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	Basic *BasicInfo             `protobuf:"bytes,1,opt,name=basic,proto3" json:"basic,omitempty"`
-	// ItemBag item_bag = 2;         // corepb.ItemBag, 复杂结构先跳过
-	TimeNowMillis int64 `protobuf:"varint,3,opt,name=time_now_millis,json=timeNowMillis,proto3" json:"time_now_millis,omitempty"`
-	IsFirstLogin  bool  `protobuf:"varint,4,opt,name=is_first_login,json=isFirstLogin,proto3" json:"is_first_login,omitempty"`
-	// GuideInfo guide_info = 5;
-	QqGroupInfos []*QQGroupInfo `protobuf:"bytes,6,rep,name=qq_group_infos,json=qqGroupInfos,proto3" json:"qq_group_infos,omitempty"`
-	// Illustrated illustrated = 7;
-	// repeated SystemUnlockItem unlocked_items = 8;
-	VersionInfo *VersionInfo `protobuf:"bytes,9,opt,name=version_info,json=versionInfo,proto3" json:"version_info,omitempty"`
-	// MallMsg mall_msg = 10;
-	QqFriendRecommendAuthorized int64 `protobuf:"varint,11,opt,name=qq_friend_recommend_authorized,json=qqFriendRecommendAuthorized,proto3" json:"qq_friend_recommend_authorized,omitempty"`
+	state                       protoimpl.MessageState  `protogen:"open.v1"`
+	Basic                       *BasicInfo              `protobuf:"bytes,1,opt,name=basic,proto3" json:"basic,omitempty"`
+	ItemBag                     *corepb.ItemBag         `protobuf:"bytes,2,opt,name=item_bag,json=itemBag,proto3" json:"item_bag,omitempty"`
+	TimeNowMillis               int64                   `protobuf:"varint,3,opt,name=time_now_millis,json=timeNowMillis,proto3" json:"time_now_millis,omitempty"`
+	IsFirstLogin                bool                    `protobuf:"varint,4,opt,name=is_first_login,json=isFirstLogin,proto3" json:"is_first_login,omitempty"`
+	GuideInfo                   *GuideInfo              `protobuf:"bytes,5,opt,name=guide_info,json=guideInfo,proto3" json:"guide_info,omitempty"`
+	QqGroupInfos                []*QQGroupInfo          `protobuf:"bytes,6,rep,name=qq_group_infos,json=qqGroupInfos,proto3" json:"qq_group_infos,omitempty"`
+	Illustrated                 *IllustratedInfo        `protobuf:"bytes,7,opt,name=illustrated,proto3" json:"illustrated,omitempty"`
+	UnlockedItems               []*SystemUnlockItem     `protobuf:"bytes,8,rep,name=unlocked_items,json=unlockedItems,proto3" json:"unlocked_items,omitempty"`
+	VersionInfo                 *VersionInfo            `protobuf:"bytes,9,opt,name=version_info,json=versionInfo,proto3" json:"version_info,omitempty"`
+	MallMsg                     *MallMsg                `protobuf:"bytes,10,opt,name=mall_msg,json=mallMsg,proto3" json:"mall_msg,omitempty"`
+	QqFriendRecommendAuthorized int64                   `protobuf:"varint,11,opt,name=qq_friend_recommend_authorized,json=qqFriendRecommendAuthorized,proto3" json:"qq_friend_recommend_authorized,omitempty"`
+	ActivityWindows             []*ActivityWindowStatus `protobuf:"bytes,12,rep,name=activity_windows,json=activityWindows,proto3" json:"activity_windows,omitempty"`
+	PolicyInfo                  *PolicyInfo             `protobuf:"bytes,14,opt,name=policy_info,json=policyInfo,proto3" json:"policy_info,omitempty"`
+	Field_15                    int64                   `protobuf:"varint,15,opt,name=field_15,json=field15,proto3" json:"field_15,omitempty"`
+	SceneEffectConfig           *SceneEffectConfig      `protobuf:"bytes,16,opt,name=scene_effect_config,json=sceneEffectConfig,proto3" json:"scene_effect_config,omitempty"`
+	Field_18                    []byte                  `protobuf:"bytes,18,opt,name=field_18,json=field18,proto3" json:"field_18,omitempty"`
 	unknownFields               protoimpl.UnknownFields
 	sizeCache                   protoimpl.SizeCache
 }
 
 func (x *LoginReply) Reset() {
 	*x = LoginReply{}
-	mi := &file_userpb_proto_msgTypes[3]
+	mi := &file_userpb_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -397,7 +1032,7 @@ func (x *LoginReply) String() string {
 func (*LoginReply) ProtoMessage() {}
 
 func (x *LoginReply) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[3]
+	mi := &file_userpb_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -410,12 +1045,19 @@ func (x *LoginReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginReply.ProtoReflect.Descriptor instead.
 func (*LoginReply) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{3}
+	return file_userpb_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *LoginReply) GetBasic() *BasicInfo {
 	if x != nil {
 		return x.Basic
+	}
+	return nil
+}
+
+func (x *LoginReply) GetItemBag() *corepb.ItemBag {
+	if x != nil {
+		return x.ItemBag
 	}
 	return nil
 }
@@ -434,9 +1076,30 @@ func (x *LoginReply) GetIsFirstLogin() bool {
 	return false
 }
 
+func (x *LoginReply) GetGuideInfo() *GuideInfo {
+	if x != nil {
+		return x.GuideInfo
+	}
+	return nil
+}
+
 func (x *LoginReply) GetQqGroupInfos() []*QQGroupInfo {
 	if x != nil {
 		return x.QqGroupInfos
+	}
+	return nil
+}
+
+func (x *LoginReply) GetIllustrated() *IllustratedInfo {
+	if x != nil {
+		return x.Illustrated
+	}
+	return nil
+}
+
+func (x *LoginReply) GetUnlockedItems() []*SystemUnlockItem {
+	if x != nil {
+		return x.UnlockedItems
 	}
 	return nil
 }
@@ -448,6 +1111,13 @@ func (x *LoginReply) GetVersionInfo() *VersionInfo {
 	return nil
 }
 
+func (x *LoginReply) GetMallMsg() *MallMsg {
+	if x != nil {
+		return x.MallMsg
+	}
+	return nil
+}
+
 func (x *LoginReply) GetQqFriendRecommendAuthorized() int64 {
 	if x != nil {
 		return x.QqFriendRecommendAuthorized
@@ -455,30 +1125,66 @@ func (x *LoginReply) GetQqFriendRecommendAuthorized() int64 {
 	return 0
 }
 
+func (x *LoginReply) GetActivityWindows() []*ActivityWindowStatus {
+	if x != nil {
+		return x.ActivityWindows
+	}
+	return nil
+}
+
+func (x *LoginReply) GetPolicyInfo() *PolicyInfo {
+	if x != nil {
+		return x.PolicyInfo
+	}
+	return nil
+}
+
+func (x *LoginReply) GetField_15() int64 {
+	if x != nil {
+		return x.Field_15
+	}
+	return 0
+}
+
+func (x *LoginReply) GetSceneEffectConfig() *SceneEffectConfig {
+	if x != nil {
+		return x.SceneEffectConfig
+	}
+	return nil
+}
+
+func (x *LoginReply) GetField_18() []byte {
+	if x != nil {
+		return x.Field_18
+	}
+	return nil
+}
+
 // 用户基本信息
 type BasicInfo struct {
-	state     protoimpl.MessageState `protogen:"open.v1"`
-	Gid       int64                  `protobuf:"varint,1,opt,name=gid,proto3" json:"gid,omitempty"`
-	Name      string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Level     int64                  `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
-	Exp       int64                  `protobuf:"varint,4,opt,name=exp,proto3" json:"exp,omitempty"`
-	Gold      int64                  `protobuf:"varint,5,opt,name=gold,proto3" json:"gold,omitempty"`
-	OpenId    string                 `protobuf:"bytes,6,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
-	AvatarUrl string                 `protobuf:"bytes,7,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
-	Remark    string                 `protobuf:"bytes,8,opt,name=remark,proto3" json:"remark,omitempty"`
-	Signature string                 `protobuf:"bytes,9,opt,name=signature,proto3" json:"signature,omitempty"`
-	Gender    int32                  `protobuf:"varint,10,opt,name=gender,proto3" json:"gender,omitempty"`
-	// repeated AvatarFrame equip_avatar_frames = 11;
-	// map<int64, ShareInfo> share_infos = 12;
-	AuthorizedStatus int32 `protobuf:"varint,13,opt,name=authorized_status,json=authorizedStatus,proto3" json:"authorized_status,omitempty"`
-	DisableNudge     bool  `protobuf:"varint,14,opt,name=disable_nudge,json=disableNudge,proto3" json:"disable_nudge,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state             protoimpl.MessageState       `protogen:"open.v1"`
+	Gid               int64                        `protobuf:"varint,1,opt,name=gid,proto3" json:"gid,omitempty"`
+	Name              string                       `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Level             int64                        `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
+	Exp               int64                        `protobuf:"varint,4,opt,name=exp,proto3" json:"exp,omitempty"`
+	Gold              int64                        `protobuf:"varint,5,opt,name=gold,proto3" json:"gold,omitempty"`
+	OpenId            string                       `protobuf:"bytes,6,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
+	AvatarUrl         string                       `protobuf:"bytes,7,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
+	Remark            string                       `protobuf:"bytes,8,opt,name=remark,proto3" json:"remark,omitempty"`
+	Signature         string                       `protobuf:"bytes,9,opt,name=signature,proto3" json:"signature,omitempty"`
+	Gender            int32                        `protobuf:"varint,10,opt,name=gender,proto3" json:"gender,omitempty"`
+	EquipAvatarFrames []*avatarframepb.AvatarFrame `protobuf:"bytes,11,rep,name=equip_avatar_frames,json=equipAvatarFrames,proto3" json:"equip_avatar_frames,omitempty"`
+	ShareInfos        map[int64]*ShareInfo         `protobuf:"bytes,12,rep,name=share_infos,json=shareInfos,proto3" json:"share_infos,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	AuthorizedStatus  int32                        `protobuf:"varint,13,opt,name=authorized_status,json=authorizedStatus,proto3" json:"authorized_status,omitempty"`
+	DisableNudge      bool                         `protobuf:"varint,14,opt,name=disable_nudge,json=disableNudge,proto3" json:"disable_nudge,omitempty"`
+	ExtraInfo         *BasicExtraInfo              `protobuf:"bytes,18,opt,name=extra_info,json=extraInfo,proto3" json:"extra_info,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *BasicInfo) Reset() {
 	*x = BasicInfo{}
-	mi := &file_userpb_proto_msgTypes[4]
+	mi := &file_userpb_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -490,7 +1196,7 @@ func (x *BasicInfo) String() string {
 func (*BasicInfo) ProtoMessage() {}
 
 func (x *BasicInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[4]
+	mi := &file_userpb_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -503,7 +1209,7 @@ func (x *BasicInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BasicInfo.ProtoReflect.Descriptor instead.
 func (*BasicInfo) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{4}
+	return file_userpb_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *BasicInfo) GetGid() int64 {
@@ -576,6 +1282,20 @@ func (x *BasicInfo) GetGender() int32 {
 	return 0
 }
 
+func (x *BasicInfo) GetEquipAvatarFrames() []*avatarframepb.AvatarFrame {
+	if x != nil {
+		return x.EquipAvatarFrames
+	}
+	return nil
+}
+
+func (x *BasicInfo) GetShareInfos() map[int64]*ShareInfo {
+	if x != nil {
+		return x.ShareInfos
+	}
+	return nil
+}
+
 func (x *BasicInfo) GetAuthorizedStatus() int32 {
 	if x != nil {
 		return x.AuthorizedStatus
@@ -590,6 +1310,109 @@ func (x *BasicInfo) GetDisableNudge() bool {
 	return false
 }
 
+func (x *BasicInfo) GetExtraInfo() *BasicExtraInfo {
+	if x != nil {
+		return x.ExtraInfo
+	}
+	return nil
+}
+
+type ShareInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        int64                  `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
+	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ShareInfo) Reset() {
+	*x = ShareInfo{}
+	mi := &file_userpb_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ShareInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ShareInfo) ProtoMessage() {}
+
+func (x *ShareInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ShareInfo.ProtoReflect.Descriptor instead.
+func (*ShareInfo) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ShareInfo) GetStatus() int64 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *ShareInfo) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+type BasicExtraInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BasicExtraInfo) Reset() {
+	*x = BasicExtraInfo{}
+	mi := &file_userpb_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BasicExtraInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BasicExtraInfo) ProtoMessage() {}
+
+func (x *BasicExtraInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_userpb_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BasicExtraInfo.ProtoReflect.Descriptor instead.
+func (*BasicExtraInfo) Descriptor() ([]byte, []int) {
+	return file_userpb_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *BasicExtraInfo) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
 // QQ群信息
 type QQGroupInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -601,7 +1424,7 @@ type QQGroupInfo struct {
 
 func (x *QQGroupInfo) Reset() {
 	*x = QQGroupInfo{}
-	mi := &file_userpb_proto_msgTypes[5]
+	mi := &file_userpb_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -613,7 +1436,7 @@ func (x *QQGroupInfo) String() string {
 func (*QQGroupInfo) ProtoMessage() {}
 
 func (x *QQGroupInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[5]
+	mi := &file_userpb_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -626,7 +1449,7 @@ func (x *QQGroupInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QQGroupInfo.ProtoReflect.Descriptor instead.
 func (*QQGroupInfo) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{5}
+	return file_userpb_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *QQGroupInfo) GetQqGroupId() string {
@@ -656,7 +1479,7 @@ type VersionInfo struct {
 
 func (x *VersionInfo) Reset() {
 	*x = VersionInfo{}
-	mi := &file_userpb_proto_msgTypes[6]
+	mi := &file_userpb_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -668,7 +1491,7 @@ func (x *VersionInfo) String() string {
 func (*VersionInfo) ProtoMessage() {}
 
 func (x *VersionInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[6]
+	mi := &file_userpb_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -681,7 +1504,7 @@ func (x *VersionInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VersionInfo.ProtoReflect.Descriptor instead.
 func (*VersionInfo) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{6}
+	return file_userpb_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *VersionInfo) GetStatus() int32 {
@@ -717,13 +1540,14 @@ type HeartbeatRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Gid           int64                  `protobuf:"varint,1,opt,name=gid,proto3" json:"gid,omitempty"`
 	ClientVersion string                 `protobuf:"bytes,2,opt,name=client_version,json=clientVersion,proto3" json:"client_version,omitempty"`
+	Field_3       int64                  `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *HeartbeatRequest) Reset() {
 	*x = HeartbeatRequest{}
-	mi := &file_userpb_proto_msgTypes[7]
+	mi := &file_userpb_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -735,7 +1559,7 @@ func (x *HeartbeatRequest) String() string {
 func (*HeartbeatRequest) ProtoMessage() {}
 
 func (x *HeartbeatRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[7]
+	mi := &file_userpb_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -748,7 +1572,7 @@ func (x *HeartbeatRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatRequest.ProtoReflect.Descriptor instead.
 func (*HeartbeatRequest) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{7}
+	return file_userpb_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *HeartbeatRequest) GetGid() int64 {
@@ -765,6 +1589,13 @@ func (x *HeartbeatRequest) GetClientVersion() string {
 	return ""
 }
 
+func (x *HeartbeatRequest) GetField_3() int64 {
+	if x != nil {
+		return x.Field_3
+	}
+	return 0
+}
+
 type HeartbeatReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ServerTime    int64                  `protobuf:"varint,1,opt,name=server_time,json=serverTime,proto3" json:"server_time,omitempty"`
@@ -775,7 +1606,7 @@ type HeartbeatReply struct {
 
 func (x *HeartbeatReply) Reset() {
 	*x = HeartbeatReply{}
-	mi := &file_userpb_proto_msgTypes[8]
+	mi := &file_userpb_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -787,7 +1618,7 @@ func (x *HeartbeatReply) String() string {
 func (*HeartbeatReply) ProtoMessage() {}
 
 func (x *HeartbeatReply) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[8]
+	mi := &file_userpb_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -800,7 +1631,7 @@ func (x *HeartbeatReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatReply.ProtoReflect.Descriptor instead.
 func (*HeartbeatReply) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{8}
+	return file_userpb_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *HeartbeatReply) GetServerTime() int64 {
@@ -831,7 +1662,7 @@ type ReportArkClickRequest struct {
 
 func (x *ReportArkClickRequest) Reset() {
 	*x = ReportArkClickRequest{}
-	mi := &file_userpb_proto_msgTypes[9]
+	mi := &file_userpb_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -843,7 +1674,7 @@ func (x *ReportArkClickRequest) String() string {
 func (*ReportArkClickRequest) ProtoMessage() {}
 
 func (x *ReportArkClickRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[9]
+	mi := &file_userpb_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -856,7 +1687,7 @@ func (x *ReportArkClickRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportArkClickRequest.ProtoReflect.Descriptor instead.
 func (*ReportArkClickRequest) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{9}
+	return file_userpb_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ReportArkClickRequest) GetSharerId() int64 {
@@ -895,7 +1726,7 @@ type ReportArkClickReply struct {
 
 func (x *ReportArkClickReply) Reset() {
 	*x = ReportArkClickReply{}
-	mi := &file_userpb_proto_msgTypes[10]
+	mi := &file_userpb_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -907,7 +1738,7 @@ func (x *ReportArkClickReply) String() string {
 func (*ReportArkClickReply) ProtoMessage() {}
 
 func (x *ReportArkClickReply) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[10]
+	mi := &file_userpb_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -920,7 +1751,7 @@ func (x *ReportArkClickReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportArkClickReply.ProtoReflect.Descriptor instead.
 func (*ReportArkClickReply) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{10}
+	return file_userpb_proto_rawDescGZIP(), []int{23}
 }
 
 // ============ 批量上报客户端流程 ============
@@ -933,7 +1764,7 @@ type BatchClientReportFlowRequest struct {
 
 func (x *BatchClientReportFlowRequest) Reset() {
 	*x = BatchClientReportFlowRequest{}
-	mi := &file_userpb_proto_msgTypes[11]
+	mi := &file_userpb_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -945,7 +1776,7 @@ func (x *BatchClientReportFlowRequest) String() string {
 func (*BatchClientReportFlowRequest) ProtoMessage() {}
 
 func (x *BatchClientReportFlowRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[11]
+	mi := &file_userpb_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -958,7 +1789,7 @@ func (x *BatchClientReportFlowRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchClientReportFlowRequest.ProtoReflect.Descriptor instead.
 func (*BatchClientReportFlowRequest) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{11}
+	return file_userpb_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *BatchClientReportFlowRequest) GetItems() []*ClientFlowItem {
@@ -970,16 +1801,25 @@ func (x *BatchClientReportFlowRequest) GetItems() []*ClientFlowItem {
 
 type ClientFlowItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	EventName     string                 `protobuf:"bytes,1,opt,name=event_name,json=eventName,proto3" json:"event_name,omitempty"`
-	Timestamp     int64                  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Params        string                 `protobuf:"bytes,3,opt,name=params,proto3" json:"params,omitempty"`
+	Field_1       int32                  `protobuf:"varint,1,opt,name=field_1,json=field1,proto3" json:"field_1,omitempty"`
+	Field_2       int32                  `protobuf:"varint,2,opt,name=field_2,json=field2,proto3" json:"field_2,omitempty"`
+	DeviceId      string                 `protobuf:"bytes,3,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
+	Gid           int64                  `protobuf:"varint,4,opt,name=gid,proto3" json:"gid,omitempty"`
+	Nickname      string                 `protobuf:"bytes,5,opt,name=nickname,proto3" json:"nickname,omitempty"`
+	Timestamp     int64                  `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Level         int64                  `protobuf:"varint,7,opt,name=level,proto3" json:"level,omitempty"`
+	EventName     string                 `protobuf:"bytes,102,opt,name=event_name,json=eventName,proto3" json:"event_name,omitempty"`
+	Action        string                 `protobuf:"bytes,108,opt,name=action,proto3" json:"action,omitempty"`
+	Param_109     string                 `protobuf:"bytes,109,opt,name=param_109,json=param109,proto3" json:"param_109,omitempty"`
+	Param_110     string                 `protobuf:"bytes,110,opt,name=param_110,json=param110,proto3" json:"param_110,omitempty"`
+	Param_112     string                 `protobuf:"bytes,112,opt,name=param_112,json=param112,proto3" json:"param_112,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ClientFlowItem) Reset() {
 	*x = ClientFlowItem{}
-	mi := &file_userpb_proto_msgTypes[12]
+	mi := &file_userpb_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -991,7 +1831,7 @@ func (x *ClientFlowItem) String() string {
 func (*ClientFlowItem) ProtoMessage() {}
 
 func (x *ClientFlowItem) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[12]
+	mi := &file_userpb_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1004,12 +1844,40 @@ func (x *ClientFlowItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClientFlowItem.ProtoReflect.Descriptor instead.
 func (*ClientFlowItem) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{12}
+	return file_userpb_proto_rawDescGZIP(), []int{25}
 }
 
-func (x *ClientFlowItem) GetEventName() string {
+func (x *ClientFlowItem) GetField_1() int32 {
 	if x != nil {
-		return x.EventName
+		return x.Field_1
+	}
+	return 0
+}
+
+func (x *ClientFlowItem) GetField_2() int32 {
+	if x != nil {
+		return x.Field_2
+	}
+	return 0
+}
+
+func (x *ClientFlowItem) GetDeviceId() string {
+	if x != nil {
+		return x.DeviceId
+	}
+	return ""
+}
+
+func (x *ClientFlowItem) GetGid() int64 {
+	if x != nil {
+		return x.Gid
+	}
+	return 0
+}
+
+func (x *ClientFlowItem) GetNickname() string {
+	if x != nil {
+		return x.Nickname
 	}
 	return ""
 }
@@ -1021,22 +1889,58 @@ func (x *ClientFlowItem) GetTimestamp() int64 {
 	return 0
 }
 
-func (x *ClientFlowItem) GetParams() string {
+func (x *ClientFlowItem) GetLevel() int64 {
 	if x != nil {
-		return x.Params
+		return x.Level
+	}
+	return 0
+}
+
+func (x *ClientFlowItem) GetEventName() string {
+	if x != nil {
+		return x.EventName
+	}
+	return ""
+}
+
+func (x *ClientFlowItem) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *ClientFlowItem) GetParam_109() string {
+	if x != nil {
+		return x.Param_109
+	}
+	return ""
+}
+
+func (x *ClientFlowItem) GetParam_110() string {
+	if x != nil {
+		return x.Param_110
+	}
+	return ""
+}
+
+func (x *ClientFlowItem) GetParam_112() string {
+	if x != nil {
+		return x.Param_112
 	}
 	return ""
 }
 
 type BatchClientReportFlowReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	AcceptedCount int32                  `protobuf:"varint,1,opt,name=accepted_count,json=acceptedCount,proto3" json:"accepted_count,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *BatchClientReportFlowReply) Reset() {
 	*x = BatchClientReportFlowReply{}
-	mi := &file_userpb_proto_msgTypes[13]
+	mi := &file_userpb_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1048,7 +1952,7 @@ func (x *BatchClientReportFlowReply) String() string {
 func (*BatchClientReportFlowReply) ProtoMessage() {}
 
 func (x *BatchClientReportFlowReply) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[13]
+	mi := &file_userpb_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1061,7 +1965,14 @@ func (x *BatchClientReportFlowReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchClientReportFlowReply.ProtoReflect.Descriptor instead.
 func (*BatchClientReportFlowReply) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{13}
+	return file_userpb_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *BatchClientReportFlowReply) GetAcceptedCount() int32 {
+	if x != nil {
+		return x.AcceptedCount
+	}
+	return 0
 }
 
 // ============ 设置展示信息 ============
@@ -1077,7 +1988,7 @@ type SetDisplayInfoRequest struct {
 
 func (x *SetDisplayInfoRequest) Reset() {
 	*x = SetDisplayInfoRequest{}
-	mi := &file_userpb_proto_msgTypes[14]
+	mi := &file_userpb_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1089,7 +2000,7 @@ func (x *SetDisplayInfoRequest) String() string {
 func (*SetDisplayInfoRequest) ProtoMessage() {}
 
 func (x *SetDisplayInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[14]
+	mi := &file_userpb_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1102,7 +2013,7 @@ func (x *SetDisplayInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetDisplayInfoRequest.ProtoReflect.Descriptor instead.
 func (*SetDisplayInfoRequest) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{14}
+	return file_userpb_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *SetDisplayInfoRequest) GetName() string {
@@ -1142,7 +2053,7 @@ type SetDisplayInfoReply struct {
 
 func (x *SetDisplayInfoReply) Reset() {
 	*x = SetDisplayInfoReply{}
-	mi := &file_userpb_proto_msgTypes[15]
+	mi := &file_userpb_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1154,7 +2065,7 @@ func (x *SetDisplayInfoReply) String() string {
 func (*SetDisplayInfoReply) ProtoMessage() {}
 
 func (x *SetDisplayInfoReply) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[15]
+	mi := &file_userpb_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1167,7 +2078,7 @@ func (x *SetDisplayInfoReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetDisplayInfoReply.ProtoReflect.Descriptor instead.
 func (*SetDisplayInfoReply) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{15}
+	return file_userpb_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *SetDisplayInfoReply) GetBasic() *BasicInfo {
@@ -1187,7 +2098,7 @@ type SetQQFriendRecommendAuthorizedRequest struct {
 
 func (x *SetQQFriendRecommendAuthorizedRequest) Reset() {
 	*x = SetQQFriendRecommendAuthorizedRequest{}
-	mi := &file_userpb_proto_msgTypes[16]
+	mi := &file_userpb_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1199,7 +2110,7 @@ func (x *SetQQFriendRecommendAuthorizedRequest) String() string {
 func (*SetQQFriendRecommendAuthorizedRequest) ProtoMessage() {}
 
 func (x *SetQQFriendRecommendAuthorizedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[16]
+	mi := &file_userpb_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1212,7 +2123,7 @@ func (x *SetQQFriendRecommendAuthorizedRequest) ProtoReflect() protoreflect.Mess
 
 // Deprecated: Use SetQQFriendRecommendAuthorizedRequest.ProtoReflect.Descriptor instead.
 func (*SetQQFriendRecommendAuthorizedRequest) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{16}
+	return file_userpb_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *SetQQFriendRecommendAuthorizedRequest) GetAuthorized() int64 {
@@ -1231,7 +2142,7 @@ type SetQQFriendRecommendAuthorizedReply struct {
 
 func (x *SetQQFriendRecommendAuthorizedReply) Reset() {
 	*x = SetQQFriendRecommendAuthorizedReply{}
-	mi := &file_userpb_proto_msgTypes[17]
+	mi := &file_userpb_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1243,7 +2154,7 @@ func (x *SetQQFriendRecommendAuthorizedReply) String() string {
 func (*SetQQFriendRecommendAuthorizedReply) ProtoMessage() {}
 
 func (x *SetQQFriendRecommendAuthorizedReply) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[17]
+	mi := &file_userpb_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1256,7 +2167,7 @@ func (x *SetQQFriendRecommendAuthorizedReply) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use SetQQFriendRecommendAuthorizedReply.ProtoReflect.Descriptor instead.
 func (*SetQQFriendRecommendAuthorizedReply) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{17}
+	return file_userpb_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *SetQQFriendRecommendAuthorizedReply) GetAuthorized() int64 {
@@ -1275,7 +2186,7 @@ type GetUserSettingsRequest struct {
 
 func (x *GetUserSettingsRequest) Reset() {
 	*x = GetUserSettingsRequest{}
-	mi := &file_userpb_proto_msgTypes[18]
+	mi := &file_userpb_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1287,7 +2198,7 @@ func (x *GetUserSettingsRequest) String() string {
 func (*GetUserSettingsRequest) ProtoMessage() {}
 
 func (x *GetUserSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[18]
+	mi := &file_userpb_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1300,20 +2211,21 @@ func (x *GetUserSettingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserSettingsRequest.ProtoReflect.Descriptor instead.
 func (*GetUserSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{18}
+	return file_userpb_proto_rawDescGZIP(), []int{31}
 }
 
 type UserSettings struct {
 	state                       protoimpl.MessageState `protogen:"open.v1"`
 	QqFriendRecommendAuthorized int64                  `protobuf:"varint,1,opt,name=qq_friend_recommend_authorized,json=qqFriendRecommendAuthorized,proto3" json:"qq_friend_recommend_authorized,omitempty"`
 	DisableNudge                bool                   `protobuf:"varint,2,opt,name=disable_nudge,json=disableNudge,proto3" json:"disable_nudge,omitempty"`
+	Field_3                     bool                   `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"`
 	unknownFields               protoimpl.UnknownFields
 	sizeCache                   protoimpl.SizeCache
 }
 
 func (x *UserSettings) Reset() {
 	*x = UserSettings{}
-	mi := &file_userpb_proto_msgTypes[19]
+	mi := &file_userpb_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1325,7 +2237,7 @@ func (x *UserSettings) String() string {
 func (*UserSettings) ProtoMessage() {}
 
 func (x *UserSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[19]
+	mi := &file_userpb_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1338,7 +2250,7 @@ func (x *UserSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserSettings.ProtoReflect.Descriptor instead.
 func (*UserSettings) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{19}
+	return file_userpb_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *UserSettings) GetQqFriendRecommendAuthorized() int64 {
@@ -1355,6 +2267,13 @@ func (x *UserSettings) GetDisableNudge() bool {
 	return false
 }
 
+func (x *UserSettings) GetField_3() bool {
+	if x != nil {
+		return x.Field_3
+	}
+	return false
+}
+
 type GetUserSettingsReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Settings      *UserSettings          `protobuf:"bytes,1,opt,name=settings,proto3" json:"settings,omitempty"`
@@ -1364,7 +2283,7 @@ type GetUserSettingsReply struct {
 
 func (x *GetUserSettingsReply) Reset() {
 	*x = GetUserSettingsReply{}
-	mi := &file_userpb_proto_msgTypes[20]
+	mi := &file_userpb_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1376,7 +2295,7 @@ func (x *GetUserSettingsReply) String() string {
 func (*GetUserSettingsReply) ProtoMessage() {}
 
 func (x *GetUserSettingsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[20]
+	mi := &file_userpb_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1389,7 +2308,7 @@ func (x *GetUserSettingsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserSettingsReply.ProtoReflect.Descriptor instead.
 func (*GetUserSettingsReply) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{20}
+	return file_userpb_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *GetUserSettingsReply) GetSettings() *UserSettings {
@@ -1409,7 +2328,7 @@ type BatchGetBasicInfoRequest struct {
 
 func (x *BatchGetBasicInfoRequest) Reset() {
 	*x = BatchGetBasicInfoRequest{}
-	mi := &file_userpb_proto_msgTypes[21]
+	mi := &file_userpb_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1421,7 +2340,7 @@ func (x *BatchGetBasicInfoRequest) String() string {
 func (*BatchGetBasicInfoRequest) ProtoMessage() {}
 
 func (x *BatchGetBasicInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[21]
+	mi := &file_userpb_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1434,7 +2353,7 @@ func (x *BatchGetBasicInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchGetBasicInfoRequest.ProtoReflect.Descriptor instead.
 func (*BatchGetBasicInfoRequest) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{21}
+	return file_userpb_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *BatchGetBasicInfoRequest) GetGids() []int64 {
@@ -1453,7 +2372,7 @@ type BatchGetBasicInfoReply struct {
 
 func (x *BatchGetBasicInfoReply) Reset() {
 	*x = BatchGetBasicInfoReply{}
-	mi := &file_userpb_proto_msgTypes[22]
+	mi := &file_userpb_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1465,7 +2384,7 @@ func (x *BatchGetBasicInfoReply) String() string {
 func (*BatchGetBasicInfoReply) ProtoMessage() {}
 
 func (x *BatchGetBasicInfoReply) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[22]
+	mi := &file_userpb_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1478,7 +2397,7 @@ func (x *BatchGetBasicInfoReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchGetBasicInfoReply.ProtoReflect.Descriptor instead.
 func (*BatchGetBasicInfoReply) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{22}
+	return file_userpb_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *BatchGetBasicInfoReply) GetUsers() []*BasicInfo {
@@ -1498,7 +2417,7 @@ type BasicNotify struct {
 
 func (x *BasicNotify) Reset() {
 	*x = BasicNotify{}
-	mi := &file_userpb_proto_msgTypes[23]
+	mi := &file_userpb_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1510,7 +2429,7 @@ func (x *BasicNotify) String() string {
 func (*BasicNotify) ProtoMessage() {}
 
 func (x *BasicNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_userpb_proto_msgTypes[23]
+	mi := &file_userpb_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1523,7 +2442,7 @@ func (x *BasicNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BasicNotify.ProtoReflect.Descriptor instead.
 func (*BasicNotify) Descriptor() ([]byte, []int) {
-	return file_userpb_proto_rawDescGZIP(), []int{23}
+	return file_userpb_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *BasicNotify) GetBasic() *BasicInfo {
@@ -1537,7 +2456,7 @@ var File_userpb_proto protoreflect.FileDescriptor
 
 const file_userpb_proto_rawDesc = "" +
 	"\n" +
-	"\fuserpb.proto\x12\rgamepb.userpb\"\x86\x02\n" +
+	"\fuserpb.proto\x12\rgamepb.userpb\x1a\fcorepb.proto\x1a\x13avatarframepb.proto\"\x9c\x02\n" +
 	"\fLoginRequest\x12\x1b\n" +
 	"\tsharer_id\x18\x03 \x01(\x03R\bsharerId\x12$\n" +
 	"\x0esharer_open_id\x18\x04 \x01(\tR\fsharerOpenId\x12:\n" +
@@ -1547,7 +2466,8 @@ const file_userpb_proto_rawDesc = "" +
 	"shareCfgId\x12\x19\n" +
 	"\bscene_id\x18\a \x01(\tR\asceneId\x12:\n" +
 	"\vreport_data\x18\b \x01(\v2\x19.gamepb.userpb.ReportDataR\n" +
-	"reportData\"\xd9\x03\n" +
+	"reportData\x12\x14\n" +
+	"\x05extra\x18\t \x01(\fR\x05extra\"\xd9\x03\n" +
 	"\n" +
 	"DeviceInfo\x12%\n" +
 	"\x0eclient_version\x18\x01 \x01(\tR\rclientVersion\x12!\n" +
@@ -1577,15 +2497,75 @@ const file_userpb_proto_rawDesc = "" +
 	"\x10minigame_channel\x18\x05 \x01(\tR\x0fminigameChannel\x12'\n" +
 	"\x0fminigame_platid\x18\x06 \x01(\x05R\x0eminigamePlatid\x12\x15\n" +
 	"\x06req_id\x18\a \x01(\tR\x05reqId\x12\x18\n" +
-	"\atrackid\x18\b \x01(\tR\atrackid\"\xd0\x02\n" +
+	"\atrackid\x18\b \x01(\tR\atrackid\"b\n" +
+	"\tGuideNode\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\x03R\x06nodeId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\x03R\x06status\x12$\n" +
+	"\x06reward\x18\x03 \x01(\v2\f.corepb.ItemR\x06reward\"t\n" +
+	"\tGuideInfo\x12\x19\n" +
+	"\bguide_id\x18\x01 \x01(\x03R\aguideId\x12.\n" +
+	"\x05nodes\x18\x02 \x03(\v2\x18.gamepb.userpb.GuideNodeR\x05nodes\x12\x1c\n" +
+	"\tcompleted\x18\x03 \x01(\bR\tcompleted\"C\n" +
+	"\x0fIllustratedInfo\x12\x18\n" +
+	"\acurrent\x18\x01 \x01(\x03R\acurrent\x12\x16\n" +
+	"\x06target\x18\x02 \x01(\x03R\x06target\"3\n" +
+	"\x10SystemUnlockItem\x12\x1f\n" +
+	"\vunlock_type\x18\x01 \x01(\x03R\n" +
+	"unlockType\"!\n" +
+	"\aMallMsg\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\x03R\x06status\"\xa8\x01\n" +
+	"\x14ActivityWindowStatus\x12\x1f\n" +
+	"\vactivity_id\x18\x01 \x01(\x03R\n" +
+	"activityId\x12\x1d\n" +
+	"\n" +
+	"begin_time\x18\x02 \x01(\x03R\tbeginTime\x12\x19\n" +
+	"\bend_time\x18\x03 \x01(\x03R\aendTime\x12\x1b\n" +
+	"\tconfig_id\x18\x04 \x01(\x03R\bconfigId\x12\x18\n" +
+	"\aenabled\x18\x05 \x01(\bR\aenabled\" \n" +
+	"\n" +
+	"PolicyInfo\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"\xd4\x01\n" +
+	"\vSceneEffect\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
+	"\veffect_name\x18\x03 \x01(\tR\n" +
+	"effectName\x12'\n" +
+	"\x0ftransition_name\x18\x04 \x01(\tR\x0etransitionName\x12\x1d\n" +
+	"\n" +
+	"is_default\x18\x05 \x01(\bR\tisDefault\x12\x1d\n" +
+	"\n" +
+	"begin_time\x18\x06 \x01(\tR\tbeginTime\x12\x19\n" +
+	"\bend_time\x18\a \x01(\tR\aendTime\"(\n" +
+	"\x10SceneEffectValue\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\x03R\x05value\"n\n" +
+	"\x14SceneEffectSelection\x12\x1f\n" +
+	"\veffect_type\x18\x01 \x01(\x03R\n" +
+	"effectType\x125\n" +
+	"\x05value\x18\x02 \x01(\v2\x1f.gamepb.userpb.SceneEffectValueR\x05value\"\x8c\x01\n" +
+	"\x11SceneEffectConfig\x124\n" +
+	"\aeffects\x18\x01 \x03(\v2\x1a.gamepb.userpb.SceneEffectR\aeffects\x12A\n" +
+	"\tselection\x18\x02 \x01(\v2#.gamepb.userpb.SceneEffectSelectionR\tselection\"\x86\a\n" +
 	"\n" +
 	"LoginReply\x12.\n" +
-	"\x05basic\x18\x01 \x01(\v2\x18.gamepb.userpb.BasicInfoR\x05basic\x12&\n" +
+	"\x05basic\x18\x01 \x01(\v2\x18.gamepb.userpb.BasicInfoR\x05basic\x12*\n" +
+	"\bitem_bag\x18\x02 \x01(\v2\x0f.corepb.ItemBagR\aitemBag\x12&\n" +
 	"\x0ftime_now_millis\x18\x03 \x01(\x03R\rtimeNowMillis\x12$\n" +
-	"\x0eis_first_login\x18\x04 \x01(\bR\fisFirstLogin\x12@\n" +
-	"\x0eqq_group_infos\x18\x06 \x03(\v2\x1a.gamepb.userpb.QQGroupInfoR\fqqGroupInfos\x12=\n" +
-	"\fversion_info\x18\t \x01(\v2\x1a.gamepb.userpb.VersionInfoR\vversionInfo\x12C\n" +
-	"\x1eqq_friend_recommend_authorized\x18\v \x01(\x03R\x1bqqFriendRecommendAuthorized\"\xc5\x02\n" +
+	"\x0eis_first_login\x18\x04 \x01(\bR\fisFirstLogin\x127\n" +
+	"\n" +
+	"guide_info\x18\x05 \x01(\v2\x18.gamepb.userpb.GuideInfoR\tguideInfo\x12@\n" +
+	"\x0eqq_group_infos\x18\x06 \x03(\v2\x1a.gamepb.userpb.QQGroupInfoR\fqqGroupInfos\x12@\n" +
+	"\villustrated\x18\a \x01(\v2\x1e.gamepb.userpb.IllustratedInfoR\villustrated\x12F\n" +
+	"\x0eunlocked_items\x18\b \x03(\v2\x1f.gamepb.userpb.SystemUnlockItemR\runlockedItems\x12=\n" +
+	"\fversion_info\x18\t \x01(\v2\x1a.gamepb.userpb.VersionInfoR\vversionInfo\x121\n" +
+	"\bmall_msg\x18\n" +
+	" \x01(\v2\x16.gamepb.userpb.MallMsgR\amallMsg\x12C\n" +
+	"\x1eqq_friend_recommend_authorized\x18\v \x01(\x03R\x1bqqFriendRecommendAuthorized\x12N\n" +
+	"\x10activity_windows\x18\f \x03(\v2#.gamepb.userpb.ActivityWindowStatusR\x0factivityWindows\x12:\n" +
+	"\vpolicy_info\x18\x0e \x01(\v2\x19.gamepb.userpb.PolicyInfoR\n" +
+	"policyInfo\x12\x19\n" +
+	"\bfield_15\x18\x0f \x01(\x03R\afield15\x12P\n" +
+	"\x13scene_effect_config\x18\x10 \x01(\v2 .gamepb.userpb.SceneEffectConfigR\x11sceneEffectConfig\x12\x19\n" +
+	"\bfield_18\x18\x12 \x01(\fR\afield18\"\xfa\x04\n" +
 	"\tBasicInfo\x12\x10\n" +
 	"\x03gid\x18\x01 \x01(\x03R\x03gid\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
@@ -1598,9 +2578,22 @@ const file_userpb_proto_rawDesc = "" +
 	"\x06remark\x18\b \x01(\tR\x06remark\x12\x1c\n" +
 	"\tsignature\x18\t \x01(\tR\tsignature\x12\x16\n" +
 	"\x06gender\x18\n" +
-	" \x01(\x05R\x06gender\x12+\n" +
+	" \x01(\x05R\x06gender\x12Q\n" +
+	"\x13equip_avatar_frames\x18\v \x03(\v2!.gamepb.avatarframepb.AvatarFrameR\x11equipAvatarFrames\x12I\n" +
+	"\vshare_infos\x18\f \x03(\v2(.gamepb.userpb.BasicInfo.ShareInfosEntryR\n" +
+	"shareInfos\x12+\n" +
 	"\x11authorized_status\x18\r \x01(\x05R\x10authorizedStatus\x12#\n" +
-	"\rdisable_nudge\x18\x0e \x01(\bR\fdisableNudge\"Q\n" +
+	"\rdisable_nudge\x18\x0e \x01(\bR\fdisableNudge\x12<\n" +
+	"\n" +
+	"extra_info\x18\x12 \x01(\v2\x1d.gamepb.userpb.BasicExtraInfoR\textraInfo\x1aW\n" +
+	"\x0fShareInfosEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12.\n" +
+	"\x05value\x18\x02 \x01(\v2\x18.gamepb.userpb.ShareInfoR\x05value:\x028\x01\"9\n" +
+	"\tShareInfo\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\x03R\x06status\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\"&\n" +
+	"\x0eBasicExtraInfo\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"Q\n" +
 	"\vQQGroupInfo\x12\x1e\n" +
 	"\vqq_group_id\x18\x01 \x01(\tR\tqqGroupId\x12\"\n" +
 	"\rqq_group_name\x18\x02 \x01(\tR\vqqGroupName\"\x98\x01\n" +
@@ -1609,10 +2602,11 @@ const file_userpb_proto_rawDesc = "" +
 	"\x11version_recommend\x18\x02 \x01(\tR\x10versionRecommend\x12#\n" +
 	"\rversion_force\x18\x03 \x01(\tR\fversionForce\x12\x1f\n" +
 	"\vres_version\x18\x04 \x01(\tR\n" +
-	"resVersion\"K\n" +
+	"resVersion\"d\n" +
 	"\x10HeartbeatRequest\x12\x10\n" +
 	"\x03gid\x18\x01 \x01(\x03R\x03gid\x12%\n" +
-	"\x0eclient_version\x18\x02 \x01(\tR\rclientVersion\"p\n" +
+	"\x0eclient_version\x18\x02 \x01(\tR\rclientVersion\x12\x17\n" +
+	"\afield_3\x18\x03 \x01(\x03R\x06field3\"p\n" +
 	"\x0eHeartbeatReply\x12\x1f\n" +
 	"\vserver_time\x18\x01 \x01(\x03R\n" +
 	"serverTime\x12=\n" +
@@ -1625,13 +2619,23 @@ const file_userpb_proto_rawDesc = "" +
 	"\bscene_id\x18\x04 \x01(\tR\asceneId\"\x15\n" +
 	"\x13ReportArkClickReply\"S\n" +
 	"\x1cBatchClientReportFlowRequest\x123\n" +
-	"\x05items\x18\x01 \x03(\v2\x1d.gamepb.userpb.ClientFlowItemR\x05items\"e\n" +
-	"\x0eClientFlowItem\x12\x1d\n" +
+	"\x05items\x18\x01 \x03(\v2\x1d.gamepb.userpb.ClientFlowItemR\x05items\"\xcf\x02\n" +
+	"\x0eClientFlowItem\x12\x17\n" +
+	"\afield_1\x18\x01 \x01(\x05R\x06field1\x12\x17\n" +
+	"\afield_2\x18\x02 \x01(\x05R\x06field2\x12\x1b\n" +
+	"\tdevice_id\x18\x03 \x01(\tR\bdeviceId\x12\x10\n" +
+	"\x03gid\x18\x04 \x01(\x03R\x03gid\x12\x1a\n" +
+	"\bnickname\x18\x05 \x01(\tR\bnickname\x12\x1c\n" +
+	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\x12\x14\n" +
+	"\x05level\x18\a \x01(\x03R\x05level\x12\x1d\n" +
 	"\n" +
-	"event_name\x18\x01 \x01(\tR\teventName\x12\x1c\n" +
-	"\ttimestamp\x18\x02 \x01(\x03R\ttimestamp\x12\x16\n" +
-	"\x06params\x18\x03 \x01(\tR\x06params\"\x1c\n" +
-	"\x1aBatchClientReportFlowReply\"\x80\x01\n" +
+	"event_name\x18f \x01(\tR\teventName\x12\x16\n" +
+	"\x06action\x18l \x01(\tR\x06action\x12\x1b\n" +
+	"\tparam_109\x18m \x01(\tR\bparam109\x12\x1b\n" +
+	"\tparam_110\x18n \x01(\tR\bparam110\x12\x1b\n" +
+	"\tparam_112\x18p \x01(\tR\bparam112\"C\n" +
+	"\x1aBatchClientReportFlowReply\x12%\n" +
+	"\x0eaccepted_count\x18\x01 \x01(\x05R\racceptedCount\"\x80\x01\n" +
 	"\x15SetDisplayInfoRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\tsignature\x18\x02 \x01(\tR\tsignature\x12\x16\n" +
@@ -1648,10 +2652,11 @@ const file_userpb_proto_rawDesc = "" +
 	"\n" +
 	"authorized\x18\x01 \x01(\x03R\n" +
 	"authorized\"\x18\n" +
-	"\x16GetUserSettingsRequest\"x\n" +
+	"\x16GetUserSettingsRequest\"\x91\x01\n" +
 	"\fUserSettings\x12C\n" +
 	"\x1eqq_friend_recommend_authorized\x18\x01 \x01(\x03R\x1bqqFriendRecommendAuthorized\x12#\n" +
-	"\rdisable_nudge\x18\x02 \x01(\bR\fdisableNudge\"O\n" +
+	"\rdisable_nudge\x18\x02 \x01(\bR\fdisableNudge\x12\x17\n" +
+	"\afield_3\x18\x03 \x01(\bR\x06field3\"O\n" +
 	"\x14GetUserSettingsReply\x127\n" +
 	"\bsettings\x18\x01 \x01(\v2\x1b.gamepb.userpb.UserSettingsR\bsettings\".\n" +
 	"\x18BatchGetBasicInfoRequest\x12\x12\n" +
@@ -1659,7 +2664,7 @@ const file_userpb_proto_rawDesc = "" +
 	"\x16BatchGetBasicInfoReply\x12.\n" +
 	"\x05users\x18\x01 \x03(\v2\x18.gamepb.userpb.BasicInfoR\x05users\"=\n" +
 	"\vBasicNotify\x12.\n" +
-	"\x05basic\x18\x01 \x01(\v2\x18.gamepb.userpb.BasicInfoR\x05basicBFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/userpb;userpbb\x06proto3"
+	"\x05basic\x18\x01 \x01(\v2\x18.gamepb.userpb.BasicInfoR\x05basicb\x06proto3"
 
 var (
 	file_userpb_proto_rawDescOnce sync.Once
@@ -1673,50 +2678,84 @@ func file_userpb_proto_rawDescGZIP() []byte {
 	return file_userpb_proto_rawDescData
 }
 
-var file_userpb_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
+var file_userpb_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_userpb_proto_goTypes = []any{
 	(*LoginRequest)(nil),                          // 0: gamepb.userpb.LoginRequest
 	(*DeviceInfo)(nil),                            // 1: gamepb.userpb.DeviceInfo
 	(*ReportData)(nil),                            // 2: gamepb.userpb.ReportData
-	(*LoginReply)(nil),                            // 3: gamepb.userpb.LoginReply
-	(*BasicInfo)(nil),                             // 4: gamepb.userpb.BasicInfo
-	(*QQGroupInfo)(nil),                           // 5: gamepb.userpb.QQGroupInfo
-	(*VersionInfo)(nil),                           // 6: gamepb.userpb.VersionInfo
-	(*HeartbeatRequest)(nil),                      // 7: gamepb.userpb.HeartbeatRequest
-	(*HeartbeatReply)(nil),                        // 8: gamepb.userpb.HeartbeatReply
-	(*ReportArkClickRequest)(nil),                 // 9: gamepb.userpb.ReportArkClickRequest
-	(*ReportArkClickReply)(nil),                   // 10: gamepb.userpb.ReportArkClickReply
-	(*BatchClientReportFlowRequest)(nil),          // 11: gamepb.userpb.BatchClientReportFlowRequest
-	(*ClientFlowItem)(nil),                        // 12: gamepb.userpb.ClientFlowItem
-	(*BatchClientReportFlowReply)(nil),            // 13: gamepb.userpb.BatchClientReportFlowReply
-	(*SetDisplayInfoRequest)(nil),                 // 14: gamepb.userpb.SetDisplayInfoRequest
-	(*SetDisplayInfoReply)(nil),                   // 15: gamepb.userpb.SetDisplayInfoReply
-	(*SetQQFriendRecommendAuthorizedRequest)(nil), // 16: gamepb.userpb.SetQQFriendRecommendAuthorizedRequest
-	(*SetQQFriendRecommendAuthorizedReply)(nil),   // 17: gamepb.userpb.SetQQFriendRecommendAuthorizedReply
-	(*GetUserSettingsRequest)(nil),                // 18: gamepb.userpb.GetUserSettingsRequest
-	(*UserSettings)(nil),                          // 19: gamepb.userpb.UserSettings
-	(*GetUserSettingsReply)(nil),                  // 20: gamepb.userpb.GetUserSettingsReply
-	(*BatchGetBasicInfoRequest)(nil),              // 21: gamepb.userpb.BatchGetBasicInfoRequest
-	(*BatchGetBasicInfoReply)(nil),                // 22: gamepb.userpb.BatchGetBasicInfoReply
-	(*BasicNotify)(nil),                           // 23: gamepb.userpb.BasicNotify
+	(*GuideNode)(nil),                             // 3: gamepb.userpb.GuideNode
+	(*GuideInfo)(nil),                             // 4: gamepb.userpb.GuideInfo
+	(*IllustratedInfo)(nil),                       // 5: gamepb.userpb.IllustratedInfo
+	(*SystemUnlockItem)(nil),                      // 6: gamepb.userpb.SystemUnlockItem
+	(*MallMsg)(nil),                               // 7: gamepb.userpb.MallMsg
+	(*ActivityWindowStatus)(nil),                  // 8: gamepb.userpb.ActivityWindowStatus
+	(*PolicyInfo)(nil),                            // 9: gamepb.userpb.PolicyInfo
+	(*SceneEffect)(nil),                           // 10: gamepb.userpb.SceneEffect
+	(*SceneEffectValue)(nil),                      // 11: gamepb.userpb.SceneEffectValue
+	(*SceneEffectSelection)(nil),                  // 12: gamepb.userpb.SceneEffectSelection
+	(*SceneEffectConfig)(nil),                     // 13: gamepb.userpb.SceneEffectConfig
+	(*LoginReply)(nil),                            // 14: gamepb.userpb.LoginReply
+	(*BasicInfo)(nil),                             // 15: gamepb.userpb.BasicInfo
+	(*ShareInfo)(nil),                             // 16: gamepb.userpb.ShareInfo
+	(*BasicExtraInfo)(nil),                        // 17: gamepb.userpb.BasicExtraInfo
+	(*QQGroupInfo)(nil),                           // 18: gamepb.userpb.QQGroupInfo
+	(*VersionInfo)(nil),                           // 19: gamepb.userpb.VersionInfo
+	(*HeartbeatRequest)(nil),                      // 20: gamepb.userpb.HeartbeatRequest
+	(*HeartbeatReply)(nil),                        // 21: gamepb.userpb.HeartbeatReply
+	(*ReportArkClickRequest)(nil),                 // 22: gamepb.userpb.ReportArkClickRequest
+	(*ReportArkClickReply)(nil),                   // 23: gamepb.userpb.ReportArkClickReply
+	(*BatchClientReportFlowRequest)(nil),          // 24: gamepb.userpb.BatchClientReportFlowRequest
+	(*ClientFlowItem)(nil),                        // 25: gamepb.userpb.ClientFlowItem
+	(*BatchClientReportFlowReply)(nil),            // 26: gamepb.userpb.BatchClientReportFlowReply
+	(*SetDisplayInfoRequest)(nil),                 // 27: gamepb.userpb.SetDisplayInfoRequest
+	(*SetDisplayInfoReply)(nil),                   // 28: gamepb.userpb.SetDisplayInfoReply
+	(*SetQQFriendRecommendAuthorizedRequest)(nil), // 29: gamepb.userpb.SetQQFriendRecommendAuthorizedRequest
+	(*SetQQFriendRecommendAuthorizedReply)(nil),   // 30: gamepb.userpb.SetQQFriendRecommendAuthorizedReply
+	(*GetUserSettingsRequest)(nil),                // 31: gamepb.userpb.GetUserSettingsRequest
+	(*UserSettings)(nil),                          // 32: gamepb.userpb.UserSettings
+	(*GetUserSettingsReply)(nil),                  // 33: gamepb.userpb.GetUserSettingsReply
+	(*BatchGetBasicInfoRequest)(nil),              // 34: gamepb.userpb.BatchGetBasicInfoRequest
+	(*BatchGetBasicInfoReply)(nil),                // 35: gamepb.userpb.BatchGetBasicInfoReply
+	(*BasicNotify)(nil),                           // 36: gamepb.userpb.BasicNotify
+	nil,                                           // 37: gamepb.userpb.BasicInfo.ShareInfosEntry
+	(*corepb.Item)(nil),                           // 38: corepb.Item
+	(*corepb.ItemBag)(nil),                        // 39: corepb.ItemBag
+	(*avatarframepb.AvatarFrame)(nil),             // 40: gamepb.avatarframepb.AvatarFrame
 }
 var file_userpb_proto_depIdxs = []int32{
 	1,  // 0: gamepb.userpb.LoginRequest.device_info:type_name -> gamepb.userpb.DeviceInfo
 	2,  // 1: gamepb.userpb.LoginRequest.report_data:type_name -> gamepb.userpb.ReportData
-	4,  // 2: gamepb.userpb.LoginReply.basic:type_name -> gamepb.userpb.BasicInfo
-	5,  // 3: gamepb.userpb.LoginReply.qq_group_infos:type_name -> gamepb.userpb.QQGroupInfo
-	6,  // 4: gamepb.userpb.LoginReply.version_info:type_name -> gamepb.userpb.VersionInfo
-	6,  // 5: gamepb.userpb.HeartbeatReply.version_info:type_name -> gamepb.userpb.VersionInfo
-	12, // 6: gamepb.userpb.BatchClientReportFlowRequest.items:type_name -> gamepb.userpb.ClientFlowItem
-	4,  // 7: gamepb.userpb.SetDisplayInfoReply.basic:type_name -> gamepb.userpb.BasicInfo
-	19, // 8: gamepb.userpb.GetUserSettingsReply.settings:type_name -> gamepb.userpb.UserSettings
-	4,  // 9: gamepb.userpb.BatchGetBasicInfoReply.users:type_name -> gamepb.userpb.BasicInfo
-	4,  // 10: gamepb.userpb.BasicNotify.basic:type_name -> gamepb.userpb.BasicInfo
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	38, // 2: gamepb.userpb.GuideNode.reward:type_name -> corepb.Item
+	3,  // 3: gamepb.userpb.GuideInfo.nodes:type_name -> gamepb.userpb.GuideNode
+	11, // 4: gamepb.userpb.SceneEffectSelection.value:type_name -> gamepb.userpb.SceneEffectValue
+	10, // 5: gamepb.userpb.SceneEffectConfig.effects:type_name -> gamepb.userpb.SceneEffect
+	12, // 6: gamepb.userpb.SceneEffectConfig.selection:type_name -> gamepb.userpb.SceneEffectSelection
+	15, // 7: gamepb.userpb.LoginReply.basic:type_name -> gamepb.userpb.BasicInfo
+	39, // 8: gamepb.userpb.LoginReply.item_bag:type_name -> corepb.ItemBag
+	4,  // 9: gamepb.userpb.LoginReply.guide_info:type_name -> gamepb.userpb.GuideInfo
+	18, // 10: gamepb.userpb.LoginReply.qq_group_infos:type_name -> gamepb.userpb.QQGroupInfo
+	5,  // 11: gamepb.userpb.LoginReply.illustrated:type_name -> gamepb.userpb.IllustratedInfo
+	6,  // 12: gamepb.userpb.LoginReply.unlocked_items:type_name -> gamepb.userpb.SystemUnlockItem
+	19, // 13: gamepb.userpb.LoginReply.version_info:type_name -> gamepb.userpb.VersionInfo
+	7,  // 14: gamepb.userpb.LoginReply.mall_msg:type_name -> gamepb.userpb.MallMsg
+	8,  // 15: gamepb.userpb.LoginReply.activity_windows:type_name -> gamepb.userpb.ActivityWindowStatus
+	9,  // 16: gamepb.userpb.LoginReply.policy_info:type_name -> gamepb.userpb.PolicyInfo
+	13, // 17: gamepb.userpb.LoginReply.scene_effect_config:type_name -> gamepb.userpb.SceneEffectConfig
+	40, // 18: gamepb.userpb.BasicInfo.equip_avatar_frames:type_name -> gamepb.avatarframepb.AvatarFrame
+	37, // 19: gamepb.userpb.BasicInfo.share_infos:type_name -> gamepb.userpb.BasicInfo.ShareInfosEntry
+	17, // 20: gamepb.userpb.BasicInfo.extra_info:type_name -> gamepb.userpb.BasicExtraInfo
+	19, // 21: gamepb.userpb.HeartbeatReply.version_info:type_name -> gamepb.userpb.VersionInfo
+	25, // 22: gamepb.userpb.BatchClientReportFlowRequest.items:type_name -> gamepb.userpb.ClientFlowItem
+	15, // 23: gamepb.userpb.SetDisplayInfoReply.basic:type_name -> gamepb.userpb.BasicInfo
+	32, // 24: gamepb.userpb.GetUserSettingsReply.settings:type_name -> gamepb.userpb.UserSettings
+	15, // 25: gamepb.userpb.BatchGetBasicInfoReply.users:type_name -> gamepb.userpb.BasicInfo
+	15, // 26: gamepb.userpb.BasicNotify.basic:type_name -> gamepb.userpb.BasicInfo
+	16, // 27: gamepb.userpb.BasicInfo.ShareInfosEntry.value:type_name -> gamepb.userpb.ShareInfo
+	28, // [28:28] is the sub-list for method output_type
+	28, // [28:28] is the sub-list for method input_type
+	28, // [28:28] is the sub-list for extension type_name
+	28, // [28:28] is the sub-list for extension extendee
+	0,  // [0:28] is the sub-list for field type_name
 }
 
 func init() { file_userpb_proto_init() }
@@ -1730,7 +2769,7 @@ func file_userpb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_userpb_proto_rawDesc), len(file_userpb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   24,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

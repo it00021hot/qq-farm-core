@@ -22,27 +22,26 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// --- 获取每日礼包状态 ---
-type GetDailyGiftStatusRequest struct {
+type GetQQVipRewardsStatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetDailyGiftStatusRequest) Reset() {
-	*x = GetDailyGiftStatusRequest{}
+func (x *GetQQVipRewardsStatusRequest) Reset() {
+	*x = GetQQVipRewardsStatusRequest{}
 	mi := &file_qqvippb_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetDailyGiftStatusRequest) String() string {
+func (x *GetQQVipRewardsStatusRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetDailyGiftStatusRequest) ProtoMessage() {}
+func (*GetQQVipRewardsStatusRequest) ProtoMessage() {}
 
-func (x *GetDailyGiftStatusRequest) ProtoReflect() protoreflect.Message {
+func (x *GetQQVipRewardsStatusRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_qqvippb_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -54,33 +53,39 @@ func (x *GetDailyGiftStatusRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetDailyGiftStatusRequest.ProtoReflect.Descriptor instead.
-func (*GetDailyGiftStatusRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetQQVipRewardsStatusRequest.ProtoReflect.Descriptor instead.
+func (*GetQQVipRewardsStatusRequest) Descriptor() ([]byte, []int) {
 	return file_qqvippb_proto_rawDescGZIP(), []int{0}
 }
 
-type GetDailyGiftStatusReply struct {
+type QQVipRewardStatus struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CanClaim      bool                   `protobuf:"varint,1,opt,name=can_claim,json=canClaim,proto3" json:"can_claim,omitempty"` // 是否可以领取
-	HasGift       bool                   `protobuf:"varint,2,opt,name=has_gift,json=hasGift,proto3" json:"has_gift,omitempty"`    // 是否有礼包
+	Enabled       bool                   `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	Rewards       []*corepb.Item         `protobuf:"bytes,2,rep,name=rewards,proto3" json:"rewards,omitempty"`
+	VipLevel      int64                  `protobuf:"varint,3,opt,name=vip_level,json=vipLevel,proto3" json:"vip_level,omitempty"`
+	ActivityId    int64                  `protobuf:"varint,4,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	RewardType    int32                  `protobuf:"varint,5,opt,name=reward_type,json=rewardType,proto3" json:"reward_type,omitempty"`
+	CanClaim      bool                   `protobuf:"varint,6,opt,name=can_claim,json=canClaim,proto3" json:"can_claim,omitempty"`
+	BeginTime     int64                  `protobuf:"varint,7,opt,name=begin_time,json=beginTime,proto3" json:"begin_time,omitempty"`
+	EndTime       int64                  `protobuf:"varint,8,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetDailyGiftStatusReply) Reset() {
-	*x = GetDailyGiftStatusReply{}
+func (x *QQVipRewardStatus) Reset() {
+	*x = QQVipRewardStatus{}
 	mi := &file_qqvippb_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetDailyGiftStatusReply) String() string {
+func (x *QQVipRewardStatus) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetDailyGiftStatusReply) ProtoMessage() {}
+func (*QQVipRewardStatus) ProtoMessage() {}
 
-func (x *GetDailyGiftStatusReply) ProtoReflect() protoreflect.Message {
+func (x *QQVipRewardStatus) ProtoReflect() protoreflect.Message {
 	mi := &file_qqvippb_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -92,83 +97,147 @@ func (x *GetDailyGiftStatusReply) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetDailyGiftStatusReply.ProtoReflect.Descriptor instead.
-func (*GetDailyGiftStatusReply) Descriptor() ([]byte, []int) {
+// Deprecated: Use QQVipRewardStatus.ProtoReflect.Descriptor instead.
+func (*QQVipRewardStatus) Descriptor() ([]byte, []int) {
 	return file_qqvippb_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GetDailyGiftStatusReply) GetCanClaim() bool {
+func (x *QQVipRewardStatus) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+func (x *QQVipRewardStatus) GetRewards() []*corepb.Item {
+	if x != nil {
+		return x.Rewards
+	}
+	return nil
+}
+
+func (x *QQVipRewardStatus) GetVipLevel() int64 {
+	if x != nil {
+		return x.VipLevel
+	}
+	return 0
+}
+
+func (x *QQVipRewardStatus) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+func (x *QQVipRewardStatus) GetRewardType() int32 {
+	if x != nil {
+		return x.RewardType
+	}
+	return 0
+}
+
+func (x *QQVipRewardStatus) GetCanClaim() bool {
 	if x != nil {
 		return x.CanClaim
 	}
 	return false
 }
 
-func (x *GetDailyGiftStatusReply) GetHasGift() bool {
+func (x *QQVipRewardStatus) GetBeginTime() int64 {
 	if x != nil {
-		return x.HasGift
+		return x.BeginTime
+	}
+	return 0
+}
+
+func (x *QQVipRewardStatus) GetEndTime() int64 {
+	if x != nil {
+		return x.EndTime
+	}
+	return 0
+}
+
+type GetQQVipRewardsStatusReply struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	IsQqVip        bool                   `protobuf:"varint,1,opt,name=is_qq_vip,json=isQqVip,proto3" json:"is_qq_vip,omitempty"`
+	IsSuperVip     bool                   `protobuf:"varint,2,opt,name=is_super_vip,json=isSuperVip,proto3" json:"is_super_vip,omitempty"`
+	RewardStatuses []*QQVipRewardStatus   `protobuf:"bytes,5,rep,name=reward_statuses,json=rewardStatuses,proto3" json:"reward_statuses,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *GetQQVipRewardsStatusReply) Reset() {
+	*x = GetQQVipRewardsStatusReply{}
+	mi := &file_qqvippb_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetQQVipRewardsStatusReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetQQVipRewardsStatusReply) ProtoMessage() {}
+
+func (x *GetQQVipRewardsStatusReply) ProtoReflect() protoreflect.Message {
+	mi := &file_qqvippb_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetQQVipRewardsStatusReply.ProtoReflect.Descriptor instead.
+func (*GetQQVipRewardsStatusReply) Descriptor() ([]byte, []int) {
+	return file_qqvippb_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetQQVipRewardsStatusReply) GetIsQqVip() bool {
+	if x != nil {
+		return x.IsQqVip
 	}
 	return false
 }
 
-// --- 领取每日礼包 ---
-type ClaimDailyGiftRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ClaimDailyGiftRequest) Reset() {
-	*x = ClaimDailyGiftRequest{}
-	mi := &file_qqvippb_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ClaimDailyGiftRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ClaimDailyGiftRequest) ProtoMessage() {}
-
-func (x *ClaimDailyGiftRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_qqvippb_proto_msgTypes[2]
+func (x *GetQQVipRewardsStatusReply) GetIsSuperVip() bool {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+		return x.IsSuperVip
 	}
-	return mi.MessageOf(x)
+	return false
 }
 
-// Deprecated: Use ClaimDailyGiftRequest.ProtoReflect.Descriptor instead.
-func (*ClaimDailyGiftRequest) Descriptor() ([]byte, []int) {
-	return file_qqvippb_proto_rawDescGZIP(), []int{2}
+func (x *GetQQVipRewardsStatusReply) GetRewardStatuses() []*QQVipRewardStatus {
+	if x != nil {
+		return x.RewardStatuses
+	}
+	return nil
 }
 
-type ClaimDailyGiftReply struct {
+type RefreshVipInfoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*corepb.Item         `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"` // 奖励物品列表
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ClaimDailyGiftReply) Reset() {
-	*x = ClaimDailyGiftReply{}
+func (x *RefreshVipInfoRequest) Reset() {
+	*x = RefreshVipInfoRequest{}
 	mi := &file_qqvippb_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ClaimDailyGiftReply) String() string {
+func (x *RefreshVipInfoRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ClaimDailyGiftReply) ProtoMessage() {}
+func (*RefreshVipInfoRequest) ProtoMessage() {}
 
-func (x *ClaimDailyGiftReply) ProtoReflect() protoreflect.Message {
+func (x *RefreshVipInfoRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_qqvippb_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -180,12 +249,129 @@ func (x *ClaimDailyGiftReply) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ClaimDailyGiftReply.ProtoReflect.Descriptor instead.
-func (*ClaimDailyGiftReply) Descriptor() ([]byte, []int) {
+// Deprecated: Use RefreshVipInfoRequest.ProtoReflect.Descriptor instead.
+func (*RefreshVipInfoRequest) Descriptor() ([]byte, []int) {
 	return file_qqvippb_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ClaimDailyGiftReply) GetItems() []*corepb.Item {
+type RefreshVipInfoReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshVipInfoReply) Reset() {
+	*x = RefreshVipInfoReply{}
+	mi := &file_qqvippb_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshVipInfoReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshVipInfoReply) ProtoMessage() {}
+
+func (x *RefreshVipInfoReply) ProtoReflect() protoreflect.Message {
+	mi := &file_qqvippb_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshVipInfoReply.ProtoReflect.Descriptor instead.
+func (*RefreshVipInfoReply) Descriptor() ([]byte, []int) {
+	return file_qqvippb_proto_rawDescGZIP(), []int{4}
+}
+
+type ClaimQQVipRewardsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RewardTypes   []int32                `protobuf:"varint,1,rep,packed,name=reward_types,json=rewardTypes,proto3" json:"reward_types,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimQQVipRewardsRequest) Reset() {
+	*x = ClaimQQVipRewardsRequest{}
+	mi := &file_qqvippb_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimQQVipRewardsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimQQVipRewardsRequest) ProtoMessage() {}
+
+func (x *ClaimQQVipRewardsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_qqvippb_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimQQVipRewardsRequest.ProtoReflect.Descriptor instead.
+func (*ClaimQQVipRewardsRequest) Descriptor() ([]byte, []int) {
+	return file_qqvippb_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ClaimQQVipRewardsRequest) GetRewardTypes() []int32 {
+	if x != nil {
+		return x.RewardTypes
+	}
+	return nil
+}
+
+type ClaimQQVipRewardsReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*corepb.Item         `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimQQVipRewardsReply) Reset() {
+	*x = ClaimQQVipRewardsReply{}
+	mi := &file_qqvippb_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimQQVipRewardsReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimQQVipRewardsReply) ProtoMessage() {}
+
+func (x *ClaimQQVipRewardsReply) ProtoReflect() protoreflect.Message {
+	mi := &file_qqvippb_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimQQVipRewardsReply.ProtoReflect.Descriptor instead.
+func (*ClaimQQVipRewardsReply) Descriptor() ([]byte, []int) {
+	return file_qqvippb_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ClaimQQVipRewardsReply) GetItems() []*corepb.Item {
 	if x != nil {
 		return x.Items
 	}
@@ -195,16 +381,15 @@ func (x *ClaimDailyGiftReply) GetItems() []*corepb.Item {
 // --- VIP信息更新通知 ---
 type VipInfoUpdatedNTF struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	VipLevel      int64                  `protobuf:"varint,1,opt,name=vip_level,json=vipLevel,proto3" json:"vip_level,omitempty"`
-	CanClaim      bool                   `protobuf:"varint,2,opt,name=can_claim,json=canClaim,proto3" json:"can_claim,omitempty"`
-	HasGift       bool                   `protobuf:"varint,3,opt,name=has_gift,json=hasGift,proto3" json:"has_gift,omitempty"`
+	VipType       int64                  `protobuf:"varint,1,opt,name=vip_type,json=vipType,proto3" json:"vip_type,omitempty"`
+	VipLevel      int64                  `protobuf:"varint,2,opt,name=vip_level,json=vipLevel,proto3" json:"vip_level,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *VipInfoUpdatedNTF) Reset() {
 	*x = VipInfoUpdatedNTF{}
-	mi := &file_qqvippb_proto_msgTypes[4]
+	mi := &file_qqvippb_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -216,7 +401,7 @@ func (x *VipInfoUpdatedNTF) String() string {
 func (*VipInfoUpdatedNTF) ProtoMessage() {}
 
 func (x *VipInfoUpdatedNTF) ProtoReflect() protoreflect.Message {
-	mi := &file_qqvippb_proto_msgTypes[4]
+	mi := &file_qqvippb_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -229,7 +414,14 @@ func (x *VipInfoUpdatedNTF) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VipInfoUpdatedNTF.ProtoReflect.Descriptor instead.
 func (*VipInfoUpdatedNTF) Descriptor() ([]byte, []int) {
-	return file_qqvippb_proto_rawDescGZIP(), []int{4}
+	return file_qqvippb_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *VipInfoUpdatedNTF) GetVipType() int64 {
+	if x != nil {
+		return x.VipType
+	}
+	return 0
 }
 
 func (x *VipInfoUpdatedNTF) GetVipLevel() int64 {
@@ -239,36 +431,38 @@ func (x *VipInfoUpdatedNTF) GetVipLevel() int64 {
 	return 0
 }
 
-func (x *VipInfoUpdatedNTF) GetCanClaim() bool {
-	if x != nil {
-		return x.CanClaim
-	}
-	return false
-}
-
-func (x *VipInfoUpdatedNTF) GetHasGift() bool {
-	if x != nil {
-		return x.HasGift
-	}
-	return false
-}
-
 var File_qqvippb_proto protoreflect.FileDescriptor
 
 const file_qqvippb_proto_rawDesc = "" +
 	"\n" +
-	"\rqqvippb.proto\x12\x0egamepb.qqvippb\x1a\fcorepb.proto\"\x1b\n" +
-	"\x19GetDailyGiftStatusRequest\"Q\n" +
-	"\x17GetDailyGiftStatusReply\x12\x1b\n" +
-	"\tcan_claim\x18\x01 \x01(\bR\bcanClaim\x12\x19\n" +
-	"\bhas_gift\x18\x02 \x01(\bR\ahasGift\"\x17\n" +
-	"\x15ClaimDailyGiftRequest\"9\n" +
-	"\x13ClaimDailyGiftReply\x12\"\n" +
-	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"h\n" +
-	"\x11VipInfoUpdatedNTF\x12\x1b\n" +
-	"\tvip_level\x18\x01 \x01(\x03R\bvipLevel\x12\x1b\n" +
-	"\tcan_claim\x18\x02 \x01(\bR\bcanClaim\x12\x19\n" +
-	"\bhas_gift\x18\x03 \x01(\bR\ahasGiftBHZFgithub.com/it00021hot/qq-farm-core/internal/farm/proto/qqvippb;qqvippbb\x06proto3"
+	"\rqqvippb.proto\x12\x0egamepb.qqvippb\x1a\fcorepb.proto\"\x1e\n" +
+	"\x1cGetQQVipRewardsStatusRequest\"\x8b\x02\n" +
+	"\x11QQVipRewardStatus\x12\x18\n" +
+	"\aenabled\x18\x01 \x01(\bR\aenabled\x12&\n" +
+	"\arewards\x18\x02 \x03(\v2\f.corepb.ItemR\arewards\x12\x1b\n" +
+	"\tvip_level\x18\x03 \x01(\x03R\bvipLevel\x12\x1f\n" +
+	"\vactivity_id\x18\x04 \x01(\x03R\n" +
+	"activityId\x12\x1f\n" +
+	"\vreward_type\x18\x05 \x01(\x05R\n" +
+	"rewardType\x12\x1b\n" +
+	"\tcan_claim\x18\x06 \x01(\bR\bcanClaim\x12\x1d\n" +
+	"\n" +
+	"begin_time\x18\a \x01(\x03R\tbeginTime\x12\x19\n" +
+	"\bend_time\x18\b \x01(\x03R\aendTime\"\xa6\x01\n" +
+	"\x1aGetQQVipRewardsStatusReply\x12\x1a\n" +
+	"\tis_qq_vip\x18\x01 \x01(\bR\aisQqVip\x12 \n" +
+	"\fis_super_vip\x18\x02 \x01(\bR\n" +
+	"isSuperVip\x12J\n" +
+	"\x0freward_statuses\x18\x05 \x03(\v2!.gamepb.qqvippb.QQVipRewardStatusR\x0erewardStatuses\"\x17\n" +
+	"\x15RefreshVipInfoRequest\"\x15\n" +
+	"\x13RefreshVipInfoReply\"A\n" +
+	"\x18ClaimQQVipRewardsRequest\x12%\n" +
+	"\freward_types\x18\x01 \x03(\x05B\x02\x10\x01R\vrewardTypes\"<\n" +
+	"\x16ClaimQQVipRewardsReply\x12\"\n" +
+	"\x05items\x18\x03 \x03(\v2\f.corepb.ItemR\x05items\"K\n" +
+	"\x11VipInfoUpdatedNTF\x12\x19\n" +
+	"\bvip_type\x18\x01 \x01(\x03R\avipType\x12\x1b\n" +
+	"\tvip_level\x18\x02 \x01(\x03R\bvipLevelb\x06proto3"
 
 var (
 	file_qqvippb_proto_rawDescOnce sync.Once
@@ -282,22 +476,27 @@ func file_qqvippb_proto_rawDescGZIP() []byte {
 	return file_qqvippb_proto_rawDescData
 }
 
-var file_qqvippb_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_qqvippb_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_qqvippb_proto_goTypes = []any{
-	(*GetDailyGiftStatusRequest)(nil), // 0: gamepb.qqvippb.GetDailyGiftStatusRequest
-	(*GetDailyGiftStatusReply)(nil),   // 1: gamepb.qqvippb.GetDailyGiftStatusReply
-	(*ClaimDailyGiftRequest)(nil),     // 2: gamepb.qqvippb.ClaimDailyGiftRequest
-	(*ClaimDailyGiftReply)(nil),       // 3: gamepb.qqvippb.ClaimDailyGiftReply
-	(*VipInfoUpdatedNTF)(nil),         // 4: gamepb.qqvippb.VipInfoUpdatedNTF
-	(*corepb.Item)(nil),               // 5: corepb.Item
+	(*GetQQVipRewardsStatusRequest)(nil), // 0: gamepb.qqvippb.GetQQVipRewardsStatusRequest
+	(*QQVipRewardStatus)(nil),            // 1: gamepb.qqvippb.QQVipRewardStatus
+	(*GetQQVipRewardsStatusReply)(nil),   // 2: gamepb.qqvippb.GetQQVipRewardsStatusReply
+	(*RefreshVipInfoRequest)(nil),        // 3: gamepb.qqvippb.RefreshVipInfoRequest
+	(*RefreshVipInfoReply)(nil),          // 4: gamepb.qqvippb.RefreshVipInfoReply
+	(*ClaimQQVipRewardsRequest)(nil),     // 5: gamepb.qqvippb.ClaimQQVipRewardsRequest
+	(*ClaimQQVipRewardsReply)(nil),       // 6: gamepb.qqvippb.ClaimQQVipRewardsReply
+	(*VipInfoUpdatedNTF)(nil),            // 7: gamepb.qqvippb.VipInfoUpdatedNTF
+	(*corepb.Item)(nil),                  // 8: corepb.Item
 }
 var file_qqvippb_proto_depIdxs = []int32{
-	5, // 0: gamepb.qqvippb.ClaimDailyGiftReply.items:type_name -> corepb.Item
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	8, // 0: gamepb.qqvippb.QQVipRewardStatus.rewards:type_name -> corepb.Item
+	1, // 1: gamepb.qqvippb.GetQQVipRewardsStatusReply.reward_statuses:type_name -> gamepb.qqvippb.QQVipRewardStatus
+	8, // 2: gamepb.qqvippb.ClaimQQVipRewardsReply.items:type_name -> corepb.Item
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_qqvippb_proto_init() }
@@ -311,7 +510,7 @@ func file_qqvippb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_qqvippb_proto_rawDesc), len(file_qqvippb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

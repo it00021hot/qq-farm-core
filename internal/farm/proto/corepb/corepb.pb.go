@@ -23,16 +23,70 @@ const (
 
 // The purchase ItemNotify currently carries an empty display payload. Keeping
 // the message typed preserves the wire field and supports populated data later.
+type ItemShowRestriction struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Text          string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	ActivityId    string                 `protobuf:"bytes,2,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ItemShowRestriction) Reset() {
+	*x = ItemShowRestriction{}
+	mi := &file_corepb_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ItemShowRestriction) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ItemShowRestriction) ProtoMessage() {}
+
+func (x *ItemShowRestriction) ProtoReflect() protoreflect.Message {
+	mi := &file_corepb_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ItemShowRestriction.ProtoReflect.Descriptor instead.
+func (*ItemShowRestriction) Descriptor() ([]byte, []int) {
+	return file_corepb_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *ItemShowRestriction) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+func (x *ItemShowRestriction) GetActivityId() string {
+	if x != nil {
+		return x.ActivityId
+	}
+	return ""
+}
+
 type ItemShow struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Restriction   *ItemShowRestriction   `protobuf:"bytes,3,opt,name=restriction,proto3" json:"restriction,omitempty"`
 	SellPrice     *Item                  `protobuf:"bytes,4,opt,name=sell_price,json=sellPrice,proto3" json:"sell_price,omitempty"` // Currency and amount shown as the item's sale value.
+	ExchangePrice *Item                  `protobuf:"bytes,5,opt,name=exchange_price,json=exchangePrice,proto3" json:"exchange_price,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ItemShow) Reset() {
 	*x = ItemShow{}
-	mi := &file_corepb_proto_msgTypes[0]
+	mi := &file_corepb_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +98,7 @@ func (x *ItemShow) String() string {
 func (*ItemShow) ProtoMessage() {}
 
 func (x *ItemShow) ProtoReflect() protoreflect.Message {
-	mi := &file_corepb_proto_msgTypes[0]
+	mi := &file_corepb_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,12 +111,26 @@ func (x *ItemShow) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ItemShow.ProtoReflect.Descriptor instead.
 func (*ItemShow) Descriptor() ([]byte, []int) {
-	return file_corepb_proto_rawDescGZIP(), []int{0}
+	return file_corepb_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ItemShow) GetRestriction() *ItemShowRestriction {
+	if x != nil {
+		return x.Restriction
+	}
+	return nil
 }
 
 func (x *ItemShow) GetSellPrice() *Item {
 	if x != nil {
 		return x.SellPrice
+	}
+	return nil
+}
+
+func (x *ItemShow) GetExchangePrice() *Item {
+	if x != nil {
+		return x.ExchangePrice
 	}
 	return nil
 }
@@ -74,17 +142,18 @@ type Item struct {
 	ExpireTime int64                  `protobuf:"varint,3,opt,name=expire_time,json=expireTime,proto3" json:"expire_time,omitempty"`
 	// Field 4 is reserved by the game protocol.
 	// google.protobuf.Any detail = 5;
-	Uid           int64     `protobuf:"varint,6,opt,name=uid,proto3" json:"uid,omitempty"`
-	IsNew         bool      `protobuf:"varint,7,opt,name=is_new,json=isNew,proto3" json:"is_new,omitempty"`
-	MutantTypes   []int64   `protobuf:"varint,8,rep,packed,name=mutant_types,json=mutantTypes,proto3" json:"mutant_types,omitempty"`
-	Show          *ItemShow `protobuf:"bytes,100,opt,name=show,proto3" json:"show,omitempty"`
+	Uid           int64           `protobuf:"varint,6,opt,name=uid,proto3" json:"uid,omitempty"`
+	IsNew         bool            `protobuf:"varint,7,opt,name=is_new,json=isNew,proto3" json:"is_new,omitempty"`
+	MutantTypes   []int64         `protobuf:"varint,8,rep,packed,name=mutant_types,json=mutantTypes,proto3" json:"mutant_types,omitempty"`
+	SourceInfo    *ItemSourceInfo `protobuf:"bytes,10,opt,name=source_info,json=sourceInfo,proto3" json:"source_info,omitempty"`
+	Show          *ItemShow       `protobuf:"bytes,100,opt,name=show,proto3" json:"show,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Item) Reset() {
 	*x = Item{}
-	mi := &file_corepb_proto_msgTypes[1]
+	mi := &file_corepb_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -96,7 +165,7 @@ func (x *Item) String() string {
 func (*Item) ProtoMessage() {}
 
 func (x *Item) ProtoReflect() protoreflect.Message {
-	mi := &file_corepb_proto_msgTypes[1]
+	mi := &file_corepb_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -109,7 +178,7 @@ func (x *Item) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Item.ProtoReflect.Descriptor instead.
 func (*Item) Descriptor() ([]byte, []int) {
-	return file_corepb_proto_rawDescGZIP(), []int{1}
+	return file_corepb_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Item) GetId() int64 {
@@ -154,6 +223,13 @@ func (x *Item) GetMutantTypes() []int64 {
 	return nil
 }
 
+func (x *Item) GetSourceInfo() *ItemSourceInfo {
+	if x != nil {
+		return x.SourceInfo
+	}
+	return nil
+}
+
 func (x *Item) GetShow() *ItemShow {
 	if x != nil {
 		return x.Show
@@ -161,16 +237,78 @@ func (x *Item) GetShow() *ItemShow {
 	return nil
 }
 
+type ItemSourceInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SenderName    string                 `protobuf:"bytes,1,opt,name=sender_name,json=senderName,proto3" json:"sender_name,omitempty"`
+	SentAt        int64                  `protobuf:"varint,2,opt,name=sent_at,json=sentAt,proto3" json:"sent_at,omitempty"`
+	SourceType    int64                  `protobuf:"varint,3,opt,name=source_type,json=sourceType,proto3" json:"source_type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ItemSourceInfo) Reset() {
+	*x = ItemSourceInfo{}
+	mi := &file_corepb_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ItemSourceInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ItemSourceInfo) ProtoMessage() {}
+
+func (x *ItemSourceInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_corepb_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ItemSourceInfo.ProtoReflect.Descriptor instead.
+func (*ItemSourceInfo) Descriptor() ([]byte, []int) {
+	return file_corepb_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ItemSourceInfo) GetSenderName() string {
+	if x != nil {
+		return x.SenderName
+	}
+	return ""
+}
+
+func (x *ItemSourceInfo) GetSentAt() int64 {
+	if x != nil {
+		return x.SentAt
+	}
+	return 0
+}
+
+func (x *ItemSourceInfo) GetSourceType() int64 {
+	if x != nil {
+		return x.SourceType
+	}
+	return 0
+}
+
 type ItemBag struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Items         []*Item                `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	Capacity      int64                  `protobuf:"varint,2,opt,name=capacity,proto3" json:"capacity,omitempty"`
+	UsedSlots     int64                  `protobuf:"varint,3,opt,name=used_slots,json=usedSlots,proto3" json:"used_slots,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ItemBag) Reset() {
 	*x = ItemBag{}
-	mi := &file_corepb_proto_msgTypes[2]
+	mi := &file_corepb_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -182,7 +320,7 @@ func (x *ItemBag) String() string {
 func (*ItemBag) ProtoMessage() {}
 
 func (x *ItemBag) ProtoReflect() protoreflect.Message {
-	mi := &file_corepb_proto_msgTypes[2]
+	mi := &file_corepb_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -195,7 +333,7 @@ func (x *ItemBag) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ItemBag.ProtoReflect.Descriptor instead.
 func (*ItemBag) Descriptor() ([]byte, []int) {
-	return file_corepb_proto_rawDescGZIP(), []int{2}
+	return file_corepb_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ItemBag) GetItems() []*Item {
@@ -203,6 +341,20 @@ func (x *ItemBag) GetItems() []*Item {
 		return x.Items
 	}
 	return nil
+}
+
+func (x *ItemBag) GetCapacity() int64 {
+	if x != nil {
+		return x.Capacity
+	}
+	return 0
+}
+
+func (x *ItemBag) GetUsedSlots() int64 {
+	if x != nil {
+		return x.UsedSlots
+	}
+	return 0
 }
 
 type ItemChg struct {
@@ -215,7 +367,7 @@ type ItemChg struct {
 
 func (x *ItemChg) Reset() {
 	*x = ItemChg{}
-	mi := &file_corepb_proto_msgTypes[3]
+	mi := &file_corepb_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -227,7 +379,7 @@ func (x *ItemChg) String() string {
 func (*ItemChg) ProtoMessage() {}
 
 func (x *ItemChg) ProtoReflect() protoreflect.Message {
-	mi := &file_corepb_proto_msgTypes[3]
+	mi := &file_corepb_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -240,7 +392,7 @@ func (x *ItemChg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ItemChg.ProtoReflect.Descriptor instead.
 func (*ItemChg) Descriptor() ([]byte, []int) {
-	return file_corepb_proto_rawDescGZIP(), []int{3}
+	return file_corepb_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ItemChg) GetItem() *Item {
@@ -261,10 +413,16 @@ var File_corepb_proto protoreflect.FileDescriptor
 
 const file_corepb_proto_rawDesc = "" +
 	"\n" +
-	"\fcorepb.proto\x12\x06corepb\"7\n" +
-	"\bItemShow\x12+\n" +
+	"\fcorepb.proto\x12\x06corepb\"J\n" +
+	"\x13ItemShowRestriction\x12\x12\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\x12\x1f\n" +
+	"\vactivity_id\x18\x02 \x01(\tR\n" +
+	"activityId\"\xab\x01\n" +
+	"\bItemShow\x12=\n" +
+	"\vrestriction\x18\x03 \x01(\v2\x1b.corepb.ItemShowRestrictionR\vrestriction\x12+\n" +
 	"\n" +
-	"sell_price\x18\x04 \x01(\v2\f.corepb.ItemR\tsellPrice\"\xbf\x01\n" +
+	"sell_price\x18\x04 \x01(\v2\f.corepb.ItemR\tsellPrice\x123\n" +
+	"\x0eexchange_price\x18\x05 \x01(\v2\f.corepb.ItemR\rexchangePrice\"\xf8\x01\n" +
 	"\x04Item\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
 	"\x05count\x18\x02 \x01(\x03R\x05count\x12\x1f\n" +
@@ -272,13 +430,25 @@ const file_corepb_proto_rawDesc = "" +
 	"expireTime\x12\x10\n" +
 	"\x03uid\x18\x06 \x01(\x03R\x03uid\x12\x15\n" +
 	"\x06is_new\x18\a \x01(\bR\x05isNew\x12!\n" +
-	"\fmutant_types\x18\b \x03(\x03R\vmutantTypes\x12$\n" +
-	"\x04show\x18d \x01(\v2\x10.corepb.ItemShowR\x04show\"-\n" +
+	"\fmutant_types\x18\b \x03(\x03R\vmutantTypes\x127\n" +
+	"\vsource_info\x18\n" +
+	" \x01(\v2\x16.corepb.ItemSourceInfoR\n" +
+	"sourceInfo\x12$\n" +
+	"\x04show\x18d \x01(\v2\x10.corepb.ItemShowR\x04show\"k\n" +
+	"\x0eItemSourceInfo\x12\x1f\n" +
+	"\vsender_name\x18\x01 \x01(\tR\n" +
+	"senderName\x12\x17\n" +
+	"\asent_at\x18\x02 \x01(\x03R\x06sentAt\x12\x1f\n" +
+	"\vsource_type\x18\x03 \x01(\x03R\n" +
+	"sourceType\"h\n" +
 	"\aItemBag\x12\"\n" +
-	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"A\n" +
+	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\x12\x1a\n" +
+	"\bcapacity\x18\x02 \x01(\x03R\bcapacity\x12\x1d\n" +
+	"\n" +
+	"used_slots\x18\x03 \x01(\x03R\tusedSlots\"A\n" +
 	"\aItemChg\x12 \n" +
 	"\x04item\x18\x01 \x01(\v2\f.corepb.ItemR\x04item\x12\x14\n" +
-	"\x05delta\x18\x02 \x01(\x03R\x05deltaBFZDgithub.com/it00021hot/qq-farm-core/internal/farm/proto/corepb;corepbb\x06proto3"
+	"\x05delta\x18\x02 \x01(\x03R\x05deltab\x06proto3"
 
 var (
 	file_corepb_proto_rawDescOnce sync.Once
@@ -292,23 +462,28 @@ func file_corepb_proto_rawDescGZIP() []byte {
 	return file_corepb_proto_rawDescData
 }
 
-var file_corepb_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_corepb_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_corepb_proto_goTypes = []any{
-	(*ItemShow)(nil), // 0: corepb.ItemShow
-	(*Item)(nil),     // 1: corepb.Item
-	(*ItemBag)(nil),  // 2: corepb.ItemBag
-	(*ItemChg)(nil),  // 3: corepb.ItemChg
+	(*ItemShowRestriction)(nil), // 0: corepb.ItemShowRestriction
+	(*ItemShow)(nil),            // 1: corepb.ItemShow
+	(*Item)(nil),                // 2: corepb.Item
+	(*ItemSourceInfo)(nil),      // 3: corepb.ItemSourceInfo
+	(*ItemBag)(nil),             // 4: corepb.ItemBag
+	(*ItemChg)(nil),             // 5: corepb.ItemChg
 }
 var file_corepb_proto_depIdxs = []int32{
-	1, // 0: corepb.ItemShow.sell_price:type_name -> corepb.Item
-	0, // 1: corepb.Item.show:type_name -> corepb.ItemShow
-	1, // 2: corepb.ItemBag.items:type_name -> corepb.Item
-	1, // 3: corepb.ItemChg.item:type_name -> corepb.Item
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	0, // 0: corepb.ItemShow.restriction:type_name -> corepb.ItemShowRestriction
+	2, // 1: corepb.ItemShow.sell_price:type_name -> corepb.Item
+	2, // 2: corepb.ItemShow.exchange_price:type_name -> corepb.Item
+	3, // 3: corepb.Item.source_info:type_name -> corepb.ItemSourceInfo
+	1, // 4: corepb.Item.show:type_name -> corepb.ItemShow
+	2, // 5: corepb.ItemBag.items:type_name -> corepb.Item
+	2, // 6: corepb.ItemChg.item:type_name -> corepb.Item
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_corepb_proto_init() }
@@ -322,7 +497,7 @@ func file_corepb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_corepb_proto_rawDesc), len(file_corepb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

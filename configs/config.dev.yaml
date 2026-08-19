@@ -84,7 +84,7 @@ farm:
   appId: 'wx5306c5978fdb76e4'
   tsdkGameId: 3167
   tsdkAppKey: '0'
-  clientVersion: '1.13.0.5_20260723'
+  clientVersion: '1.13.2.8_20260723'
   os: 'Windows'
   pushWebhook: '' # Bark / 企业微信机器人等；账号异常时推送
 

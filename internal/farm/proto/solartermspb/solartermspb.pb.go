@@ -262,6 +262,78 @@ func (*GetSolarTermsRequest) Descriptor() ([]byte, []int) {
 	return file_solartermspb_proto_rawDescGZIP(), []int{3}
 }
 
+type GetSolarTermsRedDotRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSolarTermsRedDotRequest) Reset() {
+	*x = GetSolarTermsRedDotRequest{}
+	mi := &file_solartermspb_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSolarTermsRedDotRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSolarTermsRedDotRequest) ProtoMessage() {}
+
+func (x *GetSolarTermsRedDotRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_solartermspb_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSolarTermsRedDotRequest.ProtoReflect.Descriptor instead.
+func (*GetSolarTermsRedDotRequest) Descriptor() ([]byte, []int) {
+	return file_solartermspb_proto_rawDescGZIP(), []int{4}
+}
+
+type GetSolarTermsRedDotReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSolarTermsRedDotReply) Reset() {
+	*x = GetSolarTermsRedDotReply{}
+	mi := &file_solartermspb_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSolarTermsRedDotReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSolarTermsRedDotReply) ProtoMessage() {}
+
+func (x *GetSolarTermsRedDotReply) ProtoReflect() protoreflect.Message {
+	mi := &file_solartermspb_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSolarTermsRedDotReply.ProtoReflect.Descriptor instead.
+func (*GetSolarTermsRedDotReply) Descriptor() ([]byte, []int) {
+	return file_solartermspb_proto_rawDescGZIP(), []int{5}
+}
+
 type GetSolarTermsReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Terms         []*SolarTermInfo       `protobuf:"bytes,1,rep,name=terms,proto3" json:"terms,omitempty"`
@@ -274,7 +346,7 @@ type GetSolarTermsReply struct {
 
 func (x *GetSolarTermsReply) Reset() {
 	*x = GetSolarTermsReply{}
-	mi := &file_solartermspb_proto_msgTypes[4]
+	mi := &file_solartermspb_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -286,7 +358,7 @@ func (x *GetSolarTermsReply) String() string {
 func (*GetSolarTermsReply) ProtoMessage() {}
 
 func (x *GetSolarTermsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_solartermspb_proto_msgTypes[4]
+	mi := &file_solartermspb_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -299,7 +371,7 @@ func (x *GetSolarTermsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSolarTermsReply.ProtoReflect.Descriptor instead.
 func (*GetSolarTermsReply) Descriptor() ([]byte, []int) {
-	return file_solartermspb_proto_rawDescGZIP(), []int{4}
+	return file_solartermspb_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetSolarTermsReply) GetTerms() []*SolarTermInfo {
@@ -339,7 +411,7 @@ type ClaimSolarTermsRequest struct {
 
 func (x *ClaimSolarTermsRequest) Reset() {
 	*x = ClaimSolarTermsRequest{}
-	mi := &file_solartermspb_proto_msgTypes[5]
+	mi := &file_solartermspb_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -351,7 +423,7 @@ func (x *ClaimSolarTermsRequest) String() string {
 func (*ClaimSolarTermsRequest) ProtoMessage() {}
 
 func (x *ClaimSolarTermsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_solartermspb_proto_msgTypes[5]
+	mi := &file_solartermspb_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -364,7 +436,7 @@ func (x *ClaimSolarTermsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimSolarTermsRequest.ProtoReflect.Descriptor instead.
 func (*ClaimSolarTermsRequest) Descriptor() ([]byte, []int) {
-	return file_solartermspb_proto_rawDescGZIP(), []int{5}
+	return file_solartermspb_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ClaimSolarTermsRequest) GetTermId() int64 {
@@ -384,7 +456,7 @@ type ClaimSolarTermsReply struct {
 
 func (x *ClaimSolarTermsReply) Reset() {
 	*x = ClaimSolarTermsReply{}
-	mi := &file_solartermspb_proto_msgTypes[6]
+	mi := &file_solartermspb_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -396,7 +468,7 @@ func (x *ClaimSolarTermsReply) String() string {
 func (*ClaimSolarTermsReply) ProtoMessage() {}
 
 func (x *ClaimSolarTermsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_solartermspb_proto_msgTypes[6]
+	mi := &file_solartermspb_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -409,7 +481,7 @@ func (x *ClaimSolarTermsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimSolarTermsReply.ProtoReflect.Descriptor instead.
 func (*ClaimSolarTermsReply) Descriptor() ([]byte, []int) {
-	return file_solartermspb_proto_rawDescGZIP(), []int{6}
+	return file_solartermspb_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ClaimSolarTermsReply) GetRewards() []*SolarTermReward {
@@ -449,7 +521,9 @@ const file_solartermspb_proto_rawDesc = "" +
 	"\n" +
 	"rules_json\x18\x03 \x01(\fR\trulesJson\x12\x17\n" +
 	"\afield_4\x18\x04 \x01(\fR\x06field4\"\x16\n" +
-	"\x14GetSolarTermsRequest\"\xfe\x01\n" +
+	"\x14GetSolarTermsRequest\"\x1c\n" +
+	"\x1aGetSolarTermsRedDotRequest\"\x1a\n" +
+	"\x18GetSolarTermsRedDotReply\"\xfe\x01\n" +
 	"\x12GetSolarTermsReply\x128\n" +
 	"\x05terms\x18\x01 \x03(\v2\".gamepb.solartermspb.SolarTermInfoR\x05terms\x12\x1f\n" +
 	"\vserver_time\x18\x02 \x01(\x03R\n" +
@@ -460,7 +534,7 @@ const file_solartermspb_proto_rawDesc = "" +
 	"\aterm_id\x18\x01 \x01(\x03R\x06termId\"\x8e\x01\n" +
 	"\x14ClaimSolarTermsReply\x12>\n" +
 	"\arewards\x18\x01 \x03(\v2$.gamepb.solartermspb.SolarTermRewardR\arewards\x126\n" +
-	"\x04term\x18\x02 \x01(\v2\".gamepb.solartermspb.SolarTermInfoR\x04termBRZPgithub.com/it00021hot/qq-farm-core/internal/farm/proto/solartermspb;solartermspbb\x06proto3"
+	"\x04term\x18\x02 \x01(\v2\".gamepb.solartermspb.SolarTermInfoR\x04termb\x06proto3"
 
 var (
 	file_solartermspb_proto_rawDescOnce sync.Once
@@ -474,15 +548,17 @@ func file_solartermspb_proto_rawDescGZIP() []byte {
 	return file_solartermspb_proto_rawDescData
 }
 
-var file_solartermspb_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_solartermspb_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_solartermspb_proto_goTypes = []any{
-	(*SolarTermReward)(nil),        // 0: gamepb.solartermspb.SolarTermReward
-	(*SolarTermInfo)(nil),          // 1: gamepb.solartermspb.SolarTermInfo
-	(*SolarTermsConfig)(nil),       // 2: gamepb.solartermspb.SolarTermsConfig
-	(*GetSolarTermsRequest)(nil),   // 3: gamepb.solartermspb.GetSolarTermsRequest
-	(*GetSolarTermsReply)(nil),     // 4: gamepb.solartermspb.GetSolarTermsReply
-	(*ClaimSolarTermsRequest)(nil), // 5: gamepb.solartermspb.ClaimSolarTermsRequest
-	(*ClaimSolarTermsReply)(nil),   // 6: gamepb.solartermspb.ClaimSolarTermsReply
+	(*SolarTermReward)(nil),            // 0: gamepb.solartermspb.SolarTermReward
+	(*SolarTermInfo)(nil),              // 1: gamepb.solartermspb.SolarTermInfo
+	(*SolarTermsConfig)(nil),           // 2: gamepb.solartermspb.SolarTermsConfig
+	(*GetSolarTermsRequest)(nil),       // 3: gamepb.solartermspb.GetSolarTermsRequest
+	(*GetSolarTermsRedDotRequest)(nil), // 4: gamepb.solartermspb.GetSolarTermsRedDotRequest
+	(*GetSolarTermsRedDotReply)(nil),   // 5: gamepb.solartermspb.GetSolarTermsRedDotReply
+	(*GetSolarTermsReply)(nil),         // 6: gamepb.solartermspb.GetSolarTermsReply
+	(*ClaimSolarTermsRequest)(nil),     // 7: gamepb.solartermspb.ClaimSolarTermsRequest
+	(*ClaimSolarTermsReply)(nil),       // 8: gamepb.solartermspb.ClaimSolarTermsReply
 }
 var file_solartermspb_proto_depIdxs = []int32{
 	0, // 0: gamepb.solartermspb.SolarTermInfo.rewards:type_name -> gamepb.solartermspb.SolarTermReward
@@ -509,7 +585,7 @@ func file_solartermspb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_solartermspb_proto_rawDesc), len(file_solartermspb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
