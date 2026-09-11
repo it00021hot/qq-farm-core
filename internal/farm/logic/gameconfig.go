@@ -736,7 +736,7 @@ func SeedImagePath(id int64) string {
 	if id <= 0 {
 		return ""
 	}
-	return fmt.Sprintf("/game-config/seed_images_named/seed_images/%d.png", id)
+	return fmt.Sprintf("/game-config/seed_images_named/seed_images/%d.webp", id)
 }
 
 // GetAllSeeds returns catalog seed rows.

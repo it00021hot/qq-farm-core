@@ -219,13 +219,17 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 			if len(plantedIDs) > 0 {
 				actions = append(actions, fmt.Sprintf("种植%d", len(plantedIDs)))
 				recordOpCount(options, "plant", len(plantedIDs))
-				runFertilizerByConfig(ctx, api, cfg, plantedIDs, false, &actions, &opErrs, options)
+				// Both 改由巡田末尾统一跑全场，种完后不再立刻补肥，避免同一轮打两遍。
+				if cfg.Automation.Fertilizer != logic.FertilizerBoth {
+					runFertilizerByConfig(ctx, api, cfg, plantedIDs, false, false, &actions, &opErrs, options)
+				}
 			}
 		}
 	}
 
-	if op == "all" && cfg.Automation.FertilizerMultiSeason && len(postHarvestGrowing) > 0 {
-		runFertilizerByConfig(ctx, api, cfg, postHarvestGrowing, false, &actions, &opErrs, options)
+	if op == "all" && cfg.Automation.FertilizerMultiSeason && len(postHarvestGrowing) > 0 &&
+		cfg.Automation.Fertilizer != logic.FertilizerBoth {
+		runFertilizerByConfig(ctx, api, cfg, postHarvestGrowing, false, true, &actions, &opErrs, options)
 	}
 
 	shouldUpgrade := op == "upgrade" || (op == "all" && cfg.Automation.LandUpgrade)
@@ -255,9 +259,10 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 		}
 	}
 
-	// End fertilizer pass: bot only runs smart organic on fast-mature lands (scheduler.ts).
-	if op == "all" && cfg.Automation.Fertilizer == logic.FertilizerSmart {
-		runFertilizerByConfig(ctx, api, cfg, nil, true, &actions, &opErrs, options)
+	// End fertilizer pass: smart skips normal (organic on fast-mature lands only),
+	// Both runs the full-field pass here (normal + organic ripening, bot scheduler).
+	if op == "all" && (cfg.Automation.Fertilizer == logic.FertilizerSmart || cfg.Automation.Fertilizer == logic.FertilizerBoth) {
+		runFertilizerByConfig(ctx, api, cfg, nil, cfg.Automation.Fertilizer == logic.FertilizerSmart, false, &actions, &opErrs, options)
 	}
 
 	return len(actions) > 0, actions, lands, errors.Join(opErrs...)
@@ -426,70 +431,174 @@ func plantOneLayout(ctx context.Context, api *game.API, seedID int64, layout log
 	return masterID, occupied, false, nil
 }
 
-// runFertilizerByConfig mirrors bot planting.runFertilizerByConfig.
-// When planted is non-empty: normal/both/smart get one-pass normal fert; organic/both get organic loop.
-// When skipNormal (smart end pass): only organic on fast-mature lands.
-func runFertilizerByConfig(ctx context.Context, api *game.API, cfg logic.AccountConfig, planted []int64, skipNormal bool, actions *[]string, errs *[]error, opts farmOperationOptions) {
+// runFertilizerByConfig mirrors planting.fertilize_by_config_ex:
+// normal/both/smart get normal fert; organic targets depend on mode —
+// Both ripens all immature lands (until-mature loop), Organic loops over
+// lands that can still take organic fertilizer (restricted to the planted
+// multi-season lands), Smart targets soon-to-mature lands.
+// Lands are re-fetched here; on fetch failure the whole round is skipped
+// (fail-closed, stricter than bot).
+func runFertilizerByConfig(ctx context.Context, api *game.API, cfg logic.AccountConfig, planted []int64, skipNormal bool, multiSeason bool, actions *[]string, errs *[]error, opts farmOperationOptions) {
+	mode := cfg.Automation.Fertilizer
+	if mode == logic.FertilizerNone {
+		return
+	}
 	selectedTypes := logic.NormalizeFertilizerLandTypes(cfg.Automation.FertilizerLandTypes)
 	if len(selectedTypes) == 0 {
 		return
 	}
-	mode := cfg.Automation.Fertilizer
 	plantedIDs := uniqueLandIDs(planted)
-	if len(plantedIDs) == 0 && mode != logic.FertilizerOrganic && mode != logic.FertilizerBoth && mode != logic.FertilizerSmart {
+	if len(plantedIDs) == 0 && mode == logic.FertilizerNormal {
 		return
 	}
+	reason := "常规施肥"
+	if multiSeason {
+		reason = "多季补肥"
+	}
 
-	var latestLands []logic.LandInfo
-	refreshed, reply, refreshErr := api.AllLands(ctx)
+	latestLands, reply, refreshErr := api.AllLands(ctx)
 	if refreshErr != nil {
-		*errs = append(*errs, fmt.Errorf("施肥刷新土地: %w", refreshErr))
-	} else {
-		latestLands = refreshed
-		if reply != nil {
-			feedOperationLimits(opts, reply.OperationLimits)
-		}
+		*errs = append(*errs, fmt.Errorf("%s：获取土地信息失败，已跳过本轮施肥: %w", reason, refreshErr))
+		return
+	}
+	if len(latestLands) == 0 {
+		*errs = append(*errs, fmt.Errorf("%s：获取土地信息失败，已跳过本轮施肥", reason))
+		return
+	}
+	if reply != nil {
+		feedOperationLimits(opts, reply.OperationLimits)
 	}
 	types := landTypes(latestLands)
-	allSelected := len(selectedTypes) == len(logic.AllFertilizerLandTypes)
-	if len(types) == 0 && !allSelected {
-		return
-	}
 
-	normalTargets := plantedIDs
+	// Both 常规化肥按「本季还能施普通肥的全部地块」取目标，其余模式只施本次地块。
+	normalSource := plantedIDs
+	if mode == logic.FertilizerBoth {
+		normalSource = logic.GetNormalFertilizerTargetsFromLands(latestLands)
+	}
+	normalTargets := normalSource
 	if len(types) > 0 {
-		normalTargets = logic.FilterLandIDsByTypes(plantedIDs, types, selectedTypes)
+		normalTargets = logic.FilterLandIDsByTypes(normalSource, types, selectedTypes)
 	}
 
-	if !skipNormal && (mode == logic.FertilizerNormal || mode == logic.FertilizerBoth || mode == logic.FertilizerSmart) && len(normalTargets) > 0 {
-		fertilize(ctx, api, normalTargets, game.NormalFertilizerID, "普通肥", actions, errs, opts)
+	total := 0
+	if !skipNormal && (mode == logic.FertilizerNormal || mode == logic.FertilizerBoth || mode == logic.FertilizerSmart) {
+		total += fertilizeNormalStep(ctx, api, normalTargets, mode == logic.FertilizerBoth, reason, actions, errs)
 	}
 
-	switch mode {
-	case logic.FertilizerOrganic, logic.FertilizerBoth:
-		organicTargets := plantedIDs
-		if len(latestLands) > 0 {
-			organicTargets = logic.GetOrganicFertilizerTargetsFromLands(latestLands)
-		}
-		if len(types) > 0 {
+	if mode == logic.FertilizerOrganic || mode == logic.FertilizerBoth || mode == logic.FertilizerSmart {
+		var organicTargets []int64
+		switch mode {
+		case logic.FertilizerBoth:
+			// Both：全场未成熟地催熟。
+			organicTargets = logic.GetImmatureCropTargetsFromLands(latestLands)
 			organicTargets = logic.FilterLandIDsByTypes(organicTargets, types, selectedTypes)
+		case logic.FertilizerOrganic:
+			organicTargets = logic.GetOrganicFertilizerTargetsFromLands(latestLands)
+			// bot：多季补肥时有机肥目标限定到本次多季地块。
+			if multiSeason && len(plantedIDs) > 0 {
+				organicTargets = intersectLandIDs(organicTargets, plantedIDs)
+			}
+			organicTargets = logic.FilterLandIDsByTypes(organicTargets, types, selectedTypes)
+		case logic.FertilizerSmart:
+			smartSecs := int64(cfg.Automation.FertilizerSmartSeconds)
+			if smartSecs <= 0 {
+				smartSecs = 300
+			}
+			organicTargets = logic.GetFastMatureLands(latestLands, smartSecs)
 		}
-		fertilizeOrganic(ctx, api, organicTargets, actions, errs, opts)
-	case logic.FertilizerSmart:
-		// Bot smart organic: re-fetch after normal fert so shortened mature times are visible.
-		threshold := int64(cfg.Automation.FertilizerSmartSeconds)
-		smartLands := latestLands
-		if !skipNormal && len(normalTargets) > 0 {
-			if again, againReply, againErr := api.AllLands(ctx); againErr == nil {
-				smartLands = again
-				if againReply != nil {
-					feedOperationLimits(opts, againReply.OperationLimits)
-				}
+		if len(organicTargets) > 0 {
+			var (
+				count        int
+				remainingSec int64
+				hasRemaining bool
+			)
+			if mode == logic.FertilizerBoth {
+				count, remainingSec, hasRemaining, _ = api.FertilizeOrganicUntilMature(ctx, organicTargets)
+			} else {
+				count, remainingSec, hasRemaining, _ = api.FertilizeOrganicLoop(ctx, organicTargets)
+			}
+			if count > 0 {
+				*actions = append(*actions, fmt.Sprintf("有机肥%d%s", count, remainingHoursLabel(remainingSec, hasRemaining)))
+			}
+			if limit := game.OrganicOperationLimit(len(organicTargets)); count >= limit {
+				*actions = append(*actions, fmt.Sprintf("有机肥循环达到单次上限%d，已停止继续请求", limit))
+			}
+			total += count
+		}
+	}
+	if total > 0 && opts.accountID > 0 {
+		stats.RecordOp(opts.accountID, 0, "fertilize", total)
+	}
+}
+
+// fertilizeNormalStep applies normal fertilizer land by land. continueOnError
+// is the Both mode behavior: one failing land must not block the rest.
+func fertilizeNormalStep(ctx context.Context, api *game.API, normalTargets []int64, continueOnError bool, reason string, actions *[]string, errs *[]error) int {
+	if len(normalTargets) == 0 {
+		return 0
+	}
+	normal := 0
+	var (
+		remainingSec int64
+		hasRemaining bool
+	)
+	for i, landID := range normalTargets {
+		res, err := api.Fertilize(ctx, []int64{landID}, game.NormalFertilizerID)
+		if err != nil {
+			if continueOnError {
+				continue
+			}
+			break
+		}
+		if res.HasRemaining {
+			remainingSec = res.RemainingSecs
+			hasRemaining = true
+		}
+		normal++
+		if i+1 < len(normalTargets) {
+			if delayErr := waitFarmDelay(ctx, 50*time.Millisecond); delayErr != nil {
+				break
 			}
 		}
-		organicTargets := logic.GetFastMatureLands(smartLands, threshold)
-		fertilizeOrganic(ctx, api, organicTargets, actions, errs, opts)
 	}
+	if normal > 0 {
+		*actions = append(*actions, fmt.Sprintf("普通肥%d/%d%s", normal, len(normalTargets), remainingHoursLabel(remainingSec, hasRemaining)))
+	}
+	return normal
+}
+
+// remainingHoursLabel mirrors the Rust "，剩 X.Xh" suffix (container seconds → hours).
+func remainingHoursLabel(remainingSec int64, hasRemaining bool) string {
+	if !hasRemaining || remainingSec <= 0 {
+		return ""
+	}
+	return fmt.Sprintf("(剩%.1fh)", float64(remainingSec)/3600)
+}
+
+// intersectLandIDs keeps ids present in both slices (positive, deduped).
+func intersectLandIDs(ids, keep []int64) []int64 {
+	set := make(map[int64]struct{}, len(keep))
+	for _, id := range keep {
+		if id > 0 {
+			set[id] = struct{}{}
+		}
+	}
+	seen := make(map[int64]struct{}, len(ids))
+	var out []int64
+	for _, id := range ids {
+		if id <= 0 {
+			continue
+		}
+		if _, ok := set[id]; !ok {
+			continue
+		}
+		if _, dup := seen[id]; dup {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
 }
 
 func shopSeedCandidates(reply *shoppb.ShopInfoReply, playerLevel int64) []logic.SeedCandidate {
@@ -645,34 +754,6 @@ func max(a, b int64) int64 {
 		return a
 	}
 	return b
-}
-
-func fertilize(ctx context.Context, api *game.API, landIDs []int64, fertilizerID int64, label string, actions *[]string, errs *[]error, opts farmOperationOptions) {
-	if len(landIDs) == 0 {
-		return
-	}
-	count, err := api.Fertilize(ctx, landIDs, fertilizerID)
-	if err != nil {
-		*errs = append(*errs, fmt.Errorf("%s: %w", label, err))
-	}
-	if count > 0 {
-		*actions = append(*actions, fmt.Sprintf("%s%d", label, count))
-		recordOpCount(opts, "fertilize", count)
-	}
-}
-
-func fertilizeOrganic(ctx context.Context, api *game.API, landIDs []int64, actions *[]string, errs *[]error, opts farmOperationOptions) {
-	if len(landIDs) == 0 {
-		return
-	}
-	count, err := api.FertilizeOrganicLoop(ctx, landIDs)
-	if err != nil {
-		*errs = append(*errs, fmt.Errorf("有机肥: %w", err))
-	}
-	if count > 0 {
-		*actions = append(*actions, fmt.Sprintf("有机肥%d", count))
-		recordOpCount(opts, "fertilize", count)
-	}
 }
 
 func recordOpCount(opts farmOperationOptions, label string, count int) {

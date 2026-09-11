@@ -84,7 +84,7 @@ farm:
   appId: 'wx5306c5978fdb76e4'
   tsdkGameId: 3167
   tsdkAppKey: '0'
-  clientVersion: '1.14.0.1_20260909'
+  clientVersion: '1.14.0.3_20260909'
   os: 'Windows'
   pushWebhook: ''
   # QQ 官方机器人渠道（rust 语义：AccessToken + Gateway + C2C 单聊）

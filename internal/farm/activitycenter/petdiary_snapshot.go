@@ -150,18 +150,11 @@ func buildPetDiaryOnce(ctx context.Context, api *game.API) (map[string]any, erro
 		}
 		var desc petStoryDescInfo
 		_ = json.Unmarshal([]byte(s.SelectedDesc), &desc)
-		captionImage := ""
-		caption := ""
-		if say, ok := desc.Say.(string); ok {
-			if strings.Contains(say, "/") {
-				captionImage = petDiaryImage(assets, say)
-			} else {
-				caption = say
-			}
-		}
+		// 素材收敛（bot 20260911 / rust ee8ac0e）：故事仅保留照片映射，
+		// captionImage/caption 字段移除。
 		stories = append(stories, map[string]any{
 			"order": s.Order, "unlocked": s.Unlocked, "claimed": s.Claimed, "animated": s.Animated,
-			"photo": petDiaryImage(assets, desc.Photo), "captionImage": captionImage, "caption": caption,
+			"photo": petDiaryImage(assets, desc.Photo),
 		})
 	}
 

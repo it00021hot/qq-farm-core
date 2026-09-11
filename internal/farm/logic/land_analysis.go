@@ -21,7 +21,73 @@ func GetCurrentPhase(phases []PlantPhaseInfo) *PlantPhaseInfo {
 	return &phases[0]
 }
 
+// NormalContainerID / OrganicContainerID are the fertilizer container item ids
+// (game_ids.ts NORMAL_CONTAINER_ID / ORGANIC_CONTAINER_ID).
+const (
+	NormalContainerID  int64 = 1011
+	OrganicContainerID int64 = 1012
+)
+
+// HasUsedNormalFertilizer reports whether any phase of the plant already used
+// normal fertilizer (ferts_used contains 1011 with a positive count).
+func HasUsedNormalFertilizer(land *LandInfo) bool {
+	if land == nil || land.Plant == nil {
+		return false
+	}
+	for _, p := range land.Plant.Phases {
+		if p.FertsUsed[NormalContainerID] > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// IsImmatureCrop: unlocked, has crop, not dead, not ripe.
+func IsImmatureCrop(land *LandInfo) bool {
+	if land == nil || !land.Unlocked {
+		return false
+	}
+	plant := land.Plant
+	if plant == nil || len(plant.Phases) == 0 {
+		return false
+	}
+	current := GetCurrentPhase(plant.Phases)
+	if current == nil {
+		return false
+	}
+	return current.Phase != PhaseDead && current.Phase != PhaseMature
+}
+
+// GetNormalFertilizerTargetsFromLands returns immature lands that can still take
+// one normal fertilizer this season (not yet used 1011).
+func GetNormalFertilizerTargetsFromLands(lands []LandInfo) []int64 {
+	var targets []int64
+	for i := range lands {
+		land := &lands[i]
+		if IsImmatureCrop(land) && !HasUsedNormalFertilizer(land) {
+			targets = append(targets, land.ID)
+		}
+	}
+	return targets
+}
+
+// GetImmatureCropTargetsFromLands returns all immature crop land IDs
+// (desktop Both mode: organic ripening targets).
+func GetImmatureCropTargetsFromLands(lands []LandInfo) []int64 {
+	var targets []int64
+	for i := range lands {
+		land := &lands[i]
+		if IsImmatureCrop(land) {
+			targets = append(targets, land.ID)
+		}
+	}
+	return targets
+}
+
 // GetOrganicFertilizerTargetsFromLands returns land IDs eligible for organic fertilizer.
+// 注意：不按 left_inorc_fert_times 过滤。bot 用 Object.hasOwn 区分
+// 「服务端未下发=可施」，官方向量证实服务端额度>0 时下发该字段、=0 时省略，
+// 从不显式发 0——「不过滤」与 bot 实际行为 wire 等价。
 func GetOrganicFertilizerTargetsFromLands(lands []LandInfo) []int64 {
 	var targets []int64
 	for i := range lands {
@@ -41,9 +107,6 @@ func GetOrganicFertilizerTargetsFromLands(lands []LandInfo) []int64 {
 		if current == nil || current.Phase == PhaseDead {
 			continue
 		}
-		if plant.LeftInorcFertTimes != nil && *plant.LeftInorcFertTimes <= 0 {
-			continue
-		}
 		targets = append(targets, landID)
 	}
 	return targets
@@ -51,8 +114,8 @@ func GetOrganicFertilizerTargetsFromLands(lands []LandInfo) []int64 {
 
 // GetFastMatureLands returns growing lands that mature within thresholdSec.
 func GetFastMatureLands(lands []LandInfo, thresholdSec int64) []int64 {
-	if thresholdSec <= 0 {
-		thresholdSec = 300
+	if thresholdSec < 0 {
+		thresholdSec = 0
 	}
 	nowSec := GetServerTimeSec()
 	var targets []int64
@@ -87,9 +150,8 @@ func GetFastMatureLands(lands []LandInfo, thresholdSec int64) []int64 {
 		if timeToMature > thresholdSec || timeToMature < 0 {
 			continue
 		}
-		if plant.LeftInorcFertTimes != nil && *plant.LeftInorcFertTimes <= 0 {
-			continue
-		}
+		// 同 GetOrganicFertilizerTargetsFromLands：不按 left_inorc_fert_times 过滤
+		//（服务端从不显式发 0，不过滤与 bot hasOwn 行为 wire 等价）。
 		targets = append(targets, land.ID)
 	}
 	return targets

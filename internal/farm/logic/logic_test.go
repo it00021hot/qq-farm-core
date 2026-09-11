@@ -92,7 +92,8 @@ func TestGetFastMatureLandsThreshold(t *testing.T) {
 				},
 			},
 		},
-		{ // no fert times left
+		{ // 服务端从不显式下发 left_inorc_fert_times=0（额度 0 时省略），
+			// 不过滤即与 bot hasOwn 行为 wire 等价（rust f347147）。
 			ID: 4, Unlocked: true,
 			Plant: &logic.PlantInfo{
 				ID: 4, LeftInorcFertTimes: &zero,
@@ -104,8 +105,8 @@ func TestGetFastMatureLandsThreshold(t *testing.T) {
 		},
 	}
 	got := logic.GetFastMatureLands(lands, 300)
-	if len(got) != 1 || got[0] != 1 {
-		t.Fatalf("fast mature=%v want [1]", got)
+	if len(got) != 2 || got[0] != 1 || got[1] != 4 {
+		t.Fatalf("fast mature=%v want [1 4]", got)
 	}
 }
 
@@ -262,5 +263,124 @@ func TestLandsFromPlantPBLeftInorcAbsentWhenZero(t *testing.T) {
 	}
 	if lands[1].Plant.LeftInorcFertTimes == nil || *lands[1].Plant.LeftInorcFertTimes != 3 {
 		t.Fatalf("positive left_inorc=%v", lands[1].Plant.LeftInorcFertTimes)
+	}
+}
+
+// rust f347147: 有机肥目标不按 left_inorc_fert_times 过滤——官方向量证实
+// 服务端额度=0 时省略字段、从不显式发 0，不过滤与 bot hasOwn 行为 wire 等价。
+func TestOrganicTargetsIgnoreLeftInorcQuotaField(t *testing.T) {
+	logic.SyncServerTime(1_700_000_000_000)
+	now := logic.GetServerTimeSec()
+	zero := int64(0)
+	lands := []logic.LandInfo{
+		{ // 额度字段带 0（真实报文不会出现）也要当可施目标
+			ID: 1, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID: 1, LeftInorcFertTimes: &zero,
+				Phases: []logic.PlantPhaseInfo{
+					{Phase: logic.PhaseBlooming, BeginTime: now - 10},
+				},
+			},
+		},
+		{ // 成熟地不排除（rust/bot 只排除枯死）
+			ID: 2, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID: 2,
+				Phases: []logic.PlantPhaseInfo{
+					{Phase: logic.PhaseMature, BeginTime: now - 1},
+				},
+			},
+		},
+		{ // 枯死地不可施
+			ID: 3, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID: 3,
+				Phases: []logic.PlantPhaseInfo{
+					{Phase: logic.PhaseDead, BeginTime: now - 1},
+				},
+			},
+		},
+	}
+	got := logic.GetOrganicFertilizerTargetsFromLands(lands)
+	if len(got) != 2 || got[0] != 1 || got[1] != 2 {
+		t.Fatalf("organic targets=%v want [1 2]", got)
+	}
+}
+
+// rust f347147: 普通肥目标 = 未成熟 且 本季任一阶段 ferts_used 不含 1011。
+func TestNormalFertilizerTargetsUseFertsUsed(t *testing.T) {
+	logic.SyncServerTime(1_700_000_000_000)
+	now := logic.GetServerTimeSec()
+	lands := []logic.LandInfo{
+		{ // 已施过普通肥
+			ID: 1, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID: 1,
+				Phases: []logic.PlantPhaseInfo{
+					{Phase: logic.PhaseBlooming, BeginTime: now - 10, FertsUsed: map[int64]int64{logic.NormalContainerID: 1}},
+				},
+			},
+		},
+		{ // 未施过
+			ID: 2, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID: 2,
+				Phases: []logic.PlantPhaseInfo{
+					{Phase: logic.PhaseBlooming, BeginTime: now - 10},
+				},
+			},
+		},
+		{ // 已成熟
+			ID: 3, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID: 3,
+				Phases: []logic.PlantPhaseInfo{
+					{Phase: logic.PhaseMature, BeginTime: now - 1},
+				},
+			},
+		},
+	}
+	got := logic.GetNormalFertilizerTargetsFromLands(lands)
+	if len(got) != 1 || got[0] != 2 {
+		t.Fatalf("normal targets=%v want [2]", got)
+	}
+}
+
+// rust 4fe322f: 新账号默认对齐账号 1。
+func TestDefaultAccountConfigAlignedWithRust(t *testing.T) {
+	cfg := logic.DefaultAccountConfig()
+	if cfg.PlantingStrategy != logic.StrategyBagPriority {
+		t.Fatalf("planting strategy=%s want bag_priority", cfg.PlantingStrategy)
+	}
+	if cfg.Intervals.StealMin != 60 || cfg.Intervals.StealMax != 90 {
+		t.Fatalf("steal interval=%d-%d want 60-90", cfg.Intervals.StealMin, cfg.Intervals.StealMax)
+	}
+	if !cfg.FriendQuietHours.Enabled || cfg.FriendQuietHours.End != "08:30" {
+		t.Fatalf("quiet hours=%+v want enabled 01:00-08:30", cfg.FriendQuietHours)
+	}
+	wantPriority := []int64{29003, 20129, 21380, 20108, 26032}
+	if len(cfg.BagSeedPriority) != len(wantPriority) {
+		t.Fatalf("bag seed priority=%v want %v", cfg.BagSeedPriority, wantPriority)
+	}
+	for i, id := range wantPriority {
+		if cfg.BagSeedPriority[i] != id {
+			t.Fatalf("bag seed priority=%v want %v", cfg.BagSeedPriority, wantPriority)
+		}
+	}
+	if cfg.BagSeedFallbackStrategy != logic.StrategyPreferred {
+		t.Fatalf("bag fallback=%s want preferred", cfg.BagSeedFallbackStrategy)
+	}
+	if cfg.Automation.FertilizerSmartSeconds != 360 {
+		t.Fatalf("smart seconds=%d want 360", cfg.Automation.FertilizerSmartSeconds)
+	}
+}
+
+// rust ee8ac0e: 分析页排除白萝卜种子 29999。
+func TestPlantRankingsExcludeRadishSeed(t *testing.T) {
+	rankings := logic.GetPlantRankings("exp")
+	for _, row := range rankings {
+		if row.SeedID == 29999 {
+			t.Fatalf("rankings should exclude radish seed 29999")
+		}
 	}
 }

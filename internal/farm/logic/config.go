@@ -60,34 +60,34 @@ var FertilizerLandTypeLabels = map[string]string{
 
 // AutomationConfig mirrors types/config.ts AutomationConfig.
 type AutomationConfig struct {
-	Farm                                 bool     `json:"farm"`
-	FarmPush                             bool     `json:"farm_push"`
-	LandUpgrade                          bool     `json:"land_upgrade"`
-	Friend                               bool     `json:"friend"`
-	FriendAutoAccept                     bool     `json:"friend_auto_accept"`
-	FriendHelpExpLimit                   bool     `json:"friend_help_exp_limit"`
-	FriendSteal                          bool     `json:"friend_steal"`
-	FriendHelp                           bool     `json:"friend_help"`
-	FriendBad                            bool     `json:"friend_bad"`
-	FriendHelpProtectDogIgnoreExpLimit   bool     `json:"friend_help_protect_dog_ignore_exp_limit"`
-	Task                                 bool     `json:"task"`
-	FertilizerGift                       bool     `json:"fertilizer_gift"`
-	FertilizerBuyOrganic                 bool     `json:"fertilizer_buy_organic"`
-	FertilizerBuyNormal                  bool     `json:"fertilizer_buy_normal"`
-	MysteryShopAutoBuy                   bool     `json:"mystery_shop_auto_buy"`
-	MysteryShopAllowGold                 bool     `json:"mystery_shop_allow_gold"`
-	MysteryShopAllowCoupon               bool     `json:"mystery_shop_allow_coupon"`
-	MysteryShopAllowGoldBean             bool     `json:"mystery_shop_allow_gold_bean"`
-	MysteryShopAllowDiamond              bool     `json:"mystery_shop_allow_diamond"`
-	MysteryShopArrivalNotify             bool     `json:"mystery_shop_arrival_notify"`
-	MysteryShopPurchaseNotify            bool     `json:"mystery_shop_purchase_notify"`
-	Sell                                 bool     `json:"sell"`
-	Fertilizer                           string   `json:"fertilizer"`
-	FertilizerMultiSeason                bool     `json:"fertilizer_multi_season"`
-	FertilizerLandTypes                  []string `json:"fertilizer_land_types"`
-	FertilizerSmartSeconds               int      `json:"fertilizer_smart_seconds"`
-	SkipOwnWeedBug                       bool     `json:"skip_own_weed_bug"`
-	ShowManualFertilizer                 bool     `json:"show_manual_fertilizer"`
+	Farm                               bool     `json:"farm"`
+	FarmPush                           bool     `json:"farm_push"`
+	LandUpgrade                        bool     `json:"land_upgrade"`
+	Friend                             bool     `json:"friend"`
+	FriendAutoAccept                   bool     `json:"friend_auto_accept"`
+	FriendHelpExpLimit                 bool     `json:"friend_help_exp_limit"`
+	FriendSteal                        bool     `json:"friend_steal"`
+	FriendHelp                         bool     `json:"friend_help"`
+	FriendBad                          bool     `json:"friend_bad"`
+	FriendHelpProtectDogIgnoreExpLimit bool     `json:"friend_help_protect_dog_ignore_exp_limit"`
+	Task                               bool     `json:"task"`
+	FertilizerGift                     bool     `json:"fertilizer_gift"`
+	FertilizerBuyOrganic               bool     `json:"fertilizer_buy_organic"`
+	FertilizerBuyNormal                bool     `json:"fertilizer_buy_normal"`
+	MysteryShopAutoBuy                 bool     `json:"mystery_shop_auto_buy"`
+	MysteryShopAllowGold               bool     `json:"mystery_shop_allow_gold"`
+	MysteryShopAllowCoupon             bool     `json:"mystery_shop_allow_coupon"`
+	MysteryShopAllowGoldBean           bool     `json:"mystery_shop_allow_gold_bean"`
+	MysteryShopAllowDiamond            bool     `json:"mystery_shop_allow_diamond"`
+	MysteryShopArrivalNotify           bool     `json:"mystery_shop_arrival_notify"`
+	MysteryShopPurchaseNotify          bool     `json:"mystery_shop_purchase_notify"`
+	Sell                               bool     `json:"sell"`
+	Fertilizer                         string   `json:"fertilizer"`
+	FertilizerMultiSeason              bool     `json:"fertilizer_multi_season"`
+	FertilizerLandTypes                []string `json:"fertilizer_land_types"`
+	FertilizerSmartSeconds             int      `json:"fertilizer_smart_seconds"`
+	SkipOwnWeedBug                     bool     `json:"skip_own_weed_bug"`
+	ShowManualFertilizer               bool     `json:"show_manual_fertilizer"`
 	// Legacy keys from older UI forks; ignored by settings and daily routines (bot always-on).
 	FarmManage     bool `json:"farm_manage,omitempty"`
 	FarmWater      bool `json:"farm_water,omitempty"`
@@ -124,32 +124,32 @@ type QuietHoursConfig struct {
 
 // AccountConfig mirrors types/config.ts AccountConfig.
 type AccountConfig struct {
-	Automation                          AutomationConfig   `json:"automation"`
-	PlantingStrategy                    string             `json:"plantingStrategy"`
-	PreferredSeedID                     int64              `json:"preferredSeedId"`
-	Intervals                           IntervalConfig     `json:"intervals"`
-	FriendQuietHours                    QuietHoursConfig   `json:"friendQuietHours"`
-	KnownFriendGids                     []int64            `json:"knownFriendGids"`
-	KnownFriendGidSyncCooldownSec       int                `json:"knownFriendGidSyncCooldownSec"`
-	FriendsListCacheTtlSec              int                `json:"friendsListCacheTtlSec"`
-	FriendBlacklist                     []int64            `json:"friendBlacklist"`
-	PlantBlacklist                      []int64            `json:"plantBlacklist"`
-	StealDelaySeconds                   int                `json:"stealDelaySeconds"`
-	PlantOrderRandom                    bool               `json:"plantOrderRandom"`
-	PlantDelaySeconds                   int                `json:"plantDelaySeconds"`
-	FertilizerBuyOrganicCount           int                `json:"fertilizerBuyOrganicCount"`
-	FertilizerBuyOrganicThresholdHours  int                `json:"fertilizerBuyOrganicThresholdHours"`
-	FertilizerBuyNormalCount            int                `json:"fertilizerBuyNormalCount"`
-	FertilizerBuyNormalThresholdHours   int                `json:"fertilizerBuyNormalThresholdHours"`
-	FertilizerBuyCheckIntervalMinutes   int                `json:"fertilizerBuyCheckIntervalMinutes"`
-	BagSeedPriority                     []int64            `json:"bagSeedPriority"`
-	BagSeedLandTypes                    map[string][]string `json:"bagSeedLandTypes"`
-	BagSeedFallbackStrategy             string             `json:"bagSeedFallbackStrategy"`
-	AutoAcceptFriendMinLevel            int                `json:"autoAcceptFriendMinLevel"`
-	AutoAcceptRequireOwnLevel           bool               `json:"autoAcceptRequireOwnLevel"`
-	AutoAcceptHarvestStealEnabled       bool               `json:"autoAcceptHarvestStealEnabled"`
-	AutoAcceptHarvestStealHarvest       int                `json:"autoAcceptHarvestStealHarvest"`
-	AutoAcceptHarvestStealSteal         int                `json:"autoAcceptHarvestStealSteal"`
+	Automation                         AutomationConfig    `json:"automation"`
+	PlantingStrategy                   string              `json:"plantingStrategy"`
+	PreferredSeedID                    int64               `json:"preferredSeedId"`
+	Intervals                          IntervalConfig      `json:"intervals"`
+	FriendQuietHours                   QuietHoursConfig    `json:"friendQuietHours"`
+	KnownFriendGids                    []int64             `json:"knownFriendGids"`
+	KnownFriendGidSyncCooldownSec      int                 `json:"knownFriendGidSyncCooldownSec"`
+	FriendsListCacheTtlSec             int                 `json:"friendsListCacheTtlSec"`
+	FriendBlacklist                    []int64             `json:"friendBlacklist"`
+	PlantBlacklist                     []int64             `json:"plantBlacklist"`
+	StealDelaySeconds                  int                 `json:"stealDelaySeconds"`
+	PlantOrderRandom                   bool                `json:"plantOrderRandom"`
+	PlantDelaySeconds                  int                 `json:"plantDelaySeconds"`
+	FertilizerBuyOrganicCount          int                 `json:"fertilizerBuyOrganicCount"`
+	FertilizerBuyOrganicThresholdHours int                 `json:"fertilizerBuyOrganicThresholdHours"`
+	FertilizerBuyNormalCount           int                 `json:"fertilizerBuyNormalCount"`
+	FertilizerBuyNormalThresholdHours  int                 `json:"fertilizerBuyNormalThresholdHours"`
+	FertilizerBuyCheckIntervalMinutes  int                 `json:"fertilizerBuyCheckIntervalMinutes"`
+	BagSeedPriority                    []int64             `json:"bagSeedPriority"`
+	BagSeedLandTypes                   map[string][]string `json:"bagSeedLandTypes"`
+	BagSeedFallbackStrategy            string              `json:"bagSeedFallbackStrategy"`
+	AutoAcceptFriendMinLevel           int                 `json:"autoAcceptFriendMinLevel"`
+	AutoAcceptRequireOwnLevel          bool                `json:"autoAcceptRequireOwnLevel"`
+	AutoAcceptHarvestStealEnabled      bool                `json:"autoAcceptHarvestStealEnabled"`
+	AutoAcceptHarvestStealHarvest      int                 `json:"autoAcceptHarvestStealHarvest"`
+	AutoAcceptHarvestStealSteal        int                 `json:"autoAcceptHarvestStealSteal"`
 }
 
 // DefaultAccountConfig returns a deep copy of DEFAULT_ACCOUNT_CONFIG.
@@ -181,22 +181,24 @@ func DefaultAccountConfig() AccountConfig {
 			Fertilizer:                         FertilizerSmart,
 			FertilizerMultiSeason:              true,
 			FertilizerLandTypes:                append([]string(nil), AllFertilizerLandTypes...),
-			FertilizerSmartSeconds:             300,
+			FertilizerSmartSeconds:             360,
 			SkipOwnWeedBug:                     true,
 			ShowManualFertilizer:               true,
 		},
-		PlantingStrategy: StrategyMaxExp,
+		// 新账号默认对齐本机账号 1（rust default_account_config，4fe322f）：
+		// 背包优先种植、偷菜间隔 60–90、好友安静时段 01:00–08:30、兑种回退优先。
+		PlantingStrategy: StrategyBagPriority,
 		PreferredSeedID:  0,
 		Intervals: IntervalConfig{
 			Farm: 2, FarmMin: 20, FarmMax: 25,
 			FriendMin: 20, FriendMax: 25,
 			HelpMin: 20, HelpMax: 25,
-			StealMin: 20, StealMax: 25,
+			StealMin: 60, StealMax: 90,
 		},
 		FriendQuietHours: QuietHoursConfig{
-			Enabled:      false,
+			Enabled:      true,
 			Start:        "01:00",
-			End:          "07:30",
+			End:          "08:30",
 			ContinueFarm: true,
 		},
 		KnownFriendGids:                    nil,
@@ -212,14 +214,15 @@ func DefaultAccountConfig() AccountConfig {
 		FertilizerBuyNormalCount:           1,
 		FertilizerBuyNormalThresholdHours:  10,
 		FertilizerBuyCheckIntervalMinutes:  60,
-		BagSeedPriority:                    nil,
-		BagSeedLandTypes:                   map[string][]string{},
-		BagSeedFallbackStrategy:            StrategyLevel,
-		AutoAcceptFriendMinLevel:           0,
-		AutoAcceptRequireOwnLevel:          false,
-		AutoAcceptHarvestStealEnabled:      true,
-		AutoAcceptHarvestStealHarvest:      8,
-		AutoAcceptHarvestStealSteal:        1,
+		// 默认背包种子优先顺序（对齐 rust DEFAULT_BAG_SEED_PRIORITY；仅新账号初始值）。
+		BagSeedPriority:               []int64{29003, 20129, 21380, 20108, 26032},
+		BagSeedLandTypes:              map[string][]string{},
+		BagSeedFallbackStrategy:       StrategyPreferred,
+		AutoAcceptFriendMinLevel:      0,
+		AutoAcceptRequireOwnLevel:     false,
+		AutoAcceptHarvestStealEnabled: true,
+		AutoAcceptHarvestStealHarvest: 8,
+		AutoAcceptHarvestStealSteal:   1,
 	}
 }
 
@@ -260,7 +263,8 @@ func validPlantingStrategy(s string) bool {
 // normalizeAccountConfig mirrors bot normalizeAccountConfig clamping.
 func normalizeAccountConfig(cfg *AccountConfig) {
 	if !validPlantingStrategy(cfg.PlantingStrategy) {
-		cfg.PlantingStrategy = StrategyMaxExp
+		// rust 语义：非法值回退默认（bag_priority，4fe322f 新账号默认）。
+		cfg.PlantingStrategy = StrategyBagPriority
 	}
 	if cfg.PreferredSeedID < 0 {
 		cfg.PreferredSeedID = 0
@@ -308,9 +312,9 @@ func normalizeAccountConfig(cfg *AccountConfig) {
 	cfg.FertilizerBuyNormalCount = clampInt(cfg.FertilizerBuyNormalCount, 0, 10000)
 	cfg.FertilizerBuyNormalThresholdHours = clampInt(cfg.FertilizerBuyNormalThresholdHours, 0, 990)
 	cfg.FertilizerBuyCheckIntervalMinutes = clampInt(cfg.FertilizerBuyCheckIntervalMinutes, 1, 1440)
-	// 兜种回退策略不含 bag_priority。
+	// 兜种回退策略不含 bag_priority；非法/缺省回退到默认（preferred，对齐 rust）。
 	if cfg.BagSeedFallbackStrategy == StrategyBagPriority || cfg.BagSeedFallbackStrategy == "" {
-		cfg.BagSeedFallbackStrategy = StrategyLevel
+		cfg.BagSeedFallbackStrategy = StrategyPreferred
 	}
 	// 好友申请过滤器。
 	cfg.AutoAcceptFriendMinLevel = clampInt(cfg.AutoAcceptFriendMinLevel, 0, 200)

@@ -20,11 +20,12 @@ var PhaseNames = []string{"未知", "种子", "发芽", "小叶", "大叶", "开
 
 // PlantPhaseInfo is one growth phase on a plant.
 type PlantPhaseInfo struct {
-	Phase      int   `json:"phase"`
-	BeginTime  int64 `json:"begin_time"`
-	DryTime    int64 `json:"dry_time"`
-	WeedsTime  int64 `json:"weeds_time"`
-	InsectTime int64 `json:"insect_time"`
+	Phase      int             `json:"phase"`
+	BeginTime  int64           `json:"begin_time"`
+	DryTime    int64           `json:"dry_time"`
+	WeedsTime  int64           `json:"weeds_time"`
+	InsectTime int64           `json:"insect_time"`
+	FertsUsed  map[int64]int64 `json:"ferts_used,omitempty"`
 }
 
 // PlantActivityInfo is activity-score metadata from PlantInfo.field_36.
@@ -37,20 +38,20 @@ type PlantActivityInfo struct {
 
 // PlantInfo is the plant state on a land (fields used by analysis).
 type PlantInfo struct {
-	ID                 int64              `json:"id"`
-	Name               string             `json:"name"`
-	Phases             []PlantPhaseInfo   `json:"phases"`
-	Season             int64              `json:"season"`
-	DryNum             int64              `json:"dry_num"`
-	FruitID            int64              `json:"fruit_id"`
-	FruitNum           int64              `json:"fruit_num"`
-	WeedOwners         []int64            `json:"weed_owners"`
-	InsectOwners       []int64            `json:"insect_owners"`
-	Stealers           []byte             `json:"stealers,omitempty"`
-	Stealable          bool               `json:"stealable"`
-	LeftInorcFertTimes *int64             `json:"left_inorc_fert_times,omitempty"`
-	LeftFruitNum       int64              `json:"left_fruit_num"`
-	MutantConfigIDs    []int64            `json:"mutant_config_ids,omitempty"`
+	ID                 int64            `json:"id"`
+	Name               string           `json:"name"`
+	Phases             []PlantPhaseInfo `json:"phases"`
+	Season             int64            `json:"season"`
+	DryNum             int64            `json:"dry_num"`
+	FruitID            int64            `json:"fruit_id"`
+	FruitNum           int64            `json:"fruit_num"`
+	WeedOwners         []int64          `json:"weed_owners"`
+	InsectOwners       []int64          `json:"insect_owners"`
+	Stealers           []byte           `json:"stealers,omitempty"`
+	Stealable          bool             `json:"stealable"`
+	LeftInorcFertTimes *int64           `json:"left_inorc_fert_times,omitempty"`
+	LeftFruitNum       int64            `json:"left_fruit_num"`
+	MutantConfigIDs    []int64          `json:"mutant_config_ids,omitempty"`
 	// InteractionItemIDs collects item ids from interaction_uses/interaction_targets
 	// (乌云瓶等已作用道具判定用)。
 	InteractionItemIDs []int64            `json:"interaction_item_ids,omitempty"`

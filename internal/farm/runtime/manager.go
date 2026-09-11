@@ -3,6 +3,7 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"math/rand/v2"
@@ -96,9 +97,13 @@ type Session struct {
 	farmOpMu           sync.Mutex
 	lastPushAt         time.Time
 	lastFertBuyCheckAt time.Time
-	fertilizerGiftDate string
-	dailyState         DailyState
-	dailyDateKey       string
+	// 施肥模式变更检测基线（bot last_fertilizer_mode，配置保存时比较触发立即补肥）。
+	lastFertilizerMode string
+	// 事件驱动化肥补购的当日「余额不足暂停」标记（bot buy_paused_no_gold_date_key）。
+	mallBuyPausedNoGoldDate map[int32]string
+	fertilizerGiftDate      string
+	dailyState              DailyState
+	dailyDateKey            string
 	// steal/help patrol visited GIDs (bubble+probe rotation); reset when probe pool exhausted
 	stealPatrolVisited map[int64]struct{}
 	helpPatrolVisited  map[int64]struct{}
@@ -122,7 +127,7 @@ type Session struct {
 	// QQ 访客 GID 同步冷却（bot gid-manager：默认 10min，失败重试 30s~2min）。
 	visitorGidSyncAt     time.Time
 	visitorGidSyncFailed time.Time
-// friendPetCache caches per-friend deployed dogs (bot pet-cache.ts).
+	// friendPetCache caches per-friend deployed dogs (bot pet-cache.ts).
 	petCache *friendPetCache
 	// friendChecking marks the unified friend patrol in progress (pet-sync yields to it).
 	friendChecking atomic.Bool
@@ -210,11 +215,73 @@ func (s *Session) Status() AccountStatus {
 // ApplyConfig updates account automation/strategy config.
 func (s *Session) ApplyConfig(cfg logic.AccountConfig) {
 	s.mu.Lock()
+	prevMode := s.lastFertilizerMode
+	if prevMode == "" {
+		prevMode = s.cfg.AccountConfig.Automation.Fertilizer
+	}
 	s.cfg.AccountConfig = cfg
+	s.lastFertilizerMode = cfg.Automation.Fertilizer
+	running := s.status == StatusRunning
+	runCtx := s.runCtx
 	s.mu.Unlock()
 	if s.hub != nil {
 		s.hub.PublishJSON("account_config", parseAccountID(s.id), cfg)
 	}
+	// 对齐 bot applyRuntimeConfig：施肥模式变更且目标为 both/organic/smart 时，
+	// 600ms 后立即有机补肥（skip_normal）并做一次化肥阈值补购。
+	if running && prevMode != cfg.Automation.Fertilizer &&
+		(cfg.Automation.Fertilizer == logic.FertilizerBoth ||
+			cfg.Automation.Fertilizer == logic.FertilizerOrganic ||
+			cfg.Automation.Fertilizer == logic.FertilizerSmart) {
+		go func() {
+			var done <-chan struct{}
+			if runCtx != nil {
+				done = runCtx.Done()
+			}
+			timer := time.NewTimer(600 * time.Millisecond)
+			defer timer.Stop()
+			select {
+			case <-timer.C:
+			case <-done:
+				return
+			}
+			s.immediateFertilizerAfterModeChange(cfg)
+		}()
+	}
+}
+
+// immediateFertilizerAfterModeChange runs one skip-normal fertilizer round
+// (bot "fertilizer_immediate_after_save"), then checks fertilizer buy once.
+func (s *Session) immediateFertilizerAfterModeChange(cfg logic.AccountConfig) {
+	s.mu.Lock()
+	api := s.gameAPI
+	s.mu.Unlock()
+	if api == nil || s.Status() != StatusRunning {
+		return
+	}
+	s.farmOpMu.Lock()
+	defer s.farmOpMu.Unlock()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+	var actions []string
+	var errs []error
+	runFertilizerByConfig(ctx, api, cfg, nil, true, false, &actions, &errs, farmOperationOptions{})
+	s.mu.Lock()
+	s.lastFertBuyCheckAt = time.Time{} // 模式变更后允许立即补购检测
+	s.mu.Unlock()
+	if len(actions) > 0 && s.hub != nil {
+		s.hub.PublishJSON("farm_operation", parseAccountID(s.id), map[string]any{
+			"op":      "fertilize_immediate",
+			"hadWork": true,
+			"actions": actions,
+			"error":   errorText(errors.Join(errs...)),
+			"tag":     "施肥",
+			"event":   "施肥模式变更补肥",
+			"message": strings.Join(actions, "/"),
+			"isWarn":  len(errs) > 0,
+		})
+	}
+	s.maybeEventFertilizerBuy(ctx)
 }
 
 // Start dials the gateway, performs Login, then runs the farm loop.
@@ -349,7 +416,7 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 		ver = vars.Config.GetString("farm.clientVersion")
 	}
 	if ver == "" {
-		ver = "1.14.0.1_20260909"
+		ver = "1.14.0.3_20260909"
 	}
 	sep := "?"
 	if strings.Contains(url, "?") {
@@ -436,6 +503,8 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 	go s.runFriendRefreshBootstrap(friendCtx)
 	go s.dailyLoop(protocol.WithRequestClass(ctx, protocol.ClassFarm))
 	go s.runDailyBootstrap(ctx)
+	// 登录成功后立即做一次化肥阈值检测（bot：start_farm_ticks 后 check_fertilizer_buy_once）。
+	go s.checkFertilizerBuyOnce(protocol.WithRequestClass(ctx, protocol.ClassFarm))
 
 	farmCtx := protocol.WithRequestClass(ctx, protocol.ClassFarm)
 	for {
@@ -455,7 +524,7 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 
 func (s *Session) doLogin(ctx context.Context, client *protocol.Client, ver string, dev deviceprofile.Profile) error {
 	if ver == "" {
-		ver = "1.14.0.1_20260909"
+		ver = "1.14.0.3_20260909"
 	}
 	// Exact LoginRequest shape from network.ts sendLogin — sparse DeviceInfo only.
 	sysSoft := dev.SysSoftware
@@ -507,6 +576,7 @@ func (s *Session) doLogin(ctx context.Context, client *protocol.Client, ver stri
 	s.sessionGoldGained = 0
 	s.nick = reply.Basic.Name
 	s.avatar = reply.Basic.AvatarUrl
+	s.lastFertilizerMode = s.cfg.AccountConfig.Automation.Fertilizer
 	rt := s.tsdk
 	if s.gameAPI != nil {
 		s.gameAPI.GID = reply.Basic.Gid
@@ -572,10 +642,11 @@ func (s *Session) postLoginHooks(ctx context.Context) {
 // terminate only after ≥3 misses AND >30s without any inbound frame.
 func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 	const (
-		heartbeatInterval   = 25 * time.Second
-		heartbeatRPCTimeout = 20 * time.Second
-		maxHeartbeatMiss    = 3
-		heartbeatStaleAfter = 30 * time.Second
+		heartbeatInterval      = 25 * time.Second
+		heartbeatRPCTimeout    = 20 * time.Second
+		maxHeartbeatMiss       = 3
+		heartbeatStaleAfter    = 30 * time.Second
+		pendingDeferMaxSilence = 120 * time.Second
 	)
 	ticker := time.NewTicker(heartbeatInterval)
 	defer ticker.Stop()
@@ -596,7 +667,7 @@ func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 				continue
 			}
 			if ver == "" {
-				ver = "1.14.0.1_20260909"
+				ver = "1.14.0.3_20260909"
 			}
 
 			heartbeatBody, marshalErr := proto.Marshal(&userpb.HeartbeatRequest{Gid: gid, ClientVersion: ver})
@@ -607,25 +678,28 @@ func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 			raw, _, err := client.Send(hbCtx, "gamepb.userpb.UserService", "Heartbeat", heartbeatBody)
 			cancel()
 			if err != nil {
-				// bot: 发送/超时失败只累计 miss；同时必须「连续 miss≥3 且入站静默>30s」才终止。
+				// bot: 发送/超时失败只累计 miss；判死需「连续 miss≥3 且入站静默>30s」。
 				missCount++
 				client.NoteHeartbeatMiss()
 				inboundSilence := time.Duration(client.InboundSilenceMs()) * time.Millisecond
-				slog.Warn("心跳未响应",
-					"account", s.id,
-					"miss", missCount,
-					"max", maxHeartbeatMiss,
-					"inbound_sec", int(inboundSilence.Seconds()),
-					"pending", client.PendingCount(),
-					"queued", client.QueuedCount(),
-				)
-				if missCount >= maxHeartbeatMiss && inboundSilence > heartbeatStaleAfter {
-					slog.Warn("连续心跳超时且连接无入站数据，账号将停止运行", "account", s.id)
-					s.failTransport(fmt.Errorf("protocol: connection closed: %ds 无入站数据，连续 %d 次心跳失败",
-						int(inboundSilence.Seconds()), missCount))
-					return
+				if missCount < maxHeartbeatMiss || inboundSilence <= heartbeatStaleAfter {
+					// 静默跳过门未满足：不打告警（bot 心跳静默跳过门告警）。
+					continue
 				}
-				continue
+				// 在途请求保护窗（bot PENDING_DEFER_MAX_SILENCE_MS=120s）：巨型回包
+				// 下载期间没有完整入站帧，静默虚高但连接是活的，不判死。
+				if pending := client.PendingCount(); pending > 0 && inboundSilence <= pendingDeferMaxSilence {
+					slog.Debug("心跳超时但存在在途请求，判死推迟",
+						"account", s.id,
+						"pending", pending,
+						"inbound_sec", int(inboundSilence.Seconds()),
+					)
+					continue
+				}
+				slog.Warn("连续心跳超时且连接无入站数据，账号将停止运行", "account", s.id)
+				s.failTransport(fmt.Errorf("protocol: connection closed: %ds 无入站数据，连续 %d 次心跳失败",
+					int(inboundSilence.Seconds()), missCount))
+				return
 			}
 
 			missCount = 0
@@ -2037,6 +2111,8 @@ func (s *Session) farmTick(ctx context.Context) {
 	if err != nil {
 		slog.Warn("farm tick failed", "account", s.id, "err", err)
 	}
+	// 施肥轮结束即检测化肥余量（事件驱动补充，bot maybe_event_fertilizer_buy）。
+	s.maybeEventFertilizerBuy(ctx)
 	if s.hub != nil && (hadWork || err != nil) {
 		msg := strings.Join(actions, "/")
 		if msg == "" {
@@ -2197,24 +2273,15 @@ func (s *Session) nextFriendDelay(cfg logic.AccountConfig, kind string) time.Dur
 	return time.Duration(min+rand.IntN(max-min+1)) * time.Second
 }
 
+// runBagMaintenance opens fertilizer gift packs every farm tick while enabled.
+// 化肥购买已改为事件驱动（bot 2026-09-11：施肥轮结束即检测，去周期定时器），
+// 阈值补购见 fertilizer_buy.go checkFertilizerBuyOnce。
 func (s *Session) runBagMaintenance(ctx context.Context, cfg logic.AccountConfig) {
-	now := time.Now()
-	interval := time.Duration(cfg.FertilizerBuyCheckIntervalMinutes) * time.Minute
-	if interval <= 0 {
-		interval = time.Hour
-	}
-
 	s.mu.Lock()
 	api := s.gameAPI
-	shouldBuy := (cfg.Automation.FertilizerBuyOrganic || cfg.Automation.FertilizerBuyNormal) &&
-		(now.Sub(s.lastFertBuyCheckAt) >= interval)
-	// Bot opens fertilizer gifts every farm tick while enabled (no day-done gate).
 	shouldOpenGifts := cfg.Automation.FertilizerGift
-	if shouldBuy {
-		s.lastFertBuyCheckAt = now
-	}
 	s.mu.Unlock()
-	if api == nil || (!shouldBuy && !shouldOpenGifts) {
+	if api == nil || !shouldOpenGifts {
 		return
 	}
 
@@ -2224,30 +2291,10 @@ func (s *Session) runBagMaintenance(ctx context.Context, cfg logic.AccountConfig
 		return
 	}
 	items := game.GetBagItems(bag)
-	if shouldOpenGifts {
-		if opened, err := openFertilizerGiftPacks(ctx, api, items); err != nil {
-			slog.Warn("farm fertilizer gift opening failed", "account", s.id, "err", err)
-		} else if opened > 0 {
-			slog.Info("farm fertilizer gifts opened", "account", s.id, "count", opened)
-		}
-	}
-	if !shouldBuy {
-		return
-	}
-	normalHours, organicHours := fertilizerContainerHours(items)
-	if cfg.Automation.FertilizerBuyOrganic &&
-		cfg.FertilizerBuyOrganicCount > 0 &&
-		organicHours < float64(cfg.FertilizerBuyOrganicThresholdHours) {
-		if _, err := api.Purchase(ctx, game.OrganicMallGoodsID, int32(cfg.FertilizerBuyOrganicCount)); err != nil {
-			slog.Warn("farm organic fertilizer purchase failed", "account", s.id, "err", err)
-		}
-	}
-	if cfg.Automation.FertilizerBuyNormal &&
-		cfg.FertilizerBuyNormalCount > 0 &&
-		normalHours < float64(cfg.FertilizerBuyNormalThresholdHours) {
-		if _, err := api.Purchase(ctx, game.InorganicMallGoodsID, int32(cfg.FertilizerBuyNormalCount)); err != nil {
-			slog.Warn("farm normal fertilizer purchase failed", "account", s.id, "err", err)
-		}
+	if opened, err := openFertilizerGiftPacks(ctx, api, items); err != nil {
+		slog.Warn("farm fertilizer gift opening failed", "account", s.id, "err", err)
+	} else if opened > 0 {
+		slog.Info("farm fertilizer gifts opened", "account", s.id, "count", opened)
 	}
 }
 

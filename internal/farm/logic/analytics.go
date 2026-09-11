@@ -32,6 +32,10 @@ type PlantRanking struct {
 	Image                         string  `json:"image"`
 }
 
+// excludedRadishSeedID is the radish seed excluded from the analytics page
+// (bot EXCLUDED_RADISH_SEED_ID，分析页参考数据不含白萝卜).
+const excludedRadishSeedID int64 = 29999
+
 // GetPlantRankings returns sorted seed efficiency rankings from loaded game config.
 // sortBy: exp, fert_exp (alias fert), profit, fert_profit, gold, level.
 func GetPlantRankings(sortBy string) []PlantRanking {
@@ -43,7 +47,8 @@ func GetPlantRankings(sortBy string) []PlantRanking {
 	plants := GlobalGameConfig.allPlantsForRanking()
 	results := make([]PlantRanking, 0, len(plants))
 	for _, plant := range plants {
-		if plant.SeedID == nil || *plant.SeedID <= 0 || plant.GrowPhases == "" {
+		// 筛选普通作物：必须有 seed_id 和 grow_phases；排除白萝卜种子 29999。
+		if plant.SeedID == nil || *plant.SeedID <= 0 || *plant.SeedID == excludedRadishSeedID || plant.GrowPhases == "" {
 			continue
 		}
 		baseGrowTime := growTimeFromPhases(plant.GrowPhases)

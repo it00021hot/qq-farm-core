@@ -70,12 +70,20 @@ func LandsFromPlantPB(lands []*plantpb.LandInfo) []LandInfo {
 						pi.MutantConfigIDs = append(pi.MutantConfigIDs, mu.MutantConfigId)
 					}
 				}
+				var fertsUsed map[int64]int64
+				if len(ph.FertsUsed) > 0 {
+					fertsUsed = make(map[int64]int64, len(ph.FertsUsed))
+					for k, v := range ph.FertsUsed {
+						fertsUsed[k] = v
+					}
+				}
 				pi.Phases = append(pi.Phases, PlantPhaseInfo{
 					Phase:      int(ph.Phase),
 					BeginTime:  ph.BeginTime,
 					DryTime:    ph.DryTime,
 					WeedsTime:  ph.WeedsTime,
 					InsectTime: ph.InsectTime,
+					FertsUsed:  fertsUsed,
 				})
 			}
 			pi.MutantConfigIDs = uniquePositiveIDs(pi.MutantConfigIDs)
