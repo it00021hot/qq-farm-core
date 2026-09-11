@@ -95,6 +95,8 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Post("/activity/weather/operate", activity.Activity.WeatherOperate).Name("雨落成诗操作")
 		router.Get("/activity/pet-diary", activity.Activity.PetDiary).Name("萌宠日记快照")
 		router.Post("/activity/pet-diary/operate", activity.Activity.PetDiaryOperate).Name("萌宠日记操作")
+		router.Get("/activity/pet-diary/records", activity.Activity.PetDiaryRecords).Name("萌宠日记记录")
+		router.Get("/activity/pet-diary/friend", activity.Activity.PetDiaryFriend).Name("萌宠日记好友宝藏")
 		router.Post("/activity/gift/claim", activity.Activity.ClaimGift).Name("领取礼包")
 		router.Get("/activity/qixi", activity.Activity.Qixi).Name("鹊桥寄情")
 		router.Post("/activity/qixi/bridge/claim", activity.Activity.ClaimQixiBridge).Name("领取鹊桥奖励")

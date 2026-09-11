@@ -246,6 +246,18 @@ type ActivityIngredient struct {
 	Count int64  `json:"count"`
 }
 
+// ActivityPetDiaryRecordsReq 萌宠日记记录查询（interact=互动记录 / plunder=被夺记录）
+type ActivityPetDiaryRecordsReq struct {
+	AccountID uint64 `json:"accountId" query:"accountId" validate:"required"`
+	Kind      string `json:"kind" query:"kind" validate:"required,oneof=interact plunder"`
+}
+
+// ActivityPetDiaryFriendReq 萌宠日记好友宝藏查询（op=47 单好友查询）
+type ActivityPetDiaryFriendReq struct {
+	AccountID uint64 `json:"accountId" query:"accountId" validate:"required"`
+	GID       string `json:"gid" query:"gid" validate:"required"`
+}
+
 // UnmarshalJSON accepts uid as either a JSON string or a JSON number and
 // normalizes it to a decimal string. Game UIDs are snowflake int64s too large
 // for JS number precision, so the web sends them as strings while older

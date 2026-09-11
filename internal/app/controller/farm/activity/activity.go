@@ -250,6 +250,32 @@ func (c *Controller) PetDiary(ctx fiber.Ctx) error {
 	return response.SuccessJSON(ctx, "", info)
 }
 
+// PetDiaryRecords 查询萌宠日记互动/被夺记录。
+func (c *Controller) PetDiaryRecords(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityPetDiaryRecordsReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.PetDiaryRecords(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+// PetDiaryFriend 查询单个好友的宝藏与守护 charm。
+func (c *Controller) PetDiaryFriend(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityPetDiaryFriendReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.PetDiaryFriend(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
 func (c *Controller) PetDiaryOperate(ctx fiber.Ctx) error {
 	var req farmtypes.ActivityActionReq
 	if err := c.Validate(ctx, &req); err != nil {

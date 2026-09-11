@@ -149,6 +149,32 @@ func (s *Service) PetDiaryOperate(ctx fiber.Ctx, req farm.ActivityActionReq) (ma
 	return activitycenter.OperatePetDiary(callCtx, api, req.Action, opts)
 }
 
+// PetDiaryRecords fetches interact (31) or plundered (44) logs.
+func (s *Service) PetDiaryRecords(ctx fiber.Ctx, req farm.ActivityPetDiaryRecordsReq) ([]map[string]any, error) {
+	_, api, err := s.liveSession(req.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	callCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	return activitycenter.GetPetDiaryRecords(callCtx, api, req.Kind)
+}
+
+// PetDiaryFriend queries one friend's treasures + defender charms (op 47).
+func (s *Service) PetDiaryFriend(ctx fiber.Ctx, req farm.ActivityPetDiaryFriendReq) (map[string]any, error) {
+	_, api, err := s.liveSession(req.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	gid, err := strconv.ParseInt(req.GID, 10, 64)
+	if err != nil || gid <= 0 {
+		return nil, errors.New("好友 GID 必须是正十进制整数")
+	}
+	callCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	return activitycenter.GetPetDiaryFriendInfo(callCtx, api, gid)
+}
+
 // liveSession resolves the account's running session + API.
 func (s *Service) liveSession(accountID uint64) (*farmruntime.Session, *game.API, error) {
 	var account model.FarmAccount
