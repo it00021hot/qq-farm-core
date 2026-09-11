@@ -21,77 +21,86 @@ func loadGameConfig(t *testing.T) {
 	}
 }
 
-func TestParseActivitySellCond(t *testing.T) {
-	greenPlum := "活动结束后:2026080102"
-	if cond := logic.ParseActivitySellCond(&greenPlum); cond == nil || cond.ActivityID != "2026080102" {
-		t.Fatalf("parse activity sell cond failed: %+v", cond)
-	}
-	empty := ""
-	if cond := logic.ParseActivitySellCond(&empty); cond != nil {
-		t.Fatalf("empty should be nil, got %+v", cond)
-	}
-	nilCond := (*string)(nil)
-	if cond := logic.ParseActivitySellCond(nilCond); cond != nil {
-		t.Fatalf("nil should be nil, got %+v", cond)
-	}
-	unrelated := "金币:100"
-	if cond := logic.ParseActivitySellCond(&unrelated); cond != nil {
-		t.Fatalf("unrelated should be nil, got %+v", cond)
-	}
-}
-
-func TestIsActivityRestrictedForSaleGreenPlum(t *testing.T) {
-	loadGameConfig(t)
-
-	// 青梅 fruit (id 41221) has sell_cond 活动结束后:2026080102 (a stale id;
-	// the running instance uses a fresh id like 2026081202).
-	const greenPlumFruit = 41221
+// TestSellConditionTypes mirrors bot sell-conditions.ts semantics:
+// 道具过期后 / 活动结束后 / 活动结束前 / 活动区间外.
+func TestSellConditionTypes(t *testing.T) {
 	now := time.Now().Unix()
 
-	// Unknown activity must be treated as active (conservative skip).
-	logic.ResetActivityRegistry()
-	if !logic.IsActivityRestrictedForSale(greenPlumFruit, now) {
-		t.Fatal("expected green plum fruit restricted when activity unknown")
+	// 道具过期后 requires a positive expire time already reached.
+	if logic.IsSellConditionSatisfied("道具过期后", logic.SellConditionContext{NowSec: now, ExpireTime: 0, ActivityWindowsLoaded: true}) {
+		t.Fatal("道具过期后 without expire time should not be satisfied")
+	}
+	if !logic.IsSellConditionSatisfied("道具过期后", logic.SellConditionContext{NowSec: now, ExpireTime: now - 60, ActivityWindowsLoaded: true}) {
+		t.Fatal("道具过期后 after expiry should be satisfied")
 	}
 
-	// Referenced activity ended -> sale allowed.
-	logic.ResetActivityRegistry()
-	logic.RegisterActivity(logic.ActivityRegistryItem{
-		ActivityID: "2026080102",
-		Type:       12,
-		EndTime:    now - 3600,
-	})
-	if logic.IsActivityRestrictedForSale(greenPlumFruit, now) {
-		t.Fatal("expected green plum fruit sellable after activity end")
+	// Activity clauses need loaded windows.
+	if logic.IsSellConditionSatisfied("活动结束后:2026081202", logic.SellConditionContext{NowSec: now}) {
+		t.Fatal("activity condition without loaded windows should not be satisfied")
 	}
 
-	// Referenced activity ended, but a same-type instance is ongoing -> still
-	// restricted (config keeps a stale id for recurring activities).
-	logic.ResetActivityRegistry()
-	logic.RegisterActivity(logic.ActivityRegistryItem{
-		ActivityID: "2026080102",
-		Type:       12,
-		EndTime:    now - 3600,
-	})
-	logic.RegisterActivity(logic.ActivityRegistryItem{
-		ActivityID: "2026081202",
-		Type:       12,
-		EndTime:    now + 86400,
-	})
-	if !logic.IsActivityRestrictedForSale(greenPlumFruit, now) {
-		t.Fatal("expected green plum fruit restricted while a same-type activity runs")
+	logic.ResetActivityWindows()
+	logic.SetActivityWindows([]logic.ActivityWindow{{ID: "2026081202", Name: "青梅", BeginTime: now - 3600, EndTime: now + 86400}})
+	loaded := logic.SellConditionContext{NowSec: now, ActivityWindowsLoaded: true}
+
+	if logic.IsSellConditionSatisfied("活动结束后:2026081202", loaded) {
+		t.Fatal("活动结束后 should not be satisfied while activity runs")
+	}
+	if !logic.IsSellConditionSatisfied("活动结束前:2026081202", loaded) {
+		t.Fatal("活动结束前 should be satisfied while activity runs")
+	}
+	if logic.IsSellConditionSatisfied("活动区间外:2026081202", loaded) {
+		t.Fatal("活动区间外 should not be satisfied inside the window")
 	}
 
-	// Activity ongoing -> sale blocked.
-	logic.ResetActivityRegistry()
-	logic.RegisterActivity(logic.ActivityRegistryItem{
-		ActivityID: "2026080102",
-		Type:       12,
-		EndTime:    now + 86400,
-	})
-	if !logic.IsActivityRestrictedForSale(greenPlumFruit, now) {
-		t.Fatal("expected green plum fruit restricted during activity")
+	// Unknown (stale) activity id: missing window counts as ended (bot semantics).
+	if !logic.IsSellConditionSatisfied("活动结束后:2026080102", loaded) {
+		t.Fatal("活动结束后 with stale id should be satisfied (missing window = ended)")
 	}
+	if !logic.IsSellConditionSatisfied("活动区间外:2026080102", loaded) {
+		t.Fatal("活动区间外 with stale id should be satisfied (missing window = inactive)")
+	}
+
+	// After the window ends.
+	logic.ResetActivityWindows()
+	logic.SetActivityWindows([]logic.ActivityWindow{{ID: "2026081202", Name: "青梅", BeginTime: now - 86400, EndTime: now - 3600}})
+	if !logic.IsSellConditionSatisfied("活动结束后:2026081202", loaded) {
+		t.Fatal("活动结束后 should be satisfied after end")
+	}
+	if !logic.IsSellConditionSatisfied("活动区间外:2026081202", loaded) {
+		t.Fatal("活动区间外 should be satisfied after end")
+	}
+	if logic.IsSellConditionSatisfied("活动结束前:2026081202", loaded) {
+		t.Fatal("活动结束前 should not be satisfied after end")
+	}
+	logic.ResetActivityWindows()
+}
+
+// TestGreenPlumSellEligibility uses the real gameConfig: 青梅 (41221) carries
+// cond "活动区间外:2026081202" so it is only sellable outside the activity window.
+func TestGreenPlumSellEligibility(t *testing.T) {
+	loadGameConfig(t)
+	now := time.Now().Unix()
+
+	logic.ResetActivityWindows()
+	// Windows not loaded → condition unsatisfied → not sellable via cond_sells.
+	if logic.GetEffectiveSellInfo(logic.GetItemByID(41221)).Sellable {
+		t.Fatal("green plum should not be sellable when windows are not loaded")
+	}
+
+	// Same activity running → 区间外 false → not sellable.
+	logic.SetActivityWindows([]logic.ActivityWindow{{ID: "2026081202", Name: "青梅", BeginTime: now - 60, EndTime: now + 86400}})
+	if logic.GetEffectiveSellInfoAt(logic.GetItemByID(41221), logic.SellConditionContext{NowSec: now, ActivityWindowsLoaded: true}, 0).Sellable {
+		t.Fatal("green plum should be restricted while the activity runs")
+	}
+
+	// Activity ended → 区间外 true → sellable at cond price.
+	logic.ResetActivityWindows()
+	logic.SetActivityWindows([]logic.ActivityWindow{{ID: "2026081202", Name: "青梅", BeginTime: now - 86400, EndTime: now - 60}})
+	if !logic.GetEffectiveSellInfoAt(logic.GetItemByID(41221), logic.SellConditionContext{NowSec: now, ActivityWindowsLoaded: true}, 0).Sellable {
+		t.Fatal("green plum should be sellable after the activity ends")
+	}
+	logic.ResetActivityWindows()
 }
 
 func TestActivityRegistryRegisterAndSnapshot(t *testing.T) {

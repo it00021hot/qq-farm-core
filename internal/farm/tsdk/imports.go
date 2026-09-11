@@ -122,6 +122,10 @@ func (h *host) writeBytes(m api.Memory, value []byte, ptr, capacity uint32) uint
 
 func (h *host) resolveDataPath(input string) (string, error) {
 	rel := strings.ReplaceAll(input, "\\", "/")
+	// QQ hosts hand us qqfile://usr/-prefixed paths; strip the virtual prefix.
+	for _, prefix := range []string{"qqfile://usr/", "wxfile://usr/"} {
+		rel = strings.TrimPrefix(rel, prefix)
+	}
 	rel = strings.TrimLeft(rel, "/")
 	root, err := filepath.Abs(h.rt.dataDir)
 	if err != nil {
@@ -138,6 +142,9 @@ func (h *host) resolveDataPath(input string) (string, error) {
 }
 
 func (h *host) deviceText() string {
+	if h.rt.profile.deviceText != "" {
+		return h.rt.profile.deviceText
+	}
 	model := h.rt.deviceModel
 	if model == "" {
 		model = runtime.GOOS + " " + runtime.GOARCH
@@ -280,9 +287,12 @@ func (h *host) hClock(_ context.Context, mod api.Module, clockID, _, _, outputPt
 }
 
 func (h *host) iDataDir(_ context.Context, mod api.Module, ptr, capacity uint32) uint32 {
-	dir := h.rt.dataDir
-	if !strings.HasSuffix(dir, string(os.PathSeparator)) {
-		dir += string(os.PathSeparator)
+	dir := h.rt.profile.userDataPath
+	if dir == "" {
+		dir = h.rt.dataDir
+		if !strings.HasSuffix(dir, string(os.PathSeparator)) {
+			dir += string(os.PathSeparator)
+		}
 	}
 	return h.writeCString(memOf(mod), dir, ptr, capacity)
 }
@@ -295,14 +305,14 @@ func (h *host) kRuntimeTable(_ context.Context, mod api.Module, ptr, capacity ui
 	return h.writeBytes(memOf(mod), RuntimeTable, ptr, capacity)
 }
 
-func (h *host) lPlatform(_ context.Context, _ api.Module) uint32 { return 2 }
+func (h *host) lPlatform(_ context.Context, _ api.Module) uint32 { return h.rt.profile.debugMode }
 
 func (h *host) mAppID(_ context.Context, mod api.Module, ptr, capacity uint32) uint32 {
-	return h.writeCString(memOf(mod), MiniProgramAppID, ptr, capacity)
+	return h.writeCString(memOf(mod), h.rt.profile.appID, ptr, capacity)
 }
 
 func (h *host) nAppID2(_ context.Context, mod api.Module, ptr, capacity uint32) uint32 {
-	return h.writeCString(memOf(mod), MiniProgramAppID, ptr, capacity)
+	return h.writeCString(memOf(mod), h.rt.profile.appID, ptr, capacity)
 }
 
 func (h *host) oIntegrity(_ context.Context, _ api.Module, _, _, _, _ uint32) {

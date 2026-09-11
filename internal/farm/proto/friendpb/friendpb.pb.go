@@ -8,6 +8,7 @@ package friendpb
 
 import (
 	avatarframepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/avatarframepb"
+	weatherpb "github.com/it00021hot/qq-farm-core/internal/farm/proto/weatherpb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -204,6 +205,7 @@ type GameFriend struct {
 	Title             *FriendTitle                 `protobuf:"bytes,16,opt,name=title,proto3" json:"title,omitempty"`
 	Activity          *FriendActivity              `protobuf:"bytes,18,opt,name=activity,proto3" json:"activity,omitempty"`
 	LastActiveTime    int64                        `protobuf:"varint,19,opt,name=last_active_time,json=lastActiveTime,proto3" json:"last_active_time,omitempty"`
+	Weather           *weatherpb.WeatherStatus     `protobuf:"bytes,20,opt,name=weather,proto3" json:"weather,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -355,6 +357,13 @@ func (x *GameFriend) GetLastActiveTime() int64 {
 		return x.LastActiveTime
 	}
 	return 0
+}
+
+func (x *GameFriend) GetWeather() *weatherpb.WeatherStatus {
+	if x != nil {
+		return x.Weather
+	}
+	return nil
 }
 
 type FriendIllustrated struct {
@@ -1235,6 +1244,88 @@ func (*RejectFriendsReply) Descriptor() ([]byte, []int) {
 	return file_friendpb_proto_rawDescGZIP(), []int{19}
 }
 
+// --- 删除好友 ---
+// 抓包样例: gamepb.friendpb.FriendService.DelFriend
+type DelFriendRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FriendGid     int64                  `protobuf:"varint,1,opt,name=friend_gid,json=friendGid,proto3" json:"friend_gid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DelFriendRequest) Reset() {
+	*x = DelFriendRequest{}
+	mi := &file_friendpb_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DelFriendRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DelFriendRequest) ProtoMessage() {}
+
+func (x *DelFriendRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_friendpb_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DelFriendRequest.ProtoReflect.Descriptor instead.
+func (*DelFriendRequest) Descriptor() ([]byte, []int) {
+	return file_friendpb_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *DelFriendRequest) GetFriendGid() int64 {
+	if x != nil {
+		return x.FriendGid
+	}
+	return 0
+}
+
+type DelFriendReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DelFriendReply) Reset() {
+	*x = DelFriendReply{}
+	mi := &file_friendpb_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DelFriendReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DelFriendReply) ProtoMessage() {}
+
+func (x *DelFriendReply) ProtoReflect() protoreflect.Message {
+	mi := &file_friendpb_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DelFriendReply.ProtoReflect.Descriptor instead.
+func (*DelFriendReply) Descriptor() ([]byte, []int) {
+	return file_friendpb_proto_rawDescGZIP(), []int{21}
+}
+
 // --- 设置屏蔽申请 ---
 type SetBlockApplicationsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1245,7 +1336,7 @@ type SetBlockApplicationsRequest struct {
 
 func (x *SetBlockApplicationsRequest) Reset() {
 	*x = SetBlockApplicationsRequest{}
-	mi := &file_friendpb_proto_msgTypes[20]
+	mi := &file_friendpb_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1257,7 +1348,7 @@ func (x *SetBlockApplicationsRequest) String() string {
 func (*SetBlockApplicationsRequest) ProtoMessage() {}
 
 func (x *SetBlockApplicationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[20]
+	mi := &file_friendpb_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1270,7 +1361,7 @@ func (x *SetBlockApplicationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetBlockApplicationsRequest.ProtoReflect.Descriptor instead.
 func (*SetBlockApplicationsRequest) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{20}
+	return file_friendpb_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *SetBlockApplicationsRequest) GetBlock() bool {
@@ -1289,7 +1380,7 @@ type SetBlockApplicationsReply struct {
 
 func (x *SetBlockApplicationsReply) Reset() {
 	*x = SetBlockApplicationsReply{}
-	mi := &file_friendpb_proto_msgTypes[21]
+	mi := &file_friendpb_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1301,7 +1392,7 @@ func (x *SetBlockApplicationsReply) String() string {
 func (*SetBlockApplicationsReply) ProtoMessage() {}
 
 func (x *SetBlockApplicationsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[21]
+	mi := &file_friendpb_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1314,7 +1405,7 @@ func (x *SetBlockApplicationsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetBlockApplicationsReply.ProtoReflect.Descriptor instead.
 func (*SetBlockApplicationsReply) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{21}
+	return file_friendpb_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *SetBlockApplicationsReply) GetBlock() bool {
@@ -1334,7 +1425,7 @@ type GetShareKeyRequest struct {
 
 func (x *GetShareKeyRequest) Reset() {
 	*x = GetShareKeyRequest{}
-	mi := &file_friendpb_proto_msgTypes[22]
+	mi := &file_friendpb_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1346,7 +1437,7 @@ func (x *GetShareKeyRequest) String() string {
 func (*GetShareKeyRequest) ProtoMessage() {}
 
 func (x *GetShareKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[22]
+	mi := &file_friendpb_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1359,7 +1450,7 @@ func (x *GetShareKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetShareKeyRequest.ProtoReflect.Descriptor instead.
 func (*GetShareKeyRequest) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{22}
+	return file_friendpb_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetShareKeyRequest) GetShareCfgId() int64 {
@@ -1380,7 +1471,7 @@ type GetShareKeyReply struct {
 
 func (x *GetShareKeyReply) Reset() {
 	*x = GetShareKeyReply{}
-	mi := &file_friendpb_proto_msgTypes[23]
+	mi := &file_friendpb_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1392,7 +1483,7 @@ func (x *GetShareKeyReply) String() string {
 func (*GetShareKeyReply) ProtoMessage() {}
 
 func (x *GetShareKeyReply) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[23]
+	mi := &file_friendpb_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1405,7 +1496,7 @@ func (x *GetShareKeyReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetShareKeyReply.ProtoReflect.Descriptor instead.
 func (*GetShareKeyReply) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{23}
+	return file_friendpb_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetShareKeyReply) GetShareKey() string {
@@ -1439,7 +1530,7 @@ type FriendApplicationReceivedNotify struct {
 
 func (x *FriendApplicationReceivedNotify) Reset() {
 	*x = FriendApplicationReceivedNotify{}
-	mi := &file_friendpb_proto_msgTypes[24]
+	mi := &file_friendpb_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1451,7 +1542,7 @@ func (x *FriendApplicationReceivedNotify) String() string {
 func (*FriendApplicationReceivedNotify) ProtoMessage() {}
 
 func (x *FriendApplicationReceivedNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[24]
+	mi := &file_friendpb_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1464,7 +1555,7 @@ func (x *FriendApplicationReceivedNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FriendApplicationReceivedNotify.ProtoReflect.Descriptor instead.
 func (*FriendApplicationReceivedNotify) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{24}
+	return file_friendpb_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *FriendApplicationReceivedNotify) GetApplications() []*Application {
@@ -1484,7 +1575,7 @@ type FriendAddedNotify struct {
 
 func (x *FriendAddedNotify) Reset() {
 	*x = FriendAddedNotify{}
-	mi := &file_friendpb_proto_msgTypes[25]
+	mi := &file_friendpb_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1496,7 +1587,7 @@ func (x *FriendAddedNotify) String() string {
 func (*FriendAddedNotify) ProtoMessage() {}
 
 func (x *FriendAddedNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_friendpb_proto_msgTypes[25]
+	mi := &file_friendpb_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1509,7 +1600,7 @@ func (x *FriendAddedNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FriendAddedNotify.ProtoReflect.Descriptor instead.
 func (*FriendAddedNotify) Descriptor() ([]byte, []int) {
-	return file_friendpb_proto_rawDescGZIP(), []int{25}
+	return file_friendpb_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *FriendAddedNotify) GetFriends() []*GameFriend {
@@ -1523,7 +1614,7 @@ var File_friendpb_proto protoreflect.FileDescriptor
 
 const file_friendpb_proto_rawDesc = "" +
 	"\n" +
-	"\x0efriendpb.proto\x12\x0fgamepb.friendpb\x1a\x13avatarframepb.proto\"\xb8\x02\n" +
+	"\x0efriendpb.proto\x12\x0fgamepb.friendpb\x1a\x13avatarframepb.proto\x1a\x0fweatherpb.proto\"\xb8\x02\n" +
 	"\x05Plant\x12 \n" +
 	"\fdry_time_sec\x18\x01 \x01(\x03R\n" +
 	"dryTimeSec\x12\"\n" +
@@ -1538,7 +1629,7 @@ const file_friendpb_proto_rawDesc = "" +
 	"insect_num\x18\t \x01(\x03R\tinsectNum\":\n" +
 	"\x04Tags\x12\x15\n" +
 	"\x06is_new\x18\x01 \x01(\bR\x05isNew\x12\x1b\n" +
-	"\tis_follow\x18\x02 \x01(\bR\bisFollow\"\x93\x05\n" +
+	"\tis_follow\x18\x02 \x01(\bR\bisFollow\"\xce\x05\n" +
 	"\n" +
 	"GameFriend\x12\x10\n" +
 	"\x03gid\x18\x01 \x01(\x03R\x03gid\x12\x17\n" +
@@ -1559,7 +1650,8 @@ const file_friendpb_proto_rawDesc = "" +
 	"\bfield_15\x18\x0f \x01(\bR\afield15\x122\n" +
 	"\x05title\x18\x10 \x01(\v2\x1c.gamepb.friendpb.FriendTitleR\x05title\x12;\n" +
 	"\bactivity\x18\x12 \x01(\v2\x1f.gamepb.friendpb.FriendActivityR\bactivity\x12(\n" +
-	"\x10last_active_time\x18\x13 \x01(\x03R\x0elastActiveTime\"E\n" +
+	"\x10last_active_time\x18\x13 \x01(\x03R\x0elastActiveTime\x129\n" +
+	"\aweather\x18\x14 \x01(\v2\x1f.gamepb.weatherpb.WeatherStatusR\aweather\"E\n" +
 	"\x11FriendIllustrated\x12\x18\n" +
 	"\acurrent\x18\x01 \x01(\x03R\acurrent\x12\x16\n" +
 	"\x06target\x18\x02 \x01(\x03R\x06target\"(\n" +
@@ -1615,7 +1707,11 @@ const file_friendpb_proto_rawDesc = "" +
 	"\x14RejectFriendsRequest\x12\x1f\n" +
 	"\vfriend_gids\x18\x01 \x03(\x03R\n" +
 	"friendGids\"\x14\n" +
-	"\x12RejectFriendsReply\"3\n" +
+	"\x12RejectFriendsReply\"1\n" +
+	"\x10DelFriendRequest\x12\x1d\n" +
+	"\n" +
+	"friend_gid\x18\x01 \x01(\x03R\tfriendGid\"\x10\n" +
+	"\x0eDelFriendReply\"3\n" +
 	"\x1bSetBlockApplicationsRequest\x12\x14\n" +
 	"\x05block\x18\x01 \x01(\bR\x05block\"1\n" +
 	"\x19SetBlockApplicationsReply\x12\x14\n" +
@@ -1645,7 +1741,7 @@ func file_friendpb_proto_rawDescGZIP() []byte {
 	return file_friendpb_proto_rawDescData
 }
 
-var file_friendpb_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_friendpb_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_friendpb_proto_goTypes = []any{
 	(*Plant)(nil),                           // 0: gamepb.friendpb.Plant
 	(*Tags)(nil),                            // 1: gamepb.friendpb.Tags
@@ -1667,34 +1763,38 @@ var file_friendpb_proto_goTypes = []any{
 	(*AcceptFriendsReply)(nil),              // 17: gamepb.friendpb.AcceptFriendsReply
 	(*RejectFriendsRequest)(nil),            // 18: gamepb.friendpb.RejectFriendsRequest
 	(*RejectFriendsReply)(nil),              // 19: gamepb.friendpb.RejectFriendsReply
-	(*SetBlockApplicationsRequest)(nil),     // 20: gamepb.friendpb.SetBlockApplicationsRequest
-	(*SetBlockApplicationsReply)(nil),       // 21: gamepb.friendpb.SetBlockApplicationsReply
-	(*GetShareKeyRequest)(nil),              // 22: gamepb.friendpb.GetShareKeyRequest
-	(*GetShareKeyReply)(nil),                // 23: gamepb.friendpb.GetShareKeyReply
-	(*FriendApplicationReceivedNotify)(nil), // 24: gamepb.friendpb.FriendApplicationReceivedNotify
-	(*FriendAddedNotify)(nil),               // 25: gamepb.friendpb.FriendAddedNotify
-	(*avatarframepb.AvatarFrame)(nil),       // 26: gamepb.avatarframepb.AvatarFrame
+	(*DelFriendRequest)(nil),                // 20: gamepb.friendpb.DelFriendRequest
+	(*DelFriendReply)(nil),                  // 21: gamepb.friendpb.DelFriendReply
+	(*SetBlockApplicationsRequest)(nil),     // 22: gamepb.friendpb.SetBlockApplicationsRequest
+	(*SetBlockApplicationsReply)(nil),       // 23: gamepb.friendpb.SetBlockApplicationsReply
+	(*GetShareKeyRequest)(nil),              // 24: gamepb.friendpb.GetShareKeyRequest
+	(*GetShareKeyReply)(nil),                // 25: gamepb.friendpb.GetShareKeyReply
+	(*FriendApplicationReceivedNotify)(nil), // 26: gamepb.friendpb.FriendApplicationReceivedNotify
+	(*FriendAddedNotify)(nil),               // 27: gamepb.friendpb.FriendAddedNotify
+	(*avatarframepb.AvatarFrame)(nil),       // 28: gamepb.avatarframepb.AvatarFrame
+	(*weatherpb.WeatherStatus)(nil),         // 29: gamepb.weatherpb.WeatherStatus
 }
 var file_friendpb_proto_depIdxs = []int32{
 	1,  // 0: gamepb.friendpb.GameFriend.tags:type_name -> gamepb.friendpb.Tags
 	0,  // 1: gamepb.friendpb.GameFriend.plant:type_name -> gamepb.friendpb.Plant
 	3,  // 2: gamepb.friendpb.GameFriend.illustrated:type_name -> gamepb.friendpb.FriendIllustrated
-	26, // 3: gamepb.friendpb.GameFriend.equip_avatar_frames:type_name -> gamepb.avatarframepb.AvatarFrame
+	28, // 3: gamepb.friendpb.GameFriend.equip_avatar_frames:type_name -> gamepb.avatarframepb.AvatarFrame
 	4,  // 4: gamepb.friendpb.GameFriend.title:type_name -> gamepb.friendpb.FriendTitle
 	5,  // 5: gamepb.friendpb.GameFriend.activity:type_name -> gamepb.friendpb.FriendActivity
-	2,  // 6: gamepb.friendpb.GetAllReply.game_friends:type_name -> gamepb.friendpb.GameFriend
-	2,  // 7: gamepb.friendpb.GetGameFriendsReply.game_friends:type_name -> gamepb.friendpb.GameFriend
-	2,  // 8: gamepb.friendpb.SyncAllReply.game_friends:type_name -> gamepb.friendpb.GameFriend
-	6,  // 9: gamepb.friendpb.SyncAllReply.recommended_friends:type_name -> gamepb.friendpb.RecommendedFriend
-	13, // 10: gamepb.friendpb.GetApplicationsReply.applications:type_name -> gamepb.friendpb.Application
-	2,  // 11: gamepb.friendpb.AcceptFriendsReply.friends:type_name -> gamepb.friendpb.GameFriend
-	13, // 12: gamepb.friendpb.FriendApplicationReceivedNotify.applications:type_name -> gamepb.friendpb.Application
-	2,  // 13: gamepb.friendpb.FriendAddedNotify.friends:type_name -> gamepb.friendpb.GameFriend
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	29, // 6: gamepb.friendpb.GameFriend.weather:type_name -> gamepb.weatherpb.WeatherStatus
+	2,  // 7: gamepb.friendpb.GetAllReply.game_friends:type_name -> gamepb.friendpb.GameFriend
+	2,  // 8: gamepb.friendpb.GetGameFriendsReply.game_friends:type_name -> gamepb.friendpb.GameFriend
+	2,  // 9: gamepb.friendpb.SyncAllReply.game_friends:type_name -> gamepb.friendpb.GameFriend
+	6,  // 10: gamepb.friendpb.SyncAllReply.recommended_friends:type_name -> gamepb.friendpb.RecommendedFriend
+	13, // 11: gamepb.friendpb.GetApplicationsReply.applications:type_name -> gamepb.friendpb.Application
+	2,  // 12: gamepb.friendpb.AcceptFriendsReply.friends:type_name -> gamepb.friendpb.GameFriend
+	13, // 13: gamepb.friendpb.FriendApplicationReceivedNotify.applications:type_name -> gamepb.friendpb.Application
+	2,  // 14: gamepb.friendpb.FriendAddedNotify.friends:type_name -> gamepb.friendpb.GameFriend
+	15, // [15:15] is the sub-list for method output_type
+	15, // [15:15] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_friendpb_proto_init() }
@@ -1708,7 +1808,7 @@ func file_friendpb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_friendpb_proto_rawDesc), len(file_friendpb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   26,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -61,8 +61,7 @@ func Stack() *cli.App {
 
 二、生产模式
   1、make build 打包命令行工具
-  2、执行 ./releases/skeleton-cli -h 查看命令行
-`)
+  2、执行 ./releases/skeleton-cli -h 查看命令行`)
 		return nil
 	}
 	return app

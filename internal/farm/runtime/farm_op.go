@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"math"
 	"strings"
 	"time"
@@ -562,24 +561,17 @@ func sellAllFruitsDetailed(ctx context.Context, api *game.API) (soldKinds int, g
 	items := game.GetBagItems(bag)
 	fruits := make([]corepb.Item, 0)
 	nameSet := make(map[string]struct{})
+	now := time.Now().Unix()
 	for _, item := range items {
-		if logic.GetPlantByFruitID(item.Id) == nil {
+		if item.Count <= 0 || logic.GetPlantByFruitID(item.Id) == nil {
 			continue
 		}
-		if logic.IsActivityRestrictedForSale(item.Id, time.Now().Unix()) {
-			info := logic.GetItemByID(item.Id)
-			restrictedName := ""
-			if info != nil {
-				restrictedName = info.Name
-			}
-			if restrictedName == "" {
-				restrictedName = fmt.Sprintf("果实%d", item.Id)
-			}
-			slog.Warn("skip activity-restricted fruit sale",
-				"item", item.Id, "name", restrictedName, "count", item.Count)
+		// bot sellAllFruits：跳过锁定物品，按 sell_cond + 过期时间评估可售性。
+		if item.Locked {
 			continue
 		}
-		sellInfo := logic.GetEffectiveSellInfo(logic.GetItemByID(item.Id))
+		info := logic.GetItemByID(item.Id)
+		sellInfo := logic.GetEffectiveSellInfoAt(info, logic.DefaultSellConditionContext(now), logic.ToTimeSec(item.ExpireTime))
 		if !sellInfo.Sellable {
 			continue
 		}

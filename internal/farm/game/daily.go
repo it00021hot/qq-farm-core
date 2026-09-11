@@ -80,6 +80,20 @@ func (a *API) BatchClaimEmail(ctx context.Context, boxType int32, emailID string
 }
 
 // CheckCanShare checks whether daily share is available.
+// BatchDeleteEmail deletes a whole mail box page.
+func (a *API) BatchDeleteEmail(ctx context.Context, boxType int32, emailIDs []string) (*emailpb.BatchDeleteEmailReply, error) {
+	req := &emailpb.BatchDeleteEmailRequest{BoxType: boxType, EmailIds: emailIDs}
+	raw, err := a.sendEmail(ctx, "BatchDeleteEmail", marshalMessage(req))
+	if err != nil {
+		return nil, err
+	}
+	reply := &emailpb.BatchDeleteEmailReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
 func (a *API) CheckCanShare(ctx context.Context) (*sharepb.CheckCanShareReply, error) {
 	raw, err := a.sendShare(ctx, "CheckCanShare", marshalMessage(&sharepb.CheckCanShareRequest{}))
 	if err != nil {

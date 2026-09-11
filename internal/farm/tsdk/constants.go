@@ -6,14 +6,21 @@ import (
 	"fmt"
 )
 
-// Runtime constants — see qq-farm-bot/core/docs/tsdk-runtime.md
+// Runtime constants — mirrored from qq-farm-bot/core/src/utils/tsdk-runtime.ts (v3.9.0).
 const (
-	TSDKVersion      = "v3.8.6.1785239995"
-	TSDKSHA256       = "14754428297ee0d5aa6cceee76e6ef076bdac31ceda0ea2e2bf4a0472c8e717f"
+	TSDKVersion = "v3.9.0.1788165223"
+	TSDKSHA256  = "a95b178193c4ad7cf01fd44b6ec7086b1711069659e0bf9180860466a7b5f99f"
+	// MiniProgramAppID is the WX mini-program app id (host profile wx).
 	MiniProgramAppID = "wx5306c5978fdb76e4"
-	TSDKGameID       = 3167
-	TSDKAppKey       = "0"
-	MergedDataKey    = 1871261153
+	// QQMiniProgramAppID is the QQ mini-program app id (host profile qq).
+	QQMiniProgramAppID = "1112386029"
+	TSDKGameID         = 3167
+	TSDKAppKey         = "0"
+	MergedDataKey      = 1871261153
+	// QQUserDataPath is the fixed user data path reported for QQ hosts.
+	QQUserDataPath = "qqfile://usr/"
+	// QQDeviceText is the fixed device text reported for QQ hosts.
+	QQDeviceText = "windows;windows;windows 10.0;0;"
 )
 
 // RuntimeTable is the fixed host table written by import a.k.
@@ -24,18 +31,24 @@ var RuntimeTable = []byte{
 	209, 117, 218, 8, 107, 241, 32, 62, 53, 200, 238,
 }
 
-// MergedDataSegments are (ptr, length) pairs decrypted before calling x()/G().
-//
-// Init order (from tsdk-runtime.md):
-//  1. Instantiate WASM with host imports a.a–a.v
-//  2. Decrypt 17 mergewasm segments via __mergewasm_shared____wasm_decrypt_strings
-//  3. Call export x()  (do NOT call decrypt_all_data — breaks function table)
-//  4. Call export G(3167, appKeyPtr)
+// MergedDataSegments holds the metadata segment decrypted before
+// decrypt_all_data/x/G (bot MERGED_DATA_METADATA).
 var MergedDataSegments = [][2]uint32{
-	{1024, 5541}, {6580, 8989}, {15585, 33}, {15643, 1}, {15655, 21},
-	{15701, 1}, {15713, 21}, {15759, 1}, {15771, 30}, {15826, 14},
-	{15875, 1}, {15887, 21}, {15933, 1}, {15945, 671}, {16632, 400},
-	{17040, 103}, {67371008, 404},
+	{67371008, 404},
+}
+
+// QQHostFeatureState pins the byte-level "host feature state" layout verified
+// against the QQ host; used by normalizeQqHostFeatureState.
+var QQHostFeatureState = struct {
+	CurrentPtr  uint32
+	ReferencePtr uint32
+	Length      uint32
+	NodeMismatchIndex uint32
+}{
+	CurrentPtr:       17288,
+	ReferencePtr:     17352,
+	Length:           64,
+	NodeMismatchIndex: 1,
 }
 
 // VerifyWASMHash checks the on-disk tsdk.wasm against the expected SHA-256.

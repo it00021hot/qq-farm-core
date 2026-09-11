@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/tetratelabs/wazero"
@@ -27,6 +28,42 @@ type Config struct {
 	DeviceModel string
 	OSName      string
 	SysSoftware string
+	// Platform selects the TSDK host profile: "qq" or "wx" (bot resolveTsdkPlatform).
+	Platform string
+}
+
+// hostProfile mirrors bot resolveTsdkHostProfile.
+type hostProfile struct {
+	appID        string
+	debugMode    uint32
+	deviceText   string // empty → derive from device info
+	platform     string // "qq" | "wx"
+	userDataPath string // empty → local data dir
+}
+
+func resolveTsdkPlatform(value string) string {
+	v := strings.ToLower(strings.TrimSpace(value))
+	if v == "wx" || v == "wechat" {
+		return "wx"
+	}
+	return "qq"
+}
+
+func resolveTsdkHostProfile(platform string) hostProfile {
+	if resolveTsdkPlatform(platform) == "qq" {
+		return hostProfile{
+			appID:        QQMiniProgramAppID,
+			debugMode:    0,
+			deviceText:   QQDeviceText,
+			platform:     "qq",
+			userDataPath: QQUserDataPath,
+		}
+	}
+	return hostProfile{
+		appID:     MiniProgramAppID,
+		debugMode: 2,
+		platform:  "wx",
+	}
 }
 
 // Runtime wraps a wazero TSDK instance for one account.
@@ -37,6 +74,7 @@ type Runtime struct {
 	deviceModel string
 	osName      string
 	sysSoftware string
+	profile     hostProfile
 
 	mu        sync.Mutex
 	ctx       context.Context
@@ -67,10 +105,14 @@ func New(cfg Config) (*Runtime, error) {
 		deviceModel: cfg.DeviceModel,
 		osName:      cfg.OSName,
 		sysSoftware: cfg.SysSoftware,
+		profile:     resolveTsdkHostProfile(cfg.Platform),
 	}
 	rt.host = newHost(rt)
 	return rt, nil
 }
+
+// Platform returns the resolved host platform ("qq" or "wx").
+func (r *Runtime) Platform() string { return r.profile.platform }
 
 // DataDir returns the per-account writable TSDK data directory.
 func (r *Runtime) DataDir() string { return r.dataDir }
@@ -131,6 +173,11 @@ func (r *Runtime) Init(parent context.Context) error {
 		r.cleanupLocked()
 		return fmt.Errorf("tsdk: missing mergewasm decrypt export")
 	}
+	decryptAll := mod.ExportedFunction("decrypt_all_data")
+	if decryptAll == nil {
+		r.cleanupLocked()
+		return fmt.Errorf("tsdk: missing mergewasm decrypt_all_data export")
+	}
 	for _, seg := range MergedDataSegments {
 		ptr, length := seg[0], seg[1]
 		if err := r.host.ensureBounds(mod.Memory(), ptr, length); err != nil {
@@ -141,6 +188,10 @@ func (r *Runtime) Init(parent context.Context) error {
 			r.cleanupLocked()
 			return fmt.Errorf("tsdk: decrypt segment %d+%d: %w", ptr, length, err)
 		}
+	}
+	if _, err := decryptAll.Call(ctx); err != nil {
+		r.cleanupLocked()
+		return fmt.Errorf("tsdk: decrypt_all_data: %w", err)
 	}
 
 	if _, err := mod.ExportedFunction("x").Call(ctx); err != nil {
@@ -319,6 +370,9 @@ func (r *Runtime) GetEncryptedInitInfo() (string, error) {
 	if err := r.assertReadyLocked(); err != nil {
 		return "", err
 	}
+	if err := r.normalizeQqHostFeatureStateLocked(); err != nil {
+		return "", err
+	}
 	results, err := r.mod.ExportedFunction("H").Call(r.ctx)
 	if err != nil {
 		return "", err
@@ -328,6 +382,49 @@ func (r *Runtime) GetEncryptedInitInfo() (string, error) {
 		return "", nil
 	}
 	return r.host.readCString(r.mod.Memory(), ptr)
+}
+
+// normalizeQqHostFeatureStateLocked mirrors bot normalizeQqHostFeatureState:
+// the QQ host reports a Node-vs-official difference in one feature-state byte;
+// patch it back to the reference value before minting init info.
+func (r *Runtime) normalizeQqHostFeatureStateLocked() error {
+	if r.profile.platform != "qq" {
+		return nil
+	}
+	s := QQHostFeatureState
+	mem := r.mod.Memory()
+	if err := r.host.ensureBounds(mem, s.CurrentPtr, s.Length); err != nil {
+		return err
+	}
+	if err := r.host.ensureBounds(mem, s.ReferencePtr, s.Length); err != nil {
+		return err
+	}
+	current, ok := mem.Read(s.CurrentPtr, s.Length)
+	if !ok {
+		return fmt.Errorf("tsdk: read qq host feature state failed")
+	}
+	reference, ok := mem.Read(s.ReferencePtr, s.Length)
+	if !ok {
+		return fmt.Errorf("tsdk: read qq host feature reference failed")
+	}
+	var mismatches []uint32
+	for i := uint32(0); i < s.Length; i++ {
+		if current[i] != reference[i] {
+			mismatches = append(mismatches, i)
+		}
+	}
+	if len(mismatches) == 0 {
+		return nil
+	}
+	idx := s.NodeMismatchIndex
+	if len(mismatches) != 1 || mismatches[0] != idx || current[idx] != reference[idx]+1 {
+		return fmt.Errorf("tsdk: QQ host feature state layout differs from verified build")
+	}
+	patch := []byte{reference[idx]}
+	if !mem.Write(s.CurrentPtr+idx, patch) {
+		return fmt.Errorf("tsdk: patch qq host feature state failed")
+	}
+	return nil
 }
 
 // HeartbeatTick calls export M.

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -130,34 +131,6 @@ func upsertFriendsToDB(db *gorm.DB, accountID uint64, myGID int64, friends []fri
 	}
 }
 
-// AcceptPendingFriends fetches pending applications and accepts them (bot auto-accept mirror).
-func AcceptPendingFriends(ctx context.Context, api *game.API) (accepted int, err error) {
-	if api == nil {
-		return 0, fmt.Errorf("farm API is unavailable")
-	}
-	reply, err := api.GetApplications(ctx)
-	if err != nil {
-		return 0, err
-	}
-	gids := make([]int64, 0, len(reply.Applications))
-	for _, app := range reply.Applications {
-		if app != nil && app.Gid > 0 {
-			gids = append(gids, app.Gid)
-		}
-	}
-	if len(gids) == 0 {
-		return 0, nil
-	}
-	acceptedReply, err := api.AcceptFriends(ctx, gids)
-	if err != nil {
-		return 0, err
-	}
-	if acceptedReply != nil {
-		return len(acceptedReply.Friends), nil
-	}
-	return len(gids), nil
-}
-
 // RunStealTick visits bubble friends first, then probes ceil(n/4) unvisited zero-bubble friends.
 func RunStealTick(ctx context.Context, s *Session, visited map[int64]struct{}) (actions int, err error) {
 	if s == nil {
@@ -170,7 +143,7 @@ func RunStealTick(ctx context.Context, s *Session, visited map[int64]struct{}) (
 	if api == nil {
 		return 0, fmt.Errorf("farm API is unavailable")
 	}
-	friends, err := loadFriends(ctx, s, api, cfg)
+	friends, err := getFriendsList(ctx, s, api, cfg, true)
 	if err != nil {
 		return 0, err
 	}
@@ -283,7 +256,7 @@ func RunHelpTick(ctx context.Context, s *Session, visited map[int64]struct{}) (a
 	} else if !helpState.getCanGetHelpExp() {
 		return 0, nil
 	}
-	friends, err := loadFriends(ctx, s, api, cfg)
+	friends, err := getFriendsList(ctx, s, api, cfg, true)
 	if err != nil {
 		return 0, err
 	}
@@ -343,7 +316,7 @@ func RunBadOnce(ctx context.Context, s *Session) (actions int, err error) {
 	if api == nil {
 		return 0, fmt.Errorf("farm API is unavailable")
 	}
-	friends, err := loadFriends(ctx, s, api, cfg)
+	friends, err := getFriendsList(ctx, s, api, cfg, true)
 	if err != nil {
 		return 0, err
 	}
@@ -387,6 +360,72 @@ func RunBadOnce(ctx context.Context, s *Session) (actions int, err error) {
 }
 
 const qqFriendListBatchSize = 35
+
+// friendsListFailCooldown bounds how long a failed GetAll keeps serving the
+// stale cache instead of hammering the gateway again.
+const friendsListFailCooldown = 30 * time.Second
+
+// getFriendsList returns the friend list through the big-packet discipline:
+// TTL cache for panel reads, single-flight merge for concurrent fetchers, and
+// stale-cache fallback while a recent failure is cooling down. forceSync skips
+// the TTL cache (patrol path) but still merges concurrent callers.
+func getFriendsList(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig, forceSync bool) ([]friendpb.GameFriend, error) {
+	if s == nil {
+		return loadFriends(ctx, s, api, cfg)
+	}
+	ttl := time.Duration(cfg.FriendsListCacheTtlSec) * time.Second
+	if ttl <= 0 {
+		ttl = 60 * time.Second
+	}
+
+	s.friendsMu.Lock()
+	if !forceSync && s.friendsCache != nil && time.Since(s.friendsCacheAt) < ttl {
+		cache := s.friendsCache
+		s.friendsMu.Unlock()
+		return cache, nil
+	}
+	if time.Now().Before(s.friendsFailUntil) && s.friendsCache != nil {
+		cache := s.friendsCache
+		s.friendsMu.Unlock()
+		return cache, nil
+	}
+	if s.friendsFlight != nil {
+		call := s.friendsFlight
+		s.friendsMu.Unlock()
+		select {
+		case <-call.done:
+			return call.friends, call.err
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	call := &friendsFlight{done: make(chan struct{})}
+	s.friendsFlight = call
+	s.friendsMu.Unlock()
+
+	friends, err := loadFriends(ctx, s, api, cfg)
+
+	s.friendsMu.Lock()
+	if err == nil {
+		s.friendsCache = friends
+		s.friendsCacheAt = time.Now()
+		s.friendsFailUntil = time.Time{}
+	} else if s.friendsCache != nil {
+		// 失败冷却：短时间内用陈旧缓存兜底，不再立刻重发大包。
+		s.friendsFailUntil = time.Now().Add(friendsListFailCooldown)
+		stale := s.friendsCache
+		s.friendsMu.Unlock()
+		call.friends, call.err = stale, nil
+		close(call.done)
+		return stale, nil
+	}
+	s.friendsFlight = nil
+	s.friendsMu.Unlock()
+
+	call.friends, call.err = friends, err
+	close(call.done)
+	return friends, err
+}
 
 func loadFriends(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig) ([]friendpb.GameFriend, error) {
 	platform := ""
@@ -439,13 +478,43 @@ func loadFriends(ctx context.Context, s *Session, api *game.API, cfg logic.Accou
 	return excludeSelfFriends(legacy, myGID), nil
 }
 
+// mergeVisitorGIDsFromInteract syncs QQ visitor GIDs with a cooldown
+// (bot gid-manager: config interval, default 10min; failure retry ≥30s).
 func mergeVisitorGIDsFromInteract(ctx context.Context, s *Session, api *game.API, cfg logic.AccountConfig, myGID int64) []int64 {
 	known := excludeGID(normalizeFriendGIDs(cfg.KnownFriendGids), myGID)
 	blacklist := makeIDSet(cfg.FriendBlacklist)
+
+	if s != nil {
+		s.friendsMu.Lock()
+		lastSync, lastFail := s.visitorGidSyncAt, s.visitorGidSyncFailed
+		s.friendsMu.Unlock()
+		interval := time.Duration(cfg.KnownFriendGidSyncCooldownSec) * time.Second
+		if interval <= 0 {
+			interval = 10 * time.Minute
+		}
+		now := time.Now()
+		if now.Sub(lastSync) < interval {
+			return filterBlacklistedGIDs(known, blacklist)
+		}
+		if lastFail.After(lastSync) && now.Sub(lastFail) < 30*time.Second {
+			return filterBlacklistedGIDs(known, blacklist)
+		}
+	}
+
 	reply, err := api.InteractRecords(ctx)
 	if err != nil {
 		slog.Debug("interact records for qq friends failed", "err", err)
+		if s != nil {
+			s.friendsMu.Lock()
+			s.visitorGidSyncFailed = time.Now()
+			s.friendsMu.Unlock()
+		}
 		return filterBlacklistedGIDs(known, blacklist)
+	}
+	if s != nil {
+		s.friendsMu.Lock()
+		s.visitorGidSyncAt = time.Now()
+		s.friendsMu.Unlock()
 	}
 	visitorGIDs := make([]int64, 0, len(reply.Records))
 	for _, rec := range reply.Records {
@@ -483,10 +552,12 @@ func fetchQQFriendsByKnownGIDs(ctx context.Context, api *game.API, known []int64
 			all = append(all, reply.GameFriends...)
 		}
 		if end < len(known) {
+			// bot gid-manager: 批间随机延迟 500~1000ms。
+			delay := time.Duration(500+rand.Intn(500)) * time.Millisecond
 			select {
 			case <-ctx.Done():
 				return dedupeFriendsByGID(all)
-			case <-time.After(500 * time.Millisecond):
+			case <-time.After(delay):
 			}
 		}
 	}
@@ -643,7 +714,15 @@ type friendVisitOutcome struct {
 	HelpSummary string
 	// SkipReason explains count==0 after a successful visit (empty when stolen or not entered).
 	SkipReason string
+	// Mode marks which op group produced Count (visit merge bookkeeping).
+	Mode string
 }
+
+// visit modes for friendVisitOutcome.Mode.
+const (
+	visitModeSteal = "steal"
+	visitModeBad   = "bad"
+)
 
 func friendListStealNum(friends []friendpb.GameFriend, gid int64) int64 {
 	for i := range friends {

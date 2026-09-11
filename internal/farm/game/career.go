@@ -14,9 +14,14 @@ func (a *API) sendCareer(ctx context.Context, method string, body []byte) ([]byt
 	return raw, err
 }
 
-// CareerInfoGet fetches career/lifetime info.
+// CareerInfoGet fetches the account's own career/lifetime info.
 func (a *API) CareerInfoGet(ctx context.Context) (*careerpb.CareerInfoGetReply, error) {
-	raw, err := a.sendCareer(ctx, "CareerInfoGet", marshalMessage(&careerpb.CareerInfoGetRequest{}))
+	return a.CareerInfoGetForGID(ctx, 0)
+}
+
+// CareerInfoGetForGID fetches career/lifetime info for the given GID.
+func (a *API) CareerInfoGetForGID(ctx context.Context, gid int64) (*careerpb.CareerInfoGetReply, error) {
+	raw, err := a.sendCareer(ctx, "CareerInfoGet", marshalMessage(&careerpb.CareerInfoGetRequest{Gid: gid}))
 	if err != nil {
 		return nil, err
 	}

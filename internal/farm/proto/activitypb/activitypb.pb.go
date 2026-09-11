@@ -602,24 +602,515 @@ func (x *ConstellationData) GetGroups() []*ConstellationGroup {
 	return nil
 }
 
+// 雨落成诗：天气采集瓶的产出配置。尚未抓到语义的字段保留协议字段名，
+// 避免把客户端静态配置误当成账号动态进度。
+type WeatherBottleReward struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RewardId      int64                  `protobuf:"varint,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+	Reward        *ActivityItem          `protobuf:"bytes,3,opt,name=reward,proto3" json:"reward,omitempty"`
+	Status        int64                  `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"`
+	Probability   string                 `protobuf:"bytes,6,opt,name=probability,proto3" json:"probability,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherBottleReward) Reset() {
+	*x = WeatherBottleReward{}
+	mi := &file_activitypb_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherBottleReward) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherBottleReward) ProtoMessage() {}
+
+func (x *WeatherBottleReward) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherBottleReward.ProtoReflect.Descriptor instead.
+func (*WeatherBottleReward) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *WeatherBottleReward) GetRewardId() int64 {
+	if x != nil {
+		return x.RewardId
+	}
+	return 0
+}
+
+func (x *WeatherBottleReward) GetReward() *ActivityItem {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+func (x *WeatherBottleReward) GetStatus() int64 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *WeatherBottleReward) GetProbability() string {
+	if x != nil {
+		return x.Probability
+	}
+	return ""
+}
+
+type WeatherBottleConfig struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Field_3            int64                  `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"`
+	Field_4            int64                  `protobuf:"varint,4,opt,name=field_4,json=field4,proto3" json:"field_4,omitempty"`
+	CollectorItemId    int64                  `protobuf:"varint,5,opt,name=collector_item_id,json=collectorItemId,proto3" json:"collector_item_id,omitempty"`
+	CollectorItemCount int64                  `protobuf:"varint,6,opt,name=collector_item_count,json=collectorItemCount,proto3" json:"collector_item_count,omitempty"`
+	Rewards            []*WeatherBottleReward `protobuf:"bytes,8,rep,name=rewards,proto3" json:"rewards,omitempty"`
+	Field_9            int64                  `protobuf:"varint,9,opt,name=field_9,json=field9,proto3" json:"field_9,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *WeatherBottleConfig) Reset() {
+	*x = WeatherBottleConfig{}
+	mi := &file_activitypb_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherBottleConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherBottleConfig) ProtoMessage() {}
+
+func (x *WeatherBottleConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherBottleConfig.ProtoReflect.Descriptor instead.
+func (*WeatherBottleConfig) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *WeatherBottleConfig) GetField_3() int64 {
+	if x != nil {
+		return x.Field_3
+	}
+	return 0
+}
+
+func (x *WeatherBottleConfig) GetField_4() int64 {
+	if x != nil {
+		return x.Field_4
+	}
+	return 0
+}
+
+func (x *WeatherBottleConfig) GetCollectorItemId() int64 {
+	if x != nil {
+		return x.CollectorItemId
+	}
+	return 0
+}
+
+func (x *WeatherBottleConfig) GetCollectorItemCount() int64 {
+	if x != nil {
+		return x.CollectorItemCount
+	}
+	return 0
+}
+
+func (x *WeatherBottleConfig) GetRewards() []*WeatherBottleReward {
+	if x != nil {
+		return x.Rewards
+	}
+	return nil
+}
+
+func (x *WeatherBottleConfig) GetField_9() int64 {
+	if x != nil {
+		return x.Field_9
+	}
+	return 0
+}
+
+type WeatherActivityTask struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TaskId        int64                  `protobuf:"varint,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	TriggerItemId int64                  `protobuf:"varint,2,opt,name=trigger_item_id,json=triggerItemId,proto3" json:"trigger_item_id,omitempty"`
+	Reward        *ActivityItem          `protobuf:"bytes,3,opt,name=reward,proto3" json:"reward,omitempty"`
+	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	DailyLimit    int64                  `protobuf:"varint,5,opt,name=daily_limit,json=dailyLimit,proto3" json:"daily_limit,omitempty"`
+	Current       int64                  `protobuf:"varint,6,opt,name=current,proto3" json:"current,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherActivityTask) Reset() {
+	*x = WeatherActivityTask{}
+	mi := &file_activitypb_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherActivityTask) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherActivityTask) ProtoMessage() {}
+
+func (x *WeatherActivityTask) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherActivityTask.ProtoReflect.Descriptor instead.
+func (*WeatherActivityTask) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *WeatherActivityTask) GetTaskId() int64 {
+	if x != nil {
+		return x.TaskId
+	}
+	return 0
+}
+
+func (x *WeatherActivityTask) GetTriggerItemId() int64 {
+	if x != nil {
+		return x.TriggerItemId
+	}
+	return 0
+}
+
+func (x *WeatherActivityTask) GetReward() *ActivityItem {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+func (x *WeatherActivityTask) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *WeatherActivityTask) GetDailyLimit() int64 {
+	if x != nil {
+		return x.DailyLimit
+	}
+	return 0
+}
+
+func (x *WeatherActivityTask) GetCurrent() int64 {
+	if x != nil {
+		return x.Current
+	}
+	return 0
+}
+
+type WeatherActivityTasks struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tasks         []*WeatherActivityTask `protobuf:"bytes,1,rep,name=tasks,proto3" json:"tasks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherActivityTasks) Reset() {
+	*x = WeatherActivityTasks{}
+	mi := &file_activitypb_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherActivityTasks) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherActivityTasks) ProtoMessage() {}
+
+func (x *WeatherActivityTasks) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherActivityTasks.ProtoReflect.Descriptor instead.
+func (*WeatherActivityTasks) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *WeatherActivityTasks) GetTasks() []*WeatherActivityTask {
+	if x != nil {
+		return x.Tasks
+	}
+	return nil
+}
+
+type WeatherResearchNode struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	NodeId              int64                  `protobuf:"varint,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	PrerequisiteNodeIds []int64                `protobuf:"varint,2,rep,packed,name=prerequisite_node_ids,json=prerequisiteNodeIds,proto3" json:"prerequisite_node_ids,omitempty"`
+	Status              int64                  `protobuf:"varint,3,opt,name=status,proto3" json:"status,omitempty"`
+	Claimed             bool                   `protobuf:"varint,4,opt,name=claimed,proto3" json:"claimed,omitempty"`
+	Field_5             int64                  `protobuf:"varint,5,opt,name=field_5,json=field5,proto3" json:"field_5,omitempty"`
+	Cost                *ActivityItem          `protobuf:"bytes,6,opt,name=cost,proto3" json:"cost,omitempty"`
+	Reward              *ActivityItem          `protobuf:"bytes,7,opt,name=reward,proto3" json:"reward,omitempty"`
+	Field_8             int64                  `protobuf:"varint,8,opt,name=field_8,json=field8,proto3" json:"field_8,omitempty"`
+	Field_9             int64                  `protobuf:"varint,9,opt,name=field_9,json=field9,proto3" json:"field_9,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *WeatherResearchNode) Reset() {
+	*x = WeatherResearchNode{}
+	mi := &file_activitypb_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherResearchNode) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherResearchNode) ProtoMessage() {}
+
+func (x *WeatherResearchNode) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherResearchNode.ProtoReflect.Descriptor instead.
+func (*WeatherResearchNode) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *WeatherResearchNode) GetNodeId() int64 {
+	if x != nil {
+		return x.NodeId
+	}
+	return 0
+}
+
+func (x *WeatherResearchNode) GetPrerequisiteNodeIds() []int64 {
+	if x != nil {
+		return x.PrerequisiteNodeIds
+	}
+	return nil
+}
+
+func (x *WeatherResearchNode) GetStatus() int64 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *WeatherResearchNode) GetClaimed() bool {
+	if x != nil {
+		return x.Claimed
+	}
+	return false
+}
+
+func (x *WeatherResearchNode) GetField_5() int64 {
+	if x != nil {
+		return x.Field_5
+	}
+	return 0
+}
+
+func (x *WeatherResearchNode) GetCost() *ActivityItem {
+	if x != nil {
+		return x.Cost
+	}
+	return nil
+}
+
+func (x *WeatherResearchNode) GetReward() *ActivityItem {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+func (x *WeatherResearchNode) GetField_8() int64 {
+	if x != nil {
+		return x.Field_8
+	}
+	return 0
+}
+
+func (x *WeatherResearchNode) GetField_9() int64 {
+	if x != nil {
+		return x.Field_9
+	}
+	return 0
+}
+
+type WeatherResearchTrack struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CurrentStage  int64                  `protobuf:"varint,1,opt,name=current_stage,json=currentStage,proto3" json:"current_stage,omitempty"`
+	Nodes         []*WeatherResearchNode `protobuf:"bytes,2,rep,name=nodes,proto3" json:"nodes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherResearchTrack) Reset() {
+	*x = WeatherResearchTrack{}
+	mi := &file_activitypb_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherResearchTrack) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherResearchTrack) ProtoMessage() {}
+
+func (x *WeatherResearchTrack) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherResearchTrack.ProtoReflect.Descriptor instead.
+func (*WeatherResearchTrack) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *WeatherResearchTrack) GetCurrentStage() int64 {
+	if x != nil {
+		return x.CurrentStage
+	}
+	return 0
+}
+
+func (x *WeatherResearchTrack) GetNodes() []*WeatherResearchNode {
+	if x != nil {
+		return x.Nodes
+	}
+	return nil
+}
+
+type WeatherResearchData struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Track         *WeatherResearchTrack  `protobuf:"bytes,1,opt,name=track,proto3" json:"track,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherResearchData) Reset() {
+	*x = WeatherResearchData{}
+	mi := &file_activitypb_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherResearchData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherResearchData) ProtoMessage() {}
+
+func (x *WeatherResearchData) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherResearchData.ProtoReflect.Descriptor instead.
+func (*WeatherResearchData) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *WeatherResearchData) GetTrack() *WeatherResearchTrack {
+	if x != nil {
+		return x.Track
+	}
+	return nil
+}
+
 type ActivityData struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Activity         *ActivityContent       `protobuf:"bytes,1,opt,name=activity,proto3" json:"activity,omitempty"`
-	Children         []*ActivityData        `protobuf:"bytes,2,rep,name=children,proto3" json:"children,omitempty"`
-	Catalog          *StarSandGoodsList     `protobuf:"bytes,102,opt,name=catalog,proto3" json:"catalog,omitempty"`
-	QingmeiDailySeed *QingMeiDailySeedData  `protobuf:"bytes,103,opt,name=qingmei_daily_seed,json=qingmeiDailySeed,proto3" json:"qingmei_daily_seed,omitempty"`
-	QingmeiBrew      *QingMeiBrewData       `protobuf:"bytes,108,opt,name=qingmei_brew,json=qingmeiBrew,proto3" json:"qingmei_brew,omitempty"`
-	Constellation    *ConstellationData     `protobuf:"bytes,110,opt,name=constellation,proto3" json:"constellation,omitempty"`
-	QixiBridge       *QixiBridgeConfig      `protobuf:"bytes,112,opt,name=qixi_bridge,json=qixiBridge,proto3" json:"qixi_bridge,omitempty"`
-	QixiGift         *QixiGiftProgress      `protobuf:"bytes,113,opt,name=qixi_gift,json=qixiGift,proto3" json:"qixi_gift,omitempty"`
-	QingmeiQuote     *QingMeiQuote          `protobuf:"bytes,114,opt,name=qingmei_quote,json=qingmeiQuote,proto3" json:"qingmei_quote,omitempty"`
+	state            protoimpl.MessageState       `protogen:"open.v1"`
+	Activity         *ActivityContent             `protobuf:"bytes,1,opt,name=activity,proto3" json:"activity,omitempty"`
+	Children         []*ActivityData              `protobuf:"bytes,2,rep,name=children,proto3" json:"children,omitempty"`
+	Catalog          *StarSandGoodsList           `protobuf:"bytes,102,opt,name=catalog,proto3" json:"catalog,omitempty"`
+	QingmeiDailySeed *QingMeiDailySeedData        `protobuf:"bytes,103,opt,name=qingmei_daily_seed,json=qingmeiDailySeed,proto3" json:"qingmei_daily_seed,omitempty"`
+	QingmeiBrew      *QingMeiBrewData             `protobuf:"bytes,108,opt,name=qingmei_brew,json=qingmeiBrew,proto3" json:"qingmei_brew,omitempty"`
+	Constellation    *ConstellationData           `protobuf:"bytes,110,opt,name=constellation,proto3" json:"constellation,omitempty"`
+	PetTreasureHunt  *ActivityBodyPetTreasureHunt `protobuf:"bytes,115,opt,name=pet_treasure_hunt,json=petTreasureHunt,proto3" json:"pet_treasure_hunt,omitempty"`
+	QixiBridge       *QixiBridgeConfig            `protobuf:"bytes,112,opt,name=qixi_bridge,json=qixiBridge,proto3" json:"qixi_bridge,omitempty"`
+	QixiGift         *QixiGiftProgress            `protobuf:"bytes,113,opt,name=qixi_gift,json=qixiGift,proto3" json:"qixi_gift,omitempty"`
+	QingmeiQuote     *QingMeiQuote                `protobuf:"bytes,114,opt,name=qingmei_quote,json=qingmeiQuote,proto3" json:"qingmei_quote,omitempty"`
+	WeatherBottle    *WeatherBottleConfig         `protobuf:"bytes,105,opt,name=weather_bottle,json=weatherBottle,proto3" json:"weather_bottle,omitempty"`
+	CharityRedFlower *CharityRedFlowerData        `protobuf:"bytes,116,opt,name=charity_red_flower,json=charityRedFlower,proto3" json:"charity_red_flower,omitempty"`
+	WeatherTasks     *WeatherActivityTasks        `protobuf:"bytes,117,opt,name=weather_tasks,json=weatherTasks,proto3" json:"weather_tasks,omitempty"`
+	WeatherResearch  *WeatherResearchData         `protobuf:"bytes,118,opt,name=weather_research,json=weatherResearch,proto3" json:"weather_research,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
 
 func (x *ActivityData) Reset() {
 	*x = ActivityData{}
-	mi := &file_activitypb_proto_msgTypes[7]
+	mi := &file_activitypb_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -631,7 +1122,7 @@ func (x *ActivityData) String() string {
 func (*ActivityData) ProtoMessage() {}
 
 func (x *ActivityData) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[7]
+	mi := &file_activitypb_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -644,7 +1135,7 @@ func (x *ActivityData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActivityData.ProtoReflect.Descriptor instead.
 func (*ActivityData) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{7}
+	return file_activitypb_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ActivityData) GetActivity() *ActivityContent {
@@ -689,6 +1180,13 @@ func (x *ActivityData) GetConstellation() *ConstellationData {
 	return nil
 }
 
+func (x *ActivityData) GetPetTreasureHunt() *ActivityBodyPetTreasureHunt {
+	if x != nil {
+		return x.PetTreasureHunt
+	}
+	return nil
+}
+
 func (x *ActivityData) GetQixiBridge() *QixiBridgeConfig {
 	if x != nil {
 		return x.QixiBridge
@@ -710,6 +1208,426 @@ func (x *ActivityData) GetQingmeiQuote() *QingMeiQuote {
 	return nil
 }
 
+func (x *ActivityData) GetWeatherBottle() *WeatherBottleConfig {
+	if x != nil {
+		return x.WeatherBottle
+	}
+	return nil
+}
+
+func (x *ActivityData) GetCharityRedFlower() *CharityRedFlowerData {
+	if x != nil {
+		return x.CharityRedFlower
+	}
+	return nil
+}
+
+func (x *ActivityData) GetWeatherTasks() *WeatherActivityTasks {
+	if x != nil {
+		return x.WeatherTasks
+	}
+	return nil
+}
+
+func (x *ActivityData) GetWeatherResearch() *WeatherResearchData {
+	if x != nil {
+		return x.WeatherResearch
+	}
+	return nil
+}
+
+type CharityRedFlowerProgressReward struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Target        int64                  `protobuf:"varint,1,opt,name=target,proto3" json:"target,omitempty"`
+	Reward        *ActivityItem          `protobuf:"bytes,2,opt,name=reward,proto3" json:"reward,omitempty"`
+	Status        int64                  `protobuf:"varint,3,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerProgressReward) Reset() {
+	*x = CharityRedFlowerProgressReward{}
+	mi := &file_activitypb_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerProgressReward) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerProgressReward) ProtoMessage() {}
+
+func (x *CharityRedFlowerProgressReward) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerProgressReward.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerProgressReward) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *CharityRedFlowerProgressReward) GetTarget() int64 {
+	if x != nil {
+		return x.Target
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerProgressReward) GetReward() *ActivityItem {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerProgressReward) GetStatus() int64 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+type CharityRedFlowerGlobalReward struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Target        int64                  `protobuf:"varint,1,opt,name=target,proto3" json:"target,omitempty"`
+	Reward        *ActivityItem          `protobuf:"bytes,2,opt,name=reward,proto3" json:"reward,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerGlobalReward) Reset() {
+	*x = CharityRedFlowerGlobalReward{}
+	mi := &file_activitypb_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerGlobalReward) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerGlobalReward) ProtoMessage() {}
+
+func (x *CharityRedFlowerGlobalReward) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerGlobalReward.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerGlobalReward) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *CharityRedFlowerGlobalReward) GetTarget() int64 {
+	if x != nil {
+		return x.Target
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerGlobalReward) GetReward() *ActivityItem {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+type CharityRedFlowerPublicFund struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Date          int64                  `protobuf:"varint,1,opt,name=date,proto3" json:"date,omitempty"`
+	OrderId       string                 `protobuf:"bytes,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	Token         string                 `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
+	Status        int64                  `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerPublicFund) Reset() {
+	*x = CharityRedFlowerPublicFund{}
+	mi := &file_activitypb_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerPublicFund) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerPublicFund) ProtoMessage() {}
+
+func (x *CharityRedFlowerPublicFund) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerPublicFund.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerPublicFund) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *CharityRedFlowerPublicFund) GetDate() int64 {
+	if x != nil {
+		return x.Date
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerPublicFund) GetOrderId() string {
+	if x != nil {
+		return x.OrderId
+	}
+	return ""
+}
+
+func (x *CharityRedFlowerPublicFund) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *CharityRedFlowerPublicFund) GetStatus() int64 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+type CharityRedFlowerData struct {
+	state                  protoimpl.MessageState            `protogen:"open.v1"`
+	LoveItemId             int64                             `protobuf:"varint,1,opt,name=love_item_id,json=loveItemId,proto3" json:"love_item_id,omitempty"`
+	LoveBalance            int64                             `protobuf:"varint,2,opt,name=love_balance,json=loveBalance,proto3" json:"love_balance,omitempty"`
+	DonatedLove            int64                             `protobuf:"varint,3,opt,name=donated_love,json=donatedLove,proto3" json:"donated_love,omitempty"`
+	GlobalDonatedLove      int64                             `protobuf:"varint,4,opt,name=global_donated_love,json=globalDonatedLove,proto3" json:"global_donated_love,omitempty"`
+	GlobalTargetLove       int64                             `protobuf:"varint,5,opt,name=global_target_love,json=globalTargetLove,proto3" json:"global_target_love,omitempty"`
+	SeedRewardStatus       int64                             `protobuf:"varint,6,opt,name=seed_reward_status,json=seedRewardStatus,proto3" json:"seed_reward_status,omitempty"`
+	SeedReward             *ActivityItem                     `protobuf:"bytes,7,opt,name=seed_reward,json=seedReward,proto3" json:"seed_reward,omitempty"`
+	Field_8                int64                             `protobuf:"varint,8,opt,name=field_8,json=field8,proto3" json:"field_8,omitempty"`
+	ProgressRewards        []*CharityRedFlowerProgressReward `protobuf:"bytes,9,rep,name=progress_rewards,json=progressRewards,proto3" json:"progress_rewards,omitempty"`
+	GlobalReward           *CharityRedFlowerGlobalReward     `protobuf:"bytes,10,opt,name=global_reward,json=globalReward,proto3" json:"global_reward,omitempty"`
+	SettlementRequiredLove int64                             `protobuf:"varint,11,opt,name=settlement_required_love,json=settlementRequiredLove,proto3" json:"settlement_required_love,omitempty"`
+	SettlementReward       *ActivityItem                     `protobuf:"bytes,12,opt,name=settlement_reward,json=settlementReward,proto3" json:"settlement_reward,omitempty"`
+	EndTime                int64                             `protobuf:"varint,13,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	Field_14               int64                             `protobuf:"varint,14,opt,name=field_14,json=field14,proto3" json:"field_14,omitempty"`
+	Field_15               int64                             `protobuf:"varint,15,opt,name=field_15,json=field15,proto3" json:"field_15,omitempty"`
+	Field_16               int64                             `protobuf:"varint,16,opt,name=field_16,json=field16,proto3" json:"field_16,omitempty"`
+	FlowStatus             int64                             `protobuf:"varint,17,opt,name=flow_status,json=flowStatus,proto3" json:"flow_status,omitempty"`
+	PublicFund             *CharityRedFlowerPublicFund       `protobuf:"bytes,18,opt,name=public_fund,json=publicFund,proto3" json:"public_fund,omitempty"`
+	AgreementStatus        int64                             `protobuf:"varint,19,opt,name=agreement_status,json=agreementStatus,proto3" json:"agreement_status,omitempty"`
+	Field_20               int64                             `protobuf:"varint,20,opt,name=field_20,json=field20,proto3" json:"field_20,omitempty"`
+	DailyReward            *ActivityItem                     `protobuf:"bytes,21,opt,name=daily_reward,json=dailyReward,proto3" json:"daily_reward,omitempty"`
+	DailyRewardStatus      int64                             `protobuf:"varint,22,opt,name=daily_reward_status,json=dailyRewardStatus,proto3" json:"daily_reward_status,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerData) Reset() {
+	*x = CharityRedFlowerData{}
+	mi := &file_activitypb_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerData) ProtoMessage() {}
+
+func (x *CharityRedFlowerData) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerData.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerData) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *CharityRedFlowerData) GetLoveItemId() int64 {
+	if x != nil {
+		return x.LoveItemId
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetLoveBalance() int64 {
+	if x != nil {
+		return x.LoveBalance
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetDonatedLove() int64 {
+	if x != nil {
+		return x.DonatedLove
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetGlobalDonatedLove() int64 {
+	if x != nil {
+		return x.GlobalDonatedLove
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetGlobalTargetLove() int64 {
+	if x != nil {
+		return x.GlobalTargetLove
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetSeedRewardStatus() int64 {
+	if x != nil {
+		return x.SeedRewardStatus
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetSeedReward() *ActivityItem {
+	if x != nil {
+		return x.SeedReward
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerData) GetField_8() int64 {
+	if x != nil {
+		return x.Field_8
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetProgressRewards() []*CharityRedFlowerProgressReward {
+	if x != nil {
+		return x.ProgressRewards
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerData) GetGlobalReward() *CharityRedFlowerGlobalReward {
+	if x != nil {
+		return x.GlobalReward
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerData) GetSettlementRequiredLove() int64 {
+	if x != nil {
+		return x.SettlementRequiredLove
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetSettlementReward() *ActivityItem {
+	if x != nil {
+		return x.SettlementReward
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerData) GetEndTime() int64 {
+	if x != nil {
+		return x.EndTime
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetField_14() int64 {
+	if x != nil {
+		return x.Field_14
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetField_15() int64 {
+	if x != nil {
+		return x.Field_15
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetField_16() int64 {
+	if x != nil {
+		return x.Field_16
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetFlowStatus() int64 {
+	if x != nil {
+		return x.FlowStatus
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetPublicFund() *CharityRedFlowerPublicFund {
+	if x != nil {
+		return x.PublicFund
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerData) GetAgreementStatus() int64 {
+	if x != nil {
+		return x.AgreementStatus
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetField_20() int64 {
+	if x != nil {
+		return x.Field_20
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerData) GetDailyReward() *ActivityItem {
+	if x != nil {
+		return x.DailyReward
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerData) GetDailyRewardStatus() int64 {
+	if x != nil {
+		return x.DailyRewardStatus
+	}
+	return 0
+}
+
 type ActivityWindow struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -722,7 +1640,7 @@ type ActivityWindow struct {
 
 func (x *ActivityWindow) Reset() {
 	*x = ActivityWindow{}
-	mi := &file_activitypb_proto_msgTypes[8]
+	mi := &file_activitypb_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -734,7 +1652,7 @@ func (x *ActivityWindow) String() string {
 func (*ActivityWindow) ProtoMessage() {}
 
 func (x *ActivityWindow) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[8]
+	mi := &file_activitypb_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -747,7 +1665,7 @@ func (x *ActivityWindow) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActivityWindow.ProtoReflect.Descriptor instead.
 func (*ActivityWindow) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{8}
+	return file_activitypb_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ActivityWindow) GetId() int64 {
@@ -786,7 +1704,7 @@ type ActivityListRequest struct {
 
 func (x *ActivityListRequest) Reset() {
 	*x = ActivityListRequest{}
-	mi := &file_activitypb_proto_msgTypes[9]
+	mi := &file_activitypb_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -798,7 +1716,7 @@ func (x *ActivityListRequest) String() string {
 func (*ActivityListRequest) ProtoMessage() {}
 
 func (x *ActivityListRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[9]
+	mi := &file_activitypb_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -811,7 +1729,7 @@ func (x *ActivityListRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActivityListRequest.ProtoReflect.Descriptor instead.
 func (*ActivityListRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{9}
+	return file_activitypb_proto_rawDescGZIP(), []int{20}
 }
 
 type ActivityListReply struct {
@@ -824,7 +1742,7 @@ type ActivityListReply struct {
 
 func (x *ActivityListReply) Reset() {
 	*x = ActivityListReply{}
-	mi := &file_activitypb_proto_msgTypes[10]
+	mi := &file_activitypb_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -836,7 +1754,7 @@ func (x *ActivityListReply) String() string {
 func (*ActivityListReply) ProtoMessage() {}
 
 func (x *ActivityListReply) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[10]
+	mi := &file_activitypb_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -849,7 +1767,7 @@ func (x *ActivityListReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActivityListReply.ProtoReflect.Descriptor instead.
 func (*ActivityListReply) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{10}
+	return file_activitypb_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ActivityListReply) GetActivities() []*ActivityData {
@@ -875,7 +1793,7 @@ type SetSplashedRequest struct {
 
 func (x *SetSplashedRequest) Reset() {
 	*x = SetSplashedRequest{}
-	mi := &file_activitypb_proto_msgTypes[11]
+	mi := &file_activitypb_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -887,7 +1805,7 @@ func (x *SetSplashedRequest) String() string {
 func (*SetSplashedRequest) ProtoMessage() {}
 
 func (x *SetSplashedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[11]
+	mi := &file_activitypb_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -900,7 +1818,7 @@ func (x *SetSplashedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetSplashedRequest.ProtoReflect.Descriptor instead.
 func (*SetSplashedRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{11}
+	return file_activitypb_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *SetSplashedRequest) GetActivityId() int64 {
@@ -918,7 +1836,7 @@ type SetSplashedReply struct {
 
 func (x *SetSplashedReply) Reset() {
 	*x = SetSplashedReply{}
-	mi := &file_activitypb_proto_msgTypes[12]
+	mi := &file_activitypb_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -930,7 +1848,7 @@ func (x *SetSplashedReply) String() string {
 func (*SetSplashedReply) ProtoMessage() {}
 
 func (x *SetSplashedReply) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[12]
+	mi := &file_activitypb_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -943,7 +1861,7 @@ func (x *SetSplashedReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetSplashedReply.ProtoReflect.Descriptor instead.
 func (*SetSplashedReply) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{12}
+	return file_activitypb_proto_rawDescGZIP(), []int{23}
 }
 
 type GetGroupRequest struct {
@@ -955,7 +1873,7 @@ type GetGroupRequest struct {
 
 func (x *GetGroupRequest) Reset() {
 	*x = GetGroupRequest{}
-	mi := &file_activitypb_proto_msgTypes[13]
+	mi := &file_activitypb_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -967,7 +1885,7 @@ func (x *GetGroupRequest) String() string {
 func (*GetGroupRequest) ProtoMessage() {}
 
 func (x *GetGroupRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[13]
+	mi := &file_activitypb_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -980,7 +1898,7 @@ func (x *GetGroupRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGroupRequest.ProtoReflect.Descriptor instead.
 func (*GetGroupRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{13}
+	return file_activitypb_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetGroupRequest) GetGroupId() int64 {
@@ -999,7 +1917,7 @@ type GetGroupReply struct {
 
 func (x *GetGroupReply) Reset() {
 	*x = GetGroupReply{}
-	mi := &file_activitypb_proto_msgTypes[14]
+	mi := &file_activitypb_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1011,7 +1929,7 @@ func (x *GetGroupReply) String() string {
 func (*GetGroupReply) ProtoMessage() {}
 
 func (x *GetGroupReply) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[14]
+	mi := &file_activitypb_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1024,7 +1942,7 @@ func (x *GetGroupReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGroupReply.ProtoReflect.Descriptor instead.
 func (*GetGroupReply) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{14}
+	return file_activitypb_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetGroupReply) GetGroup() *ActivityData {
@@ -1044,7 +1962,7 @@ type QingMeiDailySeedGrant struct {
 
 func (x *QingMeiDailySeedGrant) Reset() {
 	*x = QingMeiDailySeedGrant{}
-	mi := &file_activitypb_proto_msgTypes[15]
+	mi := &file_activitypb_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1056,7 +1974,7 @@ func (x *QingMeiDailySeedGrant) String() string {
 func (*QingMeiDailySeedGrant) ProtoMessage() {}
 
 func (x *QingMeiDailySeedGrant) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[15]
+	mi := &file_activitypb_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1069,7 +1987,7 @@ func (x *QingMeiDailySeedGrant) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiDailySeedGrant.ProtoReflect.Descriptor instead.
 func (*QingMeiDailySeedGrant) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{15}
+	return file_activitypb_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *QingMeiDailySeedGrant) GetGrantId() int64 {
@@ -1096,7 +2014,7 @@ type QingMeiDailySeedData struct {
 
 func (x *QingMeiDailySeedData) Reset() {
 	*x = QingMeiDailySeedData{}
-	mi := &file_activitypb_proto_msgTypes[16]
+	mi := &file_activitypb_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1108,7 +2026,7 @@ func (x *QingMeiDailySeedData) String() string {
 func (*QingMeiDailySeedData) ProtoMessage() {}
 
 func (x *QingMeiDailySeedData) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[16]
+	mi := &file_activitypb_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1121,7 +2039,7 @@ func (x *QingMeiDailySeedData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiDailySeedData.ProtoReflect.Descriptor instead.
 func (*QingMeiDailySeedData) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{16}
+	return file_activitypb_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *QingMeiDailySeedData) GetClaimed() bool {
@@ -1155,7 +2073,7 @@ type QingMeiBrewData struct {
 
 func (x *QingMeiBrewData) Reset() {
 	*x = QingMeiBrewData{}
-	mi := &file_activitypb_proto_msgTypes[17]
+	mi := &file_activitypb_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1167,7 +2085,7 @@ func (x *QingMeiBrewData) String() string {
 func (*QingMeiBrewData) ProtoMessage() {}
 
 func (x *QingMeiBrewData) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[17]
+	mi := &file_activitypb_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1180,7 +2098,7 @@ func (x *QingMeiBrewData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiBrewData.ProtoReflect.Descriptor instead.
 func (*QingMeiBrewData) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{17}
+	return file_activitypb_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *QingMeiBrewData) GetBaseGold() int64 {
@@ -1258,7 +2176,7 @@ type QixiBridgeStage struct {
 
 func (x *QixiBridgeStage) Reset() {
 	*x = QixiBridgeStage{}
-	mi := &file_activitypb_proto_msgTypes[18]
+	mi := &file_activitypb_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1270,7 +2188,7 @@ func (x *QixiBridgeStage) String() string {
 func (*QixiBridgeStage) ProtoMessage() {}
 
 func (x *QixiBridgeStage) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[18]
+	mi := &file_activitypb_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1283,7 +2201,7 @@ func (x *QixiBridgeStage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QixiBridgeStage.ProtoReflect.Descriptor instead.
 func (*QixiBridgeStage) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{18}
+	return file_activitypb_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *QixiBridgeStage) GetStage() int64 {
@@ -1325,7 +2243,7 @@ type QixiBridgeConfig struct {
 
 func (x *QixiBridgeConfig) Reset() {
 	*x = QixiBridgeConfig{}
-	mi := &file_activitypb_proto_msgTypes[19]
+	mi := &file_activitypb_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1337,7 +2255,7 @@ func (x *QixiBridgeConfig) String() string {
 func (*QixiBridgeConfig) ProtoMessage() {}
 
 func (x *QixiBridgeConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[19]
+	mi := &file_activitypb_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1350,7 +2268,7 @@ func (x *QixiBridgeConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QixiBridgeConfig.ProtoReflect.Descriptor instead.
 func (*QixiBridgeConfig) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{19}
+	return file_activitypb_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *QixiBridgeConfig) GetDisplayItems() []*ActivityItem {
@@ -1376,17 +2294,17 @@ func (x *QixiBridgeConfig) GetCurrentStage() int64 {
 
 type QixiGiftExchange struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	SentItem      *ActivityItem          `protobuf:"bytes,1,opt,name=sent_item,json=sentItem,proto3" json:"sent_item,omitempty"`
-	ReceivedItem  *ActivityItem          `protobuf:"bytes,2,opt,name=received_item,json=receivedItem,proto3" json:"received_item,omitempty"`
-	Field_3       bool                   `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"`
-	Enabled       bool                   `protobuf:"varint,4,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	CostItems     []*ActivityItem        `protobuf:"bytes,1,rep,name=cost_items,json=costItems,proto3" json:"cost_items,omitempty"`
+	ReceiveItems  []*ActivityItem        `protobuf:"bytes,2,rep,name=receive_items,json=receiveItems,proto3" json:"receive_items,omitempty"`
+	GiftType      int64                  `protobuf:"varint,3,opt,name=gift_type,json=giftType,proto3" json:"gift_type,omitempty"`
+	Content       int64                  `protobuf:"varint,4,opt,name=content,proto3" json:"content,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *QixiGiftExchange) Reset() {
 	*x = QixiGiftExchange{}
-	mi := &file_activitypb_proto_msgTypes[20]
+	mi := &file_activitypb_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1398,7 +2316,7 @@ func (x *QixiGiftExchange) String() string {
 func (*QixiGiftExchange) ProtoMessage() {}
 
 func (x *QixiGiftExchange) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[20]
+	mi := &file_activitypb_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1411,50 +2329,50 @@ func (x *QixiGiftExchange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QixiGiftExchange.ProtoReflect.Descriptor instead.
 func (*QixiGiftExchange) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{20}
+	return file_activitypb_proto_rawDescGZIP(), []int{31}
 }
 
-func (x *QixiGiftExchange) GetSentItem() *ActivityItem {
+func (x *QixiGiftExchange) GetCostItems() []*ActivityItem {
 	if x != nil {
-		return x.SentItem
+		return x.CostItems
 	}
 	return nil
 }
 
-func (x *QixiGiftExchange) GetReceivedItem() *ActivityItem {
+func (x *QixiGiftExchange) GetReceiveItems() []*ActivityItem {
 	if x != nil {
-		return x.ReceivedItem
+		return x.ReceiveItems
 	}
 	return nil
 }
 
-func (x *QixiGiftExchange) GetField_3() bool {
+func (x *QixiGiftExchange) GetGiftType() int64 {
 	if x != nil {
-		return x.Field_3
+		return x.GiftType
 	}
-	return false
+	return 0
 }
 
-func (x *QixiGiftExchange) GetEnabled() bool {
+func (x *QixiGiftExchange) GetContent() int64 {
 	if x != nil {
-		return x.Enabled
+		return x.Content
 	}
-	return false
+	return 0
 }
 
 type QixiGiftProgress struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	SentCount     int64                  `protobuf:"varint,1,opt,name=sent_count,json=sentCount,proto3" json:"sent_count,omitempty"`
-	Field_2       int64                  `protobuf:"varint,2,opt,name=field_2,json=field2,proto3" json:"field_2,omitempty"`
-	Field_3       int64                  `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"`
-	Exchange      *QixiGiftExchange      `protobuf:"bytes,4,opt,name=exchange,proto3" json:"exchange,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	TotalSendCount    int64                  `protobuf:"varint,1,opt,name=total_send_count,json=totalSendCount,proto3" json:"total_send_count,omitempty"`
+	TotalSendLimit    int64                  `protobuf:"varint,2,opt,name=total_send_limit,json=totalSendLimit,proto3" json:"total_send_limit,omitempty"`
+	TotalReceiveLimit int64                  `protobuf:"varint,3,opt,name=total_receive_limit,json=totalReceiveLimit,proto3" json:"total_receive_limit,omitempty"`
+	Gifts             []*QixiGiftExchange    `protobuf:"bytes,4,rep,name=gifts,proto3" json:"gifts,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *QixiGiftProgress) Reset() {
 	*x = QixiGiftProgress{}
-	mi := &file_activitypb_proto_msgTypes[21]
+	mi := &file_activitypb_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1466,7 +2384,7 @@ func (x *QixiGiftProgress) String() string {
 func (*QixiGiftProgress) ProtoMessage() {}
 
 func (x *QixiGiftProgress) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[21]
+	mi := &file_activitypb_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1479,33 +2397,33 @@ func (x *QixiGiftProgress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QixiGiftProgress.ProtoReflect.Descriptor instead.
 func (*QixiGiftProgress) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{21}
+	return file_activitypb_proto_rawDescGZIP(), []int{32}
 }
 
-func (x *QixiGiftProgress) GetSentCount() int64 {
+func (x *QixiGiftProgress) GetTotalSendCount() int64 {
 	if x != nil {
-		return x.SentCount
+		return x.TotalSendCount
 	}
 	return 0
 }
 
-func (x *QixiGiftProgress) GetField_2() int64 {
+func (x *QixiGiftProgress) GetTotalSendLimit() int64 {
 	if x != nil {
-		return x.Field_2
+		return x.TotalSendLimit
 	}
 	return 0
 }
 
-func (x *QixiGiftProgress) GetField_3() int64 {
+func (x *QixiGiftProgress) GetTotalReceiveLimit() int64 {
 	if x != nil {
-		return x.Field_3
+		return x.TotalReceiveLimit
 	}
 	return 0
 }
 
-func (x *QixiGiftProgress) GetExchange() *QixiGiftExchange {
+func (x *QixiGiftProgress) GetGifts() []*QixiGiftExchange {
 	if x != nil {
-		return x.Exchange
+		return x.Gifts
 	}
 	return nil
 }
@@ -1519,7 +2437,7 @@ type QingMeiBrewStarted struct {
 
 func (x *QingMeiBrewStarted) Reset() {
 	*x = QingMeiBrewStarted{}
-	mi := &file_activitypb_proto_msgTypes[22]
+	mi := &file_activitypb_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1531,7 +2449,7 @@ func (x *QingMeiBrewStarted) String() string {
 func (*QingMeiBrewStarted) ProtoMessage() {}
 
 func (x *QingMeiBrewStarted) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[22]
+	mi := &file_activitypb_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1544,7 +2462,7 @@ func (x *QingMeiBrewStarted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiBrewStarted.ProtoReflect.Descriptor instead.
 func (*QingMeiBrewStarted) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{22}
+	return file_activitypb_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *QingMeiBrewStarted) GetBaseGold() int64 {
@@ -1566,7 +2484,7 @@ type QingMeiQuote struct {
 
 func (x *QingMeiQuote) Reset() {
 	*x = QingMeiQuote{}
-	mi := &file_activitypb_proto_msgTypes[23]
+	mi := &file_activitypb_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1578,7 +2496,7 @@ func (x *QingMeiQuote) String() string {
 func (*QingMeiQuote) ProtoMessage() {}
 
 func (x *QingMeiQuote) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[23]
+	mi := &file_activitypb_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1591,7 +2509,7 @@ func (x *QingMeiQuote) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiQuote.ProtoReflect.Descriptor instead.
 func (*QingMeiQuote) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{23}
+	return file_activitypb_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *QingMeiQuote) GetRound() int64 {
@@ -1633,7 +2551,7 @@ type QingMeiSettlement struct {
 
 func (x *QingMeiSettlement) Reset() {
 	*x = QingMeiSettlement{}
-	mi := &file_activitypb_proto_msgTypes[24]
+	mi := &file_activitypb_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1645,7 +2563,7 @@ func (x *QingMeiSettlement) String() string {
 func (*QingMeiSettlement) ProtoMessage() {}
 
 func (x *QingMeiSettlement) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[24]
+	mi := &file_activitypb_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1658,7 +2576,7 @@ func (x *QingMeiSettlement) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QingMeiSettlement.ProtoReflect.Descriptor instead.
 func (*QingMeiSettlement) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{24}
+	return file_activitypb_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *QingMeiSettlement) GetSettlementMode() int64 {
@@ -1694,7 +2612,7 @@ type QueryActivityRequest struct {
 
 func (x *QueryActivityRequest) Reset() {
 	*x = QueryActivityRequest{}
-	mi := &file_activitypb_proto_msgTypes[25]
+	mi := &file_activitypb_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1706,7 +2624,7 @@ func (x *QueryActivityRequest) String() string {
 func (*QueryActivityRequest) ProtoMessage() {}
 
 func (x *QueryActivityRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[25]
+	mi := &file_activitypb_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1719,7 +2637,7 @@ func (x *QueryActivityRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryActivityRequest.ProtoReflect.Descriptor instead.
 func (*QueryActivityRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{25}
+	return file_activitypb_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *QueryActivityRequest) GetActivityId() int64 {
@@ -1746,7 +2664,7 @@ type ExchangeShopOperateParams struct {
 
 func (x *ExchangeShopOperateParams) Reset() {
 	*x = ExchangeShopOperateParams{}
-	mi := &file_activitypb_proto_msgTypes[26]
+	mi := &file_activitypb_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1758,7 +2676,7 @@ func (x *ExchangeShopOperateParams) String() string {
 func (*ExchangeShopOperateParams) ProtoMessage() {}
 
 func (x *ExchangeShopOperateParams) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[26]
+	mi := &file_activitypb_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1771,7 +2689,7 @@ func (x *ExchangeShopOperateParams) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExchangeShopOperateParams.ProtoReflect.Descriptor instead.
 func (*ExchangeShopOperateParams) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{26}
+	return file_activitypb_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ExchangeShopOperateParams) GetGoodsId() int64 {
@@ -1799,7 +2717,7 @@ type ExchangeShopRequest struct {
 
 func (x *ExchangeShopRequest) Reset() {
 	*x = ExchangeShopRequest{}
-	mi := &file_activitypb_proto_msgTypes[27]
+	mi := &file_activitypb_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1811,7 +2729,7 @@ func (x *ExchangeShopRequest) String() string {
 func (*ExchangeShopRequest) ProtoMessage() {}
 
 func (x *ExchangeShopRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[27]
+	mi := &file_activitypb_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1824,7 +2742,7 @@ func (x *ExchangeShopRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExchangeShopRequest.ProtoReflect.Descriptor instead.
 func (*ExchangeShopRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{27}
+	return file_activitypb_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *ExchangeShopRequest) GetActivityId() int64 {
@@ -1848,6 +2766,386 @@ func (x *ExchangeShopRequest) GetExchangeShopOperate() *ExchangeShopOperateParam
 	return nil
 }
 
+// 雨落成诗：推进一个气象研究节点。
+// 实机协议为 operate_type=40，选择器位于 field 140。
+type WeatherResearchOperateParams struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NodeId        int64                  `protobuf:"varint,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherResearchOperateParams) Reset() {
+	*x = WeatherResearchOperateParams{}
+	mi := &file_activitypb_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherResearchOperateParams) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherResearchOperateParams) ProtoMessage() {}
+
+func (x *WeatherResearchOperateParams) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherResearchOperateParams.ProtoReflect.Descriptor instead.
+func (*WeatherResearchOperateParams) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *WeatherResearchOperateParams) GetNodeId() int64 {
+	if x != nil {
+		return x.NodeId
+	}
+	return 0
+}
+
+type AdvanceWeatherResearchRequest struct {
+	state                  protoimpl.MessageState        `protogen:"open.v1"`
+	ActivityId             int64                         `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	OperateType            int64                         `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
+	WeatherResearchOperate *WeatherResearchOperateParams `protobuf:"bytes,140,opt,name=weather_research_operate,json=weatherResearchOperate,proto3" json:"weather_research_operate,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *AdvanceWeatherResearchRequest) Reset() {
+	*x = AdvanceWeatherResearchRequest{}
+	mi := &file_activitypb_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdvanceWeatherResearchRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdvanceWeatherResearchRequest) ProtoMessage() {}
+
+func (x *AdvanceWeatherResearchRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdvanceWeatherResearchRequest.ProtoReflect.Descriptor instead.
+func (*AdvanceWeatherResearchRequest) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *AdvanceWeatherResearchRequest) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+func (x *AdvanceWeatherResearchRequest) GetOperateType() int64 {
+	if x != nil {
+		return x.OperateType
+	}
+	return 0
+}
+
+func (x *AdvanceWeatherResearchRequest) GetWeatherResearchOperate() *WeatherResearchOperateParams {
+	if x != nil {
+		return x.WeatherResearchOperate
+	}
+	return nil
+}
+
+// 雨落成诗：在好友雷雨现场使用天气采集瓶。
+// 实机协议为 activity_id=2026070303、operate_type=9，好友 GID 位于
+// field 107 的 field 3；这条链路不经过 ItemService.Use。
+type WeatherCollectOperateParams struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HostGid       int64                  `protobuf:"varint,3,opt,name=host_gid,json=hostGid,proto3" json:"host_gid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherCollectOperateParams) Reset() {
+	*x = WeatherCollectOperateParams{}
+	mi := &file_activitypb_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherCollectOperateParams) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherCollectOperateParams) ProtoMessage() {}
+
+func (x *WeatherCollectOperateParams) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherCollectOperateParams.ProtoReflect.Descriptor instead.
+func (*WeatherCollectOperateParams) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *WeatherCollectOperateParams) GetHostGid() int64 {
+	if x != nil {
+		return x.HostGid
+	}
+	return 0
+}
+
+type CollectWeatherRequest struct {
+	state                 protoimpl.MessageState       `protogen:"open.v1"`
+	ActivityId            int64                        `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	OperateType           int64                        `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
+	WeatherCollectOperate *WeatherCollectOperateParams `protobuf:"bytes,107,opt,name=weather_collect_operate,json=weatherCollectOperate,proto3" json:"weather_collect_operate,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *CollectWeatherRequest) Reset() {
+	*x = CollectWeatherRequest{}
+	mi := &file_activitypb_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CollectWeatherRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CollectWeatherRequest) ProtoMessage() {}
+
+func (x *CollectWeatherRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CollectWeatherRequest.ProtoReflect.Descriptor instead.
+func (*CollectWeatherRequest) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *CollectWeatherRequest) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+func (x *CollectWeatherRequest) GetOperateType() int64 {
+	if x != nil {
+		return x.OperateType
+	}
+	return 0
+}
+
+func (x *CollectWeatherRequest) GetWeatherCollectOperate() *WeatherCollectOperateParams {
+	if x != nil {
+		return x.WeatherCollectOperate
+	}
+	return nil
+}
+
+// Compatibility aliases used by the upstream activity-center implementation.
+// The verified wire selectors remain field 107 for friend collection and
+// field 140 for weather research.
+type WeatherResearchOperateRequest struct {
+	state         protoimpl.MessageState        `protogen:"open.v1"`
+	ActivityId    int64                         `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	OperateType   int64                         `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
+	Params        *WeatherResearchOperateParams `protobuf:"bytes,140,opt,name=params,proto3" json:"params,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherResearchOperateRequest) Reset() {
+	*x = WeatherResearchOperateRequest{}
+	mi := &file_activitypb_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherResearchOperateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherResearchOperateRequest) ProtoMessage() {}
+
+func (x *WeatherResearchOperateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherResearchOperateRequest.ProtoReflect.Descriptor instead.
+func (*WeatherResearchOperateRequest) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *WeatherResearchOperateRequest) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+func (x *WeatherResearchOperateRequest) GetOperateType() int64 {
+	if x != nil {
+		return x.OperateType
+	}
+	return 0
+}
+
+func (x *WeatherResearchOperateRequest) GetParams() *WeatherResearchOperateParams {
+	if x != nil {
+		return x.Params
+	}
+	return nil
+}
+
+type WeatherTaskOperateParams struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TargetGid     int64                  `protobuf:"varint,3,opt,name=target_gid,json=targetGid,proto3" json:"target_gid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherTaskOperateParams) Reset() {
+	*x = WeatherTaskOperateParams{}
+	mi := &file_activitypb_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherTaskOperateParams) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherTaskOperateParams) ProtoMessage() {}
+
+func (x *WeatherTaskOperateParams) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherTaskOperateParams.ProtoReflect.Descriptor instead.
+func (*WeatherTaskOperateParams) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{44}
+}
+
+func (x *WeatherTaskOperateParams) GetTargetGid() int64 {
+	if x != nil {
+		return x.TargetGid
+	}
+	return 0
+}
+
+type WeatherTaskOperateRequest struct {
+	state         protoimpl.MessageState    `protogen:"open.v1"`
+	ActivityId    int64                     `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	OperateType   int64                     `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
+	Params        *WeatherTaskOperateParams `protobuf:"bytes,107,opt,name=params,proto3" json:"params,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherTaskOperateRequest) Reset() {
+	*x = WeatherTaskOperateRequest{}
+	mi := &file_activitypb_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherTaskOperateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherTaskOperateRequest) ProtoMessage() {}
+
+func (x *WeatherTaskOperateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherTaskOperateRequest.ProtoReflect.Descriptor instead.
+func (*WeatherTaskOperateRequest) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *WeatherTaskOperateRequest) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+func (x *WeatherTaskOperateRequest) GetOperateType() int64 {
+	if x != nil {
+		return x.OperateType
+	}
+	return 0
+}
+
+func (x *WeatherTaskOperateRequest) GetParams() *WeatherTaskOperateParams {
+	if x != nil {
+		return x.Params
+	}
+	return nil
+}
+
 type OperateConstellationRequest struct {
 	state         protoimpl.MessageState             `protogen:"open.v1"`
 	ActivityId    int64                              `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
@@ -1859,7 +3157,7 @@ type OperateConstellationRequest struct {
 
 func (x *OperateConstellationRequest) Reset() {
 	*x = OperateConstellationRequest{}
-	mi := &file_activitypb_proto_msgTypes[28]
+	mi := &file_activitypb_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1871,7 +3169,7 @@ func (x *OperateConstellationRequest) String() string {
 func (*OperateConstellationRequest) ProtoMessage() {}
 
 func (x *OperateConstellationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[28]
+	mi := &file_activitypb_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1884,7 +3182,7 @@ func (x *OperateConstellationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperateConstellationRequest.ProtoReflect.Descriptor instead.
 func (*OperateConstellationRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{28}
+	return file_activitypb_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *OperateConstellationRequest) GetActivityId() int64 {
@@ -1919,7 +3217,7 @@ type ClaimQingMeiDailySeedRequest struct {
 
 func (x *ClaimQingMeiDailySeedRequest) Reset() {
 	*x = ClaimQingMeiDailySeedRequest{}
-	mi := &file_activitypb_proto_msgTypes[29]
+	mi := &file_activitypb_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1931,7 +3229,7 @@ func (x *ClaimQingMeiDailySeedRequest) String() string {
 func (*ClaimQingMeiDailySeedRequest) ProtoMessage() {}
 
 func (x *ClaimQingMeiDailySeedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[29]
+	mi := &file_activitypb_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1944,7 +3242,7 @@ func (x *ClaimQingMeiDailySeedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimQingMeiDailySeedRequest.ProtoReflect.Descriptor instead.
 func (*ClaimQingMeiDailySeedRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{29}
+	return file_activitypb_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *ClaimQingMeiDailySeedRequest) GetActivityId() int64 {
@@ -1979,7 +3277,7 @@ type StartQingMeiBrewRequest struct {
 
 func (x *StartQingMeiBrewRequest) Reset() {
 	*x = StartQingMeiBrewRequest{}
-	mi := &file_activitypb_proto_msgTypes[30]
+	mi := &file_activitypb_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1991,7 +3289,7 @@ func (x *StartQingMeiBrewRequest) String() string {
 func (*StartQingMeiBrewRequest) ProtoMessage() {}
 
 func (x *StartQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[30]
+	mi := &file_activitypb_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2004,7 +3302,7 @@ func (x *StartQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartQingMeiBrewRequest.ProtoReflect.Descriptor instead.
 func (*StartQingMeiBrewRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{30}
+	return file_activitypb_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *StartQingMeiBrewRequest) GetActivityId() int64 {
@@ -2039,7 +3337,7 @@ type ContinueQingMeiBrewRequest struct {
 
 func (x *ContinueQingMeiBrewRequest) Reset() {
 	*x = ContinueQingMeiBrewRequest{}
-	mi := &file_activitypb_proto_msgTypes[31]
+	mi := &file_activitypb_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2051,7 +3349,7 @@ func (x *ContinueQingMeiBrewRequest) String() string {
 func (*ContinueQingMeiBrewRequest) ProtoMessage() {}
 
 func (x *ContinueQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[31]
+	mi := &file_activitypb_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2064,7 +3362,7 @@ func (x *ContinueQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContinueQingMeiBrewRequest.ProtoReflect.Descriptor instead.
 func (*ContinueQingMeiBrewRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{31}
+	return file_activitypb_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *ContinueQingMeiBrewRequest) GetActivityId() int64 {
@@ -2099,7 +3397,7 @@ type SettleQingMeiBrewRequest struct {
 
 func (x *SettleQingMeiBrewRequest) Reset() {
 	*x = SettleQingMeiBrewRequest{}
-	mi := &file_activitypb_proto_msgTypes[32]
+	mi := &file_activitypb_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2111,7 +3409,7 @@ func (x *SettleQingMeiBrewRequest) String() string {
 func (*SettleQingMeiBrewRequest) ProtoMessage() {}
 
 func (x *SettleQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[32]
+	mi := &file_activitypb_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2124,7 +3422,7 @@ func (x *SettleQingMeiBrewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SettleQingMeiBrewRequest.ProtoReflect.Descriptor instead.
 func (*SettleQingMeiBrewRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{32}
+	return file_activitypb_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *SettleQingMeiBrewRequest) GetActivityId() int64 {
@@ -2159,7 +3457,7 @@ type ClaimQixiBridgeRewardsRequest struct {
 
 func (x *ClaimQixiBridgeRewardsRequest) Reset() {
 	*x = ClaimQixiBridgeRewardsRequest{}
-	mi := &file_activitypb_proto_msgTypes[33]
+	mi := &file_activitypb_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2171,7 +3469,7 @@ func (x *ClaimQixiBridgeRewardsRequest) String() string {
 func (*ClaimQixiBridgeRewardsRequest) ProtoMessage() {}
 
 func (x *ClaimQixiBridgeRewardsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[33]
+	mi := &file_activitypb_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2184,7 +3482,7 @@ func (x *ClaimQixiBridgeRewardsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimQixiBridgeRewardsRequest.ProtoReflect.Descriptor instead.
 func (*ClaimQixiBridgeRewardsRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{33}
+	return file_activitypb_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *ClaimQixiBridgeRewardsRequest) GetActivityId() int64 {
@@ -2219,7 +3517,7 @@ type GiftQixiSachetRequest struct {
 
 func (x *GiftQixiSachetRequest) Reset() {
 	*x = GiftQixiSachetRequest{}
-	mi := &file_activitypb_proto_msgTypes[34]
+	mi := &file_activitypb_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2231,7 +3529,7 @@ func (x *GiftQixiSachetRequest) String() string {
 func (*GiftQixiSachetRequest) ProtoMessage() {}
 
 func (x *GiftQixiSachetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[34]
+	mi := &file_activitypb_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2244,7 +3542,7 @@ func (x *GiftQixiSachetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GiftQixiSachetRequest.ProtoReflect.Descriptor instead.
 func (*GiftQixiSachetRequest) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{34}
+	return file_activitypb_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *GiftQixiSachetRequest) GetActivityId() int64 {
@@ -2268,16 +3566,384 @@ func (x *GiftQixiSachetRequest) GetParams() *GiftQixiSachetRequest_Params {
 	return nil
 }
 
-type QixiGiftResult struct {
+type CharityRedFlowerOperateRequest struct {
+	state               protoimpl.MessageState                               `protogen:"open.v1"`
+	ActivityId          int64                                                `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	OperateType         int64                                                `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
+	ClaimSeed           *CharityRedFlowerOperateRequest_Empty                `protobuf:"bytes,134,opt,name=claim_seed,json=claimSeed,proto3" json:"claim_seed,omitempty"`
+	DonateLove          *CharityRedFlowerOperateRequest_Empty                `protobuf:"bytes,135,opt,name=donate_love,json=donateLove,proto3" json:"donate_love,omitempty"`
+	ClaimProgressReward *CharityRedFlowerOperateRequest_ProgressRewardParams `protobuf:"bytes,136,opt,name=claim_progress_reward,json=claimProgressReward,proto3" json:"claim_progress_reward,omitempty"`
+	SendPublicFund      *CharityRedFlowerOperateRequest_Empty                `protobuf:"bytes,137,opt,name=send_public_fund,json=sendPublicFund,proto3" json:"send_public_fund,omitempty"`
+	Query               *CharityRedFlowerOperateRequest_QueryParams          `protobuf:"bytes,138,opt,name=query,proto3" json:"query,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerOperateRequest) Reset() {
+	*x = CharityRedFlowerOperateRequest{}
+	mi := &file_activitypb_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerOperateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerOperateRequest) ProtoMessage() {}
+
+func (x *CharityRedFlowerOperateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerOperateRequest.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerOperateRequest) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *CharityRedFlowerOperateRequest) GetActivityId() int64 {
+	if x != nil {
+		return x.ActivityId
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerOperateRequest) GetOperateType() int64 {
+	if x != nil {
+		return x.OperateType
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerOperateRequest) GetClaimSeed() *CharityRedFlowerOperateRequest_Empty {
+	if x != nil {
+		return x.ClaimSeed
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerOperateRequest) GetDonateLove() *CharityRedFlowerOperateRequest_Empty {
+	if x != nil {
+		return x.DonateLove
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerOperateRequest) GetClaimProgressReward() *CharityRedFlowerOperateRequest_ProgressRewardParams {
+	if x != nil {
+		return x.ClaimProgressReward
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerOperateRequest) GetSendPublicFund() *CharityRedFlowerOperateRequest_Empty {
+	if x != nil {
+		return x.SendPublicFund
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerOperateRequest) GetQuery() *CharityRedFlowerOperateRequest_QueryParams {
+	if x != nil {
+		return x.Query
+	}
+	return nil
+}
+
+type CharityRedFlowerSeedResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Reward        *corepb.Item           `protobuf:"bytes,1,opt,name=reward,proto3" json:"reward,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
+func (x *CharityRedFlowerSeedResult) Reset() {
+	*x = CharityRedFlowerSeedResult{}
+	mi := &file_activitypb_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerSeedResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerSeedResult) ProtoMessage() {}
+
+func (x *CharityRedFlowerSeedResult) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerSeedResult.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerSeedResult) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *CharityRedFlowerSeedResult) GetReward() *corepb.Item {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+type CharityRedFlowerDonateResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Donated       int64                  `protobuf:"varint,1,opt,name=donated,proto3" json:"donated,omitempty"`
+	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	Status        int64                  `protobuf:"varint,3,opt,name=status,proto3" json:"status,omitempty"`
+	GlobalDonated int64                  `protobuf:"varint,4,opt,name=global_donated,json=globalDonated,proto3" json:"global_donated,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerDonateResult) Reset() {
+	*x = CharityRedFlowerDonateResult{}
+	mi := &file_activitypb_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerDonateResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerDonateResult) ProtoMessage() {}
+
+func (x *CharityRedFlowerDonateResult) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerDonateResult.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerDonateResult) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{55}
+}
+
+func (x *CharityRedFlowerDonateResult) GetDonated() int64 {
+	if x != nil {
+		return x.Donated
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerDonateResult) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerDonateResult) GetStatus() int64 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerDonateResult) GetGlobalDonated() int64 {
+	if x != nil {
+		return x.GlobalDonated
+	}
+	return 0
+}
+
+type CharityRedFlowerPublicFundResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        int64                  `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
+	OrderId       string                 `protobuf:"bytes,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	Reward        *corepb.Item           `protobuf:"bytes,3,opt,name=reward,proto3" json:"reward,omitempty"`
+	Token         string                 `protobuf:"bytes,4,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerPublicFundResult) Reset() {
+	*x = CharityRedFlowerPublicFundResult{}
+	mi := &file_activitypb_proto_msgTypes[56]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerPublicFundResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerPublicFundResult) ProtoMessage() {}
+
+func (x *CharityRedFlowerPublicFundResult) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[56]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerPublicFundResult.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerPublicFundResult) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{56}
+}
+
+func (x *CharityRedFlowerPublicFundResult) GetStatus() int64 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerPublicFundResult) GetOrderId() string {
+	if x != nil {
+		return x.OrderId
+	}
+	return ""
+}
+
+func (x *CharityRedFlowerPublicFundResult) GetReward() *corepb.Item {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+func (x *CharityRedFlowerPublicFundResult) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type CharityRedFlowerQueryResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Accepted      bool                   `protobuf:"varint,1,opt,name=accepted,proto3" json:"accepted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerQueryResult) Reset() {
+	*x = CharityRedFlowerQueryResult{}
+	mi := &file_activitypb_proto_msgTypes[57]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerQueryResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerQueryResult) ProtoMessage() {}
+
+func (x *CharityRedFlowerQueryResult) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[57]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerQueryResult.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerQueryResult) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{57}
+}
+
+func (x *CharityRedFlowerQueryResult) GetAccepted() bool {
+	if x != nil {
+		return x.Accepted
+	}
+	return false
+}
+
+type CharityRedFlowerProgressRewardResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Target        int64                  `protobuf:"varint,1,opt,name=target,proto3" json:"target,omitempty"`
+	Reward        *corepb.Item           `protobuf:"bytes,2,opt,name=reward,proto3" json:"reward,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerProgressRewardResult) Reset() {
+	*x = CharityRedFlowerProgressRewardResult{}
+	mi := &file_activitypb_proto_msgTypes[58]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerProgressRewardResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerProgressRewardResult) ProtoMessage() {}
+
+func (x *CharityRedFlowerProgressRewardResult) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[58]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerProgressRewardResult.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerProgressRewardResult) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{58}
+}
+
+func (x *CharityRedFlowerProgressRewardResult) GetTarget() int64 {
+	if x != nil {
+		return x.Target
+	}
+	return 0
+}
+
+func (x *CharityRedFlowerProgressRewardResult) GetReward() *corepb.Item {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+type QixiGiftResult struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	TotalSendCount int64                  `protobuf:"varint,1,opt,name=total_send_count,json=totalSendCount,proto3" json:"total_send_count,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
 func (x *QixiGiftResult) Reset() {
 	*x = QixiGiftResult{}
-	mi := &file_activitypb_proto_msgTypes[35]
+	mi := &file_activitypb_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2289,7 +3955,7 @@ func (x *QixiGiftResult) String() string {
 func (*QixiGiftResult) ProtoMessage() {}
 
 func (x *QixiGiftResult) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[35]
+	mi := &file_activitypb_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2302,27 +3968,28 @@ func (x *QixiGiftResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QixiGiftResult.ProtoReflect.Descriptor instead.
 func (*QixiGiftResult) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{35}
+	return file_activitypb_proto_rawDescGZIP(), []int{59}
 }
 
-func (x *QixiGiftResult) GetSuccess() bool {
+func (x *QixiGiftResult) GetTotalSendCount() int64 {
 	if x != nil {
-		return x.Success
+		return x.TotalSendCount
 	}
-	return false
+	return 0
 }
 
 type QixiBridgeRewardResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ClaimedStages []int64                `protobuf:"varint,1,rep,packed,name=claimed_stages,json=claimedStages,proto3" json:"claimed_stages,omitempty"`
-	Rewards       []*corepb.Item         `protobuf:"bytes,2,rep,name=rewards,proto3" json:"rewards,omitempty"`
+	UnlockedSteps []int64                `protobuf:"varint,1,rep,packed,name=unlocked_steps,json=unlockedSteps,proto3" json:"unlocked_steps,omitempty"`
+	Awards        []*corepb.Item         `protobuf:"bytes,2,rep,name=awards,proto3" json:"awards,omitempty"`
+	Completed     bool                   `protobuf:"varint,3,opt,name=completed,proto3" json:"completed,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *QixiBridgeRewardResult) Reset() {
 	*x = QixiBridgeRewardResult{}
-	mi := &file_activitypb_proto_msgTypes[36]
+	mi := &file_activitypb_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2334,7 +4001,7 @@ func (x *QixiBridgeRewardResult) String() string {
 func (*QixiBridgeRewardResult) ProtoMessage() {}
 
 func (x *QixiBridgeRewardResult) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[36]
+	mi := &file_activitypb_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2347,41 +4014,56 @@ func (x *QixiBridgeRewardResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QixiBridgeRewardResult.ProtoReflect.Descriptor instead.
 func (*QixiBridgeRewardResult) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{36}
+	return file_activitypb_proto_rawDescGZIP(), []int{60}
 }
 
-func (x *QixiBridgeRewardResult) GetClaimedStages() []int64 {
+func (x *QixiBridgeRewardResult) GetUnlockedSteps() []int64 {
 	if x != nil {
-		return x.ClaimedStages
+		return x.UnlockedSteps
 	}
 	return nil
 }
 
-func (x *QixiBridgeRewardResult) GetRewards() []*corepb.Item {
+func (x *QixiBridgeRewardResult) GetAwards() []*corepb.Item {
 	if x != nil {
-		return x.Rewards
+		return x.Awards
 	}
 	return nil
+}
+
+func (x *QixiBridgeRewardResult) GetCompleted() bool {
+	if x != nil {
+		return x.Completed
+	}
+	return false
 }
 
 type ActivityOperateReply struct {
-	state              protoimpl.MessageState  `protogen:"open.v1"`
-	ActivityId         int64                   `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
-	OperateType        int64                   `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
-	Data               *ActivityData           `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
-	Rewards            []*corepb.Item          `protobuf:"bytes,104,rep,name=rewards,proto3" json:"rewards,omitempty"`
-	QingmeiBrewStarted *QingMeiBrewStarted     `protobuf:"bytes,113,opt,name=qingmei_brew_started,json=qingmeiBrewStarted,proto3" json:"qingmei_brew_started,omitempty"`
-	QingmeiQuote       *QingMeiQuote           `protobuf:"bytes,114,opt,name=qingmei_quote,json=qingmeiQuote,proto3" json:"qingmei_quote,omitempty"`
-	QingmeiSettlement  *QingMeiSettlement      `protobuf:"bytes,115,opt,name=qingmei_settlement,json=qingmeiSettlement,proto3" json:"qingmei_settlement,omitempty"`
-	QixiGiftResult     *QixiGiftResult         `protobuf:"bytes,125,opt,name=qixi_gift_result,json=qixiGiftResult,proto3" json:"qixi_gift_result,omitempty"`
-	QixiBridgeResult   *QixiBridgeRewardResult `protobuf:"bytes,126,opt,name=qixi_bridge_result,json=qixiBridgeResult,proto3" json:"qixi_bridge_result,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state                       protoimpl.MessageState                `protogen:"open.v1"`
+	ActivityId                  int64                                 `protobuf:"varint,1,opt,name=activity_id,json=activityId,proto3" json:"activity_id,omitempty"`
+	OperateType                 int64                                 `protobuf:"varint,2,opt,name=operate_type,json=operateType,proto3" json:"operate_type,omitempty"`
+	Data                        *ActivityData                         `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	Rewards                     []*corepb.Item                        `protobuf:"bytes,104,rep,name=rewards,proto3" json:"rewards,omitempty"`
+	QingmeiBrewStarted          *QingMeiBrewStarted                   `protobuf:"bytes,113,opt,name=qingmei_brew_started,json=qingmeiBrewStarted,proto3" json:"qingmei_brew_started,omitempty"`
+	QingmeiQuote                *QingMeiQuote                         `protobuf:"bytes,114,opt,name=qingmei_quote,json=qingmeiQuote,proto3" json:"qingmei_quote,omitempty"`
+	QingmeiSettlement           *QingMeiSettlement                    `protobuf:"bytes,115,opt,name=qingmei_settlement,json=qingmeiSettlement,proto3" json:"qingmei_settlement,omitempty"`
+	QixiGiftResult              *QixiGiftResult                       `protobuf:"bytes,125,opt,name=qixi_gift_result,json=qixiGiftResult,proto3" json:"qixi_gift_result,omitempty"`
+	QixiBridgeResult            *QixiBridgeRewardResult               `protobuf:"bytes,126,opt,name=qixi_bridge_result,json=qixiBridgeResult,proto3" json:"qixi_bridge_result,omitempty"`
+	WeatherExchangeResult       *ExchangeShopResult                   `protobuf:"bytes,101,opt,name=weather_exchange_result,json=weatherExchangeResult,proto3" json:"weather_exchange_result,omitempty"`
+	WeatherTaskResult           *WeatherTaskOperateResult             `protobuf:"bytes,108,opt,name=weather_task_result,json=weatherTaskResult,proto3" json:"weather_task_result,omitempty"`
+	WeatherResearchResult       *WeatherResearchOperateResult         `protobuf:"bytes,140,opt,name=weather_research_result,json=weatherResearchResult,proto3" json:"weather_research_result,omitempty"`
+	CharitySeedResult           *CharityRedFlowerSeedResult           `protobuf:"bytes,135,opt,name=charity_seed_result,json=charitySeedResult,proto3" json:"charity_seed_result,omitempty"`
+	CharityDonateResult         *CharityRedFlowerDonateResult         `protobuf:"bytes,136,opt,name=charity_donate_result,json=charityDonateResult,proto3" json:"charity_donate_result,omitempty"`
+	CharityProgressRewardResult *CharityRedFlowerProgressRewardResult `protobuf:"bytes,137,opt,name=charity_progress_reward_result,json=charityProgressRewardResult,proto3" json:"charity_progress_reward_result,omitempty"`
+	CharityPublicFundResult     *CharityRedFlowerPublicFundResult     `protobuf:"bytes,138,opt,name=charity_public_fund_result,json=charityPublicFundResult,proto3" json:"charity_public_fund_result,omitempty"`
+	CharityQueryResult          *CharityRedFlowerQueryResult          `protobuf:"bytes,139,opt,name=charity_query_result,json=charityQueryResult,proto3" json:"charity_query_result,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
 }
 
 func (x *ActivityOperateReply) Reset() {
 	*x = ActivityOperateReply{}
-	mi := &file_activitypb_proto_msgTypes[37]
+	mi := &file_activitypb_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2393,7 +4075,7 @@ func (x *ActivityOperateReply) String() string {
 func (*ActivityOperateReply) ProtoMessage() {}
 
 func (x *ActivityOperateReply) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[37]
+	mi := &file_activitypb_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2406,7 +4088,7 @@ func (x *ActivityOperateReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActivityOperateReply.ProtoReflect.Descriptor instead.
 func (*ActivityOperateReply) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{37}
+	return file_activitypb_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *ActivityOperateReply) GetActivityId() int64 {
@@ -2472,6 +4154,286 @@ func (x *ActivityOperateReply) GetQixiBridgeResult() *QixiBridgeRewardResult {
 	return nil
 }
 
+func (x *ActivityOperateReply) GetWeatherExchangeResult() *ExchangeShopResult {
+	if x != nil {
+		return x.WeatherExchangeResult
+	}
+	return nil
+}
+
+func (x *ActivityOperateReply) GetWeatherTaskResult() *WeatherTaskOperateResult {
+	if x != nil {
+		return x.WeatherTaskResult
+	}
+	return nil
+}
+
+func (x *ActivityOperateReply) GetWeatherResearchResult() *WeatherResearchOperateResult {
+	if x != nil {
+		return x.WeatherResearchResult
+	}
+	return nil
+}
+
+func (x *ActivityOperateReply) GetCharitySeedResult() *CharityRedFlowerSeedResult {
+	if x != nil {
+		return x.CharitySeedResult
+	}
+	return nil
+}
+
+func (x *ActivityOperateReply) GetCharityDonateResult() *CharityRedFlowerDonateResult {
+	if x != nil {
+		return x.CharityDonateResult
+	}
+	return nil
+}
+
+func (x *ActivityOperateReply) GetCharityProgressRewardResult() *CharityRedFlowerProgressRewardResult {
+	if x != nil {
+		return x.CharityProgressRewardResult
+	}
+	return nil
+}
+
+func (x *ActivityOperateReply) GetCharityPublicFundResult() *CharityRedFlowerPublicFundResult {
+	if x != nil {
+		return x.CharityPublicFundResult
+	}
+	return nil
+}
+
+func (x *ActivityOperateReply) GetCharityQueryResult() *CharityRedFlowerQueryResult {
+	if x != nil {
+		return x.CharityQueryResult
+	}
+	return nil
+}
+
+type ExchangeShopResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *corepb.Item           `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	Cost          *ActivityItem          `protobuf:"bytes,2,opt,name=cost,proto3" json:"cost,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExchangeShopResult) Reset() {
+	*x = ExchangeShopResult{}
+	mi := &file_activitypb_proto_msgTypes[62]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExchangeShopResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExchangeShopResult) ProtoMessage() {}
+
+func (x *ExchangeShopResult) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[62]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExchangeShopResult.ProtoReflect.Descriptor instead.
+func (*ExchangeShopResult) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{62}
+}
+
+func (x *ExchangeShopResult) GetItem() *corepb.Item {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+func (x *ExchangeShopResult) GetCost() *ActivityItem {
+	if x != nil {
+		return x.Cost
+	}
+	return nil
+}
+
+type WeatherTaskRewardLink struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TaskId        int64                  `protobuf:"varint,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	Item          *ActivityItem          `protobuf:"bytes,2,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherTaskRewardLink) Reset() {
+	*x = WeatherTaskRewardLink{}
+	mi := &file_activitypb_proto_msgTypes[63]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherTaskRewardLink) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherTaskRewardLink) ProtoMessage() {}
+
+func (x *WeatherTaskRewardLink) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[63]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherTaskRewardLink.ProtoReflect.Descriptor instead.
+func (*WeatherTaskRewardLink) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{63}
+}
+
+func (x *WeatherTaskRewardLink) GetTaskId() int64 {
+	if x != nil {
+		return x.TaskId
+	}
+	return 0
+}
+
+func (x *WeatherTaskRewardLink) GetItem() *ActivityItem {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type WeatherTaskOperateResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TaskReward    *WeatherTaskRewardLink `protobuf:"bytes,1,opt,name=task_reward,json=taskReward,proto3" json:"task_reward,omitempty"`
+	Gained        *corepb.Item           `protobuf:"bytes,2,opt,name=gained,proto3" json:"gained,omitempty"`
+	Consumed      *corepb.Item           `protobuf:"bytes,3,opt,name=consumed,proto3" json:"consumed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WeatherTaskOperateResult) Reset() {
+	*x = WeatherTaskOperateResult{}
+	mi := &file_activitypb_proto_msgTypes[64]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherTaskOperateResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherTaskOperateResult) ProtoMessage() {}
+
+func (x *WeatherTaskOperateResult) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[64]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherTaskOperateResult.ProtoReflect.Descriptor instead.
+func (*WeatherTaskOperateResult) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{64}
+}
+
+func (x *WeatherTaskOperateResult) GetTaskReward() *WeatherTaskRewardLink {
+	if x != nil {
+		return x.TaskReward
+	}
+	return nil
+}
+
+func (x *WeatherTaskOperateResult) GetGained() *corepb.Item {
+	if x != nil {
+		return x.Gained
+	}
+	return nil
+}
+
+func (x *WeatherTaskOperateResult) GetConsumed() *corepb.Item {
+	if x != nil {
+		return x.Consumed
+	}
+	return nil
+}
+
+type WeatherResearchOperateResult struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	NodeId          int64                  `protobuf:"varint,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	Reward          *corepb.Item           `protobuf:"bytes,2,opt,name=reward,proto3" json:"reward,omitempty"`
+	UnlockedNodeIds []int64                `protobuf:"varint,3,rep,packed,name=unlocked_node_ids,json=unlockedNodeIds,proto3" json:"unlocked_node_ids,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *WeatherResearchOperateResult) Reset() {
+	*x = WeatherResearchOperateResult{}
+	mi := &file_activitypb_proto_msgTypes[65]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WeatherResearchOperateResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WeatherResearchOperateResult) ProtoMessage() {}
+
+func (x *WeatherResearchOperateResult) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[65]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WeatherResearchOperateResult.ProtoReflect.Descriptor instead.
+func (*WeatherResearchOperateResult) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{65}
+}
+
+func (x *WeatherResearchOperateResult) GetNodeId() int64 {
+	if x != nil {
+		return x.NodeId
+	}
+	return 0
+}
+
+func (x *WeatherResearchOperateResult) GetReward() *corepb.Item {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+func (x *WeatherResearchOperateResult) GetUnlockedNodeIds() []int64 {
+	if x != nil {
+		return x.UnlockedNodeIds
+	}
+	return nil
+}
+
 type ActiviesChangeNotify struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Activities    []*ActivityContent     `protobuf:"bytes,1,rep,name=activities,proto3" json:"activities,omitempty"`
@@ -2481,7 +4443,7 @@ type ActiviesChangeNotify struct {
 
 func (x *ActiviesChangeNotify) Reset() {
 	*x = ActiviesChangeNotify{}
-	mi := &file_activitypb_proto_msgTypes[38]
+	mi := &file_activitypb_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2493,7 +4455,7 @@ func (x *ActiviesChangeNotify) String() string {
 func (*ActiviesChangeNotify) ProtoMessage() {}
 
 func (x *ActiviesChangeNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[38]
+	mi := &file_activitypb_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2506,7 +4468,7 @@ func (x *ActiviesChangeNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActiviesChangeNotify.ProtoReflect.Descriptor instead.
 func (*ActiviesChangeNotify) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{38}
+	return file_activitypb_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *ActiviesChangeNotify) GetActivities() []*ActivityContent {
@@ -2524,7 +4486,7 @@ type OperateConstellationRequest_Empty struct {
 
 func (x *OperateConstellationRequest_Empty) Reset() {
 	*x = OperateConstellationRequest_Empty{}
-	mi := &file_activitypb_proto_msgTypes[39]
+	mi := &file_activitypb_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2536,7 +4498,7 @@ func (x *OperateConstellationRequest_Empty) String() string {
 func (*OperateConstellationRequest_Empty) ProtoMessage() {}
 
 func (x *OperateConstellationRequest_Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[39]
+	mi := &file_activitypb_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2549,7 +4511,7 @@ func (x *OperateConstellationRequest_Empty) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use OperateConstellationRequest_Empty.ProtoReflect.Descriptor instead.
 func (*OperateConstellationRequest_Empty) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{28, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{46, 0}
 }
 
 type ClaimQingMeiDailySeedRequest_Params struct {
@@ -2561,7 +4523,7 @@ type ClaimQingMeiDailySeedRequest_Params struct {
 
 func (x *ClaimQingMeiDailySeedRequest_Params) Reset() {
 	*x = ClaimQingMeiDailySeedRequest_Params{}
-	mi := &file_activitypb_proto_msgTypes[40]
+	mi := &file_activitypb_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2573,7 +4535,7 @@ func (x *ClaimQingMeiDailySeedRequest_Params) String() string {
 func (*ClaimQingMeiDailySeedRequest_Params) ProtoMessage() {}
 
 func (x *ClaimQingMeiDailySeedRequest_Params) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[40]
+	mi := &file_activitypb_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2586,7 +4548,7 @@ func (x *ClaimQingMeiDailySeedRequest_Params) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use ClaimQingMeiDailySeedRequest_Params.ProtoReflect.Descriptor instead.
 func (*ClaimQingMeiDailySeedRequest_Params) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{29, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{47, 0}
 }
 
 func (x *ClaimQingMeiDailySeedRequest_Params) GetGrantId() int64 {
@@ -2606,7 +4568,7 @@ type StartQingMeiBrewRequest_Ingredient struct {
 
 func (x *StartQingMeiBrewRequest_Ingredient) Reset() {
 	*x = StartQingMeiBrewRequest_Ingredient{}
-	mi := &file_activitypb_proto_msgTypes[41]
+	mi := &file_activitypb_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2618,7 +4580,7 @@ func (x *StartQingMeiBrewRequest_Ingredient) String() string {
 func (*StartQingMeiBrewRequest_Ingredient) ProtoMessage() {}
 
 func (x *StartQingMeiBrewRequest_Ingredient) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[41]
+	mi := &file_activitypb_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2631,7 +4593,7 @@ func (x *StartQingMeiBrewRequest_Ingredient) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use StartQingMeiBrewRequest_Ingredient.ProtoReflect.Descriptor instead.
 func (*StartQingMeiBrewRequest_Ingredient) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{30, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{48, 0}
 }
 
 func (x *StartQingMeiBrewRequest_Ingredient) GetUid() int64 {
@@ -2657,7 +4619,7 @@ type StartQingMeiBrewRequest_Params struct {
 
 func (x *StartQingMeiBrewRequest_Params) Reset() {
 	*x = StartQingMeiBrewRequest_Params{}
-	mi := &file_activitypb_proto_msgTypes[42]
+	mi := &file_activitypb_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2669,7 +4631,7 @@ func (x *StartQingMeiBrewRequest_Params) String() string {
 func (*StartQingMeiBrewRequest_Params) ProtoMessage() {}
 
 func (x *StartQingMeiBrewRequest_Params) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[42]
+	mi := &file_activitypb_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2682,7 +4644,7 @@ func (x *StartQingMeiBrewRequest_Params) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartQingMeiBrewRequest_Params.ProtoReflect.Descriptor instead.
 func (*StartQingMeiBrewRequest_Params) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{30, 1}
+	return file_activitypb_proto_rawDescGZIP(), []int{48, 1}
 }
 
 func (x *StartQingMeiBrewRequest_Params) GetIngredients() []*StartQingMeiBrewRequest_Ingredient {
@@ -2700,7 +4662,7 @@ type ContinueQingMeiBrewRequest_Empty struct {
 
 func (x *ContinueQingMeiBrewRequest_Empty) Reset() {
 	*x = ContinueQingMeiBrewRequest_Empty{}
-	mi := &file_activitypb_proto_msgTypes[43]
+	mi := &file_activitypb_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2712,7 +4674,7 @@ func (x *ContinueQingMeiBrewRequest_Empty) String() string {
 func (*ContinueQingMeiBrewRequest_Empty) ProtoMessage() {}
 
 func (x *ContinueQingMeiBrewRequest_Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[43]
+	mi := &file_activitypb_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2725,7 +4687,7 @@ func (x *ContinueQingMeiBrewRequest_Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContinueQingMeiBrewRequest_Empty.ProtoReflect.Descriptor instead.
 func (*ContinueQingMeiBrewRequest_Empty) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{31, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{49, 0}
 }
 
 type SettleQingMeiBrewRequest_Params struct {
@@ -2737,7 +4699,7 @@ type SettleQingMeiBrewRequest_Params struct {
 
 func (x *SettleQingMeiBrewRequest_Params) Reset() {
 	*x = SettleQingMeiBrewRequest_Params{}
-	mi := &file_activitypb_proto_msgTypes[44]
+	mi := &file_activitypb_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2749,7 +4711,7 @@ func (x *SettleQingMeiBrewRequest_Params) String() string {
 func (*SettleQingMeiBrewRequest_Params) ProtoMessage() {}
 
 func (x *SettleQingMeiBrewRequest_Params) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[44]
+	mi := &file_activitypb_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2762,7 +4724,7 @@ func (x *SettleQingMeiBrewRequest_Params) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SettleQingMeiBrewRequest_Params.ProtoReflect.Descriptor instead.
 func (*SettleQingMeiBrewRequest_Params) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{32, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{50, 0}
 }
 
 func (x *SettleQingMeiBrewRequest_Params) GetSettlementMode() int64 {
@@ -2774,14 +4736,14 @@ func (x *SettleQingMeiBrewRequest_Params) GetSettlementMode() int64 {
 
 type ClaimQixiBridgeRewardsRequest_Params struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ClaimMode     int64                  `protobuf:"varint,1,opt,name=claim_mode,json=claimMode,proto3" json:"claim_mode,omitempty"`
+	Step          int64                  `protobuf:"varint,1,opt,name=step,proto3" json:"step,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ClaimQixiBridgeRewardsRequest_Params) Reset() {
 	*x = ClaimQixiBridgeRewardsRequest_Params{}
-	mi := &file_activitypb_proto_msgTypes[45]
+	mi := &file_activitypb_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2793,7 +4755,7 @@ func (x *ClaimQixiBridgeRewardsRequest_Params) String() string {
 func (*ClaimQixiBridgeRewardsRequest_Params) ProtoMessage() {}
 
 func (x *ClaimQixiBridgeRewardsRequest_Params) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[45]
+	mi := &file_activitypb_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2806,27 +4768,27 @@ func (x *ClaimQixiBridgeRewardsRequest_Params) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use ClaimQixiBridgeRewardsRequest_Params.ProtoReflect.Descriptor instead.
 func (*ClaimQixiBridgeRewardsRequest_Params) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{33, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{51, 0}
 }
 
-func (x *ClaimQixiBridgeRewardsRequest_Params) GetClaimMode() int64 {
+func (x *ClaimQixiBridgeRewardsRequest_Params) GetStep() int64 {
 	if x != nil {
-		return x.ClaimMode
+		return x.Step
 	}
 	return 0
 }
 
 type GiftQixiSachetRequest_Params struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	FriendGid     int64                  `protobuf:"varint,1,opt,name=friend_gid,json=friendGid,proto3" json:"friend_gid,omitempty"`
-	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	TargetGid     int64                  `protobuf:"varint,1,opt,name=target_gid,json=targetGid,proto3" json:"target_gid,omitempty"`
+	MsgTextId     int64                  `protobuf:"varint,2,opt,name=msg_text_id,json=msgTextId,proto3" json:"msg_text_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GiftQixiSachetRequest_Params) Reset() {
 	*x = GiftQixiSachetRequest_Params{}
-	mi := &file_activitypb_proto_msgTypes[46]
+	mi := &file_activitypb_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2838,7 +4800,7 @@ func (x *GiftQixiSachetRequest_Params) String() string {
 func (*GiftQixiSachetRequest_Params) ProtoMessage() {}
 
 func (x *GiftQixiSachetRequest_Params) ProtoReflect() protoreflect.Message {
-	mi := &file_activitypb_proto_msgTypes[46]
+	mi := &file_activitypb_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2851,19 +4813,143 @@ func (x *GiftQixiSachetRequest_Params) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GiftQixiSachetRequest_Params.ProtoReflect.Descriptor instead.
 func (*GiftQixiSachetRequest_Params) Descriptor() ([]byte, []int) {
-	return file_activitypb_proto_rawDescGZIP(), []int{34, 0}
+	return file_activitypb_proto_rawDescGZIP(), []int{52, 0}
 }
 
-func (x *GiftQixiSachetRequest_Params) GetFriendGid() int64 {
+func (x *GiftQixiSachetRequest_Params) GetTargetGid() int64 {
 	if x != nil {
-		return x.FriendGid
+		return x.TargetGid
 	}
 	return 0
 }
 
-func (x *GiftQixiSachetRequest_Params) GetCount() int64 {
+func (x *GiftQixiSachetRequest_Params) GetMsgTextId() int64 {
 	if x != nil {
-		return x.Count
+		return x.MsgTextId
+	}
+	return 0
+}
+
+type CharityRedFlowerOperateRequest_Empty struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerOperateRequest_Empty) Reset() {
+	*x = CharityRedFlowerOperateRequest_Empty{}
+	mi := &file_activitypb_proto_msgTypes[75]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerOperateRequest_Empty) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerOperateRequest_Empty) ProtoMessage() {}
+
+func (x *CharityRedFlowerOperateRequest_Empty) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[75]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerOperateRequest_Empty.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerOperateRequest_Empty) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{53, 0}
+}
+
+type CharityRedFlowerOperateRequest_QueryParams struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Accepted      bool                   `protobuf:"varint,1,opt,name=accepted,proto3" json:"accepted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerOperateRequest_QueryParams) Reset() {
+	*x = CharityRedFlowerOperateRequest_QueryParams{}
+	mi := &file_activitypb_proto_msgTypes[76]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerOperateRequest_QueryParams) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerOperateRequest_QueryParams) ProtoMessage() {}
+
+func (x *CharityRedFlowerOperateRequest_QueryParams) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[76]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerOperateRequest_QueryParams.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerOperateRequest_QueryParams) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{53, 1}
+}
+
+func (x *CharityRedFlowerOperateRequest_QueryParams) GetAccepted() bool {
+	if x != nil {
+		return x.Accepted
+	}
+	return false
+}
+
+type CharityRedFlowerOperateRequest_ProgressRewardParams struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Target        int64                  `protobuf:"varint,1,opt,name=target,proto3" json:"target,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CharityRedFlowerOperateRequest_ProgressRewardParams) Reset() {
+	*x = CharityRedFlowerOperateRequest_ProgressRewardParams{}
+	mi := &file_activitypb_proto_msgTypes[77]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CharityRedFlowerOperateRequest_ProgressRewardParams) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CharityRedFlowerOperateRequest_ProgressRewardParams) ProtoMessage() {}
+
+func (x *CharityRedFlowerOperateRequest_ProgressRewardParams) ProtoReflect() protoreflect.Message {
+	mi := &file_activitypb_proto_msgTypes[77]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CharityRedFlowerOperateRequest_ProgressRewardParams.ProtoReflect.Descriptor instead.
+func (*CharityRedFlowerOperateRequest_ProgressRewardParams) Descriptor() ([]byte, []int) {
+	return file_activitypb_proto_rawDescGZIP(), []int{53, 2}
+}
+
+func (x *CharityRedFlowerOperateRequest_ProgressRewardParams) GetTarget() int64 {
+	if x != nil {
+		return x.Target
 	}
 	return 0
 }
@@ -2872,7 +4958,7 @@ var File_activitypb_proto protoreflect.FileDescriptor
 
 const file_activitypb_proto_rawDesc = "" +
 	"\n" +
-	"\x10activitypb.proto\x12\x11gamepb.activitypb\x1a\fcorepb.proto\"\xd0\x02\n" +
+	"\x10activitypb.proto\x12\x11gamepb.activitypb\x1a\fcorepb.proto\x1a\x0fpet-diary.proto\"\xd0\x02\n" +
 	"\x0fActivityContent\x12\x1f\n" +
 	"\vactivity_id\x18\x01 \x01(\x03R\n" +
 	"activityId\x12\x19\n" +
@@ -2926,18 +5012,100 @@ const file_activitypb_proto_rawDesc = "" +
 	"\afield_2\x18\x02 \x01(\x03R\x06field2\x12\x17\n" +
 	"\afield_3\x18\x03 \x01(\x03R\x06field3\x12:\n" +
 	"\x05nodes\x18\x04 \x03(\v2$.gamepb.activitypb.ConstellationNodeR\x05nodes\x12=\n" +
-	"\x06groups\x18\x05 \x03(\v2%.gamepb.activitypb.ConstellationGroupR\x06groups\"\x83\x05\n" +
+	"\x06groups\x18\x05 \x03(\v2%.gamepb.activitypb.ConstellationGroupR\x06groups\"\xa5\x01\n" +
+	"\x13WeatherBottleReward\x12\x1b\n" +
+	"\treward_id\x18\x01 \x01(\x03R\brewardId\x127\n" +
+	"\x06reward\x18\x03 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x06reward\x12\x16\n" +
+	"\x06status\x18\x04 \x01(\x03R\x06status\x12 \n" +
+	"\vprobability\x18\x06 \x01(\tR\vprobability\"\x80\x02\n" +
+	"\x13WeatherBottleConfig\x12\x17\n" +
+	"\afield_3\x18\x03 \x01(\x03R\x06field3\x12\x17\n" +
+	"\afield_4\x18\x04 \x01(\x03R\x06field4\x12*\n" +
+	"\x11collector_item_id\x18\x05 \x01(\x03R\x0fcollectorItemId\x120\n" +
+	"\x14collector_item_count\x18\x06 \x01(\x03R\x12collectorItemCount\x12@\n" +
+	"\arewards\x18\b \x03(\v2&.gamepb.activitypb.WeatherBottleRewardR\arewards\x12\x17\n" +
+	"\afield_9\x18\t \x01(\x03R\x06field9\"\xe0\x01\n" +
+	"\x13WeatherActivityTask\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\x03R\x06taskId\x12&\n" +
+	"\x0ftrigger_item_id\x18\x02 \x01(\x03R\rtriggerItemId\x127\n" +
+	"\x06reward\x18\x03 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x06reward\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\x12\x1f\n" +
+	"\vdaily_limit\x18\x05 \x01(\x03R\n" +
+	"dailyLimit\x12\x18\n" +
+	"\acurrent\x18\x06 \x01(\x03R\acurrent\"T\n" +
+	"\x14WeatherActivityTasks\x12<\n" +
+	"\x05tasks\x18\x01 \x03(\v2&.gamepb.activitypb.WeatherActivityTaskR\x05tasks\"\xd1\x02\n" +
+	"\x13WeatherResearchNode\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\x03R\x06nodeId\x126\n" +
+	"\x15prerequisite_node_ids\x18\x02 \x03(\x03B\x02\x10\x01R\x13prerequisiteNodeIds\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\x03R\x06status\x12\x18\n" +
+	"\aclaimed\x18\x04 \x01(\bR\aclaimed\x12\x17\n" +
+	"\afield_5\x18\x05 \x01(\x03R\x06field5\x123\n" +
+	"\x04cost\x18\x06 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x04cost\x127\n" +
+	"\x06reward\x18\a \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x06reward\x12\x17\n" +
+	"\afield_8\x18\b \x01(\x03R\x06field8\x12\x17\n" +
+	"\afield_9\x18\t \x01(\x03R\x06field9\"y\n" +
+	"\x14WeatherResearchTrack\x12#\n" +
+	"\rcurrent_stage\x18\x01 \x01(\x03R\fcurrentStage\x12<\n" +
+	"\x05nodes\x18\x02 \x03(\v2&.gamepb.activitypb.WeatherResearchNodeR\x05nodes\"T\n" +
+	"\x13WeatherResearchData\x12=\n" +
+	"\x05track\x18\x01 \x01(\v2'.gamepb.activitypb.WeatherResearchTrackR\x05track\"\xa6\b\n" +
 	"\fActivityData\x12>\n" +
 	"\bactivity\x18\x01 \x01(\v2\".gamepb.activitypb.ActivityContentR\bactivity\x12;\n" +
 	"\bchildren\x18\x02 \x03(\v2\x1f.gamepb.activitypb.ActivityDataR\bchildren\x12>\n" +
 	"\acatalog\x18f \x01(\v2$.gamepb.activitypb.StarSandGoodsListR\acatalog\x12U\n" +
 	"\x12qingmei_daily_seed\x18g \x01(\v2'.gamepb.activitypb.QingMeiDailySeedDataR\x10qingmeiDailySeed\x12E\n" +
 	"\fqingmei_brew\x18l \x01(\v2\".gamepb.activitypb.QingMeiBrewDataR\vqingmeiBrew\x12J\n" +
-	"\rconstellation\x18n \x01(\v2$.gamepb.activitypb.ConstellationDataR\rconstellation\x12D\n" +
+	"\rconstellation\x18n \x01(\v2$.gamepb.activitypb.ConstellationDataR\rconstellation\x12Z\n" +
+	"\x11pet_treasure_hunt\x18s \x01(\v2..gamepb.activitypb.ActivityBodyPetTreasureHuntR\x0fpetTreasureHunt\x12D\n" +
 	"\vqixi_bridge\x18p \x01(\v2#.gamepb.activitypb.QixiBridgeConfigR\n" +
 	"qixiBridge\x12@\n" +
 	"\tqixi_gift\x18q \x01(\v2#.gamepb.activitypb.QixiGiftProgressR\bqixiGift\x12D\n" +
-	"\rqingmei_quote\x18r \x01(\v2\x1f.gamepb.activitypb.QingMeiQuoteR\fqingmeiQuote\"n\n" +
+	"\rqingmei_quote\x18r \x01(\v2\x1f.gamepb.activitypb.QingMeiQuoteR\fqingmeiQuote\x12M\n" +
+	"\x0eweather_bottle\x18i \x01(\v2&.gamepb.activitypb.WeatherBottleConfigR\rweatherBottle\x12U\n" +
+	"\x12charity_red_flower\x18t \x01(\v2'.gamepb.activitypb.CharityRedFlowerDataR\x10charityRedFlower\x12L\n" +
+	"\rweather_tasks\x18u \x01(\v2'.gamepb.activitypb.WeatherActivityTasksR\fweatherTasks\x12Q\n" +
+	"\x10weather_research\x18v \x01(\v2&.gamepb.activitypb.WeatherResearchDataR\x0fweatherResearch\"\x89\x01\n" +
+	"\x1eCharityRedFlowerProgressReward\x12\x16\n" +
+	"\x06target\x18\x01 \x01(\x03R\x06target\x127\n" +
+	"\x06reward\x18\x02 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x06reward\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\x03R\x06status\"o\n" +
+	"\x1cCharityRedFlowerGlobalReward\x12\x16\n" +
+	"\x06target\x18\x01 \x01(\x03R\x06target\x127\n" +
+	"\x06reward\x18\x02 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x06reward\"y\n" +
+	"\x1aCharityRedFlowerPublicFund\x12\x12\n" +
+	"\x04date\x18\x01 \x01(\x03R\x04date\x12\x19\n" +
+	"\border_id\x18\x02 \x01(\tR\aorderId\x12\x14\n" +
+	"\x05token\x18\x03 \x01(\tR\x05token\x12\x16\n" +
+	"\x06status\x18\x04 \x01(\x03R\x06status\"\xb8\b\n" +
+	"\x14CharityRedFlowerData\x12 \n" +
+	"\flove_item_id\x18\x01 \x01(\x03R\n" +
+	"loveItemId\x12!\n" +
+	"\flove_balance\x18\x02 \x01(\x03R\vloveBalance\x12!\n" +
+	"\fdonated_love\x18\x03 \x01(\x03R\vdonatedLove\x12.\n" +
+	"\x13global_donated_love\x18\x04 \x01(\x03R\x11globalDonatedLove\x12,\n" +
+	"\x12global_target_love\x18\x05 \x01(\x03R\x10globalTargetLove\x12,\n" +
+	"\x12seed_reward_status\x18\x06 \x01(\x03R\x10seedRewardStatus\x12@\n" +
+	"\vseed_reward\x18\a \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\n" +
+	"seedReward\x12\x17\n" +
+	"\afield_8\x18\b \x01(\x03R\x06field8\x12\\\n" +
+	"\x10progress_rewards\x18\t \x03(\v21.gamepb.activitypb.CharityRedFlowerProgressRewardR\x0fprogressRewards\x12T\n" +
+	"\rglobal_reward\x18\n" +
+	" \x01(\v2/.gamepb.activitypb.CharityRedFlowerGlobalRewardR\fglobalReward\x128\n" +
+	"\x18settlement_required_love\x18\v \x01(\x03R\x16settlementRequiredLove\x12L\n" +
+	"\x11settlement_reward\x18\f \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x10settlementReward\x12\x19\n" +
+	"\bend_time\x18\r \x01(\x03R\aendTime\x12\x19\n" +
+	"\bfield_14\x18\x0e \x01(\x03R\afield14\x12\x19\n" +
+	"\bfield_15\x18\x0f \x01(\x03R\afield15\x12\x19\n" +
+	"\bfield_16\x18\x10 \x01(\x03R\afield16\x12\x1f\n" +
+	"\vflow_status\x18\x11 \x01(\x03R\n" +
+	"flowStatus\x12N\n" +
+	"\vpublic_fund\x18\x12 \x01(\v2-.gamepb.activitypb.CharityRedFlowerPublicFundR\n" +
+	"publicFund\x12)\n" +
+	"\x10agreement_status\x18\x13 \x01(\x03R\x0fagreementStatus\x12\x19\n" +
+	"\bfield_20\x18\x14 \x01(\x03R\afield20\x12B\n" +
+	"\fdaily_reward\x18\x15 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\vdailyReward\x12.\n" +
+	"\x13daily_reward_status\x18\x16 \x01(\x03R\x11dailyRewardStatus\"n\n" +
 	"\x0eActivityWindow\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
@@ -2984,18 +5152,18 @@ const file_activitypb_proto_rawDesc = "" +
 	"\x10QixiBridgeConfig\x12D\n" +
 	"\rdisplay_items\x18\x01 \x03(\v2\x1f.gamepb.activitypb.ActivityItemR\fdisplayItems\x12:\n" +
 	"\x06stages\x18\x02 \x03(\v2\".gamepb.activitypb.QixiBridgeStageR\x06stages\x12#\n" +
-	"\rcurrent_stage\x18\x03 \x01(\x03R\fcurrentStage\"\xc9\x01\n" +
-	"\x10QixiGiftExchange\x12<\n" +
-	"\tsent_item\x18\x01 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\bsentItem\x12D\n" +
-	"\rreceived_item\x18\x02 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\freceivedItem\x12\x17\n" +
-	"\afield_3\x18\x03 \x01(\bR\x06field3\x12\x18\n" +
-	"\aenabled\x18\x04 \x01(\bR\aenabled\"\xa4\x01\n" +
-	"\x10QixiGiftProgress\x12\x1d\n" +
+	"\rcurrent_stage\x18\x03 \x01(\x03R\fcurrentStage\"\xcf\x01\n" +
+	"\x10QixiGiftExchange\x12>\n" +
 	"\n" +
-	"sent_count\x18\x01 \x01(\x03R\tsentCount\x12\x17\n" +
-	"\afield_2\x18\x02 \x01(\x03R\x06field2\x12\x17\n" +
-	"\afield_3\x18\x03 \x01(\x03R\x06field3\x12?\n" +
-	"\bexchange\x18\x04 \x01(\v2#.gamepb.activitypb.QixiGiftExchangeR\bexchange\"1\n" +
+	"cost_items\x18\x01 \x03(\v2\x1f.gamepb.activitypb.ActivityItemR\tcostItems\x12D\n" +
+	"\rreceive_items\x18\x02 \x03(\v2\x1f.gamepb.activitypb.ActivityItemR\freceiveItems\x12\x1b\n" +
+	"\tgift_type\x18\x03 \x01(\x03R\bgiftType\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\x03R\acontent\"\xd1\x01\n" +
+	"\x10QixiGiftProgress\x12(\n" +
+	"\x10total_send_count\x18\x01 \x01(\x03R\x0etotalSendCount\x12(\n" +
+	"\x10total_send_limit\x18\x02 \x01(\x03R\x0etotalSendLimit\x12.\n" +
+	"\x13total_receive_limit\x18\x03 \x01(\x03R\x11totalReceiveLimit\x129\n" +
+	"\x05gifts\x18\x04 \x03(\v2#.gamepb.activitypb.QixiGiftExchangeR\x05gifts\"1\n" +
 	"\x12QingMeiBrewStarted\x12\x1b\n" +
 	"\tbase_gold\x18\x01 \x01(\x03R\bbaseGold\"|\n" +
 	"\fQingMeiQuote\x12\x14\n" +
@@ -3021,7 +5189,34 @@ const file_activitypb_proto_rawDesc = "" +
 	"\vactivity_id\x18\x01 \x01(\x03R\n" +
 	"activityId\x12!\n" +
 	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12`\n" +
-	"\x15exchange_shop_operate\x18e \x01(\v2,.gamepb.activitypb.ExchangeShopOperateParamsR\x13exchangeShopOperate\"\xbd\x01\n" +
+	"\x15exchange_shop_operate\x18e \x01(\v2,.gamepb.activitypb.ExchangeShopOperateParamsR\x13exchangeShopOperate\"7\n" +
+	"\x1cWeatherResearchOperateParams\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\x03R\x06nodeId\"\xcf\x01\n" +
+	"\x1dAdvanceWeatherResearchRequest\x12\x1f\n" +
+	"\vactivity_id\x18\x01 \x01(\x03R\n" +
+	"activityId\x12!\n" +
+	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12j\n" +
+	"\x18weather_research_operate\x18\x8c\x01 \x01(\v2/.gamepb.activitypb.WeatherResearchOperateParamsR\x16weatherResearchOperate\"8\n" +
+	"\x1bWeatherCollectOperateParams\x12\x19\n" +
+	"\bhost_gid\x18\x03 \x01(\x03R\ahostGid\"\xc3\x01\n" +
+	"\x15CollectWeatherRequest\x12\x1f\n" +
+	"\vactivity_id\x18\x01 \x01(\x03R\n" +
+	"activityId\x12!\n" +
+	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12f\n" +
+	"\x17weather_collect_operate\x18k \x01(\v2..gamepb.activitypb.WeatherCollectOperateParamsR\x15weatherCollectOperate\"\xad\x01\n" +
+	"\x1dWeatherResearchOperateRequest\x12\x1f\n" +
+	"\vactivity_id\x18\x01 \x01(\x03R\n" +
+	"activityId\x12!\n" +
+	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12H\n" +
+	"\x06params\x18\x8c\x01 \x01(\v2/.gamepb.activitypb.WeatherResearchOperateParamsR\x06params\"9\n" +
+	"\x18WeatherTaskOperateParams\x12\x1d\n" +
+	"\n" +
+	"target_gid\x18\x03 \x01(\x03R\ttargetGid\"\xa4\x01\n" +
+	"\x19WeatherTaskOperateRequest\x12\x1f\n" +
+	"\vactivity_id\x18\x01 \x01(\x03R\n" +
+	"activityId\x12!\n" +
+	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12C\n" +
+	"\x06params\x18k \x01(\v2+.gamepb.activitypb.WeatherTaskOperateParamsR\x06params\"\xbd\x01\n" +
 	"\x1bOperateConstellationRequest\x12\x1f\n" +
 	"\vactivity_id\x18\x01 \x01(\x03R\n" +
 	"activityId\x12!\n" +
@@ -3058,29 +5253,62 @@ const file_activitypb_proto_rawDesc = "" +
 	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12J\n" +
 	"\x06params\x18r \x01(\v22.gamepb.activitypb.SettleQingMeiBrewRequest.ParamsR\x06params\x1a1\n" +
 	"\x06Params\x12'\n" +
-	"\x0fsettlement_mode\x18\x01 \x01(\x03R\x0esettlementMode\"\xdd\x01\n" +
+	"\x0fsettlement_mode\x18\x01 \x01(\x03R\x0esettlementMode\"\xd2\x01\n" +
 	"\x1dClaimQixiBridgeRewardsRequest\x12\x1f\n" +
 	"\vactivity_id\x18\x01 \x01(\x03R\n" +
 	"activityId\x12!\n" +
 	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12O\n" +
-	"\x06params\x18} \x01(\v27.gamepb.activitypb.ClaimQixiBridgeRewardsRequest.ParamsR\x06params\x1a'\n" +
-	"\x06Params\x12\x1d\n" +
-	"\n" +
-	"claim_mode\x18\x01 \x01(\x03R\tclaimMode\"\xe3\x01\n" +
+	"\x06params\x18} \x01(\v27.gamepb.activitypb.ClaimQixiBridgeRewardsRequest.ParamsR\x06params\x1a\x1c\n" +
+	"\x06Params\x12\x12\n" +
+	"\x04step\x18\x01 \x01(\x03R\x04step\"\xed\x01\n" +
 	"\x15GiftQixiSachetRequest\x12\x1f\n" +
 	"\vactivity_id\x18\x01 \x01(\x03R\n" +
 	"activityId\x12!\n" +
 	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12G\n" +
-	"\x06params\x18| \x01(\v2/.gamepb.activitypb.GiftQixiSachetRequest.ParamsR\x06params\x1a=\n" +
+	"\x06params\x18| \x01(\v2/.gamepb.activitypb.GiftQixiSachetRequest.ParamsR\x06params\x1aG\n" +
 	"\x06Params\x12\x1d\n" +
 	"\n" +
-	"friend_gid\x18\x01 \x01(\x03R\tfriendGid\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\x03R\x05count\"*\n" +
-	"\x0eQixiGiftResult\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"k\n" +
+	"target_gid\x18\x01 \x01(\x03R\ttargetGid\x12\x1e\n" +
+	"\vmsg_text_id\x18\x02 \x01(\x03R\tmsgTextId\"\xb3\x05\n" +
+	"\x1eCharityRedFlowerOperateRequest\x12\x1f\n" +
+	"\vactivity_id\x18\x01 \x01(\x03R\n" +
+	"activityId\x12!\n" +
+	"\foperate_type\x18\x02 \x01(\x03R\voperateType\x12W\n" +
+	"\n" +
+	"claim_seed\x18\x86\x01 \x01(\v27.gamepb.activitypb.CharityRedFlowerOperateRequest.EmptyR\tclaimSeed\x12Y\n" +
+	"\vdonate_love\x18\x87\x01 \x01(\v27.gamepb.activitypb.CharityRedFlowerOperateRequest.EmptyR\n" +
+	"donateLove\x12{\n" +
+	"\x15claim_progress_reward\x18\x88\x01 \x01(\v2F.gamepb.activitypb.CharityRedFlowerOperateRequest.ProgressRewardParamsR\x13claimProgressReward\x12b\n" +
+	"\x10send_public_fund\x18\x89\x01 \x01(\v27.gamepb.activitypb.CharityRedFlowerOperateRequest.EmptyR\x0esendPublicFund\x12T\n" +
+	"\x05query\x18\x8a\x01 \x01(\v2=.gamepb.activitypb.CharityRedFlowerOperateRequest.QueryParamsR\x05query\x1a\a\n" +
+	"\x05Empty\x1a)\n" +
+	"\vQueryParams\x12\x1a\n" +
+	"\baccepted\x18\x01 \x01(\bR\baccepted\x1a.\n" +
+	"\x14ProgressRewardParams\x12\x16\n" +
+	"\x06target\x18\x01 \x01(\x03R\x06target\"B\n" +
+	"\x1aCharityRedFlowerSeedResult\x12$\n" +
+	"\x06reward\x18\x01 \x01(\v2\f.corepb.ItemR\x06reward\"\x8d\x01\n" +
+	"\x1cCharityRedFlowerDonateResult\x12\x18\n" +
+	"\adonated\x18\x01 \x01(\x03R\adonated\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\x03R\x06status\x12%\n" +
+	"\x0eglobal_donated\x18\x04 \x01(\x03R\rglobalDonated\"\x91\x01\n" +
+	" CharityRedFlowerPublicFundResult\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\x03R\x06status\x12\x19\n" +
+	"\border_id\x18\x02 \x01(\tR\aorderId\x12$\n" +
+	"\x06reward\x18\x03 \x01(\v2\f.corepb.ItemR\x06reward\x12\x14\n" +
+	"\x05token\x18\x04 \x01(\tR\x05token\"9\n" +
+	"\x1bCharityRedFlowerQueryResult\x12\x1a\n" +
+	"\baccepted\x18\x01 \x01(\bR\baccepted\"d\n" +
+	"$CharityRedFlowerProgressRewardResult\x12\x16\n" +
+	"\x06target\x18\x01 \x01(\x03R\x06target\x12$\n" +
+	"\x06reward\x18\x02 \x01(\v2\f.corepb.ItemR\x06reward\":\n" +
+	"\x0eQixiGiftResult\x12(\n" +
+	"\x10total_send_count\x18\x01 \x01(\x03R\x0etotalSendCount\"\x87\x01\n" +
 	"\x16QixiBridgeRewardResult\x12)\n" +
-	"\x0eclaimed_stages\x18\x01 \x03(\x03B\x02\x10\x01R\rclaimedStages\x12&\n" +
-	"\arewards\x18\x02 \x03(\v2\f.corepb.ItemR\arewards\"\xd1\x04\n" +
+	"\x0eunlocked_steps\x18\x01 \x03(\x03B\x02\x10\x01R\runlockedSteps\x12$\n" +
+	"\x06awards\x18\x02 \x03(\v2\f.corepb.ItemR\x06awards\x12\x1c\n" +
+	"\tcompleted\x18\x03 \x01(\bR\tcompleted\"\x92\v\n" +
 	"\x14ActivityOperateReply\x12\x1f\n" +
 	"\vactivity_id\x18\x01 \x01(\x03R\n" +
 	"activityId\x12!\n" +
@@ -3091,7 +5319,30 @@ const file_activitypb_proto_rawDesc = "" +
 	"\rqingmei_quote\x18r \x01(\v2\x1f.gamepb.activitypb.QingMeiQuoteR\fqingmeiQuote\x12S\n" +
 	"\x12qingmei_settlement\x18s \x01(\v2$.gamepb.activitypb.QingMeiSettlementR\x11qingmeiSettlement\x12K\n" +
 	"\x10qixi_gift_result\x18} \x01(\v2!.gamepb.activitypb.QixiGiftResultR\x0eqixiGiftResult\x12W\n" +
-	"\x12qixi_bridge_result\x18~ \x01(\v2).gamepb.activitypb.QixiBridgeRewardResultR\x10qixiBridgeResult\"Z\n" +
+	"\x12qixi_bridge_result\x18~ \x01(\v2).gamepb.activitypb.QixiBridgeRewardResultR\x10qixiBridgeResult\x12]\n" +
+	"\x17weather_exchange_result\x18e \x01(\v2%.gamepb.activitypb.ExchangeShopResultR\x15weatherExchangeResult\x12[\n" +
+	"\x13weather_task_result\x18l \x01(\v2+.gamepb.activitypb.WeatherTaskOperateResultR\x11weatherTaskResult\x12h\n" +
+	"\x17weather_research_result\x18\x8c\x01 \x01(\v2/.gamepb.activitypb.WeatherResearchOperateResultR\x15weatherResearchResult\x12^\n" +
+	"\x13charity_seed_result\x18\x87\x01 \x01(\v2-.gamepb.activitypb.CharityRedFlowerSeedResultR\x11charitySeedResult\x12d\n" +
+	"\x15charity_donate_result\x18\x88\x01 \x01(\v2/.gamepb.activitypb.CharityRedFlowerDonateResultR\x13charityDonateResult\x12}\n" +
+	"\x1echarity_progress_reward_result\x18\x89\x01 \x01(\v27.gamepb.activitypb.CharityRedFlowerProgressRewardResultR\x1bcharityProgressRewardResult\x12q\n" +
+	"\x1acharity_public_fund_result\x18\x8a\x01 \x01(\v23.gamepb.activitypb.CharityRedFlowerPublicFundResultR\x17charityPublicFundResult\x12a\n" +
+	"\x14charity_query_result\x18\x8b\x01 \x01(\v2..gamepb.activitypb.CharityRedFlowerQueryResultR\x12charityQueryResult\"k\n" +
+	"\x12ExchangeShopResult\x12 \n" +
+	"\x04item\x18\x01 \x01(\v2\f.corepb.ItemR\x04item\x123\n" +
+	"\x04cost\x18\x02 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x04cost\"e\n" +
+	"\x15WeatherTaskRewardLink\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\x03R\x06taskId\x123\n" +
+	"\x04item\x18\x02 \x01(\v2\x1f.gamepb.activitypb.ActivityItemR\x04item\"\xb5\x01\n" +
+	"\x18WeatherTaskOperateResult\x12I\n" +
+	"\vtask_reward\x18\x01 \x01(\v2(.gamepb.activitypb.WeatherTaskRewardLinkR\n" +
+	"taskReward\x12$\n" +
+	"\x06gained\x18\x02 \x01(\v2\f.corepb.ItemR\x06gained\x12(\n" +
+	"\bconsumed\x18\x03 \x01(\v2\f.corepb.ItemR\bconsumed\"\x8d\x01\n" +
+	"\x1cWeatherResearchOperateResult\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\x03R\x06nodeId\x12$\n" +
+	"\x06reward\x18\x02 \x01(\v2\f.corepb.ItemR\x06reward\x12.\n" +
+	"\x11unlocked_node_ids\x18\x03 \x03(\x03B\x02\x10\x01R\x0funlockedNodeIds\"Z\n" +
 	"\x14ActiviesChangeNotify\x12B\n" +
 	"\n" +
 	"activities\x18\x01 \x03(\v2\".gamepb.activitypb.ActivityContentR\n" +
@@ -3109,56 +5360,88 @@ func file_activitypb_proto_rawDescGZIP() []byte {
 	return file_activitypb_proto_rawDescData
 }
 
-var file_activitypb_proto_msgTypes = make([]protoimpl.MessageInfo, 47)
+var file_activitypb_proto_msgTypes = make([]protoimpl.MessageInfo, 78)
 var file_activitypb_proto_goTypes = []any{
-	(*ActivityContent)(nil),                      // 0: gamepb.activitypb.ActivityContent
-	(*ActivityItem)(nil),                         // 1: gamepb.activitypb.ActivityItem
-	(*StarSandGoods)(nil),                        // 2: gamepb.activitypb.StarSandGoods
-	(*StarSandGoodsList)(nil),                    // 3: gamepb.activitypb.StarSandGoodsList
-	(*ConstellationNode)(nil),                    // 4: gamepb.activitypb.ConstellationNode
-	(*ConstellationGroup)(nil),                   // 5: gamepb.activitypb.ConstellationGroup
-	(*ConstellationData)(nil),                    // 6: gamepb.activitypb.ConstellationData
-	(*ActivityData)(nil),                         // 7: gamepb.activitypb.ActivityData
-	(*ActivityWindow)(nil),                       // 8: gamepb.activitypb.ActivityWindow
-	(*ActivityListRequest)(nil),                  // 9: gamepb.activitypb.ActivityListRequest
-	(*ActivityListReply)(nil),                    // 10: gamepb.activitypb.ActivityListReply
-	(*SetSplashedRequest)(nil),                   // 11: gamepb.activitypb.SetSplashedRequest
-	(*SetSplashedReply)(nil),                     // 12: gamepb.activitypb.SetSplashedReply
-	(*GetGroupRequest)(nil),                      // 13: gamepb.activitypb.GetGroupRequest
-	(*GetGroupReply)(nil),                        // 14: gamepb.activitypb.GetGroupReply
-	(*QingMeiDailySeedGrant)(nil),                // 15: gamepb.activitypb.QingMeiDailySeedGrant
-	(*QingMeiDailySeedData)(nil),                 // 16: gamepb.activitypb.QingMeiDailySeedData
-	(*QingMeiBrewData)(nil),                      // 17: gamepb.activitypb.QingMeiBrewData
-	(*QixiBridgeStage)(nil),                      // 18: gamepb.activitypb.QixiBridgeStage
-	(*QixiBridgeConfig)(nil),                     // 19: gamepb.activitypb.QixiBridgeConfig
-	(*QixiGiftExchange)(nil),                     // 20: gamepb.activitypb.QixiGiftExchange
-	(*QixiGiftProgress)(nil),                     // 21: gamepb.activitypb.QixiGiftProgress
-	(*QingMeiBrewStarted)(nil),                   // 22: gamepb.activitypb.QingMeiBrewStarted
-	(*QingMeiQuote)(nil),                         // 23: gamepb.activitypb.QingMeiQuote
-	(*QingMeiSettlement)(nil),                    // 24: gamepb.activitypb.QingMeiSettlement
-	(*QueryActivityRequest)(nil),                 // 25: gamepb.activitypb.QueryActivityRequest
-	(*ExchangeShopOperateParams)(nil),            // 26: gamepb.activitypb.ExchangeShopOperateParams
-	(*ExchangeShopRequest)(nil),                  // 27: gamepb.activitypb.ExchangeShopRequest
-	(*OperateConstellationRequest)(nil),          // 28: gamepb.activitypb.OperateConstellationRequest
-	(*ClaimQingMeiDailySeedRequest)(nil),         // 29: gamepb.activitypb.ClaimQingMeiDailySeedRequest
-	(*StartQingMeiBrewRequest)(nil),              // 30: gamepb.activitypb.StartQingMeiBrewRequest
-	(*ContinueQingMeiBrewRequest)(nil),           // 31: gamepb.activitypb.ContinueQingMeiBrewRequest
-	(*SettleQingMeiBrewRequest)(nil),             // 32: gamepb.activitypb.SettleQingMeiBrewRequest
-	(*ClaimQixiBridgeRewardsRequest)(nil),        // 33: gamepb.activitypb.ClaimQixiBridgeRewardsRequest
-	(*GiftQixiSachetRequest)(nil),                // 34: gamepb.activitypb.GiftQixiSachetRequest
-	(*QixiGiftResult)(nil),                       // 35: gamepb.activitypb.QixiGiftResult
-	(*QixiBridgeRewardResult)(nil),               // 36: gamepb.activitypb.QixiBridgeRewardResult
-	(*ActivityOperateReply)(nil),                 // 37: gamepb.activitypb.ActivityOperateReply
-	(*ActiviesChangeNotify)(nil),                 // 38: gamepb.activitypb.ActiviesChangeNotify
-	(*OperateConstellationRequest_Empty)(nil),    // 39: gamepb.activitypb.OperateConstellationRequest.Empty
-	(*ClaimQingMeiDailySeedRequest_Params)(nil),  // 40: gamepb.activitypb.ClaimQingMeiDailySeedRequest.Params
-	(*StartQingMeiBrewRequest_Ingredient)(nil),   // 41: gamepb.activitypb.StartQingMeiBrewRequest.Ingredient
-	(*StartQingMeiBrewRequest_Params)(nil),       // 42: gamepb.activitypb.StartQingMeiBrewRequest.Params
-	(*ContinueQingMeiBrewRequest_Empty)(nil),     // 43: gamepb.activitypb.ContinueQingMeiBrewRequest.Empty
-	(*SettleQingMeiBrewRequest_Params)(nil),      // 44: gamepb.activitypb.SettleQingMeiBrewRequest.Params
-	(*ClaimQixiBridgeRewardsRequest_Params)(nil), // 45: gamepb.activitypb.ClaimQixiBridgeRewardsRequest.Params
-	(*GiftQixiSachetRequest_Params)(nil),         // 46: gamepb.activitypb.GiftQixiSachetRequest.Params
-	(*corepb.Item)(nil),                          // 47: corepb.Item
+	(*ActivityContent)(nil),                                     // 0: gamepb.activitypb.ActivityContent
+	(*ActivityItem)(nil),                                        // 1: gamepb.activitypb.ActivityItem
+	(*StarSandGoods)(nil),                                       // 2: gamepb.activitypb.StarSandGoods
+	(*StarSandGoodsList)(nil),                                   // 3: gamepb.activitypb.StarSandGoodsList
+	(*ConstellationNode)(nil),                                   // 4: gamepb.activitypb.ConstellationNode
+	(*ConstellationGroup)(nil),                                  // 5: gamepb.activitypb.ConstellationGroup
+	(*ConstellationData)(nil),                                   // 6: gamepb.activitypb.ConstellationData
+	(*WeatherBottleReward)(nil),                                 // 7: gamepb.activitypb.WeatherBottleReward
+	(*WeatherBottleConfig)(nil),                                 // 8: gamepb.activitypb.WeatherBottleConfig
+	(*WeatherActivityTask)(nil),                                 // 9: gamepb.activitypb.WeatherActivityTask
+	(*WeatherActivityTasks)(nil),                                // 10: gamepb.activitypb.WeatherActivityTasks
+	(*WeatherResearchNode)(nil),                                 // 11: gamepb.activitypb.WeatherResearchNode
+	(*WeatherResearchTrack)(nil),                                // 12: gamepb.activitypb.WeatherResearchTrack
+	(*WeatherResearchData)(nil),                                 // 13: gamepb.activitypb.WeatherResearchData
+	(*ActivityData)(nil),                                        // 14: gamepb.activitypb.ActivityData
+	(*CharityRedFlowerProgressReward)(nil),                      // 15: gamepb.activitypb.CharityRedFlowerProgressReward
+	(*CharityRedFlowerGlobalReward)(nil),                        // 16: gamepb.activitypb.CharityRedFlowerGlobalReward
+	(*CharityRedFlowerPublicFund)(nil),                          // 17: gamepb.activitypb.CharityRedFlowerPublicFund
+	(*CharityRedFlowerData)(nil),                                // 18: gamepb.activitypb.CharityRedFlowerData
+	(*ActivityWindow)(nil),                                      // 19: gamepb.activitypb.ActivityWindow
+	(*ActivityListRequest)(nil),                                 // 20: gamepb.activitypb.ActivityListRequest
+	(*ActivityListReply)(nil),                                   // 21: gamepb.activitypb.ActivityListReply
+	(*SetSplashedRequest)(nil),                                  // 22: gamepb.activitypb.SetSplashedRequest
+	(*SetSplashedReply)(nil),                                    // 23: gamepb.activitypb.SetSplashedReply
+	(*GetGroupRequest)(nil),                                     // 24: gamepb.activitypb.GetGroupRequest
+	(*GetGroupReply)(nil),                                       // 25: gamepb.activitypb.GetGroupReply
+	(*QingMeiDailySeedGrant)(nil),                               // 26: gamepb.activitypb.QingMeiDailySeedGrant
+	(*QingMeiDailySeedData)(nil),                                // 27: gamepb.activitypb.QingMeiDailySeedData
+	(*QingMeiBrewData)(nil),                                     // 28: gamepb.activitypb.QingMeiBrewData
+	(*QixiBridgeStage)(nil),                                     // 29: gamepb.activitypb.QixiBridgeStage
+	(*QixiBridgeConfig)(nil),                                    // 30: gamepb.activitypb.QixiBridgeConfig
+	(*QixiGiftExchange)(nil),                                    // 31: gamepb.activitypb.QixiGiftExchange
+	(*QixiGiftProgress)(nil),                                    // 32: gamepb.activitypb.QixiGiftProgress
+	(*QingMeiBrewStarted)(nil),                                  // 33: gamepb.activitypb.QingMeiBrewStarted
+	(*QingMeiQuote)(nil),                                        // 34: gamepb.activitypb.QingMeiQuote
+	(*QingMeiSettlement)(nil),                                   // 35: gamepb.activitypb.QingMeiSettlement
+	(*QueryActivityRequest)(nil),                                // 36: gamepb.activitypb.QueryActivityRequest
+	(*ExchangeShopOperateParams)(nil),                           // 37: gamepb.activitypb.ExchangeShopOperateParams
+	(*ExchangeShopRequest)(nil),                                 // 38: gamepb.activitypb.ExchangeShopRequest
+	(*WeatherResearchOperateParams)(nil),                        // 39: gamepb.activitypb.WeatherResearchOperateParams
+	(*AdvanceWeatherResearchRequest)(nil),                       // 40: gamepb.activitypb.AdvanceWeatherResearchRequest
+	(*WeatherCollectOperateParams)(nil),                         // 41: gamepb.activitypb.WeatherCollectOperateParams
+	(*CollectWeatherRequest)(nil),                               // 42: gamepb.activitypb.CollectWeatherRequest
+	(*WeatherResearchOperateRequest)(nil),                       // 43: gamepb.activitypb.WeatherResearchOperateRequest
+	(*WeatherTaskOperateParams)(nil),                            // 44: gamepb.activitypb.WeatherTaskOperateParams
+	(*WeatherTaskOperateRequest)(nil),                           // 45: gamepb.activitypb.WeatherTaskOperateRequest
+	(*OperateConstellationRequest)(nil),                         // 46: gamepb.activitypb.OperateConstellationRequest
+	(*ClaimQingMeiDailySeedRequest)(nil),                        // 47: gamepb.activitypb.ClaimQingMeiDailySeedRequest
+	(*StartQingMeiBrewRequest)(nil),                             // 48: gamepb.activitypb.StartQingMeiBrewRequest
+	(*ContinueQingMeiBrewRequest)(nil),                          // 49: gamepb.activitypb.ContinueQingMeiBrewRequest
+	(*SettleQingMeiBrewRequest)(nil),                            // 50: gamepb.activitypb.SettleQingMeiBrewRequest
+	(*ClaimQixiBridgeRewardsRequest)(nil),                       // 51: gamepb.activitypb.ClaimQixiBridgeRewardsRequest
+	(*GiftQixiSachetRequest)(nil),                               // 52: gamepb.activitypb.GiftQixiSachetRequest
+	(*CharityRedFlowerOperateRequest)(nil),                      // 53: gamepb.activitypb.CharityRedFlowerOperateRequest
+	(*CharityRedFlowerSeedResult)(nil),                          // 54: gamepb.activitypb.CharityRedFlowerSeedResult
+	(*CharityRedFlowerDonateResult)(nil),                        // 55: gamepb.activitypb.CharityRedFlowerDonateResult
+	(*CharityRedFlowerPublicFundResult)(nil),                    // 56: gamepb.activitypb.CharityRedFlowerPublicFundResult
+	(*CharityRedFlowerQueryResult)(nil),                         // 57: gamepb.activitypb.CharityRedFlowerQueryResult
+	(*CharityRedFlowerProgressRewardResult)(nil),                // 58: gamepb.activitypb.CharityRedFlowerProgressRewardResult
+	(*QixiGiftResult)(nil),                                      // 59: gamepb.activitypb.QixiGiftResult
+	(*QixiBridgeRewardResult)(nil),                              // 60: gamepb.activitypb.QixiBridgeRewardResult
+	(*ActivityOperateReply)(nil),                                // 61: gamepb.activitypb.ActivityOperateReply
+	(*ExchangeShopResult)(nil),                                  // 62: gamepb.activitypb.ExchangeShopResult
+	(*WeatherTaskRewardLink)(nil),                               // 63: gamepb.activitypb.WeatherTaskRewardLink
+	(*WeatherTaskOperateResult)(nil),                            // 64: gamepb.activitypb.WeatherTaskOperateResult
+	(*WeatherResearchOperateResult)(nil),                        // 65: gamepb.activitypb.WeatherResearchOperateResult
+	(*ActiviesChangeNotify)(nil),                                // 66: gamepb.activitypb.ActiviesChangeNotify
+	(*OperateConstellationRequest_Empty)(nil),                   // 67: gamepb.activitypb.OperateConstellationRequest.Empty
+	(*ClaimQingMeiDailySeedRequest_Params)(nil),                 // 68: gamepb.activitypb.ClaimQingMeiDailySeedRequest.Params
+	(*StartQingMeiBrewRequest_Ingredient)(nil),                  // 69: gamepb.activitypb.StartQingMeiBrewRequest.Ingredient
+	(*StartQingMeiBrewRequest_Params)(nil),                      // 70: gamepb.activitypb.StartQingMeiBrewRequest.Params
+	(*ContinueQingMeiBrewRequest_Empty)(nil),                    // 71: gamepb.activitypb.ContinueQingMeiBrewRequest.Empty
+	(*SettleQingMeiBrewRequest_Params)(nil),                     // 72: gamepb.activitypb.SettleQingMeiBrewRequest.Params
+	(*ClaimQixiBridgeRewardsRequest_Params)(nil),                // 73: gamepb.activitypb.ClaimQixiBridgeRewardsRequest.Params
+	(*GiftQixiSachetRequest_Params)(nil),                        // 74: gamepb.activitypb.GiftQixiSachetRequest.Params
+	(*CharityRedFlowerOperateRequest_Empty)(nil),                // 75: gamepb.activitypb.CharityRedFlowerOperateRequest.Empty
+	(*CharityRedFlowerOperateRequest_QueryParams)(nil),          // 76: gamepb.activitypb.CharityRedFlowerOperateRequest.QueryParams
+	(*CharityRedFlowerOperateRequest_ProgressRewardParams)(nil), // 77: gamepb.activitypb.CharityRedFlowerOperateRequest.ProgressRewardParams
+	(*ActivityBodyPetTreasureHunt)(nil),                         // 78: gamepb.activitypb.ActivityBodyPetTreasureHunt
+	(*corepb.Item)(nil),                                         // 79: corepb.Item
 }
 var file_activitypb_proto_depIdxs = []int32{
 	1,  // 0: gamepb.activitypb.StarSandGoods.item:type_name -> gamepb.activitypb.ActivityItem
@@ -3167,51 +5450,99 @@ var file_activitypb_proto_depIdxs = []int32{
 	1,  // 3: gamepb.activitypb.ConstellationNode.rewards:type_name -> gamepb.activitypb.ActivityItem
 	4,  // 4: gamepb.activitypb.ConstellationData.nodes:type_name -> gamepb.activitypb.ConstellationNode
 	5,  // 5: gamepb.activitypb.ConstellationData.groups:type_name -> gamepb.activitypb.ConstellationGroup
-	0,  // 6: gamepb.activitypb.ActivityData.activity:type_name -> gamepb.activitypb.ActivityContent
-	7,  // 7: gamepb.activitypb.ActivityData.children:type_name -> gamepb.activitypb.ActivityData
-	3,  // 8: gamepb.activitypb.ActivityData.catalog:type_name -> gamepb.activitypb.StarSandGoodsList
-	16, // 9: gamepb.activitypb.ActivityData.qingmei_daily_seed:type_name -> gamepb.activitypb.QingMeiDailySeedData
-	17, // 10: gamepb.activitypb.ActivityData.qingmei_brew:type_name -> gamepb.activitypb.QingMeiBrewData
-	6,  // 11: gamepb.activitypb.ActivityData.constellation:type_name -> gamepb.activitypb.ConstellationData
-	19, // 12: gamepb.activitypb.ActivityData.qixi_bridge:type_name -> gamepb.activitypb.QixiBridgeConfig
-	21, // 13: gamepb.activitypb.ActivityData.qixi_gift:type_name -> gamepb.activitypb.QixiGiftProgress
-	23, // 14: gamepb.activitypb.ActivityData.qingmei_quote:type_name -> gamepb.activitypb.QingMeiQuote
-	7,  // 15: gamepb.activitypb.ActivityListReply.activities:type_name -> gamepb.activitypb.ActivityData
-	8,  // 16: gamepb.activitypb.ActivityListReply.activity_windows:type_name -> gamepb.activitypb.ActivityWindow
-	7,  // 17: gamepb.activitypb.GetGroupReply.group:type_name -> gamepb.activitypb.ActivityData
-	1,  // 18: gamepb.activitypb.QingMeiDailySeedGrant.item:type_name -> gamepb.activitypb.ActivityItem
-	15, // 19: gamepb.activitypb.QingMeiDailySeedData.grant:type_name -> gamepb.activitypb.QingMeiDailySeedGrant
-	1,  // 20: gamepb.activitypb.QixiBridgeStage.cost:type_name -> gamepb.activitypb.ActivityItem
-	1,  // 21: gamepb.activitypb.QixiBridgeStage.rewards:type_name -> gamepb.activitypb.ActivityItem
-	1,  // 22: gamepb.activitypb.QixiBridgeConfig.display_items:type_name -> gamepb.activitypb.ActivityItem
-	18, // 23: gamepb.activitypb.QixiBridgeConfig.stages:type_name -> gamepb.activitypb.QixiBridgeStage
-	1,  // 24: gamepb.activitypb.QixiGiftExchange.sent_item:type_name -> gamepb.activitypb.ActivityItem
-	1,  // 25: gamepb.activitypb.QixiGiftExchange.received_item:type_name -> gamepb.activitypb.ActivityItem
-	20, // 26: gamepb.activitypb.QixiGiftProgress.exchange:type_name -> gamepb.activitypb.QixiGiftExchange
-	47, // 27: gamepb.activitypb.QingMeiSettlement.reward:type_name -> corepb.Item
-	26, // 28: gamepb.activitypb.ExchangeShopRequest.exchange_shop_operate:type_name -> gamepb.activitypb.ExchangeShopOperateParams
-	39, // 29: gamepb.activitypb.OperateConstellationRequest.field_119:type_name -> gamepb.activitypb.OperateConstellationRequest.Empty
-	40, // 30: gamepb.activitypb.ClaimQingMeiDailySeedRequest.params:type_name -> gamepb.activitypb.ClaimQingMeiDailySeedRequest.Params
-	42, // 31: gamepb.activitypb.StartQingMeiBrewRequest.params:type_name -> gamepb.activitypb.StartQingMeiBrewRequest.Params
-	43, // 32: gamepb.activitypb.ContinueQingMeiBrewRequest.params:type_name -> gamepb.activitypb.ContinueQingMeiBrewRequest.Empty
-	44, // 33: gamepb.activitypb.SettleQingMeiBrewRequest.params:type_name -> gamepb.activitypb.SettleQingMeiBrewRequest.Params
-	45, // 34: gamepb.activitypb.ClaimQixiBridgeRewardsRequest.params:type_name -> gamepb.activitypb.ClaimQixiBridgeRewardsRequest.Params
-	46, // 35: gamepb.activitypb.GiftQixiSachetRequest.params:type_name -> gamepb.activitypb.GiftQixiSachetRequest.Params
-	47, // 36: gamepb.activitypb.QixiBridgeRewardResult.rewards:type_name -> corepb.Item
-	7,  // 37: gamepb.activitypb.ActivityOperateReply.data:type_name -> gamepb.activitypb.ActivityData
-	47, // 38: gamepb.activitypb.ActivityOperateReply.rewards:type_name -> corepb.Item
-	22, // 39: gamepb.activitypb.ActivityOperateReply.qingmei_brew_started:type_name -> gamepb.activitypb.QingMeiBrewStarted
-	23, // 40: gamepb.activitypb.ActivityOperateReply.qingmei_quote:type_name -> gamepb.activitypb.QingMeiQuote
-	24, // 41: gamepb.activitypb.ActivityOperateReply.qingmei_settlement:type_name -> gamepb.activitypb.QingMeiSettlement
-	35, // 42: gamepb.activitypb.ActivityOperateReply.qixi_gift_result:type_name -> gamepb.activitypb.QixiGiftResult
-	36, // 43: gamepb.activitypb.ActivityOperateReply.qixi_bridge_result:type_name -> gamepb.activitypb.QixiBridgeRewardResult
-	0,  // 44: gamepb.activitypb.ActiviesChangeNotify.activities:type_name -> gamepb.activitypb.ActivityContent
-	41, // 45: gamepb.activitypb.StartQingMeiBrewRequest.Params.ingredients:type_name -> gamepb.activitypb.StartQingMeiBrewRequest.Ingredient
-	46, // [46:46] is the sub-list for method output_type
-	46, // [46:46] is the sub-list for method input_type
-	46, // [46:46] is the sub-list for extension type_name
-	46, // [46:46] is the sub-list for extension extendee
-	0,  // [0:46] is the sub-list for field type_name
+	1,  // 6: gamepb.activitypb.WeatherBottleReward.reward:type_name -> gamepb.activitypb.ActivityItem
+	7,  // 7: gamepb.activitypb.WeatherBottleConfig.rewards:type_name -> gamepb.activitypb.WeatherBottleReward
+	1,  // 8: gamepb.activitypb.WeatherActivityTask.reward:type_name -> gamepb.activitypb.ActivityItem
+	9,  // 9: gamepb.activitypb.WeatherActivityTasks.tasks:type_name -> gamepb.activitypb.WeatherActivityTask
+	1,  // 10: gamepb.activitypb.WeatherResearchNode.cost:type_name -> gamepb.activitypb.ActivityItem
+	1,  // 11: gamepb.activitypb.WeatherResearchNode.reward:type_name -> gamepb.activitypb.ActivityItem
+	11, // 12: gamepb.activitypb.WeatherResearchTrack.nodes:type_name -> gamepb.activitypb.WeatherResearchNode
+	12, // 13: gamepb.activitypb.WeatherResearchData.track:type_name -> gamepb.activitypb.WeatherResearchTrack
+	0,  // 14: gamepb.activitypb.ActivityData.activity:type_name -> gamepb.activitypb.ActivityContent
+	14, // 15: gamepb.activitypb.ActivityData.children:type_name -> gamepb.activitypb.ActivityData
+	3,  // 16: gamepb.activitypb.ActivityData.catalog:type_name -> gamepb.activitypb.StarSandGoodsList
+	27, // 17: gamepb.activitypb.ActivityData.qingmei_daily_seed:type_name -> gamepb.activitypb.QingMeiDailySeedData
+	28, // 18: gamepb.activitypb.ActivityData.qingmei_brew:type_name -> gamepb.activitypb.QingMeiBrewData
+	6,  // 19: gamepb.activitypb.ActivityData.constellation:type_name -> gamepb.activitypb.ConstellationData
+	78, // 20: gamepb.activitypb.ActivityData.pet_treasure_hunt:type_name -> gamepb.activitypb.ActivityBodyPetTreasureHunt
+	30, // 21: gamepb.activitypb.ActivityData.qixi_bridge:type_name -> gamepb.activitypb.QixiBridgeConfig
+	32, // 22: gamepb.activitypb.ActivityData.qixi_gift:type_name -> gamepb.activitypb.QixiGiftProgress
+	34, // 23: gamepb.activitypb.ActivityData.qingmei_quote:type_name -> gamepb.activitypb.QingMeiQuote
+	8,  // 24: gamepb.activitypb.ActivityData.weather_bottle:type_name -> gamepb.activitypb.WeatherBottleConfig
+	18, // 25: gamepb.activitypb.ActivityData.charity_red_flower:type_name -> gamepb.activitypb.CharityRedFlowerData
+	10, // 26: gamepb.activitypb.ActivityData.weather_tasks:type_name -> gamepb.activitypb.WeatherActivityTasks
+	13, // 27: gamepb.activitypb.ActivityData.weather_research:type_name -> gamepb.activitypb.WeatherResearchData
+	1,  // 28: gamepb.activitypb.CharityRedFlowerProgressReward.reward:type_name -> gamepb.activitypb.ActivityItem
+	1,  // 29: gamepb.activitypb.CharityRedFlowerGlobalReward.reward:type_name -> gamepb.activitypb.ActivityItem
+	1,  // 30: gamepb.activitypb.CharityRedFlowerData.seed_reward:type_name -> gamepb.activitypb.ActivityItem
+	15, // 31: gamepb.activitypb.CharityRedFlowerData.progress_rewards:type_name -> gamepb.activitypb.CharityRedFlowerProgressReward
+	16, // 32: gamepb.activitypb.CharityRedFlowerData.global_reward:type_name -> gamepb.activitypb.CharityRedFlowerGlobalReward
+	1,  // 33: gamepb.activitypb.CharityRedFlowerData.settlement_reward:type_name -> gamepb.activitypb.ActivityItem
+	17, // 34: gamepb.activitypb.CharityRedFlowerData.public_fund:type_name -> gamepb.activitypb.CharityRedFlowerPublicFund
+	1,  // 35: gamepb.activitypb.CharityRedFlowerData.daily_reward:type_name -> gamepb.activitypb.ActivityItem
+	14, // 36: gamepb.activitypb.ActivityListReply.activities:type_name -> gamepb.activitypb.ActivityData
+	19, // 37: gamepb.activitypb.ActivityListReply.activity_windows:type_name -> gamepb.activitypb.ActivityWindow
+	14, // 38: gamepb.activitypb.GetGroupReply.group:type_name -> gamepb.activitypb.ActivityData
+	1,  // 39: gamepb.activitypb.QingMeiDailySeedGrant.item:type_name -> gamepb.activitypb.ActivityItem
+	26, // 40: gamepb.activitypb.QingMeiDailySeedData.grant:type_name -> gamepb.activitypb.QingMeiDailySeedGrant
+	1,  // 41: gamepb.activitypb.QixiBridgeStage.cost:type_name -> gamepb.activitypb.ActivityItem
+	1,  // 42: gamepb.activitypb.QixiBridgeStage.rewards:type_name -> gamepb.activitypb.ActivityItem
+	1,  // 43: gamepb.activitypb.QixiBridgeConfig.display_items:type_name -> gamepb.activitypb.ActivityItem
+	29, // 44: gamepb.activitypb.QixiBridgeConfig.stages:type_name -> gamepb.activitypb.QixiBridgeStage
+	1,  // 45: gamepb.activitypb.QixiGiftExchange.cost_items:type_name -> gamepb.activitypb.ActivityItem
+	1,  // 46: gamepb.activitypb.QixiGiftExchange.receive_items:type_name -> gamepb.activitypb.ActivityItem
+	31, // 47: gamepb.activitypb.QixiGiftProgress.gifts:type_name -> gamepb.activitypb.QixiGiftExchange
+	79, // 48: gamepb.activitypb.QingMeiSettlement.reward:type_name -> corepb.Item
+	37, // 49: gamepb.activitypb.ExchangeShopRequest.exchange_shop_operate:type_name -> gamepb.activitypb.ExchangeShopOperateParams
+	39, // 50: gamepb.activitypb.AdvanceWeatherResearchRequest.weather_research_operate:type_name -> gamepb.activitypb.WeatherResearchOperateParams
+	41, // 51: gamepb.activitypb.CollectWeatherRequest.weather_collect_operate:type_name -> gamepb.activitypb.WeatherCollectOperateParams
+	39, // 52: gamepb.activitypb.WeatherResearchOperateRequest.params:type_name -> gamepb.activitypb.WeatherResearchOperateParams
+	44, // 53: gamepb.activitypb.WeatherTaskOperateRequest.params:type_name -> gamepb.activitypb.WeatherTaskOperateParams
+	67, // 54: gamepb.activitypb.OperateConstellationRequest.field_119:type_name -> gamepb.activitypb.OperateConstellationRequest.Empty
+	68, // 55: gamepb.activitypb.ClaimQingMeiDailySeedRequest.params:type_name -> gamepb.activitypb.ClaimQingMeiDailySeedRequest.Params
+	70, // 56: gamepb.activitypb.StartQingMeiBrewRequest.params:type_name -> gamepb.activitypb.StartQingMeiBrewRequest.Params
+	71, // 57: gamepb.activitypb.ContinueQingMeiBrewRequest.params:type_name -> gamepb.activitypb.ContinueQingMeiBrewRequest.Empty
+	72, // 58: gamepb.activitypb.SettleQingMeiBrewRequest.params:type_name -> gamepb.activitypb.SettleQingMeiBrewRequest.Params
+	73, // 59: gamepb.activitypb.ClaimQixiBridgeRewardsRequest.params:type_name -> gamepb.activitypb.ClaimQixiBridgeRewardsRequest.Params
+	74, // 60: gamepb.activitypb.GiftQixiSachetRequest.params:type_name -> gamepb.activitypb.GiftQixiSachetRequest.Params
+	75, // 61: gamepb.activitypb.CharityRedFlowerOperateRequest.claim_seed:type_name -> gamepb.activitypb.CharityRedFlowerOperateRequest.Empty
+	75, // 62: gamepb.activitypb.CharityRedFlowerOperateRequest.donate_love:type_name -> gamepb.activitypb.CharityRedFlowerOperateRequest.Empty
+	77, // 63: gamepb.activitypb.CharityRedFlowerOperateRequest.claim_progress_reward:type_name -> gamepb.activitypb.CharityRedFlowerOperateRequest.ProgressRewardParams
+	75, // 64: gamepb.activitypb.CharityRedFlowerOperateRequest.send_public_fund:type_name -> gamepb.activitypb.CharityRedFlowerOperateRequest.Empty
+	76, // 65: gamepb.activitypb.CharityRedFlowerOperateRequest.query:type_name -> gamepb.activitypb.CharityRedFlowerOperateRequest.QueryParams
+	79, // 66: gamepb.activitypb.CharityRedFlowerSeedResult.reward:type_name -> corepb.Item
+	79, // 67: gamepb.activitypb.CharityRedFlowerPublicFundResult.reward:type_name -> corepb.Item
+	79, // 68: gamepb.activitypb.CharityRedFlowerProgressRewardResult.reward:type_name -> corepb.Item
+	79, // 69: gamepb.activitypb.QixiBridgeRewardResult.awards:type_name -> corepb.Item
+	14, // 70: gamepb.activitypb.ActivityOperateReply.data:type_name -> gamepb.activitypb.ActivityData
+	79, // 71: gamepb.activitypb.ActivityOperateReply.rewards:type_name -> corepb.Item
+	33, // 72: gamepb.activitypb.ActivityOperateReply.qingmei_brew_started:type_name -> gamepb.activitypb.QingMeiBrewStarted
+	34, // 73: gamepb.activitypb.ActivityOperateReply.qingmei_quote:type_name -> gamepb.activitypb.QingMeiQuote
+	35, // 74: gamepb.activitypb.ActivityOperateReply.qingmei_settlement:type_name -> gamepb.activitypb.QingMeiSettlement
+	59, // 75: gamepb.activitypb.ActivityOperateReply.qixi_gift_result:type_name -> gamepb.activitypb.QixiGiftResult
+	60, // 76: gamepb.activitypb.ActivityOperateReply.qixi_bridge_result:type_name -> gamepb.activitypb.QixiBridgeRewardResult
+	62, // 77: gamepb.activitypb.ActivityOperateReply.weather_exchange_result:type_name -> gamepb.activitypb.ExchangeShopResult
+	64, // 78: gamepb.activitypb.ActivityOperateReply.weather_task_result:type_name -> gamepb.activitypb.WeatherTaskOperateResult
+	65, // 79: gamepb.activitypb.ActivityOperateReply.weather_research_result:type_name -> gamepb.activitypb.WeatherResearchOperateResult
+	54, // 80: gamepb.activitypb.ActivityOperateReply.charity_seed_result:type_name -> gamepb.activitypb.CharityRedFlowerSeedResult
+	55, // 81: gamepb.activitypb.ActivityOperateReply.charity_donate_result:type_name -> gamepb.activitypb.CharityRedFlowerDonateResult
+	58, // 82: gamepb.activitypb.ActivityOperateReply.charity_progress_reward_result:type_name -> gamepb.activitypb.CharityRedFlowerProgressRewardResult
+	56, // 83: gamepb.activitypb.ActivityOperateReply.charity_public_fund_result:type_name -> gamepb.activitypb.CharityRedFlowerPublicFundResult
+	57, // 84: gamepb.activitypb.ActivityOperateReply.charity_query_result:type_name -> gamepb.activitypb.CharityRedFlowerQueryResult
+	79, // 85: gamepb.activitypb.ExchangeShopResult.item:type_name -> corepb.Item
+	1,  // 86: gamepb.activitypb.ExchangeShopResult.cost:type_name -> gamepb.activitypb.ActivityItem
+	1,  // 87: gamepb.activitypb.WeatherTaskRewardLink.item:type_name -> gamepb.activitypb.ActivityItem
+	63, // 88: gamepb.activitypb.WeatherTaskOperateResult.task_reward:type_name -> gamepb.activitypb.WeatherTaskRewardLink
+	79, // 89: gamepb.activitypb.WeatherTaskOperateResult.gained:type_name -> corepb.Item
+	79, // 90: gamepb.activitypb.WeatherTaskOperateResult.consumed:type_name -> corepb.Item
+	79, // 91: gamepb.activitypb.WeatherResearchOperateResult.reward:type_name -> corepb.Item
+	0,  // 92: gamepb.activitypb.ActiviesChangeNotify.activities:type_name -> gamepb.activitypb.ActivityContent
+	69, // 93: gamepb.activitypb.StartQingMeiBrewRequest.Params.ingredients:type_name -> gamepb.activitypb.StartQingMeiBrewRequest.Ingredient
+	94, // [94:94] is the sub-list for method output_type
+	94, // [94:94] is the sub-list for method input_type
+	94, // [94:94] is the sub-list for extension type_name
+	94, // [94:94] is the sub-list for extension extendee
+	0,  // [0:94] is the sub-list for field type_name
 }
 
 func init() { file_activitypb_proto_init() }
@@ -3219,13 +5550,14 @@ func file_activitypb_proto_init() {
 	if File_activitypb_proto != nil {
 		return
 	}
+	file_pet_diary_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_activitypb_proto_rawDesc), len(file_activitypb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   47,
+			NumMessages:   78,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

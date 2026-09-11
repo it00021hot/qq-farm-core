@@ -189,3 +189,75 @@ func (c *Controller) GiftQixiSachet(ctx fiber.Ctx) error {
 	}
 	return response.SuccessJSON(ctx, "", info)
 }
+
+func (c *Controller) Charity(ctx fiber.Ctx) error {
+	var req farmtypes.ActivitySnapshotReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.Charity(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) CharityOperate(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityActionReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.CharityOperate(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) Weather(ctx fiber.Ctx) error {
+	var req farmtypes.ActivitySnapshotReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.Weather(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) WeatherOperate(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityActionReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.WeatherOperate(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) PetDiary(ctx fiber.Ctx) error {
+	var req farmtypes.ActivitySnapshotReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.PetDiary(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) PetDiaryOperate(ctx fiber.Ctx) error {
+	var req farmtypes.ActivityActionReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := activitysvc.Activity.PetDiaryOperate(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}

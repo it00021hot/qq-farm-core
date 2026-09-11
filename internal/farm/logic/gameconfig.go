@@ -3,6 +3,7 @@ package logic
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -92,6 +93,9 @@ type GameConfig struct {
 	itemByID         map[int64]*ItemInfo
 	seedItemByID     map[int64]*ItemInfo
 	landByID         map[int64]*LandConfigItem
+	illustratedByID  map[int64]*IllustratedConfigItem
+	mutantEffects    map[int64]*MutantEffectItem
+	buffByID         map[int64]*BuffConfigItem
 	landByCoordinate map[string]*LandConfigItem
 	levelExpTable    map[int64]int64 // RoleLevel.json: level → cumulative exp at level start
 }
@@ -189,6 +193,9 @@ func (g *GameConfig) Load(dir string) error {
 	}
 
 	levelExpTable := loadRoleLevelTable(dir)
+	illustratedByID := loadIllustratedTable(dir)
+	mutantEffects := loadMutantEffectTable(dir)
+	buffByID := loadBuffTable(dir)
 
 	g.mu.Lock()
 	g.dir = dir
@@ -200,8 +207,145 @@ func (g *GameConfig) Load(dir string) error {
 	g.landByID = landByID
 	g.landByCoordinate = landByCoord
 	g.levelExpTable = levelExpTable
+	g.illustratedByID = illustratedByID
+	g.mutantEffects = mutantEffects
+	g.buffByID = buffByID
 	g.mu.Unlock()
 	return nil
+}
+
+// IllustratedConfigItem is an Illustrated.json row.
+type IllustratedConfigItem struct {
+	ID               int64  `json:"id"`
+	Type             string `json:"type"`
+	IllustratedType  string `json:"illustrated_type"`
+	Param            int64  `json:"param"`
+	ShowGuarantee    *bool  `json:"show_guarantee"`
+	Sort             int64  `json:"sort"`
+}
+
+// MutantEffectItem is a MutantEffect.json row.
+type MutantEffectItem struct {
+	ID       int64   `json:"id"`
+	Tips     string  `json:"tips"`
+	Rate     float64 `json:"rate"`
+	Activity bool    `json:"activity"`
+}
+
+func loadIllustratedTable(dir string) map[int64]*IllustratedConfigItem {
+	raw, err := os.ReadFile(filepath.Join(dir, "Illustrated.json"))
+	if err != nil {
+		return map[int64]*IllustratedConfigItem{}
+	}
+	var rows []IllustratedConfigItem
+	if json.Unmarshal(raw, &rows) != nil {
+		return map[int64]*IllustratedConfigItem{}
+	}
+	out := make(map[int64]*IllustratedConfigItem, len(rows))
+	for i := range rows {
+		if rows[i].ID > 0 {
+			out[rows[i].ID] = &rows[i]
+		}
+	}
+	return out
+}
+
+func loadMutantEffectTable(dir string) map[int64]*MutantEffectItem {
+	raw, err := os.ReadFile(filepath.Join(dir, "MutantEffect.json"))
+	if err != nil {
+		return map[int64]*MutantEffectItem{}
+	}
+	var rows []MutantEffectItem
+	if json.Unmarshal(raw, &rows) != nil {
+		return map[int64]*MutantEffectItem{}
+	}
+	out := make(map[int64]*MutantEffectItem, len(rows))
+	for i := range rows {
+		if rows[i].ID > 0 {
+			out[rows[i].ID] = &rows[i]
+		}
+	}
+	return out
+}
+
+// GetIllustratedConfig returns the illustrated metadata row for a seed id.
+func (g *GameConfig) GetIllustratedConfig(seedID int64) *IllustratedConfigItem {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	return g.illustratedByID[seedID]
+}
+
+// BuffConfigItem is a BuffCfg.json row.
+type BuffConfigItem struct {
+	ID          int64  `json:"id"`
+	SourceType  string `json:"source_type"`
+	SourceParam int64  `json:"source_param"`
+	AttrID      string `json:"attr_id"`
+	AttrValue   int64  `json:"attr_value"`
+}
+
+func loadBuffTable(dir string) map[int64]*BuffConfigItem {
+	raw, err := os.ReadFile(filepath.Join(dir, "BuffCfg.json"))
+	if err != nil {
+		return map[int64]*BuffConfigItem{}
+	}
+	var rows []BuffConfigItem
+	if json.Unmarshal(raw, &rows) != nil {
+		return map[int64]*BuffConfigItem{}
+	}
+	out := make(map[int64]*BuffConfigItem, len(rows))
+	for i := range rows {
+		if rows[i].ID > 0 {
+			out[rows[i].ID] = &rows[i]
+		}
+	}
+	return out
+}
+
+// IllustratedBuffs returns all 超变升级 buffs sorted by level (bot getIllustratedBuffs).
+func (g *GameConfig) IllustratedBuffs() []BuffConfigItem {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	out := make([]BuffConfigItem, 0, len(g.buffByID))
+	for _, entry := range g.buffByID {
+		if entry.SourceType == "超变升级" {
+			out = append(out, *entry)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].SourceParam < out[j].SourceParam })
+	return out
+}
+
+// IllustratedBuffsByLevel returns the latest buff per attribute up to level (bot getIllustratedBuffsByLevel).
+func (g *GameConfig) IllustratedBuffsByLevel(level int64) []BuffConfigItem {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	filtered := make([]*BuffConfigItem, 0, len(g.buffByID))
+	for _, entry := range g.buffByID {
+		if entry.SourceType == "超变升级" && entry.SourceParam <= level {
+			filtered = append(filtered, entry)
+		}
+	}
+	sort.Slice(filtered, func(i, j int) bool { return filtered[i].SourceParam < filtered[j].SourceParam })
+	latest := map[string]BuffConfigItem{}
+	for _, entry := range filtered {
+		if entry.AttrID != "" {
+			latest[entry.AttrID] = *entry
+		}
+	}
+	out := make([]BuffConfigItem, 0, len(latest))
+	for _, entry := range latest {
+		out = append(out, entry)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].SourceParam < out[j].SourceParam })
+	return out
+}
+
+// GetMutantEffect returns the mutant effect row for a mutant id.
+func (g *GameConfig) GetMutantEffect(mutantID int64) *MutantEffectItem {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	return g.mutantEffects[mutantID]
 }
 
 type roleLevelRow struct {
@@ -453,67 +597,6 @@ func (g *GameConfig) GetItemByID(id int64) *ItemInfo {
 	return g.itemByID[id]
 }
 
-// ActivitySellCond captures a sell_cond that gates selling on an activity.
-type ActivitySellCond struct {
-	ActivityID string // referenced activity id, e.g. "2026080102"
-}
-
-// ParseActivitySellCond parses "活动结束后:<activityId>" style sell_cond.
-// Returns nil when the condition is not activity-restricted.
-func ParseActivitySellCond(sellCond *string) *ActivitySellCond {
-	if sellCond == nil {
-		return nil
-	}
-	raw := strings.TrimSpace(*sellCond)
-	const prefix = "活动结束后:"
-	if !strings.HasPrefix(raw, prefix) {
-		return nil
-	}
-	id := strings.TrimSpace(strings.TrimPrefix(raw, prefix))
-	if id == "" {
-		return nil
-	}
-	return &ActivitySellCond{ActivityID: id}
-}
-
-// IsActivityRestrictedForSale reports whether itemID must NOT be sold at now
-// (Unix seconds) because its sell_cond references an activity that is still
-// running. Unknown activities are treated as active (conservative skip).
-//
-// Recurring activities like 青梅 get a fresh id every run while the item
-// config may keep a stale id in sell_cond. When the referenced activity has
-// ended but another instance of the same activity type is ongoing, the item is
-// still treated as restricted.
-func IsActivityRestrictedForSale(itemID int64, now int64) bool {
-	item := GetItemByID(itemID)
-	if item == nil {
-		return false
-	}
-	cond := ParseActivitySellCond(item.SellCond)
-	if cond == nil {
-		return false
-	}
-	if ActivityActive(cond.ActivityID, now) {
-		return true
-	}
-	ref, ok := activityByID(cond.ActivityID)
-	if !ok || ref.Type <= 0 {
-		return false
-	}
-	for _, act := range ActivityRegistrySnapshot() {
-		if act.Type != ref.Type {
-			continue
-		}
-		if act.ActivityID == cond.ActivityID {
-			continue
-		}
-		if ActivityActive(act.ActivityID, now) {
-			return true
-		}
-	}
-	return false
-}
-
 // ParseSells parses "currencyId:price;..." strings.
 func ParseSells(sells string) []SellEntry {
 	sells = strings.TrimSpace(sells)
@@ -653,7 +736,7 @@ func SeedImagePath(id int64) string {
 	if id <= 0 {
 		return ""
 	}
-	return fmt.Sprintf("/game-config/seed_images_named/%d.png", id)
+	return fmt.Sprintf("/game-config/seed_images_named/seed_images/%d.png", id)
 }
 
 // GetAllSeeds returns catalog seed rows.

@@ -1,6 +1,8 @@
 package game
 
 import (
+	"google.golang.org/protobuf/reflect/protoreflect"
+
 	"context"
 	"fmt"
 	"log/slog"
@@ -74,6 +76,7 @@ const (
 	QixiFeatherItemID        int64 = 1024
 	QixiSachetItemID         int64 = 1025
 	QixiReceivedSachetItemID int64 = 1026
+	QixiDewItemID            int64 = 301103
 )
 
 func ShopActivityType() int64          { return shopActivityType }
@@ -283,6 +286,25 @@ func (a *API) ClaimSolarTerms(ctx context.Context, termID int64) (*solartermspb.
 }
 
 // QueryActivityShop loads star-sand shop catalog.
+// OperateRaw sends any ActivityService.Operate request and validates the echo.
+// Used by activity modules whose request shapes live in activitypb.
+func (a *API) OperateRaw(ctx context.Context, req interface {
+	ProtoReflect() protoreflect.Message
+}, activityID, operateType int64) (*activitypb.ActivityOperateReply, error) {
+	raw, err := a.sendActivity(ctx, "Operate", marshalMessage(req))
+	if err != nil {
+		return nil, err
+	}
+	reply := &activitypb.ActivityOperateReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	if reply.ActivityId != activityID || reply.OperateType != operateType {
+		return nil, fmt.Errorf("activity operate: unexpected reply activity=%d operate=%d", reply.ActivityId, reply.OperateType)
+	}
+	return reply, nil
+}
+
 func (a *API) QueryActivityShop(ctx context.Context, activityID int64) (*activitypb.ActivityOperateReply, error) {
 	req := &activitypb.QueryActivityRequest{
 		ActivityId:  activityID,
@@ -614,12 +636,15 @@ func (a *API) ListActivityWindows(ctx context.Context) (*activitypb.ActivityList
 	return reply, nil
 }
 
+// QixiDefaultGiftMessageTextID mirrors bot QIXI_DEFAULT_GIFT_MESSAGE_TEXT_ID.
+const QixiDefaultGiftMessageTextID int64 = 15
+
 // ClaimQixiBridgeRewards claims the current 鹊桥 stage reward (operateType=25).
 func (a *API) ClaimQixiBridgeRewards(ctx context.Context) (*activitypb.ActivityOperateReply, error) {
 	req := &activitypb.ClaimQixiBridgeRewardsRequest{
 		ActivityId:  QixiBridgeActivityID,
 		OperateType: operateQixiBridge,
-		Params:      &activitypb.ClaimQixiBridgeRewardsRequest_Params{ClaimMode: 0},
+		Params:      &activitypb.ClaimQixiBridgeRewardsRequest_Params{Step: 0},
 	}
 	raw, err := a.sendActivity(ctx, "Operate", marshalMessage(req))
 	if err != nil {
@@ -635,14 +660,18 @@ func (a *API) ClaimQixiBridgeRewards(ctx context.Context) (*activitypb.ActivityO
 	return reply, nil
 }
 
-// GiftQixiSachet gifts 鹊羽香囊 to a friend (operateType=26).
-func (a *API) GiftQixiSachet(ctx context.Context, friendGID, count int64) (*activitypb.ActivityOperateReply, error) {
+// GiftQixiSachet gifts one 鹊羽香囊 to a friend (operateType=26). The new
+// protocol sends exactly one sachet per Operate with a message text id.
+func (a *API) GiftQixiSachet(ctx context.Context, friendGID, msgTextID int64) (*activitypb.ActivityOperateReply, error) {
+	if msgTextID <= 0 {
+		msgTextID = QixiDefaultGiftMessageTextID
+	}
 	req := &activitypb.GiftQixiSachetRequest{
 		ActivityId:  QixiGiftActivityID,
 		OperateType: operateQixiGift,
 		Params: &activitypb.GiftQixiSachetRequest_Params{
-			FriendGid: friendGID,
-			Count:     count,
+			TargetGid: friendGID,
+			MsgTextId: msgTextID,
 		},
 	}
 	raw, err := a.sendActivity(ctx, "Operate", marshalMessage(req))
@@ -655,9 +684,6 @@ func (a *API) GiftQixiSachet(ctx context.Context, friendGID, count int64) (*acti
 	}
 	if reply.ActivityId != QixiGiftActivityID || reply.OperateType != operateQixiGift {
 		return nil, fmt.Errorf("QIXI_RESPONSE_INVALID: 鹊羽香囊回包不匹配")
-	}
-	if reply.QixiGiftResult != nil && !reply.QixiGiftResult.Success {
-		return nil, fmt.Errorf("QIXI_GIFT_FAILED: 鹊羽香囊赠送未成功")
 	}
 	return reply, nil
 }

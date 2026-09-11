@@ -201,6 +201,23 @@ type FriendOpReq struct {
 	Op        string `json:"op" validate:"required,oneof=steal help water weed bug bad"`
 }
 
+// InteractionUseReq 特殊互动道具批量使用
+type InteractionUseReq struct {
+	AccountID uint64 `json:"accountId" validate:"required"`
+	FriendGid int64  `json:"friendGid"`
+	ItemId    int64  `json:"itemId" validate:"required"`
+	LandIds   []int64 `json:"landIds"`
+}
+
+// DogOpReq 宠物（狗）操作
+type DogOpReq struct {
+	AccountID uint64 `json:"accountId" validate:"required"`
+	Op        string `json:"op" validate:"required,oneof=deploy withdraw addFood claimSkillGifts"`
+	DogID     int64  `json:"dogId"`
+	ItemID    int64  `json:"itemId"`
+	Count     int64  `json:"count"`
+}
+
 // ActivitySnapshotReq 活动快照
 type ActivitySnapshotReq struct {
 	AccountID uint64 `json:"accountId" query:"accountId" validate:"required"`
@@ -216,7 +233,11 @@ type ActivityActionReq struct {
 	ActivityID  string               `json:"activityId"`
 	OperateType int64                `json:"operateType"`
 	Ingredients []ActivityIngredient `json:"ingredients"`
+	Action      string               `json:"action"`
 	FriendGID   string               `json:"friendGid"`
+	TargetID    string               `json:"targetId"`
+	Gids        []string             `json:"gids"`
+	SkipBattle  bool                 `json:"skip"`
 }
 
 // ActivityIngredient 青梅酿造原料（按背包 UID 选择）

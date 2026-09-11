@@ -25,7 +25,7 @@ const (
 type GetIllustratedListV2Request struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Refresh       bool                   `protobuf:"varint,1,opt,name=refresh,proto3" json:"refresh,omitempty"`
-	Full          bool                   `protobuf:"varint,2,opt,name=full,proto3" json:"full,omitempty"`
+	Type          int32                  `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -67,24 +67,27 @@ func (x *GetIllustratedListV2Request) GetRefresh() bool {
 	return false
 }
 
-func (x *GetIllustratedListV2Request) GetFull() bool {
+func (x *GetIllustratedListV2Request) GetType() int32 {
 	if x != nil {
-		return x.Full
+		return x.Type
 	}
-	return false
+	return 0
 }
 
 type IllustratedItem struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	SeedId        int64                  `protobuf:"varint,1,opt,name=seed_id,json=seedId,proto3" json:"seed_id,omitempty"`
-	Unlocked      bool                   `protobuf:"varint,2,opt,name=unlocked,proto3" json:"unlocked,omitempty"`
-	Planted       bool                   `protobuf:"varint,3,opt,name=planted,proto3" json:"planted,omitempty"`
-	PlantedCount  int32                  `protobuf:"varint,4,opt,name=planted_count,json=plantedCount,proto3" json:"planted_count,omitempty"`
-	HarvestCount  int32                  `protobuf:"varint,5,opt,name=harvest_count,json=harvestCount,proto3" json:"harvest_count,omitempty"`
-	RewardDetail  []byte                 `protobuf:"bytes,6,opt,name=reward_detail,json=rewardDetail,proto3" json:"reward_detail,omitempty"` // 服务器改为子消息，用 bytes 兼容
-	HasReward     bool                   `protobuf:"varint,7,opt,name=has_reward,json=hasReward,proto3" json:"has_reward,omitempty"`         // 从 field 8 移到 field 7
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	SeedId int64                  `protobuf:"varint,1,opt,name=seed_id,json=seedId,proto3" json:"seed_id,omitempty"`
+	// Reward tier (2=40, 3=80, 4=200 in the captured responses), not the
+	// golden/activity/decoration fruit group.
+	RewardCategory int32                   `protobuf:"varint,2,opt,name=reward_category,json=rewardCategory,proto3" json:"reward_category,omitempty"`
+	Unlocked       bool                    `protobuf:"varint,3,opt,name=unlocked,proto3" json:"unlocked,omitempty"`
+	Progress       int32                   `protobuf:"varint,4,opt,name=progress,proto3" json:"progress,omitempty"`
+	CropCategory   int32                   `protobuf:"varint,5,opt,name=crop_category,json=cropCategory,proto3" json:"crop_category,omitempty"`
+	Reward         *IllustratedReward      `protobuf:"bytes,6,opt,name=reward,proto3" json:"reward,omitempty"`
+	IsNew          bool                    `protobuf:"varint,7,opt,name=is_new,json=isNew,proto3" json:"is_new,omitempty"`
+	Attributes     []*IllustratedAttribute `protobuf:"bytes,8,rep,name=attributes,proto3" json:"attributes,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *IllustratedItem) Reset() {
@@ -124,6 +127,13 @@ func (x *IllustratedItem) GetSeedId() int64 {
 	return 0
 }
 
+func (x *IllustratedItem) GetRewardCategory() int32 {
+	if x != nil {
+		return x.RewardCategory
+	}
+	return 0
+}
+
 func (x *IllustratedItem) GetUnlocked() bool {
 	if x != nil {
 		return x.Unlocked
@@ -131,46 +141,55 @@ func (x *IllustratedItem) GetUnlocked() bool {
 	return false
 }
 
-func (x *IllustratedItem) GetPlanted() bool {
+func (x *IllustratedItem) GetProgress() int32 {
 	if x != nil {
-		return x.Planted
-	}
-	return false
-}
-
-func (x *IllustratedItem) GetPlantedCount() int32 {
-	if x != nil {
-		return x.PlantedCount
+		return x.Progress
 	}
 	return 0
 }
 
-func (x *IllustratedItem) GetHarvestCount() int32 {
+func (x *IllustratedItem) GetCropCategory() int32 {
 	if x != nil {
-		return x.HarvestCount
+		return x.CropCategory
 	}
 	return 0
 }
 
-func (x *IllustratedItem) GetRewardDetail() []byte {
+func (x *IllustratedItem) GetReward() *IllustratedReward {
 	if x != nil {
-		return x.RewardDetail
+		return x.Reward
 	}
 	return nil
 }
 
-func (x *IllustratedItem) GetHasReward() bool {
+func (x *IllustratedItem) GetIsNew() bool {
 	if x != nil {
-		return x.HasReward
+		return x.IsNew
 	}
 	return false
 }
 
+func (x *IllustratedItem) GetAttributes() []*IllustratedAttribute {
+	if x != nil {
+		return x.Attributes
+	}
+	return nil
+}
+
 type GetIllustratedListV2Reply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*IllustratedItem     `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Items             []*IllustratedItem     `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	Progress          int64                  `protobuf:"varint,2,opt,name=progress,proto3" json:"progress,omitempty"`
+	Level             int32                  `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
+	Reward            *IllustratedReward     `protobuf:"bytes,4,opt,name=reward,proto3" json:"reward,omitempty"`
+	RewardDetail      []byte                 `protobuf:"bytes,5,opt,name=reward_detail,json=rewardDetail,proto3" json:"reward_detail,omitempty"`
+	Type              int32                  `protobuf:"varint,6,opt,name=type,proto3" json:"type,omitempty"`
+	NextLevelProgress int64                  `protobuf:"varint,7,opt,name=next_level_progress,json=nextLevelProgress,proto3" json:"next_level_progress,omitempty"`
+	RedDot            bool                   `protobuf:"varint,9,opt,name=red_dot,json=redDot,proto3" json:"red_dot,omitempty"`
+	AttributeBonuses  []*IllustratedReward   `protobuf:"bytes,10,rep,name=attribute_bonuses,json=attributeBonuses,proto3" json:"attribute_bonuses,omitempty"`
+	CurrentBonus      *IllustratedReward     `protobuf:"bytes,11,opt,name=current_bonus,json=currentBonus,proto3" json:"current_bonus,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *GetIllustratedListV2Reply) Reset() {
@@ -210,6 +229,353 @@ func (x *GetIllustratedListV2Reply) GetItems() []*IllustratedItem {
 	return nil
 }
 
+func (x *GetIllustratedListV2Reply) GetProgress() int64 {
+	if x != nil {
+		return x.Progress
+	}
+	return 0
+}
+
+func (x *GetIllustratedListV2Reply) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *GetIllustratedListV2Reply) GetReward() *IllustratedReward {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+func (x *GetIllustratedListV2Reply) GetRewardDetail() []byte {
+	if x != nil {
+		return x.RewardDetail
+	}
+	return nil
+}
+
+func (x *GetIllustratedListV2Reply) GetType() int32 {
+	if x != nil {
+		return x.Type
+	}
+	return 0
+}
+
+func (x *GetIllustratedListV2Reply) GetNextLevelProgress() int64 {
+	if x != nil {
+		return x.NextLevelProgress
+	}
+	return 0
+}
+
+func (x *GetIllustratedListV2Reply) GetRedDot() bool {
+	if x != nil {
+		return x.RedDot
+	}
+	return false
+}
+
+func (x *GetIllustratedListV2Reply) GetAttributeBonuses() []*IllustratedReward {
+	if x != nil {
+		return x.AttributeBonuses
+	}
+	return nil
+}
+
+func (x *GetIllustratedListV2Reply) GetCurrentBonus() *IllustratedReward {
+	if x != nil {
+		return x.CurrentBonus
+	}
+	return nil
+}
+
+type IllustratedReward struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        int64                  `protobuf:"varint,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IllustratedReward) Reset() {
+	*x = IllustratedReward{}
+	mi := &file_illustratedpb_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IllustratedReward) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IllustratedReward) ProtoMessage() {}
+
+func (x *IllustratedReward) ProtoReflect() protoreflect.Message {
+	mi := &file_illustratedpb_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IllustratedReward.ProtoReflect.Descriptor instead.
+func (*IllustratedReward) Descriptor() ([]byte, []int) {
+	return file_illustratedpb_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *IllustratedReward) GetItemId() int64 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
+func (x *IllustratedReward) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+type IllustratedAttribute struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          int32                  `protobuf:"varint,1,opt,name=type,proto3" json:"type,omitempty"`
+	Param         int64                  `protobuf:"varint,2,opt,name=param,proto3" json:"param,omitempty"`
+	Value         int64                  `protobuf:"varint,3,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IllustratedAttribute) Reset() {
+	*x = IllustratedAttribute{}
+	mi := &file_illustratedpb_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IllustratedAttribute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IllustratedAttribute) ProtoMessage() {}
+
+func (x *IllustratedAttribute) ProtoReflect() protoreflect.Message {
+	mi := &file_illustratedpb_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IllustratedAttribute.ProtoReflect.Descriptor instead.
+func (*IllustratedAttribute) Descriptor() ([]byte, []int) {
+	return file_illustratedpb_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *IllustratedAttribute) GetType() int32 {
+	if x != nil {
+		return x.Type
+	}
+	return 0
+}
+
+func (x *IllustratedAttribute) GetParam() int64 {
+	if x != nil {
+		return x.Param
+	}
+	return 0
+}
+
+func (x *IllustratedAttribute) GetValue() int64 {
+	if x != nil {
+		return x.Value
+	}
+	return 0
+}
+
+type GetIllustratedLevelListV2Request struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          int32                  `protobuf:"varint,1,opt,name=type,proto3" json:"type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetIllustratedLevelListV2Request) Reset() {
+	*x = GetIllustratedLevelListV2Request{}
+	mi := &file_illustratedpb_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetIllustratedLevelListV2Request) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetIllustratedLevelListV2Request) ProtoMessage() {}
+
+func (x *GetIllustratedLevelListV2Request) ProtoReflect() protoreflect.Message {
+	mi := &file_illustratedpb_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetIllustratedLevelListV2Request.ProtoReflect.Descriptor instead.
+func (*GetIllustratedLevelListV2Request) Descriptor() ([]byte, []int) {
+	return file_illustratedpb_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetIllustratedLevelListV2Request) GetType() int32 {
+	if x != nil {
+		return x.Type
+	}
+	return 0
+}
+
+type IllustratedLevel struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Level         int32                  `protobuf:"varint,1,opt,name=level,proto3" json:"level,omitempty"`
+	Progress      int64                  `protobuf:"varint,2,opt,name=progress,proto3" json:"progress,omitempty"`
+	Rewards       []*IllustratedReward   `protobuf:"bytes,3,rep,name=rewards,proto3" json:"rewards,omitempty"`
+	Claimed       bool                   `protobuf:"varint,5,opt,name=claimed,proto3" json:"claimed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IllustratedLevel) Reset() {
+	*x = IllustratedLevel{}
+	mi := &file_illustratedpb_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IllustratedLevel) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IllustratedLevel) ProtoMessage() {}
+
+func (x *IllustratedLevel) ProtoReflect() protoreflect.Message {
+	mi := &file_illustratedpb_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IllustratedLevel.ProtoReflect.Descriptor instead.
+func (*IllustratedLevel) Descriptor() ([]byte, []int) {
+	return file_illustratedpb_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *IllustratedLevel) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *IllustratedLevel) GetProgress() int64 {
+	if x != nil {
+		return x.Progress
+	}
+	return 0
+}
+
+func (x *IllustratedLevel) GetRewards() []*IllustratedReward {
+	if x != nil {
+		return x.Rewards
+	}
+	return nil
+}
+
+func (x *IllustratedLevel) GetClaimed() bool {
+	if x != nil {
+		return x.Claimed
+	}
+	return false
+}
+
+type GetIllustratedLevelListV2Reply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Level         int32                  `protobuf:"varint,1,opt,name=level,proto3" json:"level,omitempty"`
+	Progress      int64                  `protobuf:"varint,2,opt,name=progress,proto3" json:"progress,omitempty"`
+	Levels        []*IllustratedLevel    `protobuf:"bytes,3,rep,name=levels,proto3" json:"levels,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetIllustratedLevelListV2Reply) Reset() {
+	*x = GetIllustratedLevelListV2Reply{}
+	mi := &file_illustratedpb_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetIllustratedLevelListV2Reply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetIllustratedLevelListV2Reply) ProtoMessage() {}
+
+func (x *GetIllustratedLevelListV2Reply) ProtoReflect() protoreflect.Message {
+	mi := &file_illustratedpb_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetIllustratedLevelListV2Reply.ProtoReflect.Descriptor instead.
+func (*GetIllustratedLevelListV2Reply) Descriptor() ([]byte, []int) {
+	return file_illustratedpb_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetIllustratedLevelListV2Reply) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *GetIllustratedLevelListV2Reply) GetProgress() int64 {
+	if x != nil {
+		return x.Progress
+	}
+	return 0
+}
+
+func (x *GetIllustratedLevelListV2Reply) GetLevels() []*IllustratedLevel {
+	if x != nil {
+		return x.Levels
+	}
+	return nil
+}
+
 type ClaimAllRewardsV2Request struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	OnlyClaimable bool                   `protobuf:"varint,1,opt,name=only_claimable,json=onlyClaimable,proto3" json:"only_claimable,omitempty"`
@@ -219,7 +585,7 @@ type ClaimAllRewardsV2Request struct {
 
 func (x *ClaimAllRewardsV2Request) Reset() {
 	*x = ClaimAllRewardsV2Request{}
-	mi := &file_illustratedpb_proto_msgTypes[3]
+	mi := &file_illustratedpb_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -231,7 +597,7 @@ func (x *ClaimAllRewardsV2Request) String() string {
 func (*ClaimAllRewardsV2Request) ProtoMessage() {}
 
 func (x *ClaimAllRewardsV2Request) ProtoReflect() protoreflect.Message {
-	mi := &file_illustratedpb_proto_msgTypes[3]
+	mi := &file_illustratedpb_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -244,7 +610,7 @@ func (x *ClaimAllRewardsV2Request) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimAllRewardsV2Request.ProtoReflect.Descriptor instead.
 func (*ClaimAllRewardsV2Request) Descriptor() ([]byte, []int) {
-	return file_illustratedpb_proto_rawDescGZIP(), []int{3}
+	return file_illustratedpb_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ClaimAllRewardsV2Request) GetOnlyClaimable() bool {
@@ -264,7 +630,7 @@ type ClaimAllRewardsV2Reply struct {
 
 func (x *ClaimAllRewardsV2Reply) Reset() {
 	*x = ClaimAllRewardsV2Reply{}
-	mi := &file_illustratedpb_proto_msgTypes[4]
+	mi := &file_illustratedpb_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -276,7 +642,7 @@ func (x *ClaimAllRewardsV2Reply) String() string {
 func (*ClaimAllRewardsV2Reply) ProtoMessage() {}
 
 func (x *ClaimAllRewardsV2Reply) ProtoReflect() protoreflect.Message {
-	mi := &file_illustratedpb_proto_msgTypes[4]
+	mi := &file_illustratedpb_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -289,7 +655,7 @@ func (x *ClaimAllRewardsV2Reply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimAllRewardsV2Reply.ProtoReflect.Descriptor instead.
 func (*ClaimAllRewardsV2Reply) Descriptor() ([]byte, []int) {
-	return file_illustratedpb_proto_rawDescGZIP(), []int{4}
+	return file_illustratedpb_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ClaimAllRewardsV2Reply) GetItems() []*corepb.Item {
@@ -314,7 +680,7 @@ type IllustratedRewardRedDotNotifyV2 struct {
 
 func (x *IllustratedRewardRedDotNotifyV2) Reset() {
 	*x = IllustratedRewardRedDotNotifyV2{}
-	mi := &file_illustratedpb_proto_msgTypes[5]
+	mi := &file_illustratedpb_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -326,7 +692,7 @@ func (x *IllustratedRewardRedDotNotifyV2) String() string {
 func (*IllustratedRewardRedDotNotifyV2) ProtoMessage() {}
 
 func (x *IllustratedRewardRedDotNotifyV2) ProtoReflect() protoreflect.Message {
-	mi := &file_illustratedpb_proto_msgTypes[5]
+	mi := &file_illustratedpb_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -339,20 +705,20 @@ func (x *IllustratedRewardRedDotNotifyV2) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IllustratedRewardRedDotNotifyV2.ProtoReflect.Descriptor instead.
 func (*IllustratedRewardRedDotNotifyV2) Descriptor() ([]byte, []int) {
-	return file_illustratedpb_proto_rawDescGZIP(), []int{5}
+	return file_illustratedpb_proto_rawDescGZIP(), []int{10}
 }
 
 // ============ 清除新解锁水果标记 V2 ============
 type ClearNewUnlockedFruitsV2Request struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	SeedId        int64                  `protobuf:"varint,1,opt,name=seed_id,json=seedId,proto3" json:"seed_id,omitempty"`
+	SeedId        []byte                 `protobuf:"bytes,1,opt,name=seed_id,json=seedId,proto3" json:"seed_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ClearNewUnlockedFruitsV2Request) Reset() {
 	*x = ClearNewUnlockedFruitsV2Request{}
-	mi := &file_illustratedpb_proto_msgTypes[6]
+	mi := &file_illustratedpb_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -364,7 +730,7 @@ func (x *ClearNewUnlockedFruitsV2Request) String() string {
 func (*ClearNewUnlockedFruitsV2Request) ProtoMessage() {}
 
 func (x *ClearNewUnlockedFruitsV2Request) ProtoReflect() protoreflect.Message {
-	mi := &file_illustratedpb_proto_msgTypes[6]
+	mi := &file_illustratedpb_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -377,25 +743,26 @@ func (x *ClearNewUnlockedFruitsV2Request) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClearNewUnlockedFruitsV2Request.ProtoReflect.Descriptor instead.
 func (*ClearNewUnlockedFruitsV2Request) Descriptor() ([]byte, []int) {
-	return file_illustratedpb_proto_rawDescGZIP(), []int{6}
+	return file_illustratedpb_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *ClearNewUnlockedFruitsV2Request) GetSeedId() int64 {
+func (x *ClearNewUnlockedFruitsV2Request) GetSeedId() []byte {
 	if x != nil {
 		return x.SeedId
 	}
-	return 0
+	return nil
 }
 
 type ClearNewUnlockedFruitsV2Reply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	SeedId        []byte                 `protobuf:"bytes,1,opt,name=seed_id,json=seedId,proto3" json:"seed_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ClearNewUnlockedFruitsV2Reply) Reset() {
 	*x = ClearNewUnlockedFruitsV2Reply{}
-	mi := &file_illustratedpb_proto_msgTypes[7]
+	mi := &file_illustratedpb_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -407,7 +774,7 @@ func (x *ClearNewUnlockedFruitsV2Reply) String() string {
 func (*ClearNewUnlockedFruitsV2Reply) ProtoMessage() {}
 
 func (x *ClearNewUnlockedFruitsV2Reply) ProtoReflect() protoreflect.Message {
-	mi := &file_illustratedpb_proto_msgTypes[7]
+	mi := &file_illustratedpb_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -420,7 +787,14 @@ func (x *ClearNewUnlockedFruitsV2Reply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClearNewUnlockedFruitsV2Reply.ProtoReflect.Descriptor instead.
 func (*ClearNewUnlockedFruitsV2Reply) Descriptor() ([]byte, []int) {
-	return file_illustratedpb_proto_rawDescGZIP(), []int{7}
+	return file_illustratedpb_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ClearNewUnlockedFruitsV2Reply) GetSeedId() []byte {
+	if x != nil {
+		return x.SeedId
+	}
+	return nil
 }
 
 var File_illustratedpb_proto protoreflect.FileDescriptor
@@ -430,18 +804,48 @@ const file_illustratedpb_proto_rawDesc = "" +
 	"\x13illustratedpb.proto\x12\x14gamepb.illustratedpb\x1a\fcorepb.proto\"K\n" +
 	"\x1bGetIllustratedListV2Request\x12\x18\n" +
 	"\arefresh\x18\x01 \x01(\bR\arefresh\x12\x12\n" +
-	"\x04full\x18\x02 \x01(\bR\x04full\"\xee\x01\n" +
+	"\x04type\x18\x02 \x01(\x05R\x04type\"\xd4\x02\n" +
 	"\x0fIllustratedItem\x12\x17\n" +
-	"\aseed_id\x18\x01 \x01(\x03R\x06seedId\x12\x1a\n" +
-	"\bunlocked\x18\x02 \x01(\bR\bunlocked\x12\x18\n" +
-	"\aplanted\x18\x03 \x01(\bR\aplanted\x12#\n" +
-	"\rplanted_count\x18\x04 \x01(\x05R\fplantedCount\x12#\n" +
-	"\rharvest_count\x18\x05 \x01(\x05R\fharvestCount\x12#\n" +
-	"\rreward_detail\x18\x06 \x01(\fR\frewardDetail\x12\x1d\n" +
+	"\aseed_id\x18\x01 \x01(\x03R\x06seedId\x12'\n" +
+	"\x0freward_category\x18\x02 \x01(\x05R\x0erewardCategory\x12\x1a\n" +
+	"\bunlocked\x18\x03 \x01(\bR\bunlocked\x12\x1a\n" +
+	"\bprogress\x18\x04 \x01(\x05R\bprogress\x12#\n" +
+	"\rcrop_category\x18\x05 \x01(\x05R\fcropCategory\x12?\n" +
+	"\x06reward\x18\x06 \x01(\v2'.gamepb.illustratedpb.IllustratedRewardR\x06reward\x12\x15\n" +
+	"\x06is_new\x18\a \x01(\bR\x05isNew\x12J\n" +
 	"\n" +
-	"has_reward\x18\a \x01(\bR\thasReward\"X\n" +
+	"attributes\x18\b \x03(\v2*.gamepb.illustratedpb.IllustratedAttributeR\n" +
+	"attributes\"\xf1\x03\n" +
 	"\x19GetIllustratedListV2Reply\x12;\n" +
-	"\x05items\x18\x01 \x03(\v2%.gamepb.illustratedpb.IllustratedItemR\x05items\"A\n" +
+	"\x05items\x18\x01 \x03(\v2%.gamepb.illustratedpb.IllustratedItemR\x05items\x12\x1a\n" +
+	"\bprogress\x18\x02 \x01(\x03R\bprogress\x12\x14\n" +
+	"\x05level\x18\x03 \x01(\x05R\x05level\x12?\n" +
+	"\x06reward\x18\x04 \x01(\v2'.gamepb.illustratedpb.IllustratedRewardR\x06reward\x12#\n" +
+	"\rreward_detail\x18\x05 \x01(\fR\frewardDetail\x12\x12\n" +
+	"\x04type\x18\x06 \x01(\x05R\x04type\x12.\n" +
+	"\x13next_level_progress\x18\a \x01(\x03R\x11nextLevelProgress\x12\x17\n" +
+	"\ared_dot\x18\t \x01(\bR\x06redDot\x12T\n" +
+	"\x11attribute_bonuses\x18\n" +
+	" \x03(\v2'.gamepb.illustratedpb.IllustratedRewardR\x10attributeBonuses\x12L\n" +
+	"\rcurrent_bonus\x18\v \x01(\v2'.gamepb.illustratedpb.IllustratedRewardR\fcurrentBonus\"B\n" +
+	"\x11IllustratedReward\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\"V\n" +
+	"\x14IllustratedAttribute\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\x05R\x04type\x12\x14\n" +
+	"\x05param\x18\x02 \x01(\x03R\x05param\x12\x14\n" +
+	"\x05value\x18\x03 \x01(\x03R\x05value\"6\n" +
+	" GetIllustratedLevelListV2Request\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\x05R\x04type\"\xa1\x01\n" +
+	"\x10IllustratedLevel\x12\x14\n" +
+	"\x05level\x18\x01 \x01(\x05R\x05level\x12\x1a\n" +
+	"\bprogress\x18\x02 \x01(\x03R\bprogress\x12A\n" +
+	"\arewards\x18\x03 \x03(\v2'.gamepb.illustratedpb.IllustratedRewardR\arewards\x12\x18\n" +
+	"\aclaimed\x18\x05 \x01(\bR\aclaimed\"\x92\x01\n" +
+	"\x1eGetIllustratedLevelListV2Reply\x12\x14\n" +
+	"\x05level\x18\x01 \x01(\x05R\x05level\x12\x1a\n" +
+	"\bprogress\x18\x02 \x01(\x03R\bprogress\x12>\n" +
+	"\x06levels\x18\x03 \x03(\v2&.gamepb.illustratedpb.IllustratedLevelR\x06levels\"A\n" +
 	"\x18ClaimAllRewardsV2Request\x12%\n" +
 	"\x0eonly_claimable\x18\x01 \x01(\bR\ronlyClaimable\"k\n" +
 	"\x16ClaimAllRewardsV2Reply\x12\"\n" +
@@ -450,8 +854,9 @@ const file_illustratedpb_proto_rawDesc = "" +
 	"bonusItems\"!\n" +
 	"\x1fIllustratedRewardRedDotNotifyV2\":\n" +
 	"\x1fClearNewUnlockedFruitsV2Request\x12\x17\n" +
-	"\aseed_id\x18\x01 \x01(\x03R\x06seedId\"\x1f\n" +
-	"\x1dClearNewUnlockedFruitsV2Replyb\x06proto3"
+	"\aseed_id\x18\x01 \x01(\fR\x06seedId\"8\n" +
+	"\x1dClearNewUnlockedFruitsV2Reply\x12\x17\n" +
+	"\aseed_id\x18\x01 \x01(\fR\x06seedIdb\x06proto3"
 
 var (
 	file_illustratedpb_proto_rawDescOnce sync.Once
@@ -465,27 +870,39 @@ func file_illustratedpb_proto_rawDescGZIP() []byte {
 	return file_illustratedpb_proto_rawDescData
 }
 
-var file_illustratedpb_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_illustratedpb_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_illustratedpb_proto_goTypes = []any{
-	(*GetIllustratedListV2Request)(nil),     // 0: gamepb.illustratedpb.GetIllustratedListV2Request
-	(*IllustratedItem)(nil),                 // 1: gamepb.illustratedpb.IllustratedItem
-	(*GetIllustratedListV2Reply)(nil),       // 2: gamepb.illustratedpb.GetIllustratedListV2Reply
-	(*ClaimAllRewardsV2Request)(nil),        // 3: gamepb.illustratedpb.ClaimAllRewardsV2Request
-	(*ClaimAllRewardsV2Reply)(nil),          // 4: gamepb.illustratedpb.ClaimAllRewardsV2Reply
-	(*IllustratedRewardRedDotNotifyV2)(nil), // 5: gamepb.illustratedpb.IllustratedRewardRedDotNotifyV2
-	(*ClearNewUnlockedFruitsV2Request)(nil), // 6: gamepb.illustratedpb.ClearNewUnlockedFruitsV2Request
-	(*ClearNewUnlockedFruitsV2Reply)(nil),   // 7: gamepb.illustratedpb.ClearNewUnlockedFruitsV2Reply
-	(*corepb.Item)(nil),                     // 8: corepb.Item
+	(*GetIllustratedListV2Request)(nil),      // 0: gamepb.illustratedpb.GetIllustratedListV2Request
+	(*IllustratedItem)(nil),                  // 1: gamepb.illustratedpb.IllustratedItem
+	(*GetIllustratedListV2Reply)(nil),        // 2: gamepb.illustratedpb.GetIllustratedListV2Reply
+	(*IllustratedReward)(nil),                // 3: gamepb.illustratedpb.IllustratedReward
+	(*IllustratedAttribute)(nil),             // 4: gamepb.illustratedpb.IllustratedAttribute
+	(*GetIllustratedLevelListV2Request)(nil), // 5: gamepb.illustratedpb.GetIllustratedLevelListV2Request
+	(*IllustratedLevel)(nil),                 // 6: gamepb.illustratedpb.IllustratedLevel
+	(*GetIllustratedLevelListV2Reply)(nil),   // 7: gamepb.illustratedpb.GetIllustratedLevelListV2Reply
+	(*ClaimAllRewardsV2Request)(nil),         // 8: gamepb.illustratedpb.ClaimAllRewardsV2Request
+	(*ClaimAllRewardsV2Reply)(nil),           // 9: gamepb.illustratedpb.ClaimAllRewardsV2Reply
+	(*IllustratedRewardRedDotNotifyV2)(nil),  // 10: gamepb.illustratedpb.IllustratedRewardRedDotNotifyV2
+	(*ClearNewUnlockedFruitsV2Request)(nil),  // 11: gamepb.illustratedpb.ClearNewUnlockedFruitsV2Request
+	(*ClearNewUnlockedFruitsV2Reply)(nil),    // 12: gamepb.illustratedpb.ClearNewUnlockedFruitsV2Reply
+	(*corepb.Item)(nil),                      // 13: corepb.Item
 }
 var file_illustratedpb_proto_depIdxs = []int32{
-	1, // 0: gamepb.illustratedpb.GetIllustratedListV2Reply.items:type_name -> gamepb.illustratedpb.IllustratedItem
-	8, // 1: gamepb.illustratedpb.ClaimAllRewardsV2Reply.items:type_name -> corepb.Item
-	8, // 2: gamepb.illustratedpb.ClaimAllRewardsV2Reply.bonus_items:type_name -> corepb.Item
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	3,  // 0: gamepb.illustratedpb.IllustratedItem.reward:type_name -> gamepb.illustratedpb.IllustratedReward
+	4,  // 1: gamepb.illustratedpb.IllustratedItem.attributes:type_name -> gamepb.illustratedpb.IllustratedAttribute
+	1,  // 2: gamepb.illustratedpb.GetIllustratedListV2Reply.items:type_name -> gamepb.illustratedpb.IllustratedItem
+	3,  // 3: gamepb.illustratedpb.GetIllustratedListV2Reply.reward:type_name -> gamepb.illustratedpb.IllustratedReward
+	3,  // 4: gamepb.illustratedpb.GetIllustratedListV2Reply.attribute_bonuses:type_name -> gamepb.illustratedpb.IllustratedReward
+	3,  // 5: gamepb.illustratedpb.GetIllustratedListV2Reply.current_bonus:type_name -> gamepb.illustratedpb.IllustratedReward
+	3,  // 6: gamepb.illustratedpb.IllustratedLevel.rewards:type_name -> gamepb.illustratedpb.IllustratedReward
+	6,  // 7: gamepb.illustratedpb.GetIllustratedLevelListV2Reply.levels:type_name -> gamepb.illustratedpb.IllustratedLevel
+	13, // 8: gamepb.illustratedpb.ClaimAllRewardsV2Reply.items:type_name -> corepb.Item
+	13, // 9: gamepb.illustratedpb.ClaimAllRewardsV2Reply.bonus_items:type_name -> corepb.Item
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_illustratedpb_proto_init() }
@@ -499,7 +916,7 @@ func file_illustratedpb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_illustratedpb_proto_rawDesc), len(file_illustratedpb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

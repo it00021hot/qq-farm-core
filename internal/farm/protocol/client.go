@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -30,6 +29,56 @@ type HeartbeatTicker interface {
 // NotifyHandler receives server push frames (MessageTypeNotify).
 type NotifyHandler func(service, method string, body []byte)
 
+// GatewayBusyError marks a background request that yielded because the
+// gateway had no capacity (bot GatewayBusyError).
+type GatewayBusyError struct{ Message string }
+
+func (e *GatewayBusyError) Error() string { return e.Message }
+
+// IsGatewayYieldError mirrors bot isGatewayYieldError: whole-round yielding
+// errors for background tasks.
+func IsGatewayYieldError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if _, ok := err.(*GatewayBusyError); ok {
+		return true
+	}
+	msg := err.Error()
+	return contains(msg, "已让路") ||
+		contains(msg, "stage=queued") ||
+		contains(msg, "请求等待队列已满") ||
+		contains(msg, "请求已中断") ||
+		contains(msg, "连接未打开") ||
+		contains(msg, "尚未登录")
+}
+
+func contains(s, sub string) bool {
+	for i := 0; i+len(sub) <= len(s); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
+		}
+	}
+	return false
+}
+
+// queuedRequest is one entry in the dispatch queue (bot QueuedRequest).
+type queuedRequest struct {
+	service     string
+	method      string
+	body        []byte
+	class       RequestClass
+	lane        CriticalLane
+	enqueuedAt  time.Time
+	seq         int64 // 0 = still queued
+	settled     bool
+	ch          chan rpcResult
+	expectReply bool
+	timeout     time.Duration
+	timer       *time.Timer
+	queueWait   *time.Timer
+}
+
 // Client is a WSS gateway client.
 type Client struct {
 	url            string
@@ -43,12 +92,16 @@ type Client struct {
 	conn       *websocket.Conn
 	clientSeq  int64
 	serverSeq  int64
-	pending    map[int64]chan rpcResult
+	pending    map[int64]*queuedRequest
+	queue      []*queuedRequest
 	closed     atomic.Bool
 	hbCancel   context.CancelFunc
 	readCancel context.CancelFunc
-	inFlight   chan struct{}
-	queued     atomic.Int32
+
+	// liveness / load snapshot (bot lastInboundAt + heartbeatMissCount)
+	lastInboundAt     time.Time
+	heartbeatMisses  int
+	lastPressureLogAt time.Time
 }
 
 type rpcResult struct {
@@ -82,9 +135,9 @@ func NewClient(opts Options) *Client {
 		heartbeatEvery: opts.HeartbeatEvery,
 		onNotify:       opts.OnNotify,
 		onDisconnect:   opts.OnDisconnect,
-		pending:        make(map[int64]chan rpcResult),
+		pending:        make(map[int64]*queuedRequest),
 		clientSeq:      1,
-		inFlight:       make(chan struct{}, 5),
+		lastInboundAt:  time.Now(),
 	}
 }
 
@@ -112,6 +165,7 @@ func (c *Client) Connect(ctx context.Context) error {
 	}
 	c.conn = conn
 	c.closed.Store(false)
+	c.lastInboundAt = time.Now()
 
 	readCtx, readCancel := context.WithCancel(context.Background())
 	c.readCancel = readCancel
@@ -137,10 +191,14 @@ func (c *Client) Close() error {
 		c.readCancel()
 		c.readCancel = nil
 	}
-	for seq, ch := range c.pending {
-		ch <- rpcResult{err: fmt.Errorf("protocol: connection closed")}
-		close(ch)
+	for seq, req := range c.pending {
+		c.settleLocked(req, rpcResult{err: fmt.Errorf("protocol: connection closed")})
 		delete(c.pending, seq)
+	}
+	queue := c.queue
+	c.queue = nil
+	for _, req := range queue {
+		c.settleLocked(req, rpcResult{err: fmt.Errorf("protocol: connection closed")})
 	}
 	if c.conn != nil {
 		err := c.conn.Close()
@@ -150,111 +208,214 @@ func (c *Client) Close() error {
 	return nil
 }
 
-const (
-	maxInFlightRequests = 5
-	maxQueuedRequests   = 100
-)
-
-// Send performs a request/response RPC wrapped in gatepb.Message.
+// Send performs a request/response RPC wrapped in gatepb.Message. The request
+// joins the five-class scheduler: Heartbeat/AntiData get critical lanes, the
+// ambient ctx class (WithRequestClass) applies otherwise, defaulting to
+// foreground.
 func (c *Client) Send(ctx context.Context, service, method string, body []byte) ([]byte, *gatepb.Meta, error) {
-	if !strings.EqualFold(method, "Heartbeat") {
-		if int(c.queued.Load()) >= maxQueuedRequests {
-			return nil, nil, fmt.Errorf("请求等待队列已满: %s (queued=%d)", method, c.queued.Load())
-		}
-		c.queued.Add(1)
-		defer c.queued.Add(-1)
-		select {
-		case c.inFlight <- struct{}{}:
-			defer func() { <-c.inFlight }()
-		case <-ctx.Done():
-			return nil, nil, ctx.Err()
-		}
-	}
-	return c.sendNow(ctx, service, method, body)
+	return c.send(ctx, service, method, body, true)
 }
 
-func (c *Client) sendNow(ctx context.Context, service, method string, body []byte) ([]byte, *gatepb.Meta, error) {
-	seq, ch, err := c.writeRequest(body, service, method, true)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	select {
-	case <-ctx.Done():
-		c.mu.Lock()
-		delete(c.pending, seq)
-		c.mu.Unlock()
-		return nil, nil, ctx.Err()
-	case res := <-ch:
-		return res.body, res.meta, res.err
-	}
-}
-
-// SendNoReply writes a request without registering a pending waiter.
-// Matches bot sendMsgNoReply; success is confirmed by a follow-up query.
-func (c *Client) SendNoReply(_ context.Context, service, method string, body []byte) error {
-	_, _, err := c.writeRequest(body, service, method, false)
+// SendNoReply writes a request without waiting for a reply, still passing
+// through the same scheduler (bot sendMsgNoReply).
+func (c *Client) SendNoReply(ctx context.Context, service, method string, body []byte) error {
+	_, _, err := c.send(ctx, service, method, body, false)
 	return err
 }
 
-func (c *Client) writeRequest(body []byte, service, method string, waitReply bool) (int64, chan rpcResult, error) {
+func (c *Client) send(ctx context.Context, service, method string, body []byte, expectReply bool) ([]byte, *gatepb.Meta, error) {
 	if c.closed.Load() {
-		return 0, nil, fmt.Errorf("protocol: client closed")
+		return nil, nil, fmt.Errorf("protocol: client closed")
 	}
-
-	finalBody := body
-	if len(finalBody) > 0 && c.encryptor != nil {
-		enc, err := c.encryptor.Encrypt(finalBody)
-		if err != nil {
-			return 0, nil, fmt.Errorf("protocol: encrypt: %w", err)
-		}
-		finalBody = enc
-	}
+	class, lane := resolveRequestClass(method, "", "", AmbientRequestClass(ctx))
 
 	c.mu.Lock()
 	if c.conn == nil {
 		c.mu.Unlock()
-		return 0, nil, fmt.Errorf("protocol: not connected")
+		return nil, nil, fmt.Errorf("连接未打开: %s", method)
 	}
-	seq := c.clientSeq
-	c.clientSeq++
-	serverSeq := c.serverSeq
-	var ch chan rpcResult
-	if waitReply {
-		ch = make(chan rpcResult, 1)
-		c.pending[seq] = ch
+	// 每个班次有独立的排队配额：后台任务把自己的配额排满，也不会占掉前台/心跳的名额。
+	queuedForClass := 0
+	for _, q := range c.queue {
+		if q != nil && !q.settled && q.class == class {
+			queuedForClass++
+		}
+	}
+	if queuedForClass >= maxQueuedByClass[class] {
+		total := len(c.queue)
+		pending := len(c.pending)
+		c.mu.Unlock()
+		return nil, nil, fmt.Errorf("请求等待队列已满: %s (class=%s, limit=%d, queued=%d, pending=%d)",
+			method, class, maxQueuedByClass[class], total, pending)
+	}
+	req := &queuedRequest{
+		service:     service,
+		method:      method,
+		body:        body,
+		class:       class,
+		lane:        lane,
+		enqueuedAt:  time.Now(),
+		ch:          make(chan rpcResult, 1),
+		expectReply: expectReply,
+		timeout:     defaultRequestTimeout,
+	}
+	c.queue = append(c.queue, req)
+	c.drainQueueLocked()
+	c.logRequestPressureLocked(time.Now())
+	c.mu.Unlock()
+
+	req.timer = time.AfterFunc(req.timeout, func() {
+		stage := "queued"
+		c.mu.Lock()
+		if req.seq != 0 {
+			stage = "pending"
+		}
+		c.mu.Unlock()
+		c.settle(req, rpcResult{err: fmt.Errorf("请求超时: %s (stage=%s, pending=%d, queued=%d)",
+			method, stage, c.PendingCount(), c.QueuedCount())})
+	})
+	if class == ClassBackground {
+		// background 是「后台补数据」：拿不到空闲槽位就早点让路，而不是一路熬到请求超时。
+		queueWaitMs := lowPriorityQueueWaitMs
+		if req.timeout < time.Duration(queueWaitMs)*time.Millisecond {
+			queueWaitMs = int(req.timeout / time.Millisecond)
+		}
+		req.queueWait = time.AfterFunc(time.Duration(queueWaitMs)*time.Millisecond, func() {
+			c.mu.Lock()
+			sent := req.seq != 0 || req.settled
+			c.mu.Unlock()
+			if sent {
+				return
+			}
+			c.settle(req, rpcResult{err: &GatewayBusyError{Message: fmt.Sprintf(
+				"网关繁忙，后台请求已让路: %s (waited=%dms, pending=%d, queued=%d)",
+				method, queueWaitMs, c.PendingCount(), c.QueuedCount())}})
+		})
 	}
 
+	select {
+	case <-ctx.Done():
+		c.settle(req, rpcResult{err: ctx.Err()})
+		return nil, nil, ctx.Err()
+	case res := <-req.ch:
+		return res.body, res.meta, res.err
+	}
+}
+
+// drainQueue dispatches as many queued requests as the class budgets allow.
+func (c *Client) drainQueue() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.drainQueueLocked()
+}
+
+func (c *Client) drainQueueLocked() {
+	for {
+		// Drop settled entries still parked in the queue slice.
+		live := c.queue[:0]
+		for _, q := range c.queue {
+			if q != nil && !q.settled {
+				live = append(live, q)
+			}
+		}
+		c.queue = live
+		if len(c.queue) == 0 {
+			return
+		}
+
+		idx := selectDispatchIndex(classCandidates(c.queue), classInFlights(c.pending), time.Now())
+		if idx < 0 {
+			return
+		}
+		req := c.queue[idx]
+		c.queue = append(c.queue[:idx], c.queue[idx+1:]...)
+
+		if c.conn == nil || c.closed.Load() {
+			c.settleLocked(req, rpcResult{err: fmt.Errorf("连接未打开: %s", req.method)})
+			continue
+		}
+
+		seq := c.clientSeq
+		c.clientSeq++
+		// 加密前登记在途请求，确保排队器能准确计算并发槽位。
+		if req.expectReply {
+			req.seq = seq
+			c.pending[seq] = req
+		}
+		if err := c.writeFrameLocked(seq, req); err != nil {
+			if req.expectReply {
+				delete(c.pending, seq)
+				req.seq = 0
+			}
+			c.settleLocked(req, rpcResult{err: fmt.Errorf("发送失败: %s: %w", req.method, err)})
+			continue
+		}
+		if !req.expectReply {
+			c.settleLocked(req, rpcResult{})
+		}
+	}
+}
+
+// writeFrameLocked encrypts+marshals+writes one frame. Caller holds c.mu.
+func (c *Client) writeFrameLocked(seq int64, req *queuedRequest) error {
+	finalBody := req.body
+	if len(finalBody) > 0 && c.encryptor != nil {
+		enc, err := c.encryptor.Encrypt(finalBody)
+		if err != nil {
+			return fmt.Errorf("protocol: encrypt: %w", err)
+		}
+		finalBody = enc
+	}
 	msg := &gatepb.Message{
 		Meta: &gatepb.Meta{
-			ServiceName: service,
-			MethodName:  method,
+			ServiceName: req.service,
+			MethodName:  req.method,
 			MessageType: int32(gatepb.MessageType_Request),
 			ClientSeq:   seq,
-			ServerSeq:   serverSeq,
+			ServerSeq:   c.serverSeq,
 		},
 		Body:  finalBody,
 		Token: CreateGatewayToken(),
 	}
 	frame, err := proto.Marshal(msg)
 	if err != nil {
-		if waitReply {
-			delete(c.pending, seq)
-		}
-		c.mu.Unlock()
-		return 0, nil, fmt.Errorf("protocol: marshal: %w", err)
+		return fmt.Errorf("protocol: marshal: %w", err)
 	}
-	err = c.conn.WriteMessage(websocket.BinaryMessage, frame)
+	if err := c.conn.WriteMessage(websocket.BinaryMessage, frame); err != nil {
+		return fmt.Errorf("protocol: write: %w", err)
+	}
+	return nil
+}
+
+// settle finishes a request exactly once; safe from any goroutine.
+func (c *Client) settle(req *queuedRequest, res rpcResult) {
+	c.mu.Lock()
+	c.settleLocked(req, res)
 	c.mu.Unlock()
-	if err != nil {
-		if waitReply {
-			c.mu.Lock()
-			delete(c.pending, seq)
-			c.mu.Unlock()
-		}
-		return 0, nil, fmt.Errorf("protocol: write: %w", err)
+	c.drainQueue()
+}
+
+// settleLocked finishes a request exactly once; caller holds c.mu.
+func (c *Client) settleLocked(req *queuedRequest, res rpcResult) {
+	if req.settled {
+		return
 	}
-	return seq, ch, nil
+	req.settled = true
+	if req.seq != 0 {
+		if _, ok := c.pending[req.seq]; ok {
+			delete(c.pending, req.seq)
+		}
+		req.seq = 0
+	}
+	if req.timer != nil {
+		req.timer.Stop()
+		req.timer = nil
+	}
+	if req.queueWait != nil {
+		req.queueWait.Stop()
+		req.queueWait = nil
+	}
+	req.ch <- res
 }
 
 func (c *Client) readLoop(ctx context.Context) {
@@ -298,12 +459,10 @@ func (c *Client) handleFrame(data []byte) {
 	if msg.Meta == nil {
 		return
 	}
-	if msg.Meta.ServerSeq > 0 {
-		c.mu.Lock()
-		if msg.Meta.ServerSeq > c.serverSeq {
-			c.serverSeq = msg.Meta.ServerSeq
-		}
-		c.mu.Unlock()
+	c.mu.Lock()
+	c.lastInboundAt = time.Now()
+	if msg.Meta.ServerSeq > 0 && msg.Meta.ServerSeq > c.serverSeq {
+		c.serverSeq = msg.Meta.ServerSeq
 	}
 
 	// Response/notify bodies are plaintext protobuf inside GateMessage
@@ -312,8 +471,7 @@ func (c *Client) handleFrame(data []byte) {
 	body := msg.Body
 
 	if msg.Meta.MessageType == int32(gatepb.MessageType_Response) {
-		c.mu.Lock()
-		ch, ok := c.pending[msg.Meta.ClientSeq]
+		req, ok := c.pending[msg.Meta.ClientSeq]
 		if ok {
 			delete(c.pending, msg.Meta.ClientSeq)
 		}
@@ -322,31 +480,206 @@ func (c *Client) handleFrame(data []byte) {
 			return
 		}
 		if msg.Meta.ErrorCode != 0 {
-			ch <- rpcResult{meta: msg.Meta, err: fmt.Errorf("%s.%s error code=%d %s",
-				msg.Meta.ServiceName, msg.Meta.MethodName, msg.Meta.ErrorCode, msg.Meta.ErrorMessage)}
+			c.settle(req, rpcResult{meta: msg.Meta, err: fmt.Errorf("%s.%s error code=%d %s",
+				msg.Meta.ServiceName, msg.Meta.MethodName, msg.Meta.ErrorCode, msg.Meta.ErrorMessage)})
 		} else {
-			ch <- rpcResult{body: body, meta: msg.Meta}
+			c.settle(req, rpcResult{body: body, meta: msg.Meta})
 		}
-		close(ch)
 		return
 	}
 
 	if msg.Meta.MessageType == int32(gatepb.MessageType_Notify) {
-		c.mu.Lock()
 		handler := c.onNotify
 		c.mu.Unlock()
 		if handler != nil {
 			handler(msg.Meta.ServiceName, msg.Meta.MethodName, body)
 		}
+		return
 	}
+	c.mu.Unlock()
 }
 
 func (c *Client) rejectAll(err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	for seq, ch := range c.pending {
-		ch <- rpcResult{err: err}
-		close(ch)
+	for seq, req := range c.pending {
+		c.settleLocked(req, rpcResult{err: err})
 		delete(c.pending, seq)
 	}
+	queue := c.queue
+	c.queue = nil
+	for _, req := range queue {
+		c.settleLocked(req, rpcResult{err: err})
+	}
+}
+
+// PendingCount / QueuedCount expose scheduler depth for logging.
+func (c *Client) PendingCount() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return len(c.pending)
+}
+
+func (c *Client) QueuedCount() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return len(c.queue)
+}
+
+// GatewayLoad returns the low-priority gate snapshot (bot getGatewayLoad).
+func (c *Client) GatewayLoad() gatewayLoad {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	now := time.Now()
+	load := gatewayLoad{
+		pending: len(c.pending),
+		queued:  len(c.queue),
+	}
+	for _, q := range c.queue {
+		if q == nil || q.settled || q.class == ClassBackground {
+			continue
+		}
+		load.blockingQueued++
+	}
+	var oldest int64
+	for seq, req := range c.pending {
+		_ = seq
+		switch req.class {
+		case ClassCritical:
+			load.criticalPending++
+		case ClassBackground:
+			load.backgroundPending++
+		default:
+			load.businessPending++
+			if req.class == ClassForeground {
+				load.foregroundPending++
+			}
+		}
+		if age := now.Sub(req.enqueuedAt).Milliseconds(); age > oldest {
+			oldest = age
+		}
+	}
+	load.heartbeatMisses = c.heartbeatMisses
+	load.oldestPendingAgeMs = oldest
+	return load
+}
+
+// IsGatewayIdleForBackground reports whether background traffic may fly now.
+func (c *Client) IsGatewayIdleForBackground() bool {
+	return isGatewayIdleForLowPriority(c.GatewayLoad())
+}
+
+// IsGatewayHealthyForBusiness reports whether farm/friend ticks may proceed.
+func (c *Client) IsGatewayHealthyForBusiness() bool {
+	return isGatewayHealthyForBusiness(c.GatewayLoad())
+}
+
+// NoteHeartbeatMiss / ClearHeartbeatMisses maintain the liveness counter used
+// by the load snapshot (wired by the Session heartbeat loop).
+func (c *Client) NoteHeartbeatMiss() {
+	c.mu.Lock()
+	c.heartbeatMisses++
+	c.mu.Unlock()
+}
+
+func (c *Client) ClearHeartbeatMisses() {
+	c.mu.Lock()
+	c.heartbeatMisses = 0
+	c.mu.Unlock()
+}
+
+// InboundSilenceMs returns time since the last inbound frame.
+func (c *Client) InboundSilenceMs() int64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return time.Since(c.lastInboundAt).Milliseconds()
+}
+
+// logRequestPressureLocked throttles queue pressure warnings to one per 5s;
+// a queue holding only background requests is normal and never logged.
+func (c *Client) logRequestPressureLocked(now time.Time) {
+	blocking := 0
+	for _, q := range c.queue {
+		if q != nil && !q.settled && q.class != ClassBackground {
+			blocking++
+		}
+	}
+	if blocking == 0 {
+		return
+	}
+	if now.Sub(c.lastPressureLogAt) < requestPressureLogIntervalMs {
+		return
+	}
+	c.lastPressureLogAt = now
+	describe := func() string {
+		out := ""
+		n := 0
+		for _, q := range c.pending {
+			if n >= 6 {
+				break
+			}
+			n++
+			if out != "" {
+				out += ","
+			}
+			out += fmt.Sprintf("%s#%d:%dms", q.method, q.seq, now.Sub(q.enqueuedAt).Milliseconds())
+		}
+		if out == "" {
+			out = "none"
+		}
+		return out
+	}
+	queuedDesc := ""
+	n := 0
+	for _, q := range c.queue {
+		if q == nil || q.settled || n >= 8 {
+			continue
+		}
+		n++
+		if queuedDesc != "" {
+			queuedDesc += ","
+		}
+		queuedDesc += q.method
+	}
+	if queuedDesc == "" {
+		queuedDesc = "none"
+	}
+	pressureLog(fmt.Sprintf("Gateway 请求压力: pending=%d, queued=%d, active=%s, queuedMethods=%s",
+		len(c.pending), len(c.queue), describe(), queuedDesc))
+}
+
+// pressureLog is a hook so tests can capture pressure warnings.
+var pressureLog = func(msg string) {}
+
+// --- adapter views for selectDispatchIndex ---
+
+type queueView struct {
+	req *queuedRequest
+}
+
+func (v queueView) requestClass() RequestClass { return v.req.class }
+func (v queueView) lane() CriticalLane         { return v.req.lane }
+func (v queueView) enqueuedAt() time.Time      { return v.req.enqueuedAt }
+
+type inflightView struct {
+	req *queuedRequest
+}
+
+func (v inflightView) requestClass() RequestClass { return v.req.class }
+func (v inflightView) lane() CriticalLane         { return v.req.lane }
+
+func classCandidates(queue []*queuedRequest) []classCandidate {
+	out := make([]classCandidate, 0, len(queue))
+	for _, q := range queue {
+		out = append(out, queueView{req: q})
+	}
+	return out
+}
+
+func classInFlights(pending map[int64]*queuedRequest) []classInFlight {
+	out := make([]classInFlight, 0, len(pending))
+	for _, q := range pending {
+		out = append(out, inflightView{req: q})
+	}
+	return out
 }

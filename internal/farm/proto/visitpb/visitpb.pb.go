@@ -9,6 +9,7 @@ package visitpb
 import (
 	plantpb "github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
 	userpb "github.com/it00021hot/qq-farm-core/internal/farm/proto/userpb"
+	weatherpb "github.com/it00021hot/qq-farm-core/internal/farm/proto/weatherpb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -129,17 +130,64 @@ func (x *EnterRequest) GetReason() int32 {
 	return 0
 }
 
-type EnterReply struct {
+type BriefDogInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Basic         *userpb.BasicInfo      `protobuf:"bytes,1,opt,name=basic,proto3" json:"basic,omitempty"` // 好友基本信息
-	Lands         []*plantpb.LandInfo    `protobuf:"bytes,2,rep,name=lands,proto3" json:"lands,omitempty"` // 好友的所有土地
+	DogId         int64                  `protobuf:"varint,1,opt,name=dog_id,json=dogId,proto3" json:"dog_id,omitempty"` // 好友当前上场的狗 ID；缺省表示没有上场狗
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BriefDogInfo) Reset() {
+	*x = BriefDogInfo{}
+	mi := &file_visitpb_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BriefDogInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BriefDogInfo) ProtoMessage() {}
+
+func (x *BriefDogInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_visitpb_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BriefDogInfo.ProtoReflect.Descriptor instead.
+func (*BriefDogInfo) Descriptor() ([]byte, []int) {
+	return file_visitpb_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *BriefDogInfo) GetDogId() int64 {
+	if x != nil {
+		return x.DogId
+	}
+	return 0
+}
+
+type EnterReply struct {
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	Basic        *userpb.BasicInfo      `protobuf:"bytes,1,opt,name=basic,proto3" json:"basic,omitempty"`                                     // 好友基本信息
+	Lands        []*plantpb.LandInfo    `protobuf:"bytes,2,rep,name=lands,proto3" json:"lands,omitempty"`                                     // 好友的所有土地
+	BriefDogInfo *BriefDogInfo          `protobuf:"bytes,3,opt,name=brief_dog_info,json=briefDogInfo,proto3" json:"brief_dog_info,omitempty"` // 好友当前上场的狗
+	// field 4: nudge_info (不需要)
+	Weather       *weatherpb.WeatherStatus `protobuf:"bytes,13,opt,name=weather,proto3" json:"weather,omitempty"` // 当前好友农场的现场天气（最新版权威来源）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *EnterReply) Reset() {
 	*x = EnterReply{}
-	mi := &file_visitpb_proto_msgTypes[1]
+	mi := &file_visitpb_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -151,7 +199,7 @@ func (x *EnterReply) String() string {
 func (*EnterReply) ProtoMessage() {}
 
 func (x *EnterReply) ProtoReflect() protoreflect.Message {
-	mi := &file_visitpb_proto_msgTypes[1]
+	mi := &file_visitpb_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -164,7 +212,7 @@ func (x *EnterReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnterReply.ProtoReflect.Descriptor instead.
 func (*EnterReply) Descriptor() ([]byte, []int) {
-	return file_visitpb_proto_rawDescGZIP(), []int{1}
+	return file_visitpb_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *EnterReply) GetBasic() *userpb.BasicInfo {
@@ -181,6 +229,20 @@ func (x *EnterReply) GetLands() []*plantpb.LandInfo {
 	return nil
 }
 
+func (x *EnterReply) GetBriefDogInfo() *BriefDogInfo {
+	if x != nil {
+		return x.BriefDogInfo
+	}
+	return nil
+}
+
+func (x *EnterReply) GetWeather() *weatherpb.WeatherStatus {
+	if x != nil {
+		return x.Weather
+	}
+	return nil
+}
+
 // ============ 离开好友农场 ============
 type LeaveRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -191,7 +253,7 @@ type LeaveRequest struct {
 
 func (x *LeaveRequest) Reset() {
 	*x = LeaveRequest{}
-	mi := &file_visitpb_proto_msgTypes[2]
+	mi := &file_visitpb_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -203,7 +265,7 @@ func (x *LeaveRequest) String() string {
 func (*LeaveRequest) ProtoMessage() {}
 
 func (x *LeaveRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_visitpb_proto_msgTypes[2]
+	mi := &file_visitpb_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -216,7 +278,7 @@ func (x *LeaveRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveRequest.ProtoReflect.Descriptor instead.
 func (*LeaveRequest) Descriptor() ([]byte, []int) {
-	return file_visitpb_proto_rawDescGZIP(), []int{2}
+	return file_visitpb_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *LeaveRequest) GetHostGid() int64 {
@@ -234,7 +296,7 @@ type LeaveReply struct {
 
 func (x *LeaveReply) Reset() {
 	*x = LeaveReply{}
-	mi := &file_visitpb_proto_msgTypes[3]
+	mi := &file_visitpb_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -246,7 +308,7 @@ func (x *LeaveReply) String() string {
 func (*LeaveReply) ProtoMessage() {}
 
 func (x *LeaveReply) ProtoReflect() protoreflect.Message {
-	mi := &file_visitpb_proto_msgTypes[3]
+	mi := &file_visitpb_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -259,21 +321,25 @@ func (x *LeaveReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveReply.ProtoReflect.Descriptor instead.
 func (*LeaveReply) Descriptor() ([]byte, []int) {
-	return file_visitpb_proto_rawDescGZIP(), []int{3}
+	return file_visitpb_proto_rawDescGZIP(), []int{4}
 }
 
 var File_visitpb_proto protoreflect.FileDescriptor
 
 const file_visitpb_proto_rawDesc = "" +
 	"\n" +
-	"\rvisitpb.proto\x12\x0egamepb.visitpb\x1a\rplantpb.proto\x1a\fuserpb.proto\"A\n" +
+	"\rvisitpb.proto\x12\x0egamepb.visitpb\x1a\rplantpb.proto\x1a\fuserpb.proto\x1a\x0fweatherpb.proto\"A\n" +
 	"\fEnterRequest\x12\x19\n" +
 	"\bhost_gid\x18\x01 \x01(\x03R\ahostGid\x12\x16\n" +
-	"\x06reason\x18\x02 \x01(\x05R\x06reason\"l\n" +
+	"\x06reason\x18\x02 \x01(\x05R\x06reason\"%\n" +
+	"\fBriefDogInfo\x12\x15\n" +
+	"\x06dog_id\x18\x01 \x01(\x03R\x05dogId\"\xeb\x01\n" +
 	"\n" +
 	"EnterReply\x12.\n" +
 	"\x05basic\x18\x01 \x01(\v2\x18.gamepb.userpb.BasicInfoR\x05basic\x12.\n" +
-	"\x05lands\x18\x02 \x03(\v2\x18.gamepb.plantpb.LandInfoR\x05lands\")\n" +
+	"\x05lands\x18\x02 \x03(\v2\x18.gamepb.plantpb.LandInfoR\x05lands\x12B\n" +
+	"\x0ebrief_dog_info\x18\x03 \x01(\v2\x1c.gamepb.visitpb.BriefDogInfoR\fbriefDogInfo\x129\n" +
+	"\aweather\x18\r \x01(\v2\x1f.gamepb.weatherpb.WeatherStatusR\aweather\")\n" +
 	"\fLeaveRequest\x12\x19\n" +
 	"\bhost_gid\x18\x01 \x01(\x03R\ahostGid\"\f\n" +
 	"\n" +
@@ -300,28 +366,32 @@ func file_visitpb_proto_rawDescGZIP() []byte {
 }
 
 var file_visitpb_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_visitpb_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_visitpb_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_visitpb_proto_goTypes = []any{
-	(EnterReason)(0),         // 0: gamepb.visitpb.EnterReason
-	(*EnterRequest)(nil),     // 1: gamepb.visitpb.EnterRequest
-	(*EnterReply)(nil),       // 2: gamepb.visitpb.EnterReply
-	(*LeaveRequest)(nil),     // 3: gamepb.visitpb.LeaveRequest
-	(*LeaveReply)(nil),       // 4: gamepb.visitpb.LeaveReply
-	(*userpb.BasicInfo)(nil), // 5: gamepb.userpb.BasicInfo
-	(*plantpb.LandInfo)(nil), // 6: gamepb.plantpb.LandInfo
+	(EnterReason)(0),                // 0: gamepb.visitpb.EnterReason
+	(*EnterRequest)(nil),            // 1: gamepb.visitpb.EnterRequest
+	(*BriefDogInfo)(nil),            // 2: gamepb.visitpb.BriefDogInfo
+	(*EnterReply)(nil),              // 3: gamepb.visitpb.EnterReply
+	(*LeaveRequest)(nil),            // 4: gamepb.visitpb.LeaveRequest
+	(*LeaveReply)(nil),              // 5: gamepb.visitpb.LeaveReply
+	(*userpb.BasicInfo)(nil),        // 6: gamepb.userpb.BasicInfo
+	(*plantpb.LandInfo)(nil),        // 7: gamepb.plantpb.LandInfo
+	(*weatherpb.WeatherStatus)(nil), // 8: gamepb.weatherpb.WeatherStatus
 }
 var file_visitpb_proto_depIdxs = []int32{
-	5, // 0: gamepb.visitpb.EnterReply.basic:type_name -> gamepb.userpb.BasicInfo
-	6, // 1: gamepb.visitpb.EnterReply.lands:type_name -> gamepb.plantpb.LandInfo
-	1, // 2: gamepb.visitpb.VisitService.Enter:input_type -> gamepb.visitpb.EnterRequest
-	3, // 3: gamepb.visitpb.VisitService.Leave:input_type -> gamepb.visitpb.LeaveRequest
-	2, // 4: gamepb.visitpb.VisitService.Enter:output_type -> gamepb.visitpb.EnterReply
-	4, // 5: gamepb.visitpb.VisitService.Leave:output_type -> gamepb.visitpb.LeaveReply
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	6, // 0: gamepb.visitpb.EnterReply.basic:type_name -> gamepb.userpb.BasicInfo
+	7, // 1: gamepb.visitpb.EnterReply.lands:type_name -> gamepb.plantpb.LandInfo
+	2, // 2: gamepb.visitpb.EnterReply.brief_dog_info:type_name -> gamepb.visitpb.BriefDogInfo
+	8, // 3: gamepb.visitpb.EnterReply.weather:type_name -> gamepb.weatherpb.WeatherStatus
+	1, // 4: gamepb.visitpb.VisitService.Enter:input_type -> gamepb.visitpb.EnterRequest
+	4, // 5: gamepb.visitpb.VisitService.Leave:input_type -> gamepb.visitpb.LeaveRequest
+	3, // 6: gamepb.visitpb.VisitService.Enter:output_type -> gamepb.visitpb.EnterReply
+	5, // 7: gamepb.visitpb.VisitService.Leave:output_type -> gamepb.visitpb.LeaveReply
+	6, // [6:8] is the sub-list for method output_type
+	4, // [4:6] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_visitpb_proto_init() }
@@ -335,7 +405,7 @@ func file_visitpb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_visitpb_proto_rawDesc), len(file_visitpb_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

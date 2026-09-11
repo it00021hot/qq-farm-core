@@ -8,6 +8,7 @@ package itempb
 
 import (
 	corepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
+	plantpb "github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -202,6 +203,7 @@ func (x *SellReply) GetGetItems() []*corepb.Item {
 type UseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Item          *corepb.Item           `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	Target        *UseTarget             `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -243,17 +245,87 @@ func (x *UseRequest) GetItem() *corepb.Item {
 	return nil
 }
 
+func (x *UseRequest) GetTarget() *UseTarget {
+	if x != nil {
+		return x.Target
+	}
+	return nil
+}
+
+type UseTarget struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HostGid       int64                  `protobuf:"varint,1,opt,name=host_gid,json=hostGid,proto3" json:"host_gid,omitempty"`
+	LandIds       []int64                `protobuf:"varint,2,rep,packed,name=land_ids,json=landIds,proto3" json:"land_ids,omitempty"`
+	UseConfigId   int64                  `protobuf:"varint,3,opt,name=use_config_id,json=useConfigId,proto3" json:"use_config_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UseTarget) Reset() {
+	*x = UseTarget{}
+	mi := &file_itempb_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UseTarget) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UseTarget) ProtoMessage() {}
+
+func (x *UseTarget) ProtoReflect() protoreflect.Message {
+	mi := &file_itempb_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UseTarget.ProtoReflect.Descriptor instead.
+func (*UseTarget) Descriptor() ([]byte, []int) {
+	return file_itempb_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *UseTarget) GetHostGid() int64 {
+	if x != nil {
+		return x.HostGid
+	}
+	return 0
+}
+
+func (x *UseTarget) GetLandIds() []int64 {
+	if x != nil {
+		return x.LandIds
+	}
+	return nil
+}
+
+func (x *UseTarget) GetUseConfigId() int64 {
+	if x != nil {
+		return x.UseConfigId
+	}
+	return 0
+}
+
 type UseReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UsedItems     []*corepb.Item         `protobuf:"bytes,1,rep,name=used_items,json=usedItems,proto3" json:"used_items,omitempty"`
 	Items         []*corepb.Item         `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	Land          *plantpb.LandInfo      `protobuf:"bytes,4,opt,name=land,proto3" json:"land,omitempty"`
+	LandReward    *UseLandReward         `protobuf:"bytes,5,opt,name=land_reward,json=landReward,proto3" json:"land_reward,omitempty"`
+	SocialReward  *UseSocialReward       `protobuf:"bytes,6,opt,name=social_reward,json=socialReward,proto3" json:"social_reward,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UseReply) Reset() {
 	*x = UseReply{}
-	mi := &file_itempb_proto_msgTypes[5]
+	mi := &file_itempb_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -265,7 +337,7 @@ func (x *UseReply) String() string {
 func (*UseReply) ProtoMessage() {}
 
 func (x *UseReply) ProtoReflect() protoreflect.Message {
-	mi := &file_itempb_proto_msgTypes[5]
+	mi := &file_itempb_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -278,7 +350,7 @@ func (x *UseReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UseReply.ProtoReflect.Descriptor instead.
 func (*UseReply) Descriptor() ([]byte, []int) {
-	return file_itempb_proto_rawDescGZIP(), []int{5}
+	return file_itempb_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UseReply) GetUsedItems() []*corepb.Item {
@@ -295,6 +367,132 @@ func (x *UseReply) GetItems() []*corepb.Item {
 	return nil
 }
 
+func (x *UseReply) GetLand() *plantpb.LandInfo {
+	if x != nil {
+		return x.Land
+	}
+	return nil
+}
+
+func (x *UseReply) GetLandReward() *UseLandReward {
+	if x != nil {
+		return x.LandReward
+	}
+	return nil
+}
+
+func (x *UseReply) GetSocialReward() *UseSocialReward {
+	if x != nil {
+		return x.SocialReward
+	}
+	return nil
+}
+
+type UseLandReward struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LandId        int64                  `protobuf:"varint,1,opt,name=land_id,json=landId,proto3" json:"land_id,omitempty"`
+	Items         []*corepb.Item         `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UseLandReward) Reset() {
+	*x = UseLandReward{}
+	mi := &file_itempb_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UseLandReward) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UseLandReward) ProtoMessage() {}
+
+func (x *UseLandReward) ProtoReflect() protoreflect.Message {
+	mi := &file_itempb_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UseLandReward.ProtoReflect.Descriptor instead.
+func (*UseLandReward) Descriptor() ([]byte, []int) {
+	return file_itempb_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *UseLandReward) GetLandId() int64 {
+	if x != nil {
+		return x.LandId
+	}
+	return 0
+}
+
+func (x *UseLandReward) GetItems() []*corepb.Item {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+// 青蛙使坏瓶等整座好友农场道具的奖励回包。
+type UseSocialReward struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        int64                  `protobuf:"varint,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	Items         []*corepb.Item         `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UseSocialReward) Reset() {
+	*x = UseSocialReward{}
+	mi := &file_itempb_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UseSocialReward) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UseSocialReward) ProtoMessage() {}
+
+func (x *UseSocialReward) ProtoReflect() protoreflect.Message {
+	mi := &file_itempb_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UseSocialReward.ProtoReflect.Descriptor instead.
+func (*UseSocialReward) Descriptor() ([]byte, []int) {
+	return file_itempb_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UseSocialReward) GetItemId() int64 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
+func (x *UseSocialReward) GetItems() []*corepb.Item {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
 type BatchUseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Items         []*corepb.Item         `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
@@ -304,7 +502,7 @@ type BatchUseRequest struct {
 
 func (x *BatchUseRequest) Reset() {
 	*x = BatchUseRequest{}
-	mi := &file_itempb_proto_msgTypes[6]
+	mi := &file_itempb_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -316,7 +514,7 @@ func (x *BatchUseRequest) String() string {
 func (*BatchUseRequest) ProtoMessage() {}
 
 func (x *BatchUseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_itempb_proto_msgTypes[6]
+	mi := &file_itempb_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -329,7 +527,7 @@ func (x *BatchUseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchUseRequest.ProtoReflect.Descriptor instead.
 func (*BatchUseRequest) Descriptor() ([]byte, []int) {
-	return file_itempb_proto_rawDescGZIP(), []int{6}
+	return file_itempb_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *BatchUseRequest) GetItems() []*corepb.Item {
@@ -349,7 +547,7 @@ type BatchUseReply struct {
 
 func (x *BatchUseReply) Reset() {
 	*x = BatchUseReply{}
-	mi := &file_itempb_proto_msgTypes[7]
+	mi := &file_itempb_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -361,7 +559,7 @@ func (x *BatchUseReply) String() string {
 func (*BatchUseReply) ProtoMessage() {}
 
 func (x *BatchUseReply) ProtoReflect() protoreflect.Message {
-	mi := &file_itempb_proto_msgTypes[7]
+	mi := &file_itempb_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -374,7 +572,7 @@ func (x *BatchUseReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchUseReply.ProtoReflect.Descriptor instead.
 func (*BatchUseReply) Descriptor() ([]byte, []int) {
-	return file_itempb_proto_rawDescGZIP(), []int{7}
+	return file_itempb_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *BatchUseReply) GetUsedItems() []*corepb.Item {
@@ -400,7 +598,7 @@ type CannelNewRequest struct {
 
 func (x *CannelNewRequest) Reset() {
 	*x = CannelNewRequest{}
-	mi := &file_itempb_proto_msgTypes[8]
+	mi := &file_itempb_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -412,7 +610,7 @@ func (x *CannelNewRequest) String() string {
 func (*CannelNewRequest) ProtoMessage() {}
 
 func (x *CannelNewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_itempb_proto_msgTypes[8]
+	mi := &file_itempb_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -425,7 +623,7 @@ func (x *CannelNewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CannelNewRequest.ProtoReflect.Descriptor instead.
 func (*CannelNewRequest) Descriptor() ([]byte, []int) {
-	return file_itempb_proto_rawDescGZIP(), []int{8}
+	return file_itempb_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CannelNewRequest) GetItems() []*corepb.Item {
@@ -443,7 +641,7 @@ type CannelNewReply struct {
 
 func (x *CannelNewReply) Reset() {
 	*x = CannelNewReply{}
-	mi := &file_itempb_proto_msgTypes[9]
+	mi := &file_itempb_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -455,7 +653,7 @@ func (x *CannelNewReply) String() string {
 func (*CannelNewReply) ProtoMessage() {}
 
 func (x *CannelNewReply) ProtoReflect() protoreflect.Message {
-	mi := &file_itempb_proto_msgTypes[9]
+	mi := &file_itempb_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -468,14 +666,190 @@ func (x *CannelNewReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CannelNewReply.ProtoReflect.Descriptor instead.
 func (*CannelNewReply) Descriptor() ([]byte, []int) {
-	return file_itempb_proto_rawDescGZIP(), []int{9}
+	return file_itempb_proto_rawDescGZIP(), []int{12}
+}
+
+type LockItemsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemUids      []int64                `protobuf:"varint,1,rep,packed,name=item_uids,json=itemUids,proto3" json:"item_uids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LockItemsRequest) Reset() {
+	*x = LockItemsRequest{}
+	mi := &file_itempb_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LockItemsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LockItemsRequest) ProtoMessage() {}
+
+func (x *LockItemsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_itempb_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LockItemsRequest.ProtoReflect.Descriptor instead.
+func (*LockItemsRequest) Descriptor() ([]byte, []int) {
+	return file_itempb_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *LockItemsRequest) GetItemUids() []int64 {
+	if x != nil {
+		return x.ItemUids
+	}
+	return nil
+}
+
+type LockItemsReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemUids      []int64                `protobuf:"varint,1,rep,packed,name=item_uids,json=itemUids,proto3" json:"item_uids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LockItemsReply) Reset() {
+	*x = LockItemsReply{}
+	mi := &file_itempb_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LockItemsReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LockItemsReply) ProtoMessage() {}
+
+func (x *LockItemsReply) ProtoReflect() protoreflect.Message {
+	mi := &file_itempb_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LockItemsReply.ProtoReflect.Descriptor instead.
+func (*LockItemsReply) Descriptor() ([]byte, []int) {
+	return file_itempb_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *LockItemsReply) GetItemUids() []int64 {
+	if x != nil {
+		return x.ItemUids
+	}
+	return nil
+}
+
+type UnlockItemsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemUids      []int64                `protobuf:"varint,1,rep,packed,name=item_uids,json=itemUids,proto3" json:"item_uids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnlockItemsRequest) Reset() {
+	*x = UnlockItemsRequest{}
+	mi := &file_itempb_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnlockItemsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnlockItemsRequest) ProtoMessage() {}
+
+func (x *UnlockItemsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_itempb_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnlockItemsRequest.ProtoReflect.Descriptor instead.
+func (*UnlockItemsRequest) Descriptor() ([]byte, []int) {
+	return file_itempb_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *UnlockItemsRequest) GetItemUids() []int64 {
+	if x != nil {
+		return x.ItemUids
+	}
+	return nil
+}
+
+type UnlockItemsReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemUids      []int64                `protobuf:"varint,1,rep,packed,name=item_uids,json=itemUids,proto3" json:"item_uids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnlockItemsReply) Reset() {
+	*x = UnlockItemsReply{}
+	mi := &file_itempb_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnlockItemsReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnlockItemsReply) ProtoMessage() {}
+
+func (x *UnlockItemsReply) ProtoReflect() protoreflect.Message {
+	mi := &file_itempb_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnlockItemsReply.ProtoReflect.Descriptor instead.
+func (*UnlockItemsReply) Descriptor() ([]byte, []int) {
+	return file_itempb_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *UnlockItemsReply) GetItemUids() []int64 {
+	if x != nil {
+		return x.ItemUids
+	}
+	return nil
 }
 
 var File_itempb_proto protoreflect.FileDescriptor
 
 const file_itempb_proto_rawDesc = "" +
 	"\n" +
-	"\fitempb.proto\x12\rgamepb.itempb\x1a\fcorepb.proto\"\f\n" +
+	"\fitempb.proto\x12\rgamepb.itempb\x1a\fcorepb.proto\x1a\rplantpb.proto\"\f\n" +
 	"\n" +
 	"BagRequest\"6\n" +
 	"\bBagReply\x12*\n" +
@@ -485,13 +859,28 @@ const file_itempb_proto_rawDesc = "" +
 	"\tSellReply\x12+\n" +
 	"\n" +
 	"sell_items\x18\x01 \x03(\v2\f.corepb.ItemR\tsellItems\x12)\n" +
-	"\tget_items\x18\x02 \x03(\v2\f.corepb.ItemR\bgetItems\".\n" +
+	"\tget_items\x18\x02 \x03(\v2\f.corepb.ItemR\bgetItems\"`\n" +
 	"\n" +
 	"UseRequest\x12 \n" +
-	"\x04item\x18\x01 \x01(\v2\f.corepb.ItemR\x04item\"[\n" +
+	"\x04item\x18\x01 \x01(\v2\f.corepb.ItemR\x04item\x120\n" +
+	"\x06target\x18\x02 \x01(\v2\x18.gamepb.itempb.UseTargetR\x06target\"i\n" +
+	"\tUseTarget\x12\x19\n" +
+	"\bhost_gid\x18\x01 \x01(\x03R\ahostGid\x12\x1d\n" +
+	"\bland_ids\x18\x02 \x03(\x03B\x02\x10\x01R\alandIds\x12\"\n" +
+	"\ruse_config_id\x18\x03 \x01(\x03R\vuseConfigId\"\x8d\x02\n" +
 	"\bUseReply\x12+\n" +
 	"\n" +
 	"used_items\x18\x01 \x03(\v2\f.corepb.ItemR\tusedItems\x12\"\n" +
+	"\x05items\x18\x02 \x03(\v2\f.corepb.ItemR\x05items\x12,\n" +
+	"\x04land\x18\x04 \x01(\v2\x18.gamepb.plantpb.LandInfoR\x04land\x12=\n" +
+	"\vland_reward\x18\x05 \x01(\v2\x1c.gamepb.itempb.UseLandRewardR\n" +
+	"landReward\x12C\n" +
+	"\rsocial_reward\x18\x06 \x01(\v2\x1e.gamepb.itempb.UseSocialRewardR\fsocialReward\"L\n" +
+	"\rUseLandReward\x12\x17\n" +
+	"\aland_id\x18\x01 \x01(\x03R\x06landId\x12\"\n" +
+	"\x05items\x18\x02 \x03(\v2\f.corepb.ItemR\x05items\"N\n" +
+	"\x0fUseSocialReward\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12\"\n" +
 	"\x05items\x18\x02 \x03(\v2\f.corepb.ItemR\x05items\"5\n" +
 	"\x0fBatchUseRequest\x12\"\n" +
 	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"`\n" +
@@ -501,7 +890,15 @@ const file_itempb_proto_rawDesc = "" +
 	"\x05items\x18\x02 \x03(\v2\f.corepb.ItemR\x05items\"6\n" +
 	"\x10CannelNewRequest\x12\"\n" +
 	"\x05items\x18\x01 \x03(\v2\f.corepb.ItemR\x05items\"\x10\n" +
-	"\x0eCannelNewReplyb\x06proto3"
+	"\x0eCannelNewReply\"3\n" +
+	"\x10LockItemsRequest\x12\x1f\n" +
+	"\titem_uids\x18\x01 \x03(\x03B\x02\x10\x01R\bitemUids\"1\n" +
+	"\x0eLockItemsReply\x12\x1f\n" +
+	"\titem_uids\x18\x01 \x03(\x03B\x02\x10\x01R\bitemUids\"5\n" +
+	"\x12UnlockItemsRequest\x12\x1f\n" +
+	"\titem_uids\x18\x01 \x03(\x03B\x02\x10\x01R\bitemUids\"3\n" +
+	"\x10UnlockItemsReply\x12\x1f\n" +
+	"\titem_uids\x18\x01 \x03(\x03B\x02\x10\x01R\bitemUidsb\x06proto3"
 
 var (
 	file_itempb_proto_rawDescOnce sync.Once
@@ -515,38 +912,52 @@ func file_itempb_proto_rawDescGZIP() []byte {
 	return file_itempb_proto_rawDescData
 }
 
-var file_itempb_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_itempb_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_itempb_proto_goTypes = []any{
-	(*BagRequest)(nil),       // 0: gamepb.itempb.BagRequest
-	(*BagReply)(nil),         // 1: gamepb.itempb.BagReply
-	(*SellRequest)(nil),      // 2: gamepb.itempb.SellRequest
-	(*SellReply)(nil),        // 3: gamepb.itempb.SellReply
-	(*UseRequest)(nil),       // 4: gamepb.itempb.UseRequest
-	(*UseReply)(nil),         // 5: gamepb.itempb.UseReply
-	(*BatchUseRequest)(nil),  // 6: gamepb.itempb.BatchUseRequest
-	(*BatchUseReply)(nil),    // 7: gamepb.itempb.BatchUseReply
-	(*CannelNewRequest)(nil), // 8: gamepb.itempb.CannelNewRequest
-	(*CannelNewReply)(nil),   // 9: gamepb.itempb.CannelNewReply
-	(*corepb.ItemBag)(nil),   // 10: corepb.ItemBag
-	(*corepb.Item)(nil),      // 11: corepb.Item
+	(*BagRequest)(nil),         // 0: gamepb.itempb.BagRequest
+	(*BagReply)(nil),           // 1: gamepb.itempb.BagReply
+	(*SellRequest)(nil),        // 2: gamepb.itempb.SellRequest
+	(*SellReply)(nil),          // 3: gamepb.itempb.SellReply
+	(*UseRequest)(nil),         // 4: gamepb.itempb.UseRequest
+	(*UseTarget)(nil),          // 5: gamepb.itempb.UseTarget
+	(*UseReply)(nil),           // 6: gamepb.itempb.UseReply
+	(*UseLandReward)(nil),      // 7: gamepb.itempb.UseLandReward
+	(*UseSocialReward)(nil),    // 8: gamepb.itempb.UseSocialReward
+	(*BatchUseRequest)(nil),    // 9: gamepb.itempb.BatchUseRequest
+	(*BatchUseReply)(nil),      // 10: gamepb.itempb.BatchUseReply
+	(*CannelNewRequest)(nil),   // 11: gamepb.itempb.CannelNewRequest
+	(*CannelNewReply)(nil),     // 12: gamepb.itempb.CannelNewReply
+	(*LockItemsRequest)(nil),   // 13: gamepb.itempb.LockItemsRequest
+	(*LockItemsReply)(nil),     // 14: gamepb.itempb.LockItemsReply
+	(*UnlockItemsRequest)(nil), // 15: gamepb.itempb.UnlockItemsRequest
+	(*UnlockItemsReply)(nil),   // 16: gamepb.itempb.UnlockItemsReply
+	(*corepb.ItemBag)(nil),     // 17: corepb.ItemBag
+	(*corepb.Item)(nil),        // 18: corepb.Item
+	(*plantpb.LandInfo)(nil),   // 19: gamepb.plantpb.LandInfo
 }
 var file_itempb_proto_depIdxs = []int32{
-	10, // 0: gamepb.itempb.BagReply.item_bag:type_name -> corepb.ItemBag
-	11, // 1: gamepb.itempb.SellRequest.items:type_name -> corepb.Item
-	11, // 2: gamepb.itempb.SellReply.sell_items:type_name -> corepb.Item
-	11, // 3: gamepb.itempb.SellReply.get_items:type_name -> corepb.Item
-	11, // 4: gamepb.itempb.UseRequest.item:type_name -> corepb.Item
-	11, // 5: gamepb.itempb.UseReply.used_items:type_name -> corepb.Item
-	11, // 6: gamepb.itempb.UseReply.items:type_name -> corepb.Item
-	11, // 7: gamepb.itempb.BatchUseRequest.items:type_name -> corepb.Item
-	11, // 8: gamepb.itempb.BatchUseReply.used_items:type_name -> corepb.Item
-	11, // 9: gamepb.itempb.BatchUseReply.items:type_name -> corepb.Item
-	11, // 10: gamepb.itempb.CannelNewRequest.items:type_name -> corepb.Item
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	17, // 0: gamepb.itempb.BagReply.item_bag:type_name -> corepb.ItemBag
+	18, // 1: gamepb.itempb.SellRequest.items:type_name -> corepb.Item
+	18, // 2: gamepb.itempb.SellReply.sell_items:type_name -> corepb.Item
+	18, // 3: gamepb.itempb.SellReply.get_items:type_name -> corepb.Item
+	18, // 4: gamepb.itempb.UseRequest.item:type_name -> corepb.Item
+	5,  // 5: gamepb.itempb.UseRequest.target:type_name -> gamepb.itempb.UseTarget
+	18, // 6: gamepb.itempb.UseReply.used_items:type_name -> corepb.Item
+	18, // 7: gamepb.itempb.UseReply.items:type_name -> corepb.Item
+	19, // 8: gamepb.itempb.UseReply.land:type_name -> gamepb.plantpb.LandInfo
+	7,  // 9: gamepb.itempb.UseReply.land_reward:type_name -> gamepb.itempb.UseLandReward
+	8,  // 10: gamepb.itempb.UseReply.social_reward:type_name -> gamepb.itempb.UseSocialReward
+	18, // 11: gamepb.itempb.UseLandReward.items:type_name -> corepb.Item
+	18, // 12: gamepb.itempb.UseSocialReward.items:type_name -> corepb.Item
+	18, // 13: gamepb.itempb.BatchUseRequest.items:type_name -> corepb.Item
+	18, // 14: gamepb.itempb.BatchUseReply.used_items:type_name -> corepb.Item
+	18, // 15: gamepb.itempb.BatchUseReply.items:type_name -> corepb.Item
+	18, // 16: gamepb.itempb.CannelNewRequest.items:type_name -> corepb.Item
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_itempb_proto_init() }
@@ -560,7 +971,7 @@ func file_itempb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_itempb_proto_rawDesc), len(file_itempb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

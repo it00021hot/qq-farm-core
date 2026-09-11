@@ -106,6 +106,24 @@ func (a *API) Use(ctx context.Context, itemID, count int64) (*itempb.UseReply, e
 	return nil, fmt.Errorf("item %d no single entry holds %d", itemID, count)
 }
 
+// UseTargeted uses one item entry (by uid) against a specific target
+// (friend land / friend farm / own land; bot sendTargetedItemUse).
+func (a *API) UseTargeted(ctx context.Context, itemID, uid, hostGID int64, landIDs []int64) (*itempb.UseReply, error) {
+	req := &itempb.UseRequest{
+		Item:   &corepb.Item{Id: itemID, Count: 1, Uid: uid},
+		Target: &itempb.UseTarget{HostGid: hostGID, LandIds: landIDs, UseConfigId: 0},
+	}
+	raw, err := a.sendItem(ctx, "Use", marshalMessage(req))
+	if err != nil {
+		return nil, err
+	}
+	reply := &itempb.UseReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
 // BatchUse uses multiple items at once.
 func (a *API) BatchUse(ctx context.Context, items []corepb.Item) (*itempb.BatchUseReply, error) {
 	raw, err := a.sendItem(ctx, "BatchUse", marshalMessage(&itempb.BatchUseRequest{Items: itemPointers(items)}))

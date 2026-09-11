@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"path/filepath"
 
+	farmpush "github.com/it00021hot/qq-farm-core/internal/farm/push"
 	"github.com/it00021hot/qq-farm-core/internal/farm/hub"
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	farmruntime "github.com/it00021hot/qq-farm-core/internal/farm/runtime"
@@ -24,6 +25,27 @@ func InitFarmRuntime() {
 	} else {
 		slog.Info("Farm game config loaded", "dir", cfgDir)
 	}
+
+	// 推送渠道：QQ 官方机器人 + 钉钉（rust 渠道面）+ 兼容旧 webhook。
+	dataDir := vars.Config.GetString("farm.tsdkDataDir")
+	if dataDir == "" {
+		dataDir = "runtime/data"
+	}
+	farmpush.InitQqBotBinding(dataDir)
+	qqBotOpenID := vars.Config.GetString("farm.qqBot.userOpenid")
+	if binding := farmpush.CurrentBinding(); binding != nil && binding.UserOpenID != "" {
+		qqBotOpenID = binding.UserOpenID
+	}
+	farmpush.ConfigureQqBot(
+		vars.Config.GetString("farm.qqBot.appId"),
+		vars.Config.GetString("farm.qqBot.clientSecret"),
+		qqBotOpenID,
+	)
+	farmpush.ConfigureDingTalk(
+		vars.Config.GetString("farm.dingtalk.endpoint"),
+		vars.Config.GetString("farm.dingtalk.token"),
+		vars.Config.GetString("farm.dingtalk.secret"),
+	)
 
 	m := farmruntime.NewAccountManager(hub.Default)
 	farmruntime.SetManager(m)

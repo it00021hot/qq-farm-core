@@ -21,6 +21,7 @@ pkg_for() {
   case "$1" in
     game.proto) echo gatepb ;;
     notifypb.proto) echo itempb ;;
+    pet-diary.proto) echo activitypb ;; # declares package gamepb.activitypb
     *) echo "${1%.proto}" ;;
   esac
 }
@@ -47,6 +48,7 @@ while IFS= read -r -d '' gen; do
   case "$base" in
     game.pb.go) pkg=gatepb ;;
     notifypb.pb.go) pkg=itempb ;;
+    pet-diary.pb.go) pkg=activitypb ;;
     *.pb.go) pkg="${base%.pb.go}" ;;
     *) continue ;;
   esac

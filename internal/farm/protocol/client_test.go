@@ -58,8 +58,9 @@ func TestClientOnNotify(t *testing.T) {
 func TestClientResponseStillHandled(t *testing.T) {
 	client := NewClient(Options{})
 	ch := make(chan rpcResult, 1)
+	req := &queuedRequest{method: "Login", ch: ch}
 	client.mu.Lock()
-	client.pending[7] = ch
+	client.pending[7] = req
 	client.mu.Unlock()
 
 	frame, err := proto.Marshal(&gatepb.Message{

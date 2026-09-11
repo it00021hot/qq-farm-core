@@ -21,92 +21,16 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type CareerInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	CareerId      int64                  `protobuf:"varint,1,opt,name=career_id,json=careerId,proto3" json:"career_id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Level         int32                  `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
-	Exp           int64                  `protobuf:"varint,4,opt,name=exp,proto3" json:"exp,omitempty"`
-	Status        int32                  `protobuf:"varint,5,opt,name=status,proto3" json:"status,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CareerInfo) Reset() {
-	*x = CareerInfo{}
-	mi := &file_careerpb_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CareerInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CareerInfo) ProtoMessage() {}
-
-func (x *CareerInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_careerpb_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CareerInfo.ProtoReflect.Descriptor instead.
-func (*CareerInfo) Descriptor() ([]byte, []int) {
-	return file_careerpb_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *CareerInfo) GetCareerId() int64 {
-	if x != nil {
-		return x.CareerId
-	}
-	return 0
-}
-
-func (x *CareerInfo) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *CareerInfo) GetLevel() int32 {
-	if x != nil {
-		return x.Level
-	}
-	return 0
-}
-
-func (x *CareerInfo) GetExp() int64 {
-	if x != nil {
-		return x.Exp
-	}
-	return 0
-}
-
-func (x *CareerInfo) GetStatus() int32 {
-	if x != nil {
-		return x.Status
-	}
-	return 0
-}
-
-// --- 获取生涯信息 ---
 type CareerInfoGetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Gid           int64                  `protobuf:"varint,1,opt,name=gid,proto3" json:"gid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CareerInfoGetRequest) Reset() {
 	*x = CareerInfoGetRequest{}
-	mi := &file_careerpb_proto_msgTypes[1]
+	mi := &file_careerpb_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -118,7 +42,7 @@ func (x *CareerInfoGetRequest) String() string {
 func (*CareerInfoGetRequest) ProtoMessage() {}
 
 func (x *CareerInfoGetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_careerpb_proto_msgTypes[1]
+	mi := &file_careerpb_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -131,14 +55,82 @@ func (x *CareerInfoGetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CareerInfoGetRequest.ProtoReflect.Descriptor instead.
 func (*CareerInfoGetRequest) Descriptor() ([]byte, []int) {
+	return file_careerpb_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *CareerInfoGetRequest) GetGid() int64 {
+	if x != nil {
+		return x.Gid
+	}
+	return 0
+}
+
+type CareerHarvestItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FruitId       int64                  `protobuf:"varint,1,opt,name=fruit_id,json=fruitId,proto3" json:"fruit_id,omitempty"`
+	HarvestCount  int64                  `protobuf:"varint,2,opt,name=harvest_count,json=harvestCount,proto3" json:"harvest_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CareerHarvestItem) Reset() {
+	*x = CareerHarvestItem{}
+	mi := &file_careerpb_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CareerHarvestItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CareerHarvestItem) ProtoMessage() {}
+
+func (x *CareerHarvestItem) ProtoReflect() protoreflect.Message {
+	mi := &file_careerpb_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CareerHarvestItem.ProtoReflect.Descriptor instead.
+func (*CareerHarvestItem) Descriptor() ([]byte, []int) {
 	return file_careerpb_proto_rawDescGZIP(), []int{1}
 }
 
+func (x *CareerHarvestItem) GetFruitId() int64 {
+	if x != nil {
+		return x.FruitId
+	}
+	return 0
+}
+
+func (x *CareerHarvestItem) GetHarvestCount() int64 {
+	if x != nil {
+		return x.HarvestCount
+	}
+	return 0
+}
+
 type CareerInfoGetReply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Careers       []*CareerInfo          `protobuf:"bytes,1,rep,name=careers,proto3" json:"careers,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	HarvestItems      []*CareerHarvestItem   `protobuf:"bytes,1,rep,name=harvest_items,json=harvestItems,proto3" json:"harvest_items,omitempty"`
+	TotalHarvestCount int64                  `protobuf:"varint,2,opt,name=total_harvest_count,json=totalHarvestCount,proto3" json:"total_harvest_count,omitempty"`
+	TotalStealCount   int64                  `protobuf:"varint,3,opt,name=total_steal_count,json=totalStealCount,proto3" json:"total_steal_count,omitempty"`
+	Name              string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	AvatarUrl         string                 `protobuf:"bytes,5,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
+	Level             int64                  `protobuf:"varint,9,opt,name=level,proto3" json:"level,omitempty"`
+	Exp               int64                  `protobuf:"varint,10,opt,name=exp,proto3" json:"exp,omitempty"`
+	Gid               int64                  `protobuf:"varint,11,opt,name=gid,proto3" json:"gid,omitempty"`
+	Platform          int32                  `protobuf:"varint,13,opt,name=platform,proto3" json:"platform,omitempty"`
+	OpenId            string                 `protobuf:"bytes,15,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *CareerInfoGetReply) Reset() {
@@ -171,28 +163,101 @@ func (*CareerInfoGetReply) Descriptor() ([]byte, []int) {
 	return file_careerpb_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CareerInfoGetReply) GetCareers() []*CareerInfo {
+func (x *CareerInfoGetReply) GetHarvestItems() []*CareerHarvestItem {
 	if x != nil {
-		return x.Careers
+		return x.HarvestItems
 	}
 	return nil
+}
+
+func (x *CareerInfoGetReply) GetTotalHarvestCount() int64 {
+	if x != nil {
+		return x.TotalHarvestCount
+	}
+	return 0
+}
+
+func (x *CareerInfoGetReply) GetTotalStealCount() int64 {
+	if x != nil {
+		return x.TotalStealCount
+	}
+	return 0
+}
+
+func (x *CareerInfoGetReply) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CareerInfoGetReply) GetAvatarUrl() string {
+	if x != nil {
+		return x.AvatarUrl
+	}
+	return ""
+}
+
+func (x *CareerInfoGetReply) GetLevel() int64 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *CareerInfoGetReply) GetExp() int64 {
+	if x != nil {
+		return x.Exp
+	}
+	return 0
+}
+
+func (x *CareerInfoGetReply) GetGid() int64 {
+	if x != nil {
+		return x.Gid
+	}
+	return 0
+}
+
+func (x *CareerInfoGetReply) GetPlatform() int32 {
+	if x != nil {
+		return x.Platform
+	}
+	return 0
+}
+
+func (x *CareerInfoGetReply) GetOpenId() string {
+	if x != nil {
+		return x.OpenId
+	}
+	return ""
 }
 
 var File_careerpb_proto protoreflect.FileDescriptor
 
 const file_careerpb_proto_rawDesc = "" +
 	"\n" +
-	"\x0ecareerpb.proto\x12\x0fgamepb.careerpb\"}\n" +
+	"\x0ecareerpb.proto\x12\x0fgamepb.careerpb\"(\n" +
+	"\x14CareerInfoGetRequest\x12\x10\n" +
+	"\x03gid\x18\x01 \x01(\x03R\x03gid\"S\n" +
+	"\x11CareerHarvestItem\x12\x19\n" +
+	"\bfruit_id\x18\x01 \x01(\x03R\afruitId\x12#\n" +
+	"\rharvest_count\x18\x02 \x01(\x03R\fharvestCount\"\xdb\x02\n" +
+	"\x12CareerInfoGetReply\x12G\n" +
+	"\rharvest_items\x18\x01 \x03(\v2\".gamepb.careerpb.CareerHarvestItemR\fharvestItems\x12.\n" +
+	"\x13total_harvest_count\x18\x02 \x01(\x03R\x11totalHarvestCount\x12*\n" +
+	"\x11total_steal_count\x18\x03 \x01(\x03R\x0ftotalStealCount\x12\x12\n" +
+	"\x04name\x18\x04 \x01(\tR\x04name\x12\x1d\n" +
 	"\n" +
-	"CareerInfo\x12\x1b\n" +
-	"\tcareer_id\x18\x01 \x01(\x03R\bcareerId\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
-	"\x05level\x18\x03 \x01(\x05R\x05level\x12\x10\n" +
-	"\x03exp\x18\x04 \x01(\x03R\x03exp\x12\x16\n" +
-	"\x06status\x18\x05 \x01(\x05R\x06status\"\x16\n" +
-	"\x14CareerInfoGetRequest\"K\n" +
-	"\x12CareerInfoGetReply\x125\n" +
-	"\acareers\x18\x01 \x03(\v2\x1b.gamepb.careerpb.CareerInfoR\acareersb\x06proto3"
+	"avatar_url\x18\x05 \x01(\tR\tavatarUrl\x12\x14\n" +
+	"\x05level\x18\t \x01(\x03R\x05level\x12\x10\n" +
+	"\x03exp\x18\n" +
+	" \x01(\x03R\x03exp\x12\x10\n" +
+	"\x03gid\x18\v \x01(\x03R\x03gid\x12\x1a\n" +
+	"\bplatform\x18\r \x01(\x05R\bplatform\x12\x17\n" +
+	"\aopen_id\x18\x0f \x01(\tR\x06openId2l\n" +
+	"\rCareerService\x12[\n" +
+	"\rCareerInfoGet\x12%.gamepb.careerpb.CareerInfoGetRequest\x1a#.gamepb.careerpb.CareerInfoGetReplyb\x06proto3"
 
 var (
 	file_careerpb_proto_rawDescOnce sync.Once
@@ -208,14 +273,16 @@ func file_careerpb_proto_rawDescGZIP() []byte {
 
 var file_careerpb_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_careerpb_proto_goTypes = []any{
-	(*CareerInfo)(nil),           // 0: gamepb.careerpb.CareerInfo
-	(*CareerInfoGetRequest)(nil), // 1: gamepb.careerpb.CareerInfoGetRequest
+	(*CareerInfoGetRequest)(nil), // 0: gamepb.careerpb.CareerInfoGetRequest
+	(*CareerHarvestItem)(nil),    // 1: gamepb.careerpb.CareerHarvestItem
 	(*CareerInfoGetReply)(nil),   // 2: gamepb.careerpb.CareerInfoGetReply
 }
 var file_careerpb_proto_depIdxs = []int32{
-	0, // 0: gamepb.careerpb.CareerInfoGetReply.careers:type_name -> gamepb.careerpb.CareerInfo
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
+	1, // 0: gamepb.careerpb.CareerInfoGetReply.harvest_items:type_name -> gamepb.careerpb.CareerHarvestItem
+	0, // 1: gamepb.careerpb.CareerService.CareerInfoGet:input_type -> gamepb.careerpb.CareerInfoGetRequest
+	2, // 2: gamepb.careerpb.CareerService.CareerInfoGet:output_type -> gamepb.careerpb.CareerInfoGetReply
+	2, // [2:3] is the sub-list for method output_type
+	1, // [1:2] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -234,7 +301,7 @@ func file_careerpb_proto_init() {
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
-			NumServices:   0,
+			NumServices:   1,
 		},
 		GoTypes:           file_careerpb_proto_goTypes,
 		DependencyIndexes: file_careerpb_proto_depIdxs,

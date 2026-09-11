@@ -6,6 +6,7 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/friendpb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/userpb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/visitpb"
 )
 
@@ -138,7 +139,18 @@ func (a *API) GetShareKey(ctx context.Context, shareCfgID int64) (*friendpb.GetS
 }
 
 // VisitEnter enters a friend's farm and returns mapped land info.
-func (a *API) VisitEnter(ctx context.Context, hostGID int64, reason int32) ([]logic.LandInfo, error) {
+// EnterReplyDetail carries the parts of VisitService.Enter that callers beyond
+// land analysis need (bot enterFriendFarm returns the whole reply).
+type EnterReplyDetail struct {
+	Lands         []logic.LandInfo
+	Basic         *userpb.BasicInfo
+	DogID         int64 // brief_dog_info.dog_id; 0 = no dog deployed
+	Weather       int64 // weather.weather_type (0 = none)
+	WeatherStatus int64
+}
+
+// VisitEnterDetailed enters a friend farm and returns the full reply detail.
+func (a *API) VisitEnterDetailed(ctx context.Context, hostGID int64, reason int32) (*EnterReplyDetail, error) {
 	req := &visitpb.EnterRequest{HostGid: hostGID, Reason: reason}
 	raw, err := a.sendVisit(ctx, "Enter", marshalMessage(req))
 	if err != nil {
@@ -148,7 +160,27 @@ func (a *API) VisitEnter(ctx context.Context, hostGID int64, reason int32) ([]lo
 	if err := unmarshalMessage(raw, reply); err != nil {
 		return nil, err
 	}
-	return logic.LandsFromPlantPB(reply.Lands), nil
+	out := &EnterReplyDetail{
+		Lands: logic.LandsFromPlantPB(reply.Lands),
+		Basic: reply.Basic,
+	}
+	if reply.BriefDogInfo != nil {
+		out.DogID = reply.BriefDogInfo.DogId
+	}
+	if reply.Weather != nil {
+		out.Weather = reply.Weather.WeatherType
+		out.WeatherStatus = reply.Weather.Status
+	}
+	return out, nil
+}
+
+// VisitEnter enters a friend's farm and returns their lands.
+func (a *API) VisitEnter(ctx context.Context, hostGID int64, reason int32) ([]logic.LandInfo, error) {
+	detail, err := a.VisitEnterDetailed(ctx, hostGID, reason)
+	if err != nil {
+		return nil, err
+	}
+	return detail.Lands, nil
 }
 
 // VisitLeave leaves a friend's farm.
@@ -208,4 +240,11 @@ func (a *API) FriendWater(ctx context.Context, hostGID int64, landIDs []int64) (
 		return nil, err
 	}
 	return reply, nil
+}
+
+// DelFriend removes a friend by GID.
+func (a *API) DelFriend(ctx context.Context, friendGID int64) error {
+	req := &friendpb.DelFriendRequest{FriendGid: friendGID}
+	_, err := a.sendFriend(ctx, "DelFriend", marshalMessage(req))
+	return err
 }

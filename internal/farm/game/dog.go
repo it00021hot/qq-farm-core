@@ -26,3 +26,71 @@ func (a *API) GetDogInfo(ctx context.Context) (*dogpb.GetDogInfoReply, error) {
 	}
 	return reply, nil
 }
+
+// DeployDog deploys the given dog (dog page "上场").
+func (a *API) DeployDog(ctx context.Context, dogID int64) (*dogpb.DeployDogReply, error) {
+	raw, err := a.sendDog(ctx, "DeployDog", marshalMessage(&dogpb.DeployDogRequest{DogId: dogID}))
+	if err != nil {
+		return nil, err
+	}
+	reply := &dogpb.DeployDogReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+// WithdrawDog withdraws the deployed dog.
+func (a *API) WithdrawDog(ctx context.Context) (*dogpb.WithdrawDogReply, error) {
+	raw, err := a.sendDog(ctx, "WithdrawDog", marshalMessage(&dogpb.WithdrawDogRequest{}))
+	if err != nil {
+		return nil, err
+	}
+	reply := &dogpb.WithdrawDogReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+// AddFood feeds the dog bowl (itemID = dog food item, count = servings).
+func (a *API) AddFood(ctx context.Context, itemID, count int64) (*dogpb.AddFoodReply, error) {
+	raw, err := a.sendDog(ctx, "AddFood", marshalMessage(&dogpb.AddFoodRequest{ItemId: itemID, Count: count}))
+	if err != nil {
+		return nil, err
+	}
+	reply := &dogpb.AddFoodReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+// ClaimSkillGifts claims all pending "同气连枝" skill gifts at once.
+func (a *API) ClaimSkillGifts(ctx context.Context) (*dogpb.ClaimSkillGiftsReply, error) {
+	raw, err := a.sendDog(ctx, "ClaimSkillGifts", marshalMessage(&dogpb.ClaimSkillGiftsRequest{}))
+	if err != nil {
+		return nil, err
+	}
+	reply := &dogpb.ClaimSkillGiftsReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+// GetProtectLogs fetches the dog guard history page.
+func (a *API) GetProtectLogs(ctx context.Context) (*dogpb.GetProtectLogsReply, error) {
+	// 请求抓包固定为 { field_1: 0, count: 100, field_3: 0 }。
+	raw, err := a.sendDog(ctx, "GetProtectLogs", marshalMessage(&dogpb.GetProtectLogsRequest{
+		Field_1: 0, Count: 100, Field_3: 0,
+	}))
+	if err != nil {
+		return nil, err
+	}
+	reply := &dogpb.GetProtectLogsReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}

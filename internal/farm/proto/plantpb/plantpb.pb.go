@@ -260,13 +260,14 @@ func (x *LandInfo) GetField_17() int64 {
 	return 0
 }
 
-// 土地解锁条件 (简化)
+// 土地解锁条件
 type LandUnlockCondition struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NeedLevel     int64                  `protobuf:"varint,1,opt,name=need_level,json=needLevel,proto3" json:"need_level,omitempty"`
-	NeedGold      int64                  `protobuf:"varint,2,opt,name=need_gold,json=needGold,proto3" json:"need_gold,omitempty"` // ... 其他条件字段
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	PrecedingLandId int64                  `protobuf:"varint,1,opt,name=preceding_land_id,json=precedingLandId,proto3" json:"preceding_land_id,omitempty"`
+	NeedLevel       int64                  `protobuf:"varint,2,opt,name=need_level,json=needLevel,proto3" json:"need_level,omitempty"`
+	NeedGold        int64                  `protobuf:"varint,3,opt,name=need_gold,json=needGold,proto3" json:"need_gold,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *LandUnlockCondition) Reset() {
@@ -299,6 +300,13 @@ func (*LandUnlockCondition) Descriptor() ([]byte, []int) {
 	return file_plantpb_proto_rawDescGZIP(), []int{1}
 }
 
+func (x *LandUnlockCondition) GetPrecedingLandId() int64 {
+	if x != nil {
+		return x.PrecedingLandId
+	}
+	return 0
+}
+
 func (x *LandUnlockCondition) GetNeedLevel() int64 {
 	if x != nil {
 		return x.NeedLevel
@@ -315,11 +323,12 @@ func (x *LandUnlockCondition) GetNeedGold() int64 {
 
 // 土地升级条件 (简化)
 type LandUpgradeCondition struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NeedLevel     int64                  `protobuf:"varint,1,opt,name=need_level,json=needLevel,proto3" json:"need_level,omitempty"`
-	NeedGold      int64                  `protobuf:"varint,2,opt,name=need_gold,json=needGold,proto3" json:"need_gold,omitempty"` // ... 其他条件字段
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ConditionType  int64                  `protobuf:"varint,1,opt,name=condition_type,json=conditionType,proto3" json:"condition_type,omitempty"`
+	ConditionValue int64                  `protobuf:"varint,2,opt,name=condition_value,json=conditionValue,proto3" json:"condition_value,omitempty"` // condition_type=1 时已确认代表所需角色等级
+	RequiredItems  []*corepb.Item         `protobuf:"bytes,3,rep,name=required_items,json=requiredItems,proto3" json:"required_items,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *LandUpgradeCondition) Reset() {
@@ -352,18 +361,25 @@ func (*LandUpgradeCondition) Descriptor() ([]byte, []int) {
 	return file_plantpb_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *LandUpgradeCondition) GetNeedLevel() int64 {
+func (x *LandUpgradeCondition) GetConditionType() int64 {
 	if x != nil {
-		return x.NeedLevel
+		return x.ConditionType
 	}
 	return 0
 }
 
-func (x *LandUpgradeCondition) GetNeedGold() int64 {
+func (x *LandUpgradeCondition) GetConditionValue() int64 {
 	if x != nil {
-		return x.NeedGold
+		return x.ConditionValue
 	}
 	return 0
+}
+
+func (x *LandUpgradeCondition) GetRequiredItems() []*corepb.Item {
+	if x != nil {
+		return x.RequiredItems
+	}
+	return nil
 }
 
 // ============ 偷菜玩家信息 ============
@@ -443,18 +459,27 @@ type PlantInfo struct {
 	MutantConfigIds    []int64 `protobuf:"varint,20,rep,packed,name=mutant_config_ids,json=mutantConfigIds,proto3" json:"mutant_config_ids,omitempty"`     // 变异配置ID
 	IsNudged           bool    `protobuf:"varint,21,opt,name=is_nudged,json=isNudged,proto3" json:"is_nudged,omitempty"`                                   // 是否被催熟
 	// repeated StealPlayer steal_player = 22;    // 旧版: 偷菜玩家详情 (GID+已偷次数)
-	StealPlayer   int64              `protobuf:"varint,22,opt,name=steal_player,json=stealPlayer,proto3" json:"steal_player,omitempty"` // 偷菜玩家相关数值 (服务端已改为varint)
-	StealNum      []byte             `protobuf:"bytes,23,opt,name=steal_num,json=stealNum,proto3" json:"steal_num,omitempty"`           // 每人最大可偷次数 (服务端为bytes)
-	Field_24      int64              `protobuf:"varint,24,opt,name=field_24,json=field24,proto3" json:"field_24,omitempty"`             // unknown new field
-	Field_25      int64              `protobuf:"varint,25,opt,name=field_25,json=field25,proto3" json:"field_25,omitempty"`             // unknown new field
-	Field_26      int64              `protobuf:"varint,26,opt,name=field_26,json=field26,proto3" json:"field_26,omitempty"`             // unknown new field
-	Field_27      int64              `protobuf:"varint,27,opt,name=field_27,json=field27,proto3" json:"field_27,omitempty"`             // unknown new field
-	Field_32      []byte             `protobuf:"bytes,32,opt,name=field_32,json=field32,proto3" json:"field_32,omitempty"`              // unknown (3-byte varint, 推测为某种ID)
-	Field_34      *PlantLimitInfo    `protobuf:"bytes,34,opt,name=field_34,json=field34,proto3" json:"field_34,omitempty"`              // 植物限制信息
-	Field_36      *PlantActivityInfo `protobuf:"bytes,36,opt,name=field_36,json=field36,proto3" json:"field_36,omitempty"`              // 植物活动信息
-	Field_37      int64              `protobuf:"varint,37,opt,name=field_37,json=field37,proto3" json:"field_37,omitempty"`             // unknown new field
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	StealPlayer int64           `protobuf:"varint,22,opt,name=steal_player,json=stealPlayer,proto3" json:"steal_player,omitempty"` // 偷菜玩家相关数值 (服务端已改为varint)
+	StealNum    []byte          `protobuf:"bytes,23,opt,name=steal_num,json=stealNum,proto3" json:"steal_num,omitempty"`           // 每人最大可偷次数 (服务端为bytes)
+	Field_24    int64           `protobuf:"varint,24,opt,name=field_24,json=field24,proto3" json:"field_24,omitempty"`             // unknown new field
+	Field_25    int64           `protobuf:"varint,25,opt,name=field_25,json=field25,proto3" json:"field_25,omitempty"`             // unknown new field
+	Field_26    int64           `protobuf:"varint,26,opt,name=field_26,json=field26,proto3" json:"field_26,omitempty"`             // unknown new field
+	Field_27    int64           `protobuf:"varint,27,opt,name=field_27,json=field27,proto3" json:"field_27,omitempty"`             // unknown new field
+	Field_32    []byte          `protobuf:"bytes,32,opt,name=field_32,json=field32,proto3" json:"field_32,omitempty"`              // unknown (3-byte varint, 推测为某种ID)
+	Field_34    *PlantLimitInfo `protobuf:"bytes,34,opt,name=field_34,json=field34,proto3" json:"field_34,omitempty"`              // 植物限制信息
+	// ItemService.Use 回包中已抓包确认：道具使用记录（301101=黄金虫，301102=足球）。
+	InteractionUses []*PlantInteractionUseInfo `protobuf:"bytes,35,rep,name=interaction_uses,json=interactionUses,proto3" json:"interaction_uses,omitempty"`
+	Field_36        *PlantActivityInfo         `protobuf:"bytes,36,opt,name=field_36,json=field36,proto3" json:"field_36,omitempty"`  // 植物活动信息
+	Field_37        int64                      `protobuf:"varint,37,opt,name=field_37,json=field37,proto3" json:"field_37,omitempty"` // unknown new field
+	// ItemService.Use 回包中已抓包确认：道具目标记录，field 4 为目标土地 ID。
+	InteractionTargets []*PlantInteractionTargetInfo `protobuf:"bytes,38,rep,name=interaction_targets,json=interactionTargets,proto3" json:"interaction_targets,omitempty"`
+	// 重复的历史/扩展记录；同一土地可同时出现多条，且黄金虫/足球清理后仍会保留。
+	// 当前互动道具以 interaction_uses / interaction_targets 为准；仅七夕灵露可结合变异 13 作保守兜底。
+	Field_40 []*PlantExtendedStatus `protobuf:"bytes,40,rep,name=field_40,json=field40,proto3" json:"field_40,omitempty"`
+	// 变异扩展记录；配置 ID 可与 mutant_config_ids / phase.mutants 交叉确认。
+	ExtendedMutations []*PlantMutationRecord `protobuf:"bytes,41,rep,name=extended_mutations,json=extendedMutations,proto3" json:"extended_mutations,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *PlantInfo) Reset() {
@@ -669,6 +694,13 @@ func (x *PlantInfo) GetField_34() *PlantLimitInfo {
 	return nil
 }
 
+func (x *PlantInfo) GetInteractionUses() []*PlantInteractionUseInfo {
+	if x != nil {
+		return x.InteractionUses
+	}
+	return nil
+}
+
 func (x *PlantInfo) GetField_36() *PlantActivityInfo {
 	if x != nil {
 		return x.Field_36
@@ -679,6 +711,311 @@ func (x *PlantInfo) GetField_36() *PlantActivityInfo {
 func (x *PlantInfo) GetField_37() int64 {
 	if x != nil {
 		return x.Field_37
+	}
+	return 0
+}
+
+func (x *PlantInfo) GetInteractionTargets() []*PlantInteractionTargetInfo {
+	if x != nil {
+		return x.InteractionTargets
+	}
+	return nil
+}
+
+func (x *PlantInfo) GetField_40() []*PlantExtendedStatus {
+	if x != nil {
+		return x.Field_40
+	}
+	return nil
+}
+
+func (x *PlantInfo) GetExtendedMutations() []*PlantMutationRecord {
+	if x != nil {
+		return x.ExtendedMutations
+	}
+	return nil
+}
+
+// PlantInfo.field 35：ItemService.Use 成功回包中的道具使用信息。
+type PlantInteractionUseInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        int64                  `protobuf:"varint,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	EffectType    int64                  `protobuf:"varint,3,opt,name=effect_type,json=effectType,proto3" json:"effect_type,omitempty"`
+	HostGid       int64                  `protobuf:"varint,4,opt,name=host_gid,json=hostGid,proto3" json:"host_gid,omitempty"`
+	Timestamp     int64                  `protobuf:"varint,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlantInteractionUseInfo) Reset() {
+	*x = PlantInteractionUseInfo{}
+	mi := &file_plantpb_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlantInteractionUseInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlantInteractionUseInfo) ProtoMessage() {}
+
+func (x *PlantInteractionUseInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_plantpb_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlantInteractionUseInfo.ProtoReflect.Descriptor instead.
+func (*PlantInteractionUseInfo) Descriptor() ([]byte, []int) {
+	return file_plantpb_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *PlantInteractionUseInfo) GetItemId() int64 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
+func (x *PlantInteractionUseInfo) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+func (x *PlantInteractionUseInfo) GetEffectType() int64 {
+	if x != nil {
+		return x.EffectType
+	}
+	return 0
+}
+
+func (x *PlantInteractionUseInfo) GetHostGid() int64 {
+	if x != nil {
+		return x.HostGid
+	}
+	return 0
+}
+
+func (x *PlantInteractionUseInfo) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+// PlantInfo.field 38：ItemService.Use 成功回包中的目标信息。
+type PlantInteractionTargetInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        int64                  `protobuf:"varint,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	HostGid       int64                  `protobuf:"varint,2,opt,name=host_gid,json=hostGid,proto3" json:"host_gid,omitempty"`
+	Timestamp     int64                  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	LandId        int64                  `protobuf:"varint,4,opt,name=land_id,json=landId,proto3" json:"land_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlantInteractionTargetInfo) Reset() {
+	*x = PlantInteractionTargetInfo{}
+	mi := &file_plantpb_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlantInteractionTargetInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlantInteractionTargetInfo) ProtoMessage() {}
+
+func (x *PlantInteractionTargetInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_plantpb_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlantInteractionTargetInfo.ProtoReflect.Descriptor instead.
+func (*PlantInteractionTargetInfo) Descriptor() ([]byte, []int) {
+	return file_plantpb_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *PlantInteractionTargetInfo) GetItemId() int64 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
+func (x *PlantInteractionTargetInfo) GetHostGid() int64 {
+	if x != nil {
+		return x.HostGid
+	}
+	return 0
+}
+
+func (x *PlantInteractionTargetInfo) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *PlantInteractionTargetInfo) GetLandId() int64 {
+	if x != nil {
+		return x.LandId
+	}
+	return 0
+}
+
+// PlantInfo.field 40：土地历史/扩展记录，字段语义尚未完全确认。
+type PlantExtendedStatus struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value_1       int64                  `protobuf:"varint,1,opt,name=value_1,json=value1,proto3" json:"value_1,omitempty"`
+	Value_2       int64                  `protobuf:"varint,2,opt,name=value_2,json=value2,proto3" json:"value_2,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlantExtendedStatus) Reset() {
+	*x = PlantExtendedStatus{}
+	mi := &file_plantpb_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlantExtendedStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlantExtendedStatus) ProtoMessage() {}
+
+func (x *PlantExtendedStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_plantpb_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlantExtendedStatus.ProtoReflect.Descriptor instead.
+func (*PlantExtendedStatus) Descriptor() ([]byte, []int) {
+	return file_plantpb_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *PlantExtendedStatus) GetValue_1() int64 {
+	if x != nil {
+		return x.Value_1
+	}
+	return 0
+}
+
+func (x *PlantExtendedStatus) GetValue_2() int64 {
+	if x != nil {
+		return x.Value_2
+	}
+	return 0
+}
+
+// PlantInfo.field 41：抓包观察到的变异扩展记录。
+type PlantMutationRecord struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Timestamp      int64                  `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	MutantConfigId int64                  `protobuf:"varint,2,opt,name=mutant_config_id,json=mutantConfigId,proto3" json:"mutant_config_id,omitempty"`
+	Field_3        int64                  `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"`
+	Field_4        int64                  `protobuf:"varint,4,opt,name=field_4,json=field4,proto3" json:"field_4,omitempty"`
+	Field_5        int64                  `protobuf:"varint,5,opt,name=field_5,json=field5,proto3" json:"field_5,omitempty"`
+	Field_6        int64                  `protobuf:"varint,6,opt,name=field_6,json=field6,proto3" json:"field_6,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *PlantMutationRecord) Reset() {
+	*x = PlantMutationRecord{}
+	mi := &file_plantpb_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlantMutationRecord) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlantMutationRecord) ProtoMessage() {}
+
+func (x *PlantMutationRecord) ProtoReflect() protoreflect.Message {
+	mi := &file_plantpb_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlantMutationRecord.ProtoReflect.Descriptor instead.
+func (*PlantMutationRecord) Descriptor() ([]byte, []int) {
+	return file_plantpb_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *PlantMutationRecord) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *PlantMutationRecord) GetMutantConfigId() int64 {
+	if x != nil {
+		return x.MutantConfigId
+	}
+	return 0
+}
+
+func (x *PlantMutationRecord) GetField_3() int64 {
+	if x != nil {
+		return x.Field_3
+	}
+	return 0
+}
+
+func (x *PlantMutationRecord) GetField_4() int64 {
+	if x != nil {
+		return x.Field_4
+	}
+	return 0
+}
+
+func (x *PlantMutationRecord) GetField_5() int64 {
+	if x != nil {
+		return x.Field_5
+	}
+	return 0
+}
+
+func (x *PlantMutationRecord) GetField_6() int64 {
+	if x != nil {
+		return x.Field_6
 	}
 	return 0
 }
@@ -695,7 +1032,7 @@ type PlantLimitInfo struct {
 
 func (x *PlantLimitInfo) Reset() {
 	*x = PlantLimitInfo{}
-	mi := &file_plantpb_proto_msgTypes[5]
+	mi := &file_plantpb_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -707,7 +1044,7 @@ func (x *PlantLimitInfo) String() string {
 func (*PlantLimitInfo) ProtoMessage() {}
 
 func (x *PlantLimitInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[5]
+	mi := &file_plantpb_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -720,7 +1057,7 @@ func (x *PlantLimitInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlantLimitInfo.ProtoReflect.Descriptor instead.
 func (*PlantLimitInfo) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{5}
+	return file_plantpb_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *PlantLimitInfo) GetConfigId() int64 {
@@ -757,7 +1094,7 @@ type PlantActivityInfo struct {
 
 func (x *PlantActivityInfo) Reset() {
 	*x = PlantActivityInfo{}
-	mi := &file_plantpb_proto_msgTypes[6]
+	mi := &file_plantpb_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -769,7 +1106,7 @@ func (x *PlantActivityInfo) String() string {
 func (*PlantActivityInfo) ProtoMessage() {}
 
 func (x *PlantActivityInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[6]
+	mi := &file_plantpb_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -782,7 +1119,7 @@ func (x *PlantActivityInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlantActivityInfo.ProtoReflect.Descriptor instead.
 func (*PlantActivityInfo) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{6}
+	return file_plantpb_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *PlantActivityInfo) GetActivityId() int64 {
@@ -831,7 +1168,7 @@ type PlantPhaseInfo struct {
 
 func (x *PlantPhaseInfo) Reset() {
 	*x = PlantPhaseInfo{}
-	mi := &file_plantpb_proto_msgTypes[7]
+	mi := &file_plantpb_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -843,7 +1180,7 @@ func (x *PlantPhaseInfo) String() string {
 func (*PlantPhaseInfo) ProtoMessage() {}
 
 func (x *PlantPhaseInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[7]
+	mi := &file_plantpb_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -856,7 +1193,7 @@ func (x *PlantPhaseInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlantPhaseInfo.ProtoReflect.Descriptor instead.
 func (*PlantPhaseInfo) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{7}
+	return file_plantpb_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *PlantPhaseInfo) GetPhase() int32 {
@@ -927,7 +1264,7 @@ type MutantInfo struct {
 
 func (x *MutantInfo) Reset() {
 	*x = MutantInfo{}
-	mi := &file_plantpb_proto_msgTypes[8]
+	mi := &file_plantpb_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -939,7 +1276,7 @@ func (x *MutantInfo) String() string {
 func (*MutantInfo) ProtoMessage() {}
 
 func (x *MutantInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[8]
+	mi := &file_plantpb_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -952,7 +1289,7 @@ func (x *MutantInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutantInfo.ProtoReflect.Descriptor instead.
 func (*MutantInfo) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{8}
+	return file_plantpb_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *MutantInfo) GetMutantTime() int64 {
@@ -993,7 +1330,7 @@ type OperationLimit struct {
 
 func (x *OperationLimit) Reset() {
 	*x = OperationLimit{}
-	mi := &file_plantpb_proto_msgTypes[9]
+	mi := &file_plantpb_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1005,7 +1342,7 @@ func (x *OperationLimit) String() string {
 func (*OperationLimit) ProtoMessage() {}
 
 func (x *OperationLimit) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[9]
+	mi := &file_plantpb_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1018,7 +1355,7 @@ func (x *OperationLimit) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationLimit.ProtoReflect.Descriptor instead.
 func (*OperationLimit) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{9}
+	return file_plantpb_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *OperationLimit) GetId() int64 {
@@ -1080,7 +1417,7 @@ type AllLandsRequest struct {
 
 func (x *AllLandsRequest) Reset() {
 	*x = AllLandsRequest{}
-	mi := &file_plantpb_proto_msgTypes[10]
+	mi := &file_plantpb_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1092,7 +1429,7 @@ func (x *AllLandsRequest) String() string {
 func (*AllLandsRequest) ProtoMessage() {}
 
 func (x *AllLandsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[10]
+	mi := &file_plantpb_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1105,7 +1442,7 @@ func (x *AllLandsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllLandsRequest.ProtoReflect.Descriptor instead.
 func (*AllLandsRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{10}
+	return file_plantpb_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *AllLandsRequest) GetHostGid() int64 {
@@ -1115,17 +1452,79 @@ func (x *AllLandsRequest) GetHostGid() int64 {
 	return 0
 }
 
+// 农场级社交事件。实机已确认 5005=青蛙使坏瓶；它不绑定某一块土地。
+type FarmSocialEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        int64                  `protobuf:"varint,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	VisitorGid    int64                  `protobuf:"varint,2,opt,name=visitor_gid,json=visitorGid,proto3" json:"visitor_gid,omitempty"`
+	Timestamp     int64                  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FarmSocialEvent) Reset() {
+	*x = FarmSocialEvent{}
+	mi := &file_plantpb_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FarmSocialEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FarmSocialEvent) ProtoMessage() {}
+
+func (x *FarmSocialEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_plantpb_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FarmSocialEvent.ProtoReflect.Descriptor instead.
+func (*FarmSocialEvent) Descriptor() ([]byte, []int) {
+	return file_plantpb_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *FarmSocialEvent) GetItemId() int64 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
+func (x *FarmSocialEvent) GetVisitorGid() int64 {
+	if x != nil {
+		return x.VisitorGid
+	}
+	return 0
+}
+
+func (x *FarmSocialEvent) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
 type AllLandsReply struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Lands           []*LandInfo            `protobuf:"bytes,1,rep,name=lands,proto3" json:"lands,omitempty"`
 	OperationLimits []*OperationLimit      `protobuf:"bytes,2,rep,name=operation_limits,json=operationLimits,proto3" json:"operation_limits,omitempty"`
+	SocialEvents    []*FarmSocialEvent     `protobuf:"bytes,3,rep,name=social_events,json=socialEvents,proto3" json:"social_events,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
 
 func (x *AllLandsReply) Reset() {
 	*x = AllLandsReply{}
-	mi := &file_plantpb_proto_msgTypes[11]
+	mi := &file_plantpb_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1137,7 +1536,7 @@ func (x *AllLandsReply) String() string {
 func (*AllLandsReply) ProtoMessage() {}
 
 func (x *AllLandsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[11]
+	mi := &file_plantpb_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1150,7 +1549,7 @@ func (x *AllLandsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllLandsReply.ProtoReflect.Descriptor instead.
 func (*AllLandsReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{11}
+	return file_plantpb_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *AllLandsReply) GetLands() []*LandInfo {
@@ -1167,6 +1566,13 @@ func (x *AllLandsReply) GetOperationLimits() []*OperationLimit {
 	return nil
 }
 
+func (x *AllLandsReply) GetSocialEvents() []*FarmSocialEvent {
+	if x != nil {
+		return x.SocialEvents
+	}
+	return nil
+}
+
 // --- 收获 ---
 type HarvestRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1179,7 +1585,7 @@ type HarvestRequest struct {
 
 func (x *HarvestRequest) Reset() {
 	*x = HarvestRequest{}
-	mi := &file_plantpb_proto_msgTypes[12]
+	mi := &file_plantpb_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1191,7 +1597,7 @@ func (x *HarvestRequest) String() string {
 func (*HarvestRequest) ProtoMessage() {}
 
 func (x *HarvestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[12]
+	mi := &file_plantpb_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1204,7 +1610,7 @@ func (x *HarvestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HarvestRequest.ProtoReflect.Descriptor instead.
 func (*HarvestRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{12}
+	return file_plantpb_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *HarvestRequest) GetLandIds() []int64 {
@@ -1240,7 +1646,7 @@ type HarvestReply struct {
 
 func (x *HarvestReply) Reset() {
 	*x = HarvestReply{}
-	mi := &file_plantpb_proto_msgTypes[13]
+	mi := &file_plantpb_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1252,7 +1658,7 @@ func (x *HarvestReply) String() string {
 func (*HarvestReply) ProtoMessage() {}
 
 func (x *HarvestReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[13]
+	mi := &file_plantpb_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1265,7 +1671,7 @@ func (x *HarvestReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HarvestReply.ProtoReflect.Descriptor instead.
 func (*HarvestReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{13}
+	return file_plantpb_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *HarvestReply) GetLand() []*LandInfo {
@@ -1293,7 +1699,7 @@ type WaterLandRequest struct {
 
 func (x *WaterLandRequest) Reset() {
 	*x = WaterLandRequest{}
-	mi := &file_plantpb_proto_msgTypes[14]
+	mi := &file_plantpb_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1305,7 +1711,7 @@ func (x *WaterLandRequest) String() string {
 func (*WaterLandRequest) ProtoMessage() {}
 
 func (x *WaterLandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[14]
+	mi := &file_plantpb_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1318,7 +1724,7 @@ func (x *WaterLandRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaterLandRequest.ProtoReflect.Descriptor instead.
 func (*WaterLandRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{14}
+	return file_plantpb_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *WaterLandRequest) GetLandIds() []int64 {
@@ -1345,7 +1751,7 @@ type WaterLandReply struct {
 
 func (x *WaterLandReply) Reset() {
 	*x = WaterLandReply{}
-	mi := &file_plantpb_proto_msgTypes[15]
+	mi := &file_plantpb_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1357,7 +1763,7 @@ func (x *WaterLandReply) String() string {
 func (*WaterLandReply) ProtoMessage() {}
 
 func (x *WaterLandReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[15]
+	mi := &file_plantpb_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1370,7 +1776,7 @@ func (x *WaterLandReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaterLandReply.ProtoReflect.Descriptor instead.
 func (*WaterLandReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{15}
+	return file_plantpb_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *WaterLandReply) GetLand() []*LandInfo {
@@ -1389,18 +1795,20 @@ func (x *WaterLandReply) GetOperationLimits() []*OperationLimit {
 
 // --- 务农 (除草+除虫合并) ---
 type FarmingRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	LandIds       []int64                `protobuf:"varint,1,rep,packed,name=land_ids,json=landIds,proto3" json:"land_ids,omitempty"`
-	HostGid       int64                  `protobuf:"varint,2,opt,name=host_gid,json=hostGid,proto3" json:"host_gid,omitempty"`
-	Field_3       int32                  `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"` // 场景字段，普通好友抓包值为 0
-	Field_4       int32                  `protobuf:"varint,4,opt,name=field_4,json=field4,proto3" json:"field_4,omitempty"` // 场景字段，普通好友抓包值为 2
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	LandIds []int64                `protobuf:"varint,1,rep,packed,name=land_ids,json=landIds,proto3" json:"land_ids,omitempty"`
+	HostGid int64                  `protobuf:"varint,2,opt,name=host_gid,json=hostGid,proto3" json:"host_gid,omitempty"`
+	Field_3 int32                  `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"` // 场景字段，自家与普通好友抓包均显式编码为 0
+	Field_4 int32                  `protobuf:"varint,4,opt,name=field_4,json=field4,proto3" json:"field_4,omitempty"` // 场景字段，自家抓包显式编码为 0，普通好友抓包值为 2
+	// 自家农场待清理的农场级社交道具 ID。青蛙存在时官方单点与一键务农均发送 5005。
+	SocialEventItemIds []int64 `protobuf:"varint,5,rep,packed,name=social_event_item_ids,json=socialEventItemIds,proto3" json:"social_event_item_ids,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *FarmingRequest) Reset() {
 	*x = FarmingRequest{}
-	mi := &file_plantpb_proto_msgTypes[16]
+	mi := &file_plantpb_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1412,7 +1820,7 @@ func (x *FarmingRequest) String() string {
 func (*FarmingRequest) ProtoMessage() {}
 
 func (x *FarmingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[16]
+	mi := &file_plantpb_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1425,7 +1833,7 @@ func (x *FarmingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FarmingRequest.ProtoReflect.Descriptor instead.
 func (*FarmingRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{16}
+	return file_plantpb_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *FarmingRequest) GetLandIds() []int64 {
@@ -1456,6 +1864,13 @@ func (x *FarmingRequest) GetField_4() int32 {
 	return 0
 }
 
+func (x *FarmingRequest) GetSocialEventItemIds() []int64 {
+	if x != nil {
+		return x.SocialEventItemIds
+	}
+	return nil
+}
+
 type FarmingResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LandId        int64                  `protobuf:"varint,1,opt,name=land_id,json=landId,proto3" json:"land_id,omitempty"`
@@ -1466,7 +1881,7 @@ type FarmingResult struct {
 
 func (x *FarmingResult) Reset() {
 	*x = FarmingResult{}
-	mi := &file_plantpb_proto_msgTypes[17]
+	mi := &file_plantpb_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1478,7 +1893,7 @@ func (x *FarmingResult) String() string {
 func (*FarmingResult) ProtoMessage() {}
 
 func (x *FarmingResult) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[17]
+	mi := &file_plantpb_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1491,7 +1906,7 @@ func (x *FarmingResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FarmingResult.ProtoReflect.Descriptor instead.
 func (*FarmingResult) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{17}
+	return file_plantpb_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *FarmingResult) GetLandId() int64 {
@@ -1508,18 +1923,71 @@ func (x *FarmingResult) GetReward() *corepb.Item {
 	return nil
 }
 
+type FarmingSocialEventReward struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        int64                  `protobuf:"varint,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	Reward        *corepb.Item           `protobuf:"bytes,2,opt,name=reward,proto3" json:"reward,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FarmingSocialEventReward) Reset() {
+	*x = FarmingSocialEventReward{}
+	mi := &file_plantpb_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FarmingSocialEventReward) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FarmingSocialEventReward) ProtoMessage() {}
+
+func (x *FarmingSocialEventReward) ProtoReflect() protoreflect.Message {
+	mi := &file_plantpb_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FarmingSocialEventReward.ProtoReflect.Descriptor instead.
+func (*FarmingSocialEventReward) Descriptor() ([]byte, []int) {
+	return file_plantpb_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *FarmingSocialEventReward) GetItemId() int64 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
+func (x *FarmingSocialEventReward) GetReward() *corepb.Item {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
 type FarmingReply struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Land            []*LandInfo            `protobuf:"bytes,1,rep,name=land,proto3" json:"land,omitempty"`
-	OperationLimits []*OperationLimit      `protobuf:"bytes,2,rep,name=operation_limits,json=operationLimits,proto3" json:"operation_limits,omitempty"`
-	Results         []*FarmingResult       `protobuf:"bytes,3,rep,name=results,proto3" json:"results,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state              protoimpl.MessageState      `protogen:"open.v1"`
+	Land               []*LandInfo                 `protobuf:"bytes,1,rep,name=land,proto3" json:"land,omitempty"`
+	OperationLimits    []*OperationLimit           `protobuf:"bytes,2,rep,name=operation_limits,json=operationLimits,proto3" json:"operation_limits,omitempty"`
+	Results            []*FarmingResult            `protobuf:"bytes,3,rep,name=results,proto3" json:"results,omitempty"`
+	SocialEventRewards []*FarmingSocialEventReward `protobuf:"bytes,4,rep,name=social_event_rewards,json=socialEventRewards,proto3" json:"social_event_rewards,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *FarmingReply) Reset() {
 	*x = FarmingReply{}
-	mi := &file_plantpb_proto_msgTypes[18]
+	mi := &file_plantpb_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1531,7 +1999,7 @@ func (x *FarmingReply) String() string {
 func (*FarmingReply) ProtoMessage() {}
 
 func (x *FarmingReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[18]
+	mi := &file_plantpb_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1544,7 +2012,7 @@ func (x *FarmingReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FarmingReply.ProtoReflect.Descriptor instead.
 func (*FarmingReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{18}
+	return file_plantpb_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *FarmingReply) GetLand() []*LandInfo {
@@ -1568,6 +2036,13 @@ func (x *FarmingReply) GetResults() []*FarmingResult {
 	return nil
 }
 
+func (x *FarmingReply) GetSocialEventRewards() []*FarmingSocialEventReward {
+	if x != nil {
+		return x.SocialEventRewards
+	}
+	return nil
+}
+
 // --- 除草 (旧版兼容) ---
 type WeedOutRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1579,7 +2054,7 @@ type WeedOutRequest struct {
 
 func (x *WeedOutRequest) Reset() {
 	*x = WeedOutRequest{}
-	mi := &file_plantpb_proto_msgTypes[19]
+	mi := &file_plantpb_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1591,7 +2066,7 @@ func (x *WeedOutRequest) String() string {
 func (*WeedOutRequest) ProtoMessage() {}
 
 func (x *WeedOutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[19]
+	mi := &file_plantpb_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1604,7 +2079,7 @@ func (x *WeedOutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WeedOutRequest.ProtoReflect.Descriptor instead.
 func (*WeedOutRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{19}
+	return file_plantpb_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *WeedOutRequest) GetLandIds() []int64 {
@@ -1631,7 +2106,7 @@ type WeedOutReply struct {
 
 func (x *WeedOutReply) Reset() {
 	*x = WeedOutReply{}
-	mi := &file_plantpb_proto_msgTypes[20]
+	mi := &file_plantpb_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1643,7 +2118,7 @@ func (x *WeedOutReply) String() string {
 func (*WeedOutReply) ProtoMessage() {}
 
 func (x *WeedOutReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[20]
+	mi := &file_plantpb_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1656,7 +2131,7 @@ func (x *WeedOutReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WeedOutReply.ProtoReflect.Descriptor instead.
 func (*WeedOutReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{20}
+	return file_plantpb_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *WeedOutReply) GetLand() []*LandInfo {
@@ -1684,7 +2159,7 @@ type InsecticideRequest struct {
 
 func (x *InsecticideRequest) Reset() {
 	*x = InsecticideRequest{}
-	mi := &file_plantpb_proto_msgTypes[21]
+	mi := &file_plantpb_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1696,7 +2171,7 @@ func (x *InsecticideRequest) String() string {
 func (*InsecticideRequest) ProtoMessage() {}
 
 func (x *InsecticideRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[21]
+	mi := &file_plantpb_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1709,7 +2184,7 @@ func (x *InsecticideRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InsecticideRequest.ProtoReflect.Descriptor instead.
 func (*InsecticideRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{21}
+	return file_plantpb_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *InsecticideRequest) GetLandIds() []int64 {
@@ -1736,7 +2211,7 @@ type InsecticideReply struct {
 
 func (x *InsecticideReply) Reset() {
 	*x = InsecticideReply{}
-	mi := &file_plantpb_proto_msgTypes[22]
+	mi := &file_plantpb_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1748,7 +2223,7 @@ func (x *InsecticideReply) String() string {
 func (*InsecticideReply) ProtoMessage() {}
 
 func (x *InsecticideReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[22]
+	mi := &file_plantpb_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1761,7 +2236,7 @@ func (x *InsecticideReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InsecticideReply.ProtoReflect.Descriptor instead.
 func (*InsecticideReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{22}
+	return file_plantpb_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *InsecticideReply) GetLand() []*LandInfo {
@@ -1790,7 +2265,7 @@ type PlantItem struct {
 
 func (x *PlantItem) Reset() {
 	*x = PlantItem{}
-	mi := &file_plantpb_proto_msgTypes[23]
+	mi := &file_plantpb_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1802,7 +2277,7 @@ func (x *PlantItem) String() string {
 func (*PlantItem) ProtoMessage() {}
 
 func (x *PlantItem) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[23]
+	mi := &file_plantpb_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1815,7 +2290,7 @@ func (x *PlantItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlantItem.ProtoReflect.Descriptor instead.
 func (*PlantItem) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{23}
+	return file_plantpb_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *PlantItem) GetSeedId() int64 {
@@ -1849,7 +2324,7 @@ type PlantRequest struct {
 
 func (x *PlantRequest) Reset() {
 	*x = PlantRequest{}
-	mi := &file_plantpb_proto_msgTypes[24]
+	mi := &file_plantpb_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1861,7 +2336,7 @@ func (x *PlantRequest) String() string {
 func (*PlantRequest) ProtoMessage() {}
 
 func (x *PlantRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[24]
+	mi := &file_plantpb_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1874,7 +2349,7 @@ func (x *PlantRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlantRequest.ProtoReflect.Descriptor instead.
 func (*PlantRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{24}
+	return file_plantpb_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *PlantRequest) GetLandAndSeed() map[int64]int64 {
@@ -1901,7 +2376,7 @@ type PlantReply struct {
 
 func (x *PlantReply) Reset() {
 	*x = PlantReply{}
-	mi := &file_plantpb_proto_msgTypes[25]
+	mi := &file_plantpb_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1913,7 +2388,7 @@ func (x *PlantReply) String() string {
 func (*PlantReply) ProtoMessage() {}
 
 func (x *PlantReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[25]
+	mi := &file_plantpb_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1926,7 +2401,7 @@ func (x *PlantReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlantReply.ProtoReflect.Descriptor instead.
 func (*PlantReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{25}
+	return file_plantpb_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *PlantReply) GetLand() []*LandInfo {
@@ -1953,7 +2428,7 @@ type RemovePlantRequest struct {
 
 func (x *RemovePlantRequest) Reset() {
 	*x = RemovePlantRequest{}
-	mi := &file_plantpb_proto_msgTypes[26]
+	mi := &file_plantpb_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1965,7 +2440,7 @@ func (x *RemovePlantRequest) String() string {
 func (*RemovePlantRequest) ProtoMessage() {}
 
 func (x *RemovePlantRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[26]
+	mi := &file_plantpb_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1978,7 +2453,7 @@ func (x *RemovePlantRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemovePlantRequest.ProtoReflect.Descriptor instead.
 func (*RemovePlantRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{26}
+	return file_plantpb_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *RemovePlantRequest) GetLandIds() []int64 {
@@ -1998,7 +2473,7 @@ type RemovePlantReply struct {
 
 func (x *RemovePlantReply) Reset() {
 	*x = RemovePlantReply{}
-	mi := &file_plantpb_proto_msgTypes[27]
+	mi := &file_plantpb_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2010,7 +2485,7 @@ func (x *RemovePlantReply) String() string {
 func (*RemovePlantReply) ProtoMessage() {}
 
 func (x *RemovePlantReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[27]
+	mi := &file_plantpb_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2023,7 +2498,7 @@ func (x *RemovePlantReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemovePlantReply.ProtoReflect.Descriptor instead.
 func (*RemovePlantReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{27}
+	return file_plantpb_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *RemovePlantReply) GetLand() []*LandInfo {
@@ -2051,7 +2526,7 @@ type FertilizeRequest struct {
 
 func (x *FertilizeRequest) Reset() {
 	*x = FertilizeRequest{}
-	mi := &file_plantpb_proto_msgTypes[28]
+	mi := &file_plantpb_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2063,7 +2538,7 @@ func (x *FertilizeRequest) String() string {
 func (*FertilizeRequest) ProtoMessage() {}
 
 func (x *FertilizeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[28]
+	mi := &file_plantpb_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2076,7 +2551,7 @@ func (x *FertilizeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FertilizeRequest.ProtoReflect.Descriptor instead.
 func (*FertilizeRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{28}
+	return file_plantpb_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *FertilizeRequest) GetLandIds() []int64 {
@@ -2093,18 +2568,73 @@ func (x *FertilizeRequest) GetFertilizerId() int64 {
 	return 0
 }
 
+// 单次施肥实际消耗。field 1 的语义尚未完全确认；field 3 已通过
+// FertilizeReply 与紧随其后的 ItemNotify 交叉验证为本次消耗的肥料秒数。
+type FertilizerUse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Field_1       int64                  `protobuf:"varint,1,opt,name=field_1,json=field1,proto3" json:"field_1,omitempty"`
+	Consumed      *corepb.Item           `protobuf:"bytes,3,opt,name=consumed,proto3" json:"consumed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FertilizerUse) Reset() {
+	*x = FertilizerUse{}
+	mi := &file_plantpb_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FertilizerUse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FertilizerUse) ProtoMessage() {}
+
+func (x *FertilizerUse) ProtoReflect() protoreflect.Message {
+	mi := &file_plantpb_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FertilizerUse.ProtoReflect.Descriptor instead.
+func (*FertilizerUse) Descriptor() ([]byte, []int) {
+	return file_plantpb_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *FertilizerUse) GetField_1() int64 {
+	if x != nil {
+		return x.Field_1
+	}
+	return 0
+}
+
+func (x *FertilizerUse) GetConsumed() *corepb.Item {
+	if x != nil {
+		return x.Consumed
+	}
+	return nil
+}
+
 type FertilizeReply struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Land            []*LandInfo            `protobuf:"bytes,1,rep,name=land,proto3" json:"land,omitempty"`
 	OperationLimits []*OperationLimit      `protobuf:"bytes,2,rep,name=operation_limits,json=operationLimits,proto3" json:"operation_limits,omitempty"`
-	Fertilizer      int64                  `protobuf:"varint,3,opt,name=fertilizer,proto3" json:"fertilizer,omitempty"` // 剩余肥料时间
+	Fertilizer      *corepb.Item           `protobuf:"bytes,3,opt,name=fertilizer,proto3" json:"fertilizer,omitempty"`                            // 肥料 ID 与剩余肥料时间
+	FertilizerUse   *FertilizerUse         `protobuf:"bytes,4,opt,name=fertilizer_use,json=fertilizerUse,proto3" json:"fertilizer_use,omitempty"` // 本次实际消耗
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
 
 func (x *FertilizeReply) Reset() {
 	*x = FertilizeReply{}
-	mi := &file_plantpb_proto_msgTypes[29]
+	mi := &file_plantpb_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2116,7 +2646,7 @@ func (x *FertilizeReply) String() string {
 func (*FertilizeReply) ProtoMessage() {}
 
 func (x *FertilizeReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[29]
+	mi := &file_plantpb_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2129,7 +2659,7 @@ func (x *FertilizeReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FertilizeReply.ProtoReflect.Descriptor instead.
 func (*FertilizeReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{29}
+	return file_plantpb_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *FertilizeReply) GetLand() []*LandInfo {
@@ -2146,11 +2676,18 @@ func (x *FertilizeReply) GetOperationLimits() []*OperationLimit {
 	return nil
 }
 
-func (x *FertilizeReply) GetFertilizer() int64 {
+func (x *FertilizeReply) GetFertilizer() *corepb.Item {
 	if x != nil {
 		return x.Fertilizer
 	}
-	return 0
+	return nil
+}
+
+func (x *FertilizeReply) GetFertilizerUse() *FertilizerUse {
+	if x != nil {
+		return x.FertilizerUse
+	}
+	return nil
 }
 
 // --- 放虫 ---
@@ -2164,7 +2701,7 @@ type PutInsectsRequest struct {
 
 func (x *PutInsectsRequest) Reset() {
 	*x = PutInsectsRequest{}
-	mi := &file_plantpb_proto_msgTypes[30]
+	mi := &file_plantpb_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2176,7 +2713,7 @@ func (x *PutInsectsRequest) String() string {
 func (*PutInsectsRequest) ProtoMessage() {}
 
 func (x *PutInsectsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[30]
+	mi := &file_plantpb_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2189,7 +2726,7 @@ func (x *PutInsectsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutInsectsRequest.ProtoReflect.Descriptor instead.
 func (*PutInsectsRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{30}
+	return file_plantpb_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *PutInsectsRequest) GetHostGid() int64 {
@@ -2216,7 +2753,7 @@ type PutInsectsReply struct {
 
 func (x *PutInsectsReply) Reset() {
 	*x = PutInsectsReply{}
-	mi := &file_plantpb_proto_msgTypes[31]
+	mi := &file_plantpb_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2228,7 +2765,7 @@ func (x *PutInsectsReply) String() string {
 func (*PutInsectsReply) ProtoMessage() {}
 
 func (x *PutInsectsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[31]
+	mi := &file_plantpb_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2241,7 +2778,7 @@ func (x *PutInsectsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutInsectsReply.ProtoReflect.Descriptor instead.
 func (*PutInsectsReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{31}
+	return file_plantpb_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *PutInsectsReply) GetLand() []*LandInfo {
@@ -2269,7 +2806,7 @@ type PutWeedsRequest struct {
 
 func (x *PutWeedsRequest) Reset() {
 	*x = PutWeedsRequest{}
-	mi := &file_plantpb_proto_msgTypes[32]
+	mi := &file_plantpb_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2281,7 +2818,7 @@ func (x *PutWeedsRequest) String() string {
 func (*PutWeedsRequest) ProtoMessage() {}
 
 func (x *PutWeedsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[32]
+	mi := &file_plantpb_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2294,7 +2831,7 @@ func (x *PutWeedsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutWeedsRequest.ProtoReflect.Descriptor instead.
 func (*PutWeedsRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{32}
+	return file_plantpb_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *PutWeedsRequest) GetHostGid() int64 {
@@ -2321,7 +2858,7 @@ type PutWeedsReply struct {
 
 func (x *PutWeedsReply) Reset() {
 	*x = PutWeedsReply{}
-	mi := &file_plantpb_proto_msgTypes[33]
+	mi := &file_plantpb_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2333,7 +2870,7 @@ func (x *PutWeedsReply) String() string {
 func (*PutWeedsReply) ProtoMessage() {}
 
 func (x *PutWeedsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[33]
+	mi := &file_plantpb_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2346,7 +2883,7 @@ func (x *PutWeedsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutWeedsReply.ProtoReflect.Descriptor instead.
 func (*PutWeedsReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{33}
+	return file_plantpb_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *PutWeedsReply) GetLand() []*LandInfo {
@@ -2373,7 +2910,7 @@ type UpgradeLandRequest struct {
 
 func (x *UpgradeLandRequest) Reset() {
 	*x = UpgradeLandRequest{}
-	mi := &file_plantpb_proto_msgTypes[34]
+	mi := &file_plantpb_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2385,7 +2922,7 @@ func (x *UpgradeLandRequest) String() string {
 func (*UpgradeLandRequest) ProtoMessage() {}
 
 func (x *UpgradeLandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[34]
+	mi := &file_plantpb_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2398,7 +2935,7 @@ func (x *UpgradeLandRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpgradeLandRequest.ProtoReflect.Descriptor instead.
 func (*UpgradeLandRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{34}
+	return file_plantpb_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *UpgradeLandRequest) GetLandId() int64 {
@@ -2417,7 +2954,7 @@ type UpgradeLandReply struct {
 
 func (x *UpgradeLandReply) Reset() {
 	*x = UpgradeLandReply{}
-	mi := &file_plantpb_proto_msgTypes[35]
+	mi := &file_plantpb_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2429,7 +2966,7 @@ func (x *UpgradeLandReply) String() string {
 func (*UpgradeLandReply) ProtoMessage() {}
 
 func (x *UpgradeLandReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[35]
+	mi := &file_plantpb_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2442,7 +2979,7 @@ func (x *UpgradeLandReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpgradeLandReply.ProtoReflect.Descriptor instead.
 func (*UpgradeLandReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{35}
+	return file_plantpb_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *UpgradeLandReply) GetLand() *LandInfo {
@@ -2463,7 +3000,7 @@ type UnlockLandRequest struct {
 
 func (x *UnlockLandRequest) Reset() {
 	*x = UnlockLandRequest{}
-	mi := &file_plantpb_proto_msgTypes[36]
+	mi := &file_plantpb_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2475,7 +3012,7 @@ func (x *UnlockLandRequest) String() string {
 func (*UnlockLandRequest) ProtoMessage() {}
 
 func (x *UnlockLandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[36]
+	mi := &file_plantpb_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2488,7 +3025,7 @@ func (x *UnlockLandRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnlockLandRequest.ProtoReflect.Descriptor instead.
 func (*UnlockLandRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{36}
+	return file_plantpb_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *UnlockLandRequest) GetLandId() int64 {
@@ -2514,7 +3051,7 @@ type UnlockLandReply struct {
 
 func (x *UnlockLandReply) Reset() {
 	*x = UnlockLandReply{}
-	mi := &file_plantpb_proto_msgTypes[37]
+	mi := &file_plantpb_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2526,7 +3063,7 @@ func (x *UnlockLandReply) String() string {
 func (*UnlockLandReply) ProtoMessage() {}
 
 func (x *UnlockLandReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[37]
+	mi := &file_plantpb_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2539,7 +3076,7 @@ func (x *UnlockLandReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnlockLandReply.ProtoReflect.Descriptor instead.
 func (*UnlockLandReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{37}
+	return file_plantpb_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *UnlockLandReply) GetLand() *LandInfo {
@@ -2561,7 +3098,7 @@ type PutSocialItemRequest struct {
 
 func (x *PutSocialItemRequest) Reset() {
 	*x = PutSocialItemRequest{}
-	mi := &file_plantpb_proto_msgTypes[38]
+	mi := &file_plantpb_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2573,7 +3110,7 @@ func (x *PutSocialItemRequest) String() string {
 func (*PutSocialItemRequest) ProtoMessage() {}
 
 func (x *PutSocialItemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[38]
+	mi := &file_plantpb_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2586,7 +3123,7 @@ func (x *PutSocialItemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutSocialItemRequest.ProtoReflect.Descriptor instead.
 func (*PutSocialItemRequest) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{38}
+	return file_plantpb_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *PutSocialItemRequest) GetHostGid() int64 {
@@ -2621,7 +3158,7 @@ type ItemChange struct {
 
 func (x *ItemChange) Reset() {
 	*x = ItemChange{}
-	mi := &file_plantpb_proto_msgTypes[39]
+	mi := &file_plantpb_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2633,7 +3170,7 @@ func (x *ItemChange) String() string {
 func (*ItemChange) ProtoMessage() {}
 
 func (x *ItemChange) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[39]
+	mi := &file_plantpb_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2646,7 +3183,7 @@ func (x *ItemChange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ItemChange.ProtoReflect.Descriptor instead.
 func (*ItemChange) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{39}
+	return file_plantpb_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *ItemChange) GetLandId() int64 {
@@ -2682,7 +3219,7 @@ type PutSocialItemReply struct {
 
 func (x *PutSocialItemReply) Reset() {
 	*x = PutSocialItemReply{}
-	mi := &file_plantpb_proto_msgTypes[40]
+	mi := &file_plantpb_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2694,7 +3231,7 @@ func (x *PutSocialItemReply) String() string {
 func (*PutSocialItemReply) ProtoMessage() {}
 
 func (x *PutSocialItemReply) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[40]
+	mi := &file_plantpb_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2707,7 +3244,7 @@ func (x *PutSocialItemReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutSocialItemReply.ProtoReflect.Descriptor instead.
 func (*PutSocialItemReply) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{40}
+	return file_plantpb_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *PutSocialItemReply) GetLand() *LandInfo {
@@ -2749,7 +3286,7 @@ type LandsNotify struct {
 
 func (x *LandsNotify) Reset() {
 	*x = LandsNotify{}
-	mi := &file_plantpb_proto_msgTypes[41]
+	mi := &file_plantpb_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2761,7 +3298,7 @@ func (x *LandsNotify) String() string {
 func (*LandsNotify) ProtoMessage() {}
 
 func (x *LandsNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[41]
+	mi := &file_plantpb_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2774,7 +3311,7 @@ func (x *LandsNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LandsNotify.ProtoReflect.Descriptor instead.
 func (*LandsNotify) Descriptor() ([]byte, []int) {
-	return file_plantpb_proto_rawDescGZIP(), []int{41}
+	return file_plantpb_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *LandsNotify) GetLands() []*LandInfo {
@@ -2785,6 +3322,59 @@ func (x *LandsNotify) GetLands() []*LandInfo {
 }
 
 func (x *LandsNotify) GetHostGid() int64 {
+	if x != nil {
+		return x.HostGid
+	}
+	return 0
+}
+
+// 青蛙等农场级社交事件变化；清空事件时 social_events 为空。
+type FarmSocialEventsNotify struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SocialEvents  []*FarmSocialEvent     `protobuf:"bytes,1,rep,name=social_events,json=socialEvents,proto3" json:"social_events,omitempty"`
+	HostGid       int64                  `protobuf:"varint,2,opt,name=host_gid,json=hostGid,proto3" json:"host_gid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FarmSocialEventsNotify) Reset() {
+	*x = FarmSocialEventsNotify{}
+	mi := &file_plantpb_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FarmSocialEventsNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FarmSocialEventsNotify) ProtoMessage() {}
+
+func (x *FarmSocialEventsNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_plantpb_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FarmSocialEventsNotify.ProtoReflect.Descriptor instead.
+func (*FarmSocialEventsNotify) Descriptor() ([]byte, []int) {
+	return file_plantpb_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *FarmSocialEventsNotify) GetSocialEvents() []*FarmSocialEvent {
+	if x != nil {
+		return x.SocialEvents
+	}
+	return nil
+}
+
+func (x *FarmSocialEventsNotify) GetHostGid() int64 {
 	if x != nil {
 		return x.HostGid
 	}
@@ -2803,7 +3393,7 @@ type LandInfo_Buff struct {
 
 func (x *LandInfo_Buff) Reset() {
 	*x = LandInfo_Buff{}
-	mi := &file_plantpb_proto_msgTypes[42]
+	mi := &file_plantpb_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2815,7 +3405,7 @@ func (x *LandInfo_Buff) String() string {
 func (*LandInfo_Buff) ProtoMessage() {}
 
 func (x *LandInfo_Buff) ProtoReflect() protoreflect.Message {
-	mi := &file_plantpb_proto_msgTypes[42]
+	mi := &file_plantpb_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2880,18 +3470,19 @@ const file_plantpb_proto_rawDesc = "" +
 	"\x04Buff\x12*\n" +
 	"\x11plant_yield_bonus\x18\x01 \x01(\x03R\x0fplantYieldBonus\x126\n" +
 	"\x17planting_time_reduction\x18\x02 \x01(\x03R\x15plantingTimeReduction\x12&\n" +
-	"\x0fplant_exp_bonus\x18\x03 \x01(\x03R\rplantExpBonus\"Q\n" +
-	"\x13LandUnlockCondition\x12\x1d\n" +
+	"\x0fplant_exp_bonus\x18\x03 \x01(\x03R\rplantExpBonus\"}\n" +
+	"\x13LandUnlockCondition\x12*\n" +
+	"\x11preceding_land_id\x18\x01 \x01(\x03R\x0fprecedingLandId\x12\x1d\n" +
 	"\n" +
-	"need_level\x18\x01 \x01(\x03R\tneedLevel\x12\x1b\n" +
-	"\tneed_gold\x18\x02 \x01(\x03R\bneedGold\"R\n" +
-	"\x14LandUpgradeCondition\x12\x1d\n" +
-	"\n" +
-	"need_level\x18\x01 \x01(\x03R\tneedLevel\x12\x1b\n" +
-	"\tneed_gold\x18\x02 \x01(\x03R\bneedGold\"1\n" +
+	"need_level\x18\x02 \x01(\x03R\tneedLevel\x12\x1b\n" +
+	"\tneed_gold\x18\x03 \x01(\x03R\bneedGold\"\x9b\x01\n" +
+	"\x14LandUpgradeCondition\x12%\n" +
+	"\x0econdition_type\x18\x01 \x01(\x03R\rconditionType\x12'\n" +
+	"\x0fcondition_value\x18\x02 \x01(\x03R\x0econditionValue\x123\n" +
+	"\x0erequired_items\x18\x03 \x03(\v2\f.corepb.ItemR\rrequiredItems\"1\n" +
 	"\vStealPlayer\x12\x10\n" +
 	"\x03gid\x18\x01 \x01(\x03R\x03gid\x12\x10\n" +
-	"\x03num\x18\x02 \x01(\x03R\x03num\"\xb7\a\n" +
+	"\x03num\x18\x02 \x01(\x03R\x03num\"\xfc\t\n" +
 	"\tPlantInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x126\n" +
@@ -2920,9 +3511,35 @@ const file_plantpb_proto_rawDesc = "" +
 	"\bfield_26\x18\x1a \x01(\x03R\afield26\x12\x19\n" +
 	"\bfield_27\x18\x1b \x01(\x03R\afield27\x12\x19\n" +
 	"\bfield_32\x18  \x01(\fR\afield32\x129\n" +
-	"\bfield_34\x18\" \x01(\v2\x1e.gamepb.plantpb.PlantLimitInfoR\afield34\x12<\n" +
+	"\bfield_34\x18\" \x01(\v2\x1e.gamepb.plantpb.PlantLimitInfoR\afield34\x12R\n" +
+	"\x10interaction_uses\x18# \x03(\v2'.gamepb.plantpb.PlantInteractionUseInfoR\x0finteractionUses\x12<\n" +
 	"\bfield_36\x18$ \x01(\v2!.gamepb.plantpb.PlantActivityInfoR\afield36\x12\x19\n" +
-	"\bfield_37\x18% \x01(\x03R\afield37\"Y\n" +
+	"\bfield_37\x18% \x01(\x03R\afield37\x12[\n" +
+	"\x13interaction_targets\x18& \x03(\v2*.gamepb.plantpb.PlantInteractionTargetInfoR\x12interactionTargets\x12>\n" +
+	"\bfield_40\x18( \x03(\v2#.gamepb.plantpb.PlantExtendedStatusR\afield40\x12R\n" +
+	"\x12extended_mutations\x18) \x03(\v2#.gamepb.plantpb.PlantMutationRecordR\x11extendedMutations\"\xa2\x01\n" +
+	"\x17PlantInteractionUseInfo\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\x12\x1f\n" +
+	"\veffect_type\x18\x03 \x01(\x03R\n" +
+	"effectType\x12\x19\n" +
+	"\bhost_gid\x18\x04 \x01(\x03R\ahostGid\x12\x1c\n" +
+	"\ttimestamp\x18\x05 \x01(\x03R\ttimestamp\"\x87\x01\n" +
+	"\x1aPlantInteractionTargetInfo\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12\x19\n" +
+	"\bhost_gid\x18\x02 \x01(\x03R\ahostGid\x12\x1c\n" +
+	"\ttimestamp\x18\x03 \x01(\x03R\ttimestamp\x12\x17\n" +
+	"\aland_id\x18\x04 \x01(\x03R\x06landId\"G\n" +
+	"\x13PlantExtendedStatus\x12\x17\n" +
+	"\avalue_1\x18\x01 \x01(\x03R\x06value1\x12\x17\n" +
+	"\avalue_2\x18\x02 \x01(\x03R\x06value2\"\xc1\x01\n" +
+	"\x13PlantMutationRecord\x12\x1c\n" +
+	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\x12(\n" +
+	"\x10mutant_config_id\x18\x02 \x01(\x03R\x0emutantConfigId\x12\x17\n" +
+	"\afield_3\x18\x03 \x01(\x03R\x06field3\x12\x17\n" +
+	"\afield_4\x18\x04 \x01(\x03R\x06field4\x12\x17\n" +
+	"\afield_5\x18\x05 \x01(\x03R\x06field5\x12\x17\n" +
+	"\afield_6\x18\x06 \x01(\x03R\x06field6\"Y\n" +
 	"\x0ePlantLimitInfo\x12\x1b\n" +
 	"\tconfig_id\x18\x01 \x01(\x03R\bconfigId\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x03R\x05limit\x12\x14\n" +
@@ -2968,10 +3585,16 @@ const file_plantpb_proto_rawDesc = "" +
 	"\x0fday_ex_times_lt\x18\x06 \x01(\x03R\fdayExTimesLt\x12'\n" +
 	"\x10day_exp_share_id\x18\a \x01(\x03R\rdayExpShareId\",\n" +
 	"\x0fAllLandsRequest\x12\x19\n" +
-	"\bhost_gid\x18\x01 \x01(\x03R\ahostGid\"\x8a\x01\n" +
+	"\bhost_gid\x18\x01 \x01(\x03R\ahostGid\"i\n" +
+	"\x0fFarmSocialEvent\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12\x1f\n" +
+	"\vvisitor_gid\x18\x02 \x01(\x03R\n" +
+	"visitorGid\x12\x1c\n" +
+	"\ttimestamp\x18\x03 \x01(\x03R\ttimestamp\"\xd0\x01\n" +
 	"\rAllLandsReply\x12.\n" +
 	"\x05lands\x18\x01 \x03(\v2\x18.gamepb.plantpb.LandInfoR\x05lands\x12I\n" +
-	"\x10operation_limits\x18\x02 \x03(\v2\x1e.gamepb.plantpb.OperationLimitR\x0foperationLimits\"]\n" +
+	"\x10operation_limits\x18\x02 \x03(\v2\x1e.gamepb.plantpb.OperationLimitR\x0foperationLimits\x12D\n" +
+	"\rsocial_events\x18\x03 \x03(\v2\x1f.gamepb.plantpb.FarmSocialEventR\fsocialEvents\"]\n" +
 	"\x0eHarvestRequest\x12\x19\n" +
 	"\bland_ids\x18\x01 \x03(\x03R\alandIds\x12\x19\n" +
 	"\bhost_gid\x18\x02 \x01(\x03R\ahostGid\x12\x15\n" +
@@ -2984,19 +3607,24 @@ const file_plantpb_proto_rawDesc = "" +
 	"\bhost_gid\x18\x02 \x01(\x03R\ahostGid\"\x89\x01\n" +
 	"\x0eWaterLandReply\x12,\n" +
 	"\x04land\x18\x01 \x03(\v2\x18.gamepb.plantpb.LandInfoR\x04land\x12I\n" +
-	"\x10operation_limits\x18\x02 \x03(\v2\x1e.gamepb.plantpb.OperationLimitR\x0foperationLimits\"x\n" +
+	"\x10operation_limits\x18\x02 \x03(\v2\x1e.gamepb.plantpb.OperationLimitR\x0foperationLimits\"\xaf\x01\n" +
 	"\x0eFarmingRequest\x12\x19\n" +
 	"\bland_ids\x18\x01 \x03(\x03R\alandIds\x12\x19\n" +
 	"\bhost_gid\x18\x02 \x01(\x03R\ahostGid\x12\x17\n" +
 	"\afield_3\x18\x03 \x01(\x05R\x06field3\x12\x17\n" +
-	"\afield_4\x18\x04 \x01(\x05R\x06field4\"N\n" +
+	"\afield_4\x18\x04 \x01(\x05R\x06field4\x125\n" +
+	"\x15social_event_item_ids\x18\x05 \x03(\x03B\x02\x10\x01R\x12socialEventItemIds\"N\n" +
 	"\rFarmingResult\x12\x17\n" +
 	"\aland_id\x18\x01 \x01(\x03R\x06landId\x12$\n" +
-	"\x06reward\x18\x02 \x01(\v2\f.corepb.ItemR\x06reward\"\xc0\x01\n" +
+	"\x06reward\x18\x02 \x01(\v2\f.corepb.ItemR\x06reward\"Y\n" +
+	"\x18FarmingSocialEventReward\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12$\n" +
+	"\x06reward\x18\x02 \x01(\v2\f.corepb.ItemR\x06reward\"\x9c\x02\n" +
 	"\fFarmingReply\x12,\n" +
 	"\x04land\x18\x01 \x03(\v2\x18.gamepb.plantpb.LandInfoR\x04land\x12I\n" +
 	"\x10operation_limits\x18\x02 \x03(\v2\x1e.gamepb.plantpb.OperationLimitR\x0foperationLimits\x127\n" +
-	"\aresults\x18\x03 \x03(\v2\x1d.gamepb.plantpb.FarmingResultR\aresults\"F\n" +
+	"\aresults\x18\x03 \x03(\v2\x1d.gamepb.plantpb.FarmingResultR\aresults\x12Z\n" +
+	"\x14social_event_rewards\x18\x04 \x03(\v2(.gamepb.plantpb.FarmingSocialEventRewardR\x12socialEventRewards\"F\n" +
 	"\x0eWeedOutRequest\x12\x19\n" +
 	"\bland_ids\x18\x01 \x03(\x03R\alandIds\x12\x19\n" +
 	"\bhost_gid\x18\x02 \x01(\x03R\ahostGid\"\x87\x01\n" +
@@ -3031,13 +3659,17 @@ const file_plantpb_proto_rawDesc = "" +
 	"\x10operation_limits\x18\x02 \x03(\v2\x1e.gamepb.plantpb.OperationLimitR\x0foperationLimits\"R\n" +
 	"\x10FertilizeRequest\x12\x19\n" +
 	"\bland_ids\x18\x01 \x03(\x03R\alandIds\x12#\n" +
-	"\rfertilizer_id\x18\x02 \x01(\x03R\ffertilizerId\"\xa9\x01\n" +
+	"\rfertilizer_id\x18\x02 \x01(\x03R\ffertilizerId\"R\n" +
+	"\rFertilizerUse\x12\x17\n" +
+	"\afield_1\x18\x01 \x01(\x03R\x06field1\x12(\n" +
+	"\bconsumed\x18\x03 \x01(\v2\f.corepb.ItemR\bconsumed\"\xfd\x01\n" +
 	"\x0eFertilizeReply\x12,\n" +
 	"\x04land\x18\x01 \x03(\v2\x18.gamepb.plantpb.LandInfoR\x04land\x12I\n" +
-	"\x10operation_limits\x18\x02 \x03(\v2\x1e.gamepb.plantpb.OperationLimitR\x0foperationLimits\x12\x1e\n" +
+	"\x10operation_limits\x18\x02 \x03(\v2\x1e.gamepb.plantpb.OperationLimitR\x0foperationLimits\x12,\n" +
 	"\n" +
-	"fertilizer\x18\x03 \x01(\x03R\n" +
-	"fertilizer\"I\n" +
+	"fertilizer\x18\x03 \x01(\v2\f.corepb.ItemR\n" +
+	"fertilizer\x12D\n" +
+	"\x0efertilizer_use\x18\x04 \x01(\v2\x1d.gamepb.plantpb.FertilizerUseR\rfertilizerUse\"I\n" +
 	"\x11PutInsectsRequest\x12\x19\n" +
 	"\bhost_gid\x18\x01 \x01(\x03R\ahostGid\x12\x19\n" +
 	"\bland_ids\x18\x02 \x03(\x03R\alandIds\"\x8a\x01\n" +
@@ -3075,6 +3707,9 @@ const file_plantpb_proto_rawDesc = "" +
 	"\bconsumed\x18\x04 \x03(\v2\x1a.gamepb.plantpb.ItemChangeR\bconsumed\"X\n" +
 	"\vLandsNotify\x12.\n" +
 	"\x05lands\x18\x01 \x03(\v2\x18.gamepb.plantpb.LandInfoR\x05lands\x12\x19\n" +
+	"\bhost_gid\x18\x02 \x01(\x03R\ahostGid\"y\n" +
+	"\x16FarmSocialEventsNotify\x12D\n" +
+	"\rsocial_events\x18\x01 \x03(\v2\x1f.gamepb.plantpb.FarmSocialEventR\fsocialEvents\x12\x19\n" +
 	"\bhost_gid\x18\x02 \x01(\x03R\ahostGid*\x82\x01\n" +
 	"\n" +
 	"PlantPhase\x12\x11\n" +
@@ -3101,104 +3736,124 @@ func file_plantpb_proto_rawDescGZIP() []byte {
 }
 
 var file_plantpb_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_plantpb_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
+var file_plantpb_proto_msgTypes = make([]protoimpl.MessageInfo, 53)
 var file_plantpb_proto_goTypes = []any{
-	(PlantPhase)(0),              // 0: gamepb.plantpb.PlantPhase
-	(*LandInfo)(nil),             // 1: gamepb.plantpb.LandInfo
-	(*LandUnlockCondition)(nil),  // 2: gamepb.plantpb.LandUnlockCondition
-	(*LandUpgradeCondition)(nil), // 3: gamepb.plantpb.LandUpgradeCondition
-	(*StealPlayer)(nil),          // 4: gamepb.plantpb.StealPlayer
-	(*PlantInfo)(nil),            // 5: gamepb.plantpb.PlantInfo
-	(*PlantLimitInfo)(nil),       // 6: gamepb.plantpb.PlantLimitInfo
-	(*PlantActivityInfo)(nil),    // 7: gamepb.plantpb.PlantActivityInfo
-	(*PlantPhaseInfo)(nil),       // 8: gamepb.plantpb.PlantPhaseInfo
-	(*MutantInfo)(nil),           // 9: gamepb.plantpb.MutantInfo
-	(*OperationLimit)(nil),       // 10: gamepb.plantpb.OperationLimit
-	(*AllLandsRequest)(nil),      // 11: gamepb.plantpb.AllLandsRequest
-	(*AllLandsReply)(nil),        // 12: gamepb.plantpb.AllLandsReply
-	(*HarvestRequest)(nil),       // 13: gamepb.plantpb.HarvestRequest
-	(*HarvestReply)(nil),         // 14: gamepb.plantpb.HarvestReply
-	(*WaterLandRequest)(nil),     // 15: gamepb.plantpb.WaterLandRequest
-	(*WaterLandReply)(nil),       // 16: gamepb.plantpb.WaterLandReply
-	(*FarmingRequest)(nil),       // 17: gamepb.plantpb.FarmingRequest
-	(*FarmingResult)(nil),        // 18: gamepb.plantpb.FarmingResult
-	(*FarmingReply)(nil),         // 19: gamepb.plantpb.FarmingReply
-	(*WeedOutRequest)(nil),       // 20: gamepb.plantpb.WeedOutRequest
-	(*WeedOutReply)(nil),         // 21: gamepb.plantpb.WeedOutReply
-	(*InsecticideRequest)(nil),   // 22: gamepb.plantpb.InsecticideRequest
-	(*InsecticideReply)(nil),     // 23: gamepb.plantpb.InsecticideReply
-	(*PlantItem)(nil),            // 24: gamepb.plantpb.PlantItem
-	(*PlantRequest)(nil),         // 25: gamepb.plantpb.PlantRequest
-	(*PlantReply)(nil),           // 26: gamepb.plantpb.PlantReply
-	(*RemovePlantRequest)(nil),   // 27: gamepb.plantpb.RemovePlantRequest
-	(*RemovePlantReply)(nil),     // 28: gamepb.plantpb.RemovePlantReply
-	(*FertilizeRequest)(nil),     // 29: gamepb.plantpb.FertilizeRequest
-	(*FertilizeReply)(nil),       // 30: gamepb.plantpb.FertilizeReply
-	(*PutInsectsRequest)(nil),    // 31: gamepb.plantpb.PutInsectsRequest
-	(*PutInsectsReply)(nil),      // 32: gamepb.plantpb.PutInsectsReply
-	(*PutWeedsRequest)(nil),      // 33: gamepb.plantpb.PutWeedsRequest
-	(*PutWeedsReply)(nil),        // 34: gamepb.plantpb.PutWeedsReply
-	(*UpgradeLandRequest)(nil),   // 35: gamepb.plantpb.UpgradeLandRequest
-	(*UpgradeLandReply)(nil),     // 36: gamepb.plantpb.UpgradeLandReply
-	(*UnlockLandRequest)(nil),    // 37: gamepb.plantpb.UnlockLandRequest
-	(*UnlockLandReply)(nil),      // 38: gamepb.plantpb.UnlockLandReply
-	(*PutSocialItemRequest)(nil), // 39: gamepb.plantpb.PutSocialItemRequest
-	(*ItemChange)(nil),           // 40: gamepb.plantpb.ItemChange
-	(*PutSocialItemReply)(nil),   // 41: gamepb.plantpb.PutSocialItemReply
-	(*LandsNotify)(nil),          // 42: gamepb.plantpb.LandsNotify
-	(*LandInfo_Buff)(nil),        // 43: gamepb.plantpb.LandInfo.Buff
-	nil,                          // 44: gamepb.plantpb.PlantPhaseInfo.FertsUsedEntry
-	nil,                          // 45: gamepb.plantpb.PlantRequest.LandAndSeedEntry
-	(*corepb.Item)(nil),          // 46: corepb.Item
+	(PlantPhase)(0),                    // 0: gamepb.plantpb.PlantPhase
+	(*LandInfo)(nil),                   // 1: gamepb.plantpb.LandInfo
+	(*LandUnlockCondition)(nil),        // 2: gamepb.plantpb.LandUnlockCondition
+	(*LandUpgradeCondition)(nil),       // 3: gamepb.plantpb.LandUpgradeCondition
+	(*StealPlayer)(nil),                // 4: gamepb.plantpb.StealPlayer
+	(*PlantInfo)(nil),                  // 5: gamepb.plantpb.PlantInfo
+	(*PlantInteractionUseInfo)(nil),    // 6: gamepb.plantpb.PlantInteractionUseInfo
+	(*PlantInteractionTargetInfo)(nil), // 7: gamepb.plantpb.PlantInteractionTargetInfo
+	(*PlantExtendedStatus)(nil),        // 8: gamepb.plantpb.PlantExtendedStatus
+	(*PlantMutationRecord)(nil),        // 9: gamepb.plantpb.PlantMutationRecord
+	(*PlantLimitInfo)(nil),             // 10: gamepb.plantpb.PlantLimitInfo
+	(*PlantActivityInfo)(nil),          // 11: gamepb.plantpb.PlantActivityInfo
+	(*PlantPhaseInfo)(nil),             // 12: gamepb.plantpb.PlantPhaseInfo
+	(*MutantInfo)(nil),                 // 13: gamepb.plantpb.MutantInfo
+	(*OperationLimit)(nil),             // 14: gamepb.plantpb.OperationLimit
+	(*AllLandsRequest)(nil),            // 15: gamepb.plantpb.AllLandsRequest
+	(*FarmSocialEvent)(nil),            // 16: gamepb.plantpb.FarmSocialEvent
+	(*AllLandsReply)(nil),              // 17: gamepb.plantpb.AllLandsReply
+	(*HarvestRequest)(nil),             // 18: gamepb.plantpb.HarvestRequest
+	(*HarvestReply)(nil),               // 19: gamepb.plantpb.HarvestReply
+	(*WaterLandRequest)(nil),           // 20: gamepb.plantpb.WaterLandRequest
+	(*WaterLandReply)(nil),             // 21: gamepb.plantpb.WaterLandReply
+	(*FarmingRequest)(nil),             // 22: gamepb.plantpb.FarmingRequest
+	(*FarmingResult)(nil),              // 23: gamepb.plantpb.FarmingResult
+	(*FarmingSocialEventReward)(nil),   // 24: gamepb.plantpb.FarmingSocialEventReward
+	(*FarmingReply)(nil),               // 25: gamepb.plantpb.FarmingReply
+	(*WeedOutRequest)(nil),             // 26: gamepb.plantpb.WeedOutRequest
+	(*WeedOutReply)(nil),               // 27: gamepb.plantpb.WeedOutReply
+	(*InsecticideRequest)(nil),         // 28: gamepb.plantpb.InsecticideRequest
+	(*InsecticideReply)(nil),           // 29: gamepb.plantpb.InsecticideReply
+	(*PlantItem)(nil),                  // 30: gamepb.plantpb.PlantItem
+	(*PlantRequest)(nil),               // 31: gamepb.plantpb.PlantRequest
+	(*PlantReply)(nil),                 // 32: gamepb.plantpb.PlantReply
+	(*RemovePlantRequest)(nil),         // 33: gamepb.plantpb.RemovePlantRequest
+	(*RemovePlantReply)(nil),           // 34: gamepb.plantpb.RemovePlantReply
+	(*FertilizeRequest)(nil),           // 35: gamepb.plantpb.FertilizeRequest
+	(*FertilizerUse)(nil),              // 36: gamepb.plantpb.FertilizerUse
+	(*FertilizeReply)(nil),             // 37: gamepb.plantpb.FertilizeReply
+	(*PutInsectsRequest)(nil),          // 38: gamepb.plantpb.PutInsectsRequest
+	(*PutInsectsReply)(nil),            // 39: gamepb.plantpb.PutInsectsReply
+	(*PutWeedsRequest)(nil),            // 40: gamepb.plantpb.PutWeedsRequest
+	(*PutWeedsReply)(nil),              // 41: gamepb.plantpb.PutWeedsReply
+	(*UpgradeLandRequest)(nil),         // 42: gamepb.plantpb.UpgradeLandRequest
+	(*UpgradeLandReply)(nil),           // 43: gamepb.plantpb.UpgradeLandReply
+	(*UnlockLandRequest)(nil),          // 44: gamepb.plantpb.UnlockLandRequest
+	(*UnlockLandReply)(nil),            // 45: gamepb.plantpb.UnlockLandReply
+	(*PutSocialItemRequest)(nil),       // 46: gamepb.plantpb.PutSocialItemRequest
+	(*ItemChange)(nil),                 // 47: gamepb.plantpb.ItemChange
+	(*PutSocialItemReply)(nil),         // 48: gamepb.plantpb.PutSocialItemReply
+	(*LandsNotify)(nil),                // 49: gamepb.plantpb.LandsNotify
+	(*FarmSocialEventsNotify)(nil),     // 50: gamepb.plantpb.FarmSocialEventsNotify
+	(*LandInfo_Buff)(nil),              // 51: gamepb.plantpb.LandInfo.Buff
+	nil,                                // 52: gamepb.plantpb.PlantPhaseInfo.FertsUsedEntry
+	nil,                                // 53: gamepb.plantpb.PlantRequest.LandAndSeedEntry
+	(*corepb.Item)(nil),                // 54: corepb.Item
 }
 var file_plantpb_proto_depIdxs = []int32{
 	2,  // 0: gamepb.plantpb.LandInfo.unlock_condition:type_name -> gamepb.plantpb.LandUnlockCondition
 	3,  // 1: gamepb.plantpb.LandInfo.upgrade_condition:type_name -> gamepb.plantpb.LandUpgradeCondition
-	43, // 2: gamepb.plantpb.LandInfo.buff:type_name -> gamepb.plantpb.LandInfo.Buff
+	51, // 2: gamepb.plantpb.LandInfo.buff:type_name -> gamepb.plantpb.LandInfo.Buff
 	5,  // 3: gamepb.plantpb.LandInfo.plant:type_name -> gamepb.plantpb.PlantInfo
-	8,  // 4: gamepb.plantpb.PlantInfo.phases:type_name -> gamepb.plantpb.PlantPhaseInfo
-	6,  // 5: gamepb.plantpb.PlantInfo.field_34:type_name -> gamepb.plantpb.PlantLimitInfo
-	7,  // 6: gamepb.plantpb.PlantInfo.field_36:type_name -> gamepb.plantpb.PlantActivityInfo
-	44, // 7: gamepb.plantpb.PlantPhaseInfo.ferts_used:type_name -> gamepb.plantpb.PlantPhaseInfo.FertsUsedEntry
-	9,  // 8: gamepb.plantpb.PlantPhaseInfo.mutants:type_name -> gamepb.plantpb.MutantInfo
-	1,  // 9: gamepb.plantpb.AllLandsReply.lands:type_name -> gamepb.plantpb.LandInfo
-	10, // 10: gamepb.plantpb.AllLandsReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	1,  // 11: gamepb.plantpb.HarvestReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 12: gamepb.plantpb.HarvestReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	1,  // 13: gamepb.plantpb.WaterLandReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 14: gamepb.plantpb.WaterLandReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	46, // 15: gamepb.plantpb.FarmingResult.reward:type_name -> corepb.Item
-	1,  // 16: gamepb.plantpb.FarmingReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 17: gamepb.plantpb.FarmingReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	18, // 18: gamepb.plantpb.FarmingReply.results:type_name -> gamepb.plantpb.FarmingResult
-	1,  // 19: gamepb.plantpb.WeedOutReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 20: gamepb.plantpb.WeedOutReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	1,  // 21: gamepb.plantpb.InsecticideReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 22: gamepb.plantpb.InsecticideReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	45, // 23: gamepb.plantpb.PlantRequest.land_and_seed:type_name -> gamepb.plantpb.PlantRequest.LandAndSeedEntry
-	24, // 24: gamepb.plantpb.PlantRequest.items:type_name -> gamepb.plantpb.PlantItem
-	1,  // 25: gamepb.plantpb.PlantReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 26: gamepb.plantpb.PlantReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	1,  // 27: gamepb.plantpb.RemovePlantReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 28: gamepb.plantpb.RemovePlantReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	1,  // 29: gamepb.plantpb.FertilizeReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 30: gamepb.plantpb.FertilizeReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	1,  // 31: gamepb.plantpb.PutInsectsReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 32: gamepb.plantpb.PutInsectsReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	1,  // 33: gamepb.plantpb.PutWeedsReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 34: gamepb.plantpb.PutWeedsReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
-	1,  // 35: gamepb.plantpb.UpgradeLandReply.land:type_name -> gamepb.plantpb.LandInfo
-	1,  // 36: gamepb.plantpb.UnlockLandReply.land:type_name -> gamepb.plantpb.LandInfo
-	1,  // 37: gamepb.plantpb.PutSocialItemReply.land:type_name -> gamepb.plantpb.LandInfo
-	10, // 38: gamepb.plantpb.PutSocialItemReply.operation_limit:type_name -> gamepb.plantpb.OperationLimit
-	40, // 39: gamepb.plantpb.PutSocialItemReply.rewards:type_name -> gamepb.plantpb.ItemChange
-	40, // 40: gamepb.plantpb.PutSocialItemReply.consumed:type_name -> gamepb.plantpb.ItemChange
-	1,  // 41: gamepb.plantpb.LandsNotify.lands:type_name -> gamepb.plantpb.LandInfo
-	42, // [42:42] is the sub-list for method output_type
-	42, // [42:42] is the sub-list for method input_type
-	42, // [42:42] is the sub-list for extension type_name
-	42, // [42:42] is the sub-list for extension extendee
-	0,  // [0:42] is the sub-list for field type_name
+	54, // 4: gamepb.plantpb.LandUpgradeCondition.required_items:type_name -> corepb.Item
+	12, // 5: gamepb.plantpb.PlantInfo.phases:type_name -> gamepb.plantpb.PlantPhaseInfo
+	10, // 6: gamepb.plantpb.PlantInfo.field_34:type_name -> gamepb.plantpb.PlantLimitInfo
+	6,  // 7: gamepb.plantpb.PlantInfo.interaction_uses:type_name -> gamepb.plantpb.PlantInteractionUseInfo
+	11, // 8: gamepb.plantpb.PlantInfo.field_36:type_name -> gamepb.plantpb.PlantActivityInfo
+	7,  // 9: gamepb.plantpb.PlantInfo.interaction_targets:type_name -> gamepb.plantpb.PlantInteractionTargetInfo
+	8,  // 10: gamepb.plantpb.PlantInfo.field_40:type_name -> gamepb.plantpb.PlantExtendedStatus
+	9,  // 11: gamepb.plantpb.PlantInfo.extended_mutations:type_name -> gamepb.plantpb.PlantMutationRecord
+	52, // 12: gamepb.plantpb.PlantPhaseInfo.ferts_used:type_name -> gamepb.plantpb.PlantPhaseInfo.FertsUsedEntry
+	13, // 13: gamepb.plantpb.PlantPhaseInfo.mutants:type_name -> gamepb.plantpb.MutantInfo
+	1,  // 14: gamepb.plantpb.AllLandsReply.lands:type_name -> gamepb.plantpb.LandInfo
+	14, // 15: gamepb.plantpb.AllLandsReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	16, // 16: gamepb.plantpb.AllLandsReply.social_events:type_name -> gamepb.plantpb.FarmSocialEvent
+	1,  // 17: gamepb.plantpb.HarvestReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 18: gamepb.plantpb.HarvestReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	1,  // 19: gamepb.plantpb.WaterLandReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 20: gamepb.plantpb.WaterLandReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	54, // 21: gamepb.plantpb.FarmingResult.reward:type_name -> corepb.Item
+	54, // 22: gamepb.plantpb.FarmingSocialEventReward.reward:type_name -> corepb.Item
+	1,  // 23: gamepb.plantpb.FarmingReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 24: gamepb.plantpb.FarmingReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	23, // 25: gamepb.plantpb.FarmingReply.results:type_name -> gamepb.plantpb.FarmingResult
+	24, // 26: gamepb.plantpb.FarmingReply.social_event_rewards:type_name -> gamepb.plantpb.FarmingSocialEventReward
+	1,  // 27: gamepb.plantpb.WeedOutReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 28: gamepb.plantpb.WeedOutReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	1,  // 29: gamepb.plantpb.InsecticideReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 30: gamepb.plantpb.InsecticideReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	53, // 31: gamepb.plantpb.PlantRequest.land_and_seed:type_name -> gamepb.plantpb.PlantRequest.LandAndSeedEntry
+	30, // 32: gamepb.plantpb.PlantRequest.items:type_name -> gamepb.plantpb.PlantItem
+	1,  // 33: gamepb.plantpb.PlantReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 34: gamepb.plantpb.PlantReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	1,  // 35: gamepb.plantpb.RemovePlantReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 36: gamepb.plantpb.RemovePlantReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	54, // 37: gamepb.plantpb.FertilizerUse.consumed:type_name -> corepb.Item
+	1,  // 38: gamepb.plantpb.FertilizeReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 39: gamepb.plantpb.FertilizeReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	54, // 40: gamepb.plantpb.FertilizeReply.fertilizer:type_name -> corepb.Item
+	36, // 41: gamepb.plantpb.FertilizeReply.fertilizer_use:type_name -> gamepb.plantpb.FertilizerUse
+	1,  // 42: gamepb.plantpb.PutInsectsReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 43: gamepb.plantpb.PutInsectsReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	1,  // 44: gamepb.plantpb.PutWeedsReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 45: gamepb.plantpb.PutWeedsReply.operation_limits:type_name -> gamepb.plantpb.OperationLimit
+	1,  // 46: gamepb.plantpb.UpgradeLandReply.land:type_name -> gamepb.plantpb.LandInfo
+	1,  // 47: gamepb.plantpb.UnlockLandReply.land:type_name -> gamepb.plantpb.LandInfo
+	1,  // 48: gamepb.plantpb.PutSocialItemReply.land:type_name -> gamepb.plantpb.LandInfo
+	14, // 49: gamepb.plantpb.PutSocialItemReply.operation_limit:type_name -> gamepb.plantpb.OperationLimit
+	47, // 50: gamepb.plantpb.PutSocialItemReply.rewards:type_name -> gamepb.plantpb.ItemChange
+	47, // 51: gamepb.plantpb.PutSocialItemReply.consumed:type_name -> gamepb.plantpb.ItemChange
+	1,  // 52: gamepb.plantpb.LandsNotify.lands:type_name -> gamepb.plantpb.LandInfo
+	16, // 53: gamepb.plantpb.FarmSocialEventsNotify.social_events:type_name -> gamepb.plantpb.FarmSocialEvent
+	54, // [54:54] is the sub-list for method output_type
+	54, // [54:54] is the sub-list for method input_type
+	54, // [54:54] is the sub-list for extension type_name
+	54, // [54:54] is the sub-list for extension extendee
+	0,  // [0:54] is the sub-list for field type_name
 }
 
 func init() { file_plantpb_proto_init() }
@@ -3212,7 +3867,7 @@ func file_plantpb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_plantpb_proto_rawDesc), len(file_plantpb_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   45,
+			NumMessages:   53,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

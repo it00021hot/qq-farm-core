@@ -84,9 +84,19 @@ farm:
   appId: 'wx5306c5978fdb76e4'
   tsdkGameId: 3167
   tsdkAppKey: '0'
-  clientVersion: '1.13.2.8_20260723'
+  clientVersion: '1.14.0.1_20260909'
   os: 'Windows'
-  pushWebhook: '' # Bark / 企业微信机器人等；账号异常时推送
+  pushWebhook: ''
+  # QQ 官方机器人渠道（rust 语义：AccessToken + Gateway + C2C 单聊）
+  qqBot:
+    appId: ''
+    clientSecret: ''
+    userOpenid: ''
+  # 钉钉群机器人渠道（支持加签）
+  dingtalk:
+    endpoint: ''
+    token: ''
+    secret: '' # Bark / 企业微信机器人等；账号异常时推送
 
 wecom: # 企业微信
   corpId: ''  # 企业ID

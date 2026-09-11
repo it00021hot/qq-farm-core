@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/it00021hot/qq-farm-core/internal/farm/activitycenter"
@@ -21,6 +22,7 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/acepb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/activitypb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/dogpb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/friendpb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/gatepb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/interactpb"
@@ -110,6 +112,25 @@ type Session struct {
 	// LandsNotify 只刷新该好友：GetAll 漏气泡时仍当可偷，进场或 GetAll 追上后清除。
 	friendPlantHints map[int64]friendPlantHint
 	lastFriendPushAt map[int64]time.Time
+	// 好友列表大包纪律（bot visit-strategy TTL 缓存 + api.ts single-flight）：
+	// 巡逻/面板/后台同步并发取列表时合并为一次 GetAll，失败后短时间内用陈旧缓存兜底。
+	friendsMu        sync.Mutex
+	friendsCache     []friendpb.GameFriend
+	friendsCacheAt   time.Time
+	friendsFlight    *friendsFlight
+	friendsFailUntil time.Time
+	// QQ 访客 GID 同步冷却（bot gid-manager：默认 10min，失败重试 30s~2min）。
+	visitorGidSyncAt     time.Time
+	visitorGidSyncFailed time.Time
+// friendPetCache caches per-friend deployed dogs (bot pet-cache.ts).
+	petCache *friendPetCache
+	// friendChecking marks the unified friend patrol in progress (pet-sync yields to it).
+	friendChecking atomic.Bool
+	// dogGiftClaiming single-flights 同气连枝 gift claims.
+	dogGiftClaiming atomic.Bool
+	// msAutoState dedups mystery-shop arrival/purchase notifications.
+	msAutoState mysteryShopAutoState
+
 	// next scheduled tick times for status nextChecks countdowns
 	nextFarmAt        time.Time
 	nextStealAt       time.Time
@@ -120,6 +141,13 @@ type Session struct {
 	sessionExpGained  int64
 	sessionGoldGained int64
 	lastStatusPushAt  time.Time
+}
+
+// friendsFlight merges concurrent friend-list fetches (bot allFriendsRequests).
+type friendsFlight struct {
+	done    chan struct{}
+	friends []friendpb.GameFriend
+	err     error
 }
 
 func newSession(cfg SessionConfig, h *hub.Hub) *Session {
@@ -162,13 +190,13 @@ func (s *Session) setStatus(st AccountStatus, detail string) {
 		}
 	}
 	// Push offline/error alerts once when leaving a healthy/running state.
-	if webhook != "" && st == StatusError && prev != StatusError {
+	if st == StatusError && prev != StatusError {
 		title := fmt.Sprintf("农场账号 %s 异常", accountID)
 		body := detail
 		if body == "" {
 			body = string(st)
 		}
-		go func() { _ = push.Notify(webhook, title, body) }()
+		go push.NotifyAll(webhook, title, body)
 	}
 }
 
@@ -289,6 +317,7 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 		DeviceModel: s.cfg.DeviceModel,
 		OSName:      s.cfg.OSName,
 		SysSoftware: s.cfg.SysSoftware,
+		Platform:    s.cfg.Platform,
 	})
 	if err != nil {
 		ready <- fmt.Errorf("TSDK 初始化失败: %w", err)
@@ -320,7 +349,7 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 		ver = vars.Config.GetString("farm.clientVersion")
 	}
 	if ver == "" {
-		ver = "1.13.2.8_20260723"
+		ver = "1.14.0.1_20260909"
 	}
 	sep := "?"
 	if strings.Contains(url, "?") {
@@ -392,16 +421,23 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 	ready <- nil
 
 	// Post-login loops (aligned with qq-farm-bot): game Heartbeat + ACE.
+	// 请求班次标记对齐 bot request-context.ts：定时任务整体跑在对应班次里，
+	// 内部所有请求自动继承；面板请求无标记 → 默认前台。
 	go s.gameHeartbeatLoop(ctx)
 	go s.aceLoop(ctx)
-	go s.friendLoop(ctx, "steal")
-	go s.friendLoop(ctx, "help")
-	go s.friendLoop(ctx, "bad")
-	go s.runAcceptFriendsBootstrap(ctx)
-	go s.runFriendRefreshBootstrap(ctx)
-	go s.dailyLoop(ctx)
+	// 统一好友巡查循环（bot friendCheckLoop：一位好友只进一次农场做完三件事）。
+	friendCtx := protocol.WithRequestClass(ctx, protocol.ClassFriend)
+	go s.friendCheckLoop(friendCtx)
+	// 好友守卫犬每日同步（background 班次，只有网关空闲时才发）。
+	go s.friendPetSyncLoop(protocol.WithRequestClass(ctx, protocol.ClassBackground))
+	// 神秘商人自动购买（bot：登录后即启动，2 小时一轮）。
+	go s.mysteryShopAutoLoop(protocol.WithRequestClass(ctx, protocol.ClassFarm))
+	go s.runAcceptFriendsBootstrap(friendCtx)
+	go s.runFriendRefreshBootstrap(friendCtx)
+	go s.dailyLoop(protocol.WithRequestClass(ctx, protocol.ClassFarm))
 	go s.runDailyBootstrap(ctx)
 
+	farmCtx := protocol.WithRequestClass(ctx, protocol.ClassFarm)
 	for {
 		delay := s.nextFarmDelay()
 		s.setNextCheckAt("farm", time.Now().Add(delay))
@@ -412,14 +448,14 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 			timer.Stop()
 			return
 		case <-timer.C:
-			s.farmTick(ctx)
+			s.farmTick(farmCtx)
 		}
 	}
 }
 
 func (s *Session) doLogin(ctx context.Context, client *protocol.Client, ver string, dev deviceprofile.Profile) error {
 	if ver == "" {
-		ver = "1.13.2.8_20260723"
+		ver = "1.14.0.1_20260909"
 	}
 	// Exact LoginRequest shape from network.ts sendLogin — sparse DeviceInfo only.
 	sysSoft := dev.SysSoftware
@@ -531,19 +567,19 @@ func (s *Session) postLoginHooks(ctx context.Context) {
 	}
 }
 
-// gameHeartbeatLoop mirrors qq-farm-bot startHeartbeat:
-// UserService.Heartbeat every 25s; kill only after >30s without a heartbeat reply.
+// gameHeartbeatLoop mirrors bot startHeartbeat + keepalive-policy.ts:
+// UserService.Heartbeat every 25s; a reply (even undecodable) resets misses;
+// terminate only after ≥3 misses AND >30s without any inbound frame.
 func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 	const (
 		heartbeatInterval   = 25 * time.Second
-		heartbeatSilence    = 30 * time.Second
 		heartbeatRPCTimeout = 20 * time.Second
-		maxHeartbeatMiss    = 1
+		maxHeartbeatMiss    = 3
+		heartbeatStaleAfter = 30 * time.Second
 	)
 	ticker := time.NewTicker(heartbeatInterval)
 	defer ticker.Stop()
 
-	lastResponse := time.Now()
 	missCount := 0
 
 	for {
@@ -560,21 +596,7 @@ func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 				continue
 			}
 			if ver == "" {
-				ver = "1.13.2.8_20260723"
-			}
-
-			silence := time.Since(lastResponse)
-			if silence > heartbeatSilence {
-				missCount++
-				slog.Warn("farm heartbeat silence",
-					"account", s.id,
-					"silence_sec", int(silence.Seconds()),
-					"miss", missCount,
-				)
-				if missCount >= maxHeartbeatMiss {
-					s.failTransport(fmt.Errorf("protocol: connection closed: heartbeat timeout (%ds no response)", int(silence.Seconds())))
-					return
-				}
+				ver = "1.14.0.1_20260909"
 			}
 
 			heartbeatBody, marshalErr := proto.Marshal(&userpb.HeartbeatRequest{Gid: gid, ClientVersion: ver})
@@ -585,13 +607,30 @@ func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 			raw, _, err := client.Send(hbCtx, "gamepb.userpb.UserService", "Heartbeat", heartbeatBody)
 			cancel()
 			if err != nil {
-				// Node: Heartbeat send/reply errors are swallowed; only silence kills the session.
-				slog.Warn("farm heartbeat failed", "account", s.id, "err", err)
+				// bot: 发送/超时失败只累计 miss；同时必须「连续 miss≥3 且入站静默>30s」才终止。
+				missCount++
+				client.NoteHeartbeatMiss()
+				inboundSilence := time.Duration(client.InboundSilenceMs()) * time.Millisecond
+				slog.Warn("心跳未响应",
+					"account", s.id,
+					"miss", missCount,
+					"max", maxHeartbeatMiss,
+					"inbound_sec", int(inboundSilence.Seconds()),
+					"pending", client.PendingCount(),
+					"queued", client.QueuedCount(),
+				)
+				if missCount >= maxHeartbeatMiss && inboundSilence > heartbeatStaleAfter {
+					slog.Warn("连续心跳超时且连接无入站数据，账号将停止运行", "account", s.id)
+					s.failTransport(fmt.Errorf("protocol: connection closed: %ds 无入站数据，连续 %d 次心跳失败",
+						int(inboundSilence.Seconds()), missCount))
+					return
+				}
 				continue
 			}
 
-			lastResponse = time.Now()
 			missCount = 0
+			client.ClearHeartbeatMisses()
+			// bot: 解码失败不影响心跳成功判定。
 			var reply userpb.HeartbeatReply
 			if proto.Unmarshal(raw, &reply) == nil && reply.GetServerTime() > 0 {
 				logic.SyncServerTime(normalizeServerTimeMs(reply.GetServerTime()))
@@ -935,7 +974,7 @@ func (s *Session) Friends(ctx context.Context) ([]friendpb.GameFriend, error) {
 	if api == nil {
 		return nil, fmt.Errorf("farm session is not connected")
 	}
-	friends, err := loadFriends(ctx, s, api, cfg)
+	friends, err := getFriendsList(ctx, s, api, cfg, false)
 	if err == nil {
 		friends = s.applyFriendStealOverrides(friends)
 		friends = s.applyFriendPushHints(friends)
@@ -1205,7 +1244,7 @@ func (s *Session) SyncFriends(ctx context.Context) error {
 	if api == nil {
 		return fmt.Errorf("farm session is not connected")
 	}
-	friends, err := loadFriends(ctx, s, api, cfg)
+	friends, err := getFriendsList(ctx, s, api, cfg, true)
 	if err != nil {
 		return err
 	}
@@ -1363,6 +1402,23 @@ func (s *Session) GID() int64 {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.gid
+}
+
+// Client returns the live gateway client (nil when disconnected).
+func (s *Session) Client() *protocol.Client {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.client
+}
+
+// FriendCheckRunning reports whether the unified friend patrol is executing.
+func (s *Session) FriendCheckRunning() bool { return s.friendChecking.Load() }
+
+// Level returns the logged-in player level.
+func (s *Session) Level() int64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.playerLevel
 }
 
 // NextChecksSnapshot mirrors bot status_sync nextChecks countdowns (seconds remaining).
@@ -1581,19 +1637,13 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 		return
 	}
 
-	// P1: auto-accept friend applications pushed by the gate.
+	// P1: friend applications pushed by the gate go through the filter flow.
 	if strings.Contains(messageType, "FriendApplicationReceivedNotify") {
 		var notify friendpb.FriendApplicationReceivedNotify
 		if err := proto.Unmarshal(eventBody, &notify); err != nil {
 			return
 		}
-		gids := make([]int64, 0, len(notify.Applications))
-		for _, app := range notify.Applications {
-			if app != nil && app.Gid > 0 {
-				gids = append(gids, app.Gid)
-			}
-		}
-		if len(gids) == 0 {
+		if len(notify.Applications) == 0 {
 			return
 		}
 		s.mu.Lock()
@@ -1604,13 +1654,36 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 			return
 		}
 		go func() {
-			if _, err := api.AcceptFriends(runCtx, gids); err != nil {
+			if _, err := ProcessFriendApplications(runCtx, s, api, notify.Applications); err != nil {
 				slog.Debug("accept friend application notify failed", "account", s.id, "err", err)
-				return
 			}
-			slog.Info("accepted friend applications from notify", "account", s.id, "count", len(gids))
 		}()
 		return
+	}
+
+	// 同气连枝礼包：服务端推送待领取数量时立即整堆拾取（bot dogSkillGiftPending）。
+	if strings.Contains(messageType, "PendingGiftCountNotify") || (service == "gamepb.dogpb.DogService" && method == "PendingGiftCountNotify") {
+		var notify dogpb.PendingGiftCountNotify
+		if err := proto.Unmarshal(eventBody, &notify); err != nil {
+			return
+		}
+		if notify.Count <= 0 {
+			return
+		}
+		s.mu.Lock()
+		api := s.gameAPI
+		runCtx := s.runCtx
+		s.mu.Unlock()
+		if api == nil || runCtx == nil {
+			return
+		}
+		go s.claimDogSkillGifts(protocol.WithRequestClass(runCtx, protocol.ClassFarm), api, notify.Count)
+		return
+	}
+
+	// 雨落成诗：现场天气变化/活动目录变化时清空好友现场天气缓存并作废快照。
+	if strings.Contains(messageType, "WeatherChange") || strings.Contains(messageType, "ActivitiesChange") {
+		activitycenter.ClearFriendWeatherCache()
 	}
 
 	if strings.Contains(messageType, "ItemNotify") || (service == "gamepb.itempb.ItemService" && method == "ItemNotify") {
@@ -1679,7 +1752,7 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 		return
 	}
 	go func() {
-		if _, _, err := s.RunFarmOp(runCtx, "all"); err != nil {
+		if _, _, err := s.RunFarmOp(protocol.WithRequestClass(runCtx, protocol.ClassFarm), "all"); err != nil {
 			slog.Warn("farm push tick failed", "account", s.id, "err", err)
 		}
 	}()
@@ -1713,6 +1786,57 @@ func (s *Session) lastError() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.lastErr
+}
+
+// claimDogSkillGifts picks up all pending "同气连枝" gifts (bot checkAndClaimDogSkillGifts).
+// pendingCountHint > 0 skips the GetDogInfo probe; single-flight via a session flag.
+func (s *Session) claimDogSkillGifts(ctx context.Context, api *game.API, pendingCountHint int64) {
+	if s.dogGiftClaiming.Load() {
+		return
+	}
+	s.dogGiftClaiming.Store(true)
+	defer s.dogGiftClaiming.Store(false)
+
+	pending := pendingCountHint
+	if pending <= 0 {
+		info, err := api.GetDogInfo(ctx)
+		if err != nil {
+			return
+		}
+		pending = info.PendingGiftCount
+	}
+	if pending <= 0 {
+		return
+	}
+	reply, err := api.ClaimSkillGifts(ctx)
+	if err != nil {
+		slog.Warn("拾取同气连枝礼包失败", "account", s.id, "err", err)
+		return
+	}
+	claimed := reply.ClaimedCount
+	itemName := "宠物礼包"
+	if reply.Item != nil && reply.Item.Id > 0 {
+		if info := logic.GetItemByID(reply.Item.Id); info != nil && info.Name != "" {
+			itemName = info.Name
+		} else {
+			itemName = fmt.Sprintf("物品#%d", reply.Item.Id)
+		}
+		if reply.Item.Count > claimed {
+			claimed = reply.Item.Count
+		}
+	}
+	if claimed > 0 {
+		slog.Info("拾取同气连枝礼包", "account", s.id, "item", itemName, "count", claimed)
+		if s.hub != nil {
+			s.hub.PublishJSON("runtime_log", parseAccountID(s.id), map[string]any{
+				"tag":       "宠物",
+				"event":     "领取同气连枝礼包",
+				"message":   fmt.Sprintf("拾取%s x%d", itemName, claimed),
+				"isWarn":    false,
+				"accountId": parseAccountID(s.id),
+			})
+		}
+	}
 }
 
 func (s *Session) applyItemNotify(body []byte) {
@@ -1905,6 +2029,10 @@ func (s *Session) farmTick(ctx context.Context) {
 	if !cfg.Automation.Farm {
 		return
 	}
+	// bot inFarmQuietHours：好友安静时段开着且 continueFarm=false 时，农场任务一并暂停。
+	if logicInQuietHours(cfg) && !cfg.FriendQuietHours.ContinueFarm {
+		return
+	}
 	hadWork, actions, err := s.RunFarmOp(ctx, "all")
 	if err != nil {
 		slog.Warn("farm tick failed", "account", s.id, "err", err)
@@ -1937,23 +2065,29 @@ func (s *Session) farmTick(ctx context.Context) {
 }
 
 // friendLoop keeps friend work independent from farm ticks while serializing game RPCs.
-func (s *Session) friendLoop(ctx context.Context, kind string) {
+// friendCheckLoop is the unified friend patrol loop (bot friendCheckLoop):
+// one pass plans each friend once and does help+steal+bad inside a single visit.
+func (s *Session) friendCheckLoop(ctx context.Context) {
+	// 延迟 5 秒后启动循环，等待登录和首次农场检查完成（bot startFriendCheckLoop）。
+	timer := time.NewTimer(5 * time.Second)
+	select {
+	case <-ctx.Done():
+		timer.Stop()
+		return
+	case <-timer.C:
+	}
 	for {
 		cfg := s.Config()
 		enabled := cfg.Automation.Friend &&
-			((kind == "steal" && cfg.Automation.FriendSteal) ||
-				(kind == "help" && cfg.Automation.FriendHelp) ||
-				(kind == "bad" && cfg.Automation.FriendBad))
-		if enabled {
-			s.runFriendTick(ctx, kind)
-		}
+			(cfg.Automation.FriendSteal || cfg.Automation.FriendHelp || cfg.Automation.FriendBad)
 		delay := 30 * time.Second
 		if enabled {
-			delay = s.nextFriendDelay(cfg, kind)
+			s.runFriendCheckTick(ctx)
+			delay = s.nextFriendCheckDelay(cfg)
 		}
-		s.setNextCheckAt(kind, time.Now().Add(delay))
-		// Only push status when this loop is actively working; idle loops were spamming
-		// WS status every ~30s and making the overview countdown flicker.
+		next := time.Now().Add(delay)
+		s.setNextCheckAt("steal", next)
+		s.setNextCheckAt("help", next)
 		if enabled {
 			s.publishStatusSnapshot()
 		}
@@ -1967,45 +2101,27 @@ func (s *Session) friendLoop(ctx context.Context, kind string) {
 	}
 }
 
-func (s *Session) runFriendTick(ctx context.Context, kind string) {
+// nextFriendCheckDelay returns the unified friend interval jitter
+// (bot worker.ts: friendMin = min(helpMin, stealMin), friendMax = min(helpMax, stealMax)).
+func (s *Session) nextFriendCheckDelay(cfg logic.AccountConfig) time.Duration {
+	minSec, maxSec := cfg.FriendIntervalBounds()
+	return time.Duration(minSec+rand.IntN(maxSec-minSec+1)) * time.Second
+}
+
+func (s *Session) runFriendCheckTick(ctx context.Context) {
 	if shouldAbortFriendPatrol(ctx, s) {
 		return
 	}
 	cfg := s.Config()
-	if logic.InQuietHours(cfg.FriendQuietHours.Enabled, cfg.FriendQuietHours.Start, cfg.FriendQuietHours.End, time.Now().Format("15:04")) {
+	if logicInQuietHours(cfg) {
 		return
 	}
 	s.farmOpMu.Lock()
 	defer s.farmOpMu.Unlock()
-	s.mu.Lock()
-	api := s.gameAPI
-	s.mu.Unlock()
-	if api == nil {
-		return
-	}
-	// Auto-accept pending friend applications (bot: independent of friend automation toggle).
-	if n, acceptErr := AcceptPendingFriends(ctx, api); acceptErr != nil {
-		slog.Debug("accept friends failed", "account", s.id, "err", acceptErr)
-	} else if n > 0 {
-		slog.Info("accepted friend applications", "account", s.id, "count", n)
-	}
-	var err error
-	switch kind {
-	case "steal":
-		if s.stealPatrolVisited == nil {
-			s.stealPatrolVisited = make(map[int64]struct{})
-		}
-		_, err = RunStealTick(ctx, s, s.stealPatrolVisited)
-	case "help":
-		if s.helpPatrolVisited == nil {
-			s.helpPatrolVisited = make(map[int64]struct{})
-		}
-		_, err = RunHelpTick(ctx, s, s.helpPatrolVisited)
-	case "bad":
-		_, err = RunBadOnce(ctx, s)
-	}
-	if err != nil {
-		slog.Warn("friend tick failed", "account", s.id, "kind", kind, "err", err)
+	s.friendChecking.Store(true)
+	defer s.friendChecking.Store(false)
+	if _, err := RunFriendCheckTick(ctx, s, RunFriendTickOptions{IgnoreToggles: true}); err != nil {
+		slog.Warn("friend check tick failed", "account", s.id, "err", err)
 	}
 }
 
@@ -2026,7 +2142,7 @@ func (s *Session) runAcceptFriendsBootstrap(ctx context.Context) {
 	if api == nil {
 		return
 	}
-	if n, err := AcceptPendingFriends(ctx, api); err != nil {
+	if n, err := AcceptPendingFriends(ctx, s, api); err != nil {
 		slog.Debug("accept friends bootstrap failed", "account", s.id, "err", err)
 	} else if n > 0 {
 		slog.Info("accepted friend applications on bootstrap", "account", s.id, "count", n)
@@ -2053,7 +2169,7 @@ func (s *Session) runFriendRefreshBootstrap(ctx context.Context) {
 	if api == nil {
 		return
 	}
-	friends, err := loadFriends(ctx, s, api, cfg)
+	friends, err := getFriendsList(ctx, s, api, cfg, true)
 	if err != nil {
 		slog.Warn("friend refresh bootstrap failed", "account", s.id, "err", err)
 		return

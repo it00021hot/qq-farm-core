@@ -145,6 +145,7 @@ type Item struct {
 	Uid           int64           `protobuf:"varint,6,opt,name=uid,proto3" json:"uid,omitempty"`
 	IsNew         bool            `protobuf:"varint,7,opt,name=is_new,json=isNew,proto3" json:"is_new,omitempty"`
 	MutantTypes   []int64         `protobuf:"varint,8,rep,packed,name=mutant_types,json=mutantTypes,proto3" json:"mutant_types,omitempty"`
+	Locked        bool            `protobuf:"varint,9,opt,name=locked,proto3" json:"locked,omitempty"`
 	SourceInfo    *ItemSourceInfo `protobuf:"bytes,10,opt,name=source_info,json=sourceInfo,proto3" json:"source_info,omitempty"`
 	Show          *ItemShow       `protobuf:"bytes,100,opt,name=show,proto3" json:"show,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -221,6 +222,13 @@ func (x *Item) GetMutantTypes() []int64 {
 		return x.MutantTypes
 	}
 	return nil
+}
+
+func (x *Item) GetLocked() bool {
+	if x != nil {
+		return x.Locked
+	}
+	return false
 }
 
 func (x *Item) GetSourceInfo() *ItemSourceInfo {
@@ -422,7 +430,7 @@ const file_corepb_proto_rawDesc = "" +
 	"\vrestriction\x18\x03 \x01(\v2\x1b.corepb.ItemShowRestrictionR\vrestriction\x12+\n" +
 	"\n" +
 	"sell_price\x18\x04 \x01(\v2\f.corepb.ItemR\tsellPrice\x123\n" +
-	"\x0eexchange_price\x18\x05 \x01(\v2\f.corepb.ItemR\rexchangePrice\"\xf8\x01\n" +
+	"\x0eexchange_price\x18\x05 \x01(\v2\f.corepb.ItemR\rexchangePrice\"\x90\x02\n" +
 	"\x04Item\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
 	"\x05count\x18\x02 \x01(\x03R\x05count\x12\x1f\n" +
@@ -430,7 +438,8 @@ const file_corepb_proto_rawDesc = "" +
 	"expireTime\x12\x10\n" +
 	"\x03uid\x18\x06 \x01(\x03R\x03uid\x12\x15\n" +
 	"\x06is_new\x18\a \x01(\bR\x05isNew\x12!\n" +
-	"\fmutant_types\x18\b \x03(\x03R\vmutantTypes\x127\n" +
+	"\fmutant_types\x18\b \x03(\x03R\vmutantTypes\x12\x16\n" +
+	"\x06locked\x18\t \x01(\bR\x06locked\x127\n" +
 	"\vsource_info\x18\n" +
 	" \x01(\v2\x16.corepb.ItemSourceInfoR\n" +
 	"sourceInfo\x12$\n" +

@@ -51,6 +51,16 @@ func LandsFromPlantPB(lands []*plantpb.LandInfo) []LandInfo {
 					Date:       p.Field_36.Date,
 				}
 			}
+			for _, iu := range p.InteractionUses {
+				if iu != nil && iu.ItemId > 0 {
+					pi.InteractionItemIDs = append(pi.InteractionItemIDs, iu.ItemId)
+				}
+			}
+			for _, it := range p.InteractionTargets {
+				if it != nil && it.ItemId > 0 {
+					pi.InteractionItemIDs = append(pi.InteractionItemIDs, it.ItemId)
+				}
+			}
 			for _, ph := range p.Phases {
 				if ph == nil {
 					continue

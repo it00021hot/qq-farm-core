@@ -128,6 +128,7 @@ func TestRunFarmOperationCallsFarmingAndHarvest(t *testing.T) {
 	cfg := logic.DefaultAccountConfig()
 	cfg.Automation.Fertilizer = "none"
 	cfg.Automation.LandUpgrade = false
+	cfg.Automation.SkipOwnWeedBug = false // 默认 true 会跳过一键务农，这里显式验证务农+收获路径
 
 	hadWork, actions, _, err := RunFarmOperation(context.Background(), api, cfg, "all")
 	if err != nil {

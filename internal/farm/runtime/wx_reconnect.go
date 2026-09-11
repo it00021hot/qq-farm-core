@@ -262,5 +262,5 @@ func notifyWxOffline(acc model.FarmAccount, msg string) {
 	if strings.TrimSpace(acc.Name) == "" {
 		title = "农场账号离线"
 	}
-	go func() { _ = push.Notify(webhook, title, msg) }()
+	go push.NotifyAll(webhook, title, msg)
 }

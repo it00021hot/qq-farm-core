@@ -167,22 +167,46 @@ func qixiDTO(groupReply *activitypb.GetGroupReply, balances map[int64]int64) (ma
 		}
 		displayItems = append(displayItems, activityItemDTO(item.ItemId, item.Count))
 	}
-	exchange := map[string]any{
-		"sentItem":     activityItemDTO(0, 0),
-		"receivedItem": activityItemDTO(0, 0),
-		"field3":       false,
-		"enabled":      false,
-	}
-	if gift.Exchange != nil {
-		if gift.Exchange.SentItem != nil {
-			exchange["sentItem"] = activityItemDTO(gift.Exchange.SentItem.ItemId, gift.Exchange.SentItem.Count)
+	exchanges := make([]map[string]any, 0, len(gift.Gifts))
+	for _, entry := range gift.Gifts {
+		if entry == nil {
+			continue
 		}
-		if gift.Exchange.ReceivedItem != nil {
-			exchange["receivedItem"] = activityItemDTO(gift.Exchange.ReceivedItem.ItemId, gift.Exchange.ReceivedItem.Count)
+		costItems := make([]map[string]any, 0, len(entry.CostItems))
+		for _, item := range entry.CostItems {
+			if item != nil {
+				costItems = append(costItems, activityItemDTO(item.ItemId, item.Count))
+			}
 		}
-		exchange["field3"] = gift.Exchange.Field_3
-		exchange["enabled"] = gift.Exchange.Enabled
+		receiveItems := make([]map[string]any, 0, len(entry.ReceiveItems))
+		for _, item := range entry.ReceiveItems {
+			if item != nil {
+				receiveItems = append(receiveItems, activityItemDTO(item.ItemId, item.Count))
+			}
+		}
+		exchanges = append(exchanges, map[string]any{
+			"costItems":    costItems,
+			"receiveItems": receiveItems,
+			"giftType":     strconv.FormatInt(entry.GiftType, 10),
+			"content":      strconv.FormatInt(entry.Content, 10),
+		})
 	}
+	// 甘露（QIXI_DEW_ITEM_ID）：余额与卖出条件。
+	dewBalance := readBalance(game.QixiDewItemID)
+	dewCount := int64(0)
+	if dewBalance != nil {
+		dewCount, _ = strconv.ParseInt(*dewBalance, 10, 64)
+	}
+	dewMetadata := logic.GetItemByID(game.QixiDewItemID)
+	dewSellInfo := logic.GetEffectiveSellInfo(dewMetadata)
+	dew := activityItemDTO(game.QixiDewItemID, dewCount)
+	dew["balance"] = dewBalance
+	dew["balanceKnown"] = balances != nil
+	dew["usable"] = active && (balances == nil || dewCount > 0)
+	dew["sellable"] = dewSellInfo.Sellable
+	dew["sellStatus"] = string(dewSellInfo.Status)
+	dew["sellCondition"] = dewSellInfo.Condition
+	dew["sellPrice"] = configuredSellPrice(dewMetadata, dewSellInfo)
 	zero := "0"
 	featherCount := zero
 	if featherBalance != nil {
@@ -211,10 +235,12 @@ func qixiDTO(groupReply *activitypb.GetGroupReply, balances map[int64]int64) (ma
 		"feather":          activityItemDTO(game.QixiFeatherItemID, parseCount(featherCount)),
 		"sachet":           activityItemDTO(game.QixiSachetItemID, parseCount(sachetCountStr)),
 		"receivedSachet":   activityItemDTO(game.QixiReceivedSachetItemID, parseCount(receivedCountStr)),
+		"dew":              dew,
 		"balances": map[string]any{
 			"feather":        featherBalance,
 			"sachet":         sachetBalance,
 			"receivedSachet": receivedBalance,
+			"dew":            dewBalance,
 			"known":          balances != nil,
 		},
 		"bridge": map[string]any{
@@ -225,16 +251,52 @@ func qixiDTO(groupReply *activitypb.GetGroupReply, balances map[int64]int64) (ma
 			"displayItems": displayItems,
 		},
 		"gift": map[string]any{
-			"sentCount":  strconv.FormatInt(gift.SentCount, 10),
-			"field2Code": strconv.FormatInt(gift.Field_2, 10),
-			"field3Code": strconv.FormatInt(gift.Field_3, 10),
-			"exchange":   exchange,
+			"sentCount":     strconv.FormatInt(gift.TotalSendCount, 10),
+			"sendLimit":     strconv.FormatInt(gift.TotalSendLimit, 10),
+			"receiveLimit":  strconv.FormatInt(gift.TotalReceiveLimit, 10),
+			"exchanges":     exchanges,
+			"messageTextId": strconv.FormatInt(game.QixiDefaultGiftMessageTextID, 10),
 		},
 		"actions": map[string]any{
 			"bridge": map[string]any{"enabled": active && bridgeClaimable, "available": active && bridgeClaimable, "availabilityKnown": true},
 			"gift":   map[string]any{"enabled": giftEnabled, "available": giftEnabled, "availabilityKnown": balances != nil},
+			"dew":    map[string]any{"enabled": active && (balances == nil || dewCount > 0), "available": active && (balances == nil || dewCount > 0), "availabilityKnown": balances != nil},
 		},
 	}, nil
+}
+
+// configuredSellPrice mirrors bot configuredSellPrice: prefer effective sells,
+// otherwise parse the raw cond_sells/sells string of the item metadata.
+func configuredSellPrice(item *logic.ItemInfo, info logic.EffectiveSellInfo) []map[string]any {
+	if len(info.Sells) > 0 {
+		out := make([]map[string]any, 0, len(info.Sells))
+		for _, s := range info.Sells {
+			out = append(out, map[string]any{"currencyId": s.CurrencyID, "price": s.Price})
+		}
+		return out
+	}
+	raw := ""
+	if item != nil {
+		if item.CondSells != nil && strings.TrimSpace(*item.CondSells) != "" {
+			raw = *item.CondSells
+		} else if item.Sells != nil {
+			raw = *item.Sells
+		}
+	}
+	out := []map[string]any{}
+	for _, entry := range strings.Split(raw, ";") {
+		if entry == "" {
+			continue
+		}
+		parts := strings.SplitN(entry, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		cid, _ := strconv.ParseInt(parts[0], 10, 64)
+		price, _ := strconv.ParseInt(parts[1], 10, 64)
+		out = append(out, map[string]any{"currencyId": cid, "price": price})
+	}
+	return out
 }
 
 func stringOr(value, fallback string) string {
@@ -312,10 +374,10 @@ func ClaimQixiBridge(ctx context.Context, api *game.API) (map[string]any, error)
 	claimed := make([]string, 0)
 	rewards := make([]map[string]any, 0)
 	if reply.QixiBridgeResult != nil {
-		for _, stage := range reply.QixiBridgeResult.ClaimedStages {
+		for _, stage := range reply.QixiBridgeResult.UnlockedSteps {
 			claimed = append(claimed, strconv.FormatInt(stage, 10))
 		}
-		rewards = append(rewards, coreItemsToDTOs(reply.QixiBridgeResult.Rewards)...)
+		rewards = append(rewards, coreItemsToDTOs(reply.QixiBridgeResult.Awards)...)
 	}
 	if len(rewards) == 0 {
 		rewards = append(rewards, coreItemsToDTOs(reply.Rewards)...)
@@ -361,8 +423,14 @@ func GiftQixiSachet(ctx context.Context, api *game.API, friendGID, count int64) 
 			return nil, qixiErr("INSUFFICIENT_QIXI_SACHET", "鹊羽香囊数量不足")
 		}
 	}
-	if _, err := api.GiftQixiSachet(ctx, friendGID, count); err != nil {
-		return nil, err
+	// 新协议一次 Operate 赠送一个香囊，按数量循环。
+	for i := int64(0); i < count; i++ {
+		if _, err := api.GiftQixiSachet(ctx, friendGID, game.QixiDefaultGiftMessageTextID); err != nil {
+			if i > 0 {
+				break // 已送出部分，返回成功部分
+			}
+			return nil, err
+		}
 	}
 	return map[string]any{
 		"friendGid": strconv.FormatInt(friendGID, 10),

@@ -7,6 +7,7 @@
 package dogpb
 
 import (
+	corepb "github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -23,12 +24,17 @@ const (
 
 // ============ 狗狗信息 ============
 type DogInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Price         int64                  `protobuf:"varint,3,opt,name=price,proto3" json:"price,omitempty"`
-	Status        int64                  `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"` // 1=拥有
-	Level         int64                  `protobuf:"varint,5,opt,name=level,proto3" json:"level,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name  string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Price int64                  `protobuf:"varint,3,opt,name=price,proto3" json:"price,omitempty"`
+	// 服务端对所有图鉴项均返回 1，不能据此判断是否已经获得。
+	Status int64 `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"`
+	Level  int64 `protobuf:"varint,5,opt,name=level,proto3" json:"level,omitempty"`
+	// 抓包中尚未确认语义，保留中性命名，不作业务判断。
+	Field_6 int64 `protobuf:"varint,6,opt,name=field_6,json=field6,proto3" json:"field_6,omitempty"`
+	// 真实列表与游戏锁定状态逐项比对：1=已获得；缺失=未获得。
+	Owned         int64 `protobuf:"varint,7,opt,name=owned,proto3" json:"owned,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -98,12 +104,28 @@ func (x *DogInfo) GetLevel() int64 {
 	return 0
 }
 
+func (x *DogInfo) GetField_6() int64 {
+	if x != nil {
+		return x.Field_6
+	}
+	return 0
+}
+
+func (x *DogInfo) GetOwned() int64 {
+	if x != nil {
+		return x.Owned
+	}
+	return 0
+}
+
 // 狗狗装备/道具
 type DogItem struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Duration      int64                  `protobuf:"varint,2,opt,name=duration,proto3" json:"duration,omitempty"`
-	Status        int64                  `protobuf:"varint,3,opt,name=status,proto3" json:"status,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Id       int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Duration int64                  `protobuf:"varint,2,opt,name=duration,proto3" json:"duration,omitempty"`
+	// 抓包中三种狗粮均固定返回 1，而同一时刻背包只持有其中一种，
+	// 因此这是状态位，不是库存；库存必须读取 ItemService.Bag。
+	Status        int64 `protobuf:"varint,3,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -159,16 +181,88 @@ func (x *DogItem) GetStatus() int64 {
 	return 0
 }
 
+// 宠物技能当日使用次数。已与游戏内“今日剩余”逐项核对：
+// 同气连枝返回 used_count=7、daily_limit=30，页面显示 23/30。
+type DogSkillUsage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SkillId       int64                  `protobuf:"varint,1,opt,name=skill_id,json=skillId,proto3" json:"skill_id,omitempty"`
+	UsedCount     int64                  `protobuf:"varint,2,opt,name=used_count,json=usedCount,proto3" json:"used_count,omitempty"`
+	DailyLimit    int64                  `protobuf:"varint,3,opt,name=daily_limit,json=dailyLimit,proto3" json:"daily_limit,omitempty"`
+	DogId         int64                  `protobuf:"varint,4,opt,name=dog_id,json=dogId,proto3" json:"dog_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DogSkillUsage) Reset() {
+	*x = DogSkillUsage{}
+	mi := &file_dogpb_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DogSkillUsage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DogSkillUsage) ProtoMessage() {}
+
+func (x *DogSkillUsage) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DogSkillUsage.ProtoReflect.Descriptor instead.
+func (*DogSkillUsage) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *DogSkillUsage) GetSkillId() int64 {
+	if x != nil {
+		return x.SkillId
+	}
+	return 0
+}
+
+func (x *DogSkillUsage) GetUsedCount() int64 {
+	if x != nil {
+		return x.UsedCount
+	}
+	return 0
+}
+
+func (x *DogSkillUsage) GetDailyLimit() int64 {
+	if x != nil {
+		return x.DailyLimit
+	}
+	return 0
+}
+
+func (x *DogSkillUsage) GetDogId() int64 {
+	if x != nil {
+		return x.DogId
+	}
+	return 0
+}
+
 // ============ 请求/回复 ============
 type GetDogInfoRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 查询好友宠物时使用；查询自己的宠物时保持空请求体。
+	HostGid       int64 `protobuf:"varint,1,opt,name=host_gid,json=hostGid,proto3" json:"host_gid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetDogInfoRequest) Reset() {
 	*x = GetDogInfoRequest{}
-	mi := &file_dogpb_proto_msgTypes[2]
+	mi := &file_dogpb_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -180,7 +274,7 @@ func (x *GetDogInfoRequest) String() string {
 func (*GetDogInfoRequest) ProtoMessage() {}
 
 func (x *GetDogInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dogpb_proto_msgTypes[2]
+	mi := &file_dogpb_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -193,22 +287,37 @@ func (x *GetDogInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDogInfoRequest.ProtoReflect.Descriptor instead.
 func (*GetDogInfoRequest) Descriptor() ([]byte, []int) {
-	return file_dogpb_proto_rawDescGZIP(), []int{2}
+	return file_dogpb_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetDogInfoRequest) GetHostGid() int64 {
+	if x != nil {
+		return x.HostGid
+	}
+	return 0
 }
 
 type GetDogInfoReply struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Dogs  []*DogInfo             `protobuf:"bytes,1,rep,name=dogs,proto3" json:"dogs,omitempty"`
-	// field 2,3 reserved
-	ProtectDuration int64      `protobuf:"varint,4,opt,name=protect_duration,json=protectDuration,proto3" json:"protect_duration,omitempty"` // 护主时长(秒)
-	Items           []*DogItem `protobuf:"bytes,5,rep,name=items,proto3" json:"items,omitempty"`                                             // 狗狗道具
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// 真实抓包：收回后 field 2 消失，重新上场后恢复为宠物 ID。
+	CurrentDogId   int64      `protobuf:"varint,2,opt,name=current_dog_id,json=currentDogId,proto3" json:"current_dog_id,omitempty"`
+	ProtectTime    int64      `protobuf:"varint,3,opt,name=protect_time,json=protectTime,proto3" json:"protect_time,omitempty"`            // 当前狗粮剩余秒数
+	MaxProtectTime int64      `protobuf:"varint,4,opt,name=max_protect_time,json=maxProtectTime,proto3" json:"max_protect_time,omitempty"` // 服务端上限，本次为 2592000（30 天）
+	Items          []*DogItem `protobuf:"bytes,5,rep,name=items,proto3" json:"items,omitempty"`                                            // 狗狗道具
+	// 抓包已确认存在，业务语义尚未证明，当前不用于页面逻辑。
+	Field_6 int64 `protobuf:"varint,6,opt,name=field_6,json=field6,proto3" json:"field_6,omitempty"`
+	// 抓包确认：主人侧尚未拾取的“同气连枝礼包”数量。
+	PendingGiftCount int64 `protobuf:"varint,7,opt,name=pending_gift_count,json=pendingGiftCount,proto3" json:"pending_gift_count,omitempty"`
+	// 技能当日使用次数；当前已确认技能 2001 为“同气连枝”。
+	SkillUsages   []*DogSkillUsage `protobuf:"bytes,8,rep,name=skill_usages,json=skillUsages,proto3" json:"skill_usages,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetDogInfoReply) Reset() {
 	*x = GetDogInfoReply{}
-	mi := &file_dogpb_proto_msgTypes[3]
+	mi := &file_dogpb_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -220,7 +329,7 @@ func (x *GetDogInfoReply) String() string {
 func (*GetDogInfoReply) ProtoMessage() {}
 
 func (x *GetDogInfoReply) ProtoReflect() protoreflect.Message {
-	mi := &file_dogpb_proto_msgTypes[3]
+	mi := &file_dogpb_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -233,7 +342,7 @@ func (x *GetDogInfoReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDogInfoReply.ProtoReflect.Descriptor instead.
 func (*GetDogInfoReply) Descriptor() ([]byte, []int) {
-	return file_dogpb_proto_rawDescGZIP(), []int{3}
+	return file_dogpb_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetDogInfoReply) GetDogs() []*DogInfo {
@@ -243,9 +352,23 @@ func (x *GetDogInfoReply) GetDogs() []*DogInfo {
 	return nil
 }
 
-func (x *GetDogInfoReply) GetProtectDuration() int64 {
+func (x *GetDogInfoReply) GetCurrentDogId() int64 {
 	if x != nil {
-		return x.ProtectDuration
+		return x.CurrentDogId
+	}
+	return 0
+}
+
+func (x *GetDogInfoReply) GetProtectTime() int64 {
+	if x != nil {
+		return x.ProtectTime
+	}
+	return 0
+}
+
+func (x *GetDogInfoReply) GetMaxProtectTime() int64 {
+	if x != nil {
+		return x.MaxProtectTime
 	}
 	return 0
 }
@@ -257,26 +380,909 @@ func (x *GetDogInfoReply) GetItems() []*DogItem {
 	return nil
 }
 
+func (x *GetDogInfoReply) GetField_6() int64 {
+	if x != nil {
+		return x.Field_6
+	}
+	return 0
+}
+
+func (x *GetDogInfoReply) GetPendingGiftCount() int64 {
+	if x != nil {
+		return x.PendingGiftCount
+	}
+	return 0
+}
+
+func (x *GetDogInfoReply) GetSkillUsages() []*DogSkillUsage {
+	if x != nil {
+		return x.SkillUsages
+	}
+	return nil
+}
+
+type DeployDogRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DogId         int64                  `protobuf:"varint,1,opt,name=dog_id,json=dogId,proto3" json:"dog_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeployDogRequest) Reset() {
+	*x = DeployDogRequest{}
+	mi := &file_dogpb_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeployDogRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeployDogRequest) ProtoMessage() {}
+
+func (x *DeployDogRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeployDogRequest.ProtoReflect.Descriptor instead.
+func (*DeployDogRequest) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DeployDogRequest) GetDogId() int64 {
+	if x != nil {
+		return x.DogId
+	}
+	return 0
+}
+
+type DeployDogReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DogId         int64                  `protobuf:"varint,1,opt,name=dog_id,json=dogId,proto3" json:"dog_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeployDogReply) Reset() {
+	*x = DeployDogReply{}
+	mi := &file_dogpb_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeployDogReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeployDogReply) ProtoMessage() {}
+
+func (x *DeployDogReply) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeployDogReply.ProtoReflect.Descriptor instead.
+func (*DeployDogReply) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DeployDogReply) GetDogId() int64 {
+	if x != nil {
+		return x.DogId
+	}
+	return 0
+}
+
+type WithdrawDogRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WithdrawDogRequest) Reset() {
+	*x = WithdrawDogRequest{}
+	mi := &file_dogpb_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WithdrawDogRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WithdrawDogRequest) ProtoMessage() {}
+
+func (x *WithdrawDogRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WithdrawDogRequest.ProtoReflect.Descriptor instead.
+func (*WithdrawDogRequest) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{7}
+}
+
+type WithdrawDogReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DogId         int64                  `protobuf:"varint,1,opt,name=dog_id,json=dogId,proto3" json:"dog_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WithdrawDogReply) Reset() {
+	*x = WithdrawDogReply{}
+	mi := &file_dogpb_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WithdrawDogReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WithdrawDogReply) ProtoMessage() {}
+
+func (x *WithdrawDogReply) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WithdrawDogReply.ProtoReflect.Descriptor instead.
+func (*WithdrawDogReply) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *WithdrawDogReply) GetDogId() int64 {
+	if x != nil {
+		return x.DogId
+	}
+	return 0
+}
+
+// 点击宠物页狗盆选择狗粮后，点“确定”调用该接口。
+type AddFoodRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        int64                  `protobuf:"varint,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddFoodRequest) Reset() {
+	*x = AddFoodRequest{}
+	mi := &file_dogpb_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddFoodRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddFoodRequest) ProtoMessage() {}
+
+func (x *AddFoodRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddFoodRequest.ProtoReflect.Descriptor instead.
+func (*AddFoodRequest) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *AddFoodRequest) GetItemId() int64 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
+func (x *AddFoodRequest) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+type AddFoodReply struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 使用后的狗粮剩余秒数。
+	ProtectTime   int64 `protobuf:"varint,1,opt,name=protect_time,json=protectTime,proto3" json:"protect_time,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddFoodReply) Reset() {
+	*x = AddFoodReply{}
+	mi := &file_dogpb_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddFoodReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddFoodReply) ProtoMessage() {}
+
+func (x *AddFoodReply) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddFoodReply.ProtoReflect.Descriptor instead.
+func (*AddFoodReply) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *AddFoodReply) GetProtectTime() int64 {
+	if x != nil {
+		return x.ProtectTime
+	}
+	return 0
+}
+
+// 主人点击农场中的礼包堆时发送空请求，服务端一次领取全部待拾取礼包。
+type ClaimSkillGiftsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimSkillGiftsRequest) Reset() {
+	*x = ClaimSkillGiftsRequest{}
+	mi := &file_dogpb_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimSkillGiftsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimSkillGiftsRequest) ProtoMessage() {}
+
+func (x *ClaimSkillGiftsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimSkillGiftsRequest.ProtoReflect.Descriptor instead.
+func (*ClaimSkillGiftsRequest) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{11}
+}
+
+type ClaimSkillGiftsReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *corepb.Item           `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	ClaimedCount  int64                  `protobuf:"varint,3,opt,name=claimed_count,json=claimedCount,proto3" json:"claimed_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimSkillGiftsReply) Reset() {
+	*x = ClaimSkillGiftsReply{}
+	mi := &file_dogpb_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimSkillGiftsReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimSkillGiftsReply) ProtoMessage() {}
+
+func (x *ClaimSkillGiftsReply) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimSkillGiftsReply.ProtoReflect.Descriptor instead.
+func (*ClaimSkillGiftsReply) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ClaimSkillGiftsReply) GetItem() *corepb.Item {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+func (x *ClaimSkillGiftsReply) GetClaimedCount() int64 {
+	if x != nil {
+		return x.ClaimedCount
+	}
+	return 0
+}
+
+type PendingGiftCountNotify struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Count         int64                  `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PendingGiftCountNotify) Reset() {
+	*x = PendingGiftCountNotify{}
+	mi := &file_dogpb_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PendingGiftCountNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PendingGiftCountNotify) ProtoMessage() {}
+
+func (x *PendingGiftCountNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PendingGiftCountNotify.ProtoReflect.Descriptor instead.
+func (*PendingGiftCountNotify) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *PendingGiftCountNotify) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+// 宠物页“守护记录”。请求抓包固定为 { field 1: 0, field 2: 100, field 3: 0 }。
+type GetProtectLogsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 字段 1/3 的业务语义尚未证明；仅按真实点击的 0/100/0 发送。
+	Field_1       int64 `protobuf:"varint,1,opt,name=field_1,json=field1,proto3" json:"field_1,omitempty"`
+	Count         int64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	Field_3       int64 `protobuf:"varint,3,opt,name=field_3,json=field3,proto3" json:"field_3,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProtectLogsRequest) Reset() {
+	*x = GetProtectLogsRequest{}
+	mi := &file_dogpb_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProtectLogsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProtectLogsRequest) ProtoMessage() {}
+
+func (x *GetProtectLogsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProtectLogsRequest.ProtoReflect.Descriptor instead.
+func (*GetProtectLogsRequest) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetProtectLogsRequest) GetField_1() int64 {
+	if x != nil {
+		return x.Field_1
+	}
+	return 0
+}
+
+func (x *GetProtectLogsRequest) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+func (x *GetProtectLogsRequest) GetField_3() int64 {
+	if x != nil {
+		return x.Field_3
+	}
+	return 0
+}
+
+// 字段 14 的值会随好友固定重复，更像头像框/铭牌等展示信息；
+// 在协议语义确认前仅保留结构用于兼容性审计，不作为守护奖励暴露。
+type ProtectLogDisplayItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        int64                  `protobuf:"varint,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	Field_4       int64                  `protobuf:"varint,4,opt,name=field_4,json=field4,proto3" json:"field_4,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProtectLogDisplayItem) Reset() {
+	*x = ProtectLogDisplayItem{}
+	mi := &file_dogpb_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProtectLogDisplayItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProtectLogDisplayItem) ProtoMessage() {}
+
+func (x *ProtectLogDisplayItem) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProtectLogDisplayItem.ProtoReflect.Descriptor instead.
+func (*ProtectLogDisplayItem) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ProtectLogDisplayItem) GetItemId() int64 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
+func (x *ProtectLogDisplayItem) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+func (x *ProtectLogDisplayItem) GetField_4() int64 {
+	if x != nil {
+		return x.Field_4
+	}
+	return 0
+}
+
+type ProtectLogExtra struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value         []byte                 `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProtectLogExtra) Reset() {
+	*x = ProtectLogExtra{}
+	mi := &file_dogpb_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProtectLogExtra) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProtectLogExtra) ProtoMessage() {}
+
+func (x *ProtectLogExtra) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProtectLogExtra.ProtoReflect.Descriptor instead.
+func (*ProtectLogExtra) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ProtectLogExtra) GetValue() []byte {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+type ProtectLogEntry struct {
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	FriendGid    int64                  `protobuf:"varint,1,opt,name=friend_gid,json=friendGid,proto3" json:"friend_gid,omitempty"`
+	FriendName   string                 `protobuf:"bytes,2,opt,name=friend_name,json=friendName,proto3" json:"friend_name,omitempty"`
+	FriendAvatar string                 `protobuf:"bytes,3,opt,name=friend_avatar,json=friendAvatar,proto3" json:"friend_avatar,omitempty"`
+	// Unix 秒级时间戳。
+	Timestamp int64 `protobuf:"varint,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// 实际记录中分别对应被扣数量和守护所得金币。
+	StolenCount   int64                    `protobuf:"varint,6,opt,name=stolen_count,json=stolenCount,proto3" json:"stolen_count,omitempty"`
+	ProtectedGold int64                    `protobuf:"varint,7,opt,name=protected_gold,json=protectedGold,proto3" json:"protected_gold,omitempty"`
+	DogId         int64                    `protobuf:"varint,8,opt,name=dog_id,json=dogId,proto3" json:"dog_id,omitempty"`
+	DogName       string                   `protobuf:"bytes,9,opt,name=dog_name,json=dogName,proto3" json:"dog_name,omitempty"`
+	FriendRoleId  int64                    `protobuf:"varint,10,opt,name=friend_role_id,json=friendRoleId,proto3" json:"friend_role_id,omitempty"`
+	Field_12      int64                    `protobuf:"varint,12,opt,name=field_12,json=field12,proto3" json:"field_12,omitempty"`
+	Field_13      int64                    `protobuf:"varint,13,opt,name=field_13,json=field13,proto3" json:"field_13,omitempty"`
+	DisplayItems  []*ProtectLogDisplayItem `protobuf:"bytes,14,rep,name=display_items,json=displayItems,proto3" json:"display_items,omitempty"`
+	Extra         *ProtectLogExtra         `protobuf:"bytes,20,opt,name=extra,proto3" json:"extra,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProtectLogEntry) Reset() {
+	*x = ProtectLogEntry{}
+	mi := &file_dogpb_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProtectLogEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProtectLogEntry) ProtoMessage() {}
+
+func (x *ProtectLogEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProtectLogEntry.ProtoReflect.Descriptor instead.
+func (*ProtectLogEntry) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ProtectLogEntry) GetFriendGid() int64 {
+	if x != nil {
+		return x.FriendGid
+	}
+	return 0
+}
+
+func (x *ProtectLogEntry) GetFriendName() string {
+	if x != nil {
+		return x.FriendName
+	}
+	return ""
+}
+
+func (x *ProtectLogEntry) GetFriendAvatar() string {
+	if x != nil {
+		return x.FriendAvatar
+	}
+	return ""
+}
+
+func (x *ProtectLogEntry) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *ProtectLogEntry) GetStolenCount() int64 {
+	if x != nil {
+		return x.StolenCount
+	}
+	return 0
+}
+
+func (x *ProtectLogEntry) GetProtectedGold() int64 {
+	if x != nil {
+		return x.ProtectedGold
+	}
+	return 0
+}
+
+func (x *ProtectLogEntry) GetDogId() int64 {
+	if x != nil {
+		return x.DogId
+	}
+	return 0
+}
+
+func (x *ProtectLogEntry) GetDogName() string {
+	if x != nil {
+		return x.DogName
+	}
+	return ""
+}
+
+func (x *ProtectLogEntry) GetFriendRoleId() int64 {
+	if x != nil {
+		return x.FriendRoleId
+	}
+	return 0
+}
+
+func (x *ProtectLogEntry) GetField_12() int64 {
+	if x != nil {
+		return x.Field_12
+	}
+	return 0
+}
+
+func (x *ProtectLogEntry) GetField_13() int64 {
+	if x != nil {
+		return x.Field_13
+	}
+	return 0
+}
+
+func (x *ProtectLogEntry) GetDisplayItems() []*ProtectLogDisplayItem {
+	if x != nil {
+		return x.DisplayItems
+	}
+	return nil
+}
+
+func (x *ProtectLogEntry) GetExtra() *ProtectLogExtra {
+	if x != nil {
+		return x.Extra
+	}
+	return nil
+}
+
+type GetProtectLogsReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Logs          []*ProtectLogEntry     `protobuf:"bytes,1,rep,name=logs,proto3" json:"logs,omitempty"`
+	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProtectLogsReply) Reset() {
+	*x = GetProtectLogsReply{}
+	mi := &file_dogpb_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProtectLogsReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProtectLogsReply) ProtoMessage() {}
+
+func (x *GetProtectLogsReply) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProtectLogsReply.ProtoReflect.Descriptor instead.
+func (*GetProtectLogsReply) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GetProtectLogsReply) GetLogs() []*ProtectLogEntry {
+	if x != nil {
+		return x.Logs
+	}
+	return nil
+}
+
+func (x *GetProtectLogsReply) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+// 服务端仅推送“记录有更新”的空事件，页面可在用户打开时再拉取完整列表。
+type NewProtectLogNotify struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NewProtectLogNotify) Reset() {
+	*x = NewProtectLogNotify{}
+	mi := &file_dogpb_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NewProtectLogNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NewProtectLogNotify) ProtoMessage() {}
+
+func (x *NewProtectLogNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_dogpb_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NewProtectLogNotify.ProtoReflect.Descriptor instead.
+func (*NewProtectLogNotify) Descriptor() ([]byte, []int) {
+	return file_dogpb_proto_rawDescGZIP(), []int{19}
+}
+
 var File_dogpb_proto protoreflect.FileDescriptor
 
 const file_dogpb_proto_rawDesc = "" +
 	"\n" +
-	"\vdogpb.proto\x12\fgamepb.dogpb\"q\n" +
+	"\vdogpb.proto\x12\fgamepb.dogpb\x1a\fcorepb.proto\"\xa0\x01\n" +
 	"\aDogInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05price\x18\x03 \x01(\x03R\x05price\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\x03R\x06status\x12\x14\n" +
-	"\x05level\x18\x05 \x01(\x03R\x05level\"M\n" +
+	"\x05level\x18\x05 \x01(\x03R\x05level\x12\x17\n" +
+	"\afield_6\x18\x06 \x01(\x03R\x06field6\x12\x14\n" +
+	"\x05owned\x18\a \x01(\x03R\x05owned\"M\n" +
 	"\aDogItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
 	"\bduration\x18\x02 \x01(\x03R\bduration\x12\x16\n" +
-	"\x06status\x18\x03 \x01(\x03R\x06status\"\x13\n" +
-	"\x11GetDogInfoRequest\"\x94\x01\n" +
+	"\x06status\x18\x03 \x01(\x03R\x06status\"\x81\x01\n" +
+	"\rDogSkillUsage\x12\x19\n" +
+	"\bskill_id\x18\x01 \x01(\x03R\askillId\x12\x1d\n" +
+	"\n" +
+	"used_count\x18\x02 \x01(\x03R\tusedCount\x12\x1f\n" +
+	"\vdaily_limit\x18\x03 \x01(\x03R\n" +
+	"dailyLimit\x12\x15\n" +
+	"\x06dog_id\x18\x04 \x01(\x03R\x05dogId\".\n" +
+	"\x11GetDogInfoRequest\x12\x19\n" +
+	"\bhost_gid\x18\x01 \x01(\x03R\ahostGid\"\xe3\x02\n" +
 	"\x0fGetDogInfoReply\x12)\n" +
-	"\x04dogs\x18\x01 \x03(\v2\x15.gamepb.dogpb.DogInfoR\x04dogs\x12)\n" +
-	"\x10protect_duration\x18\x04 \x01(\x03R\x0fprotectDuration\x12+\n" +
-	"\x05items\x18\x05 \x03(\v2\x15.gamepb.dogpb.DogItemR\x05itemsb\x06proto3"
+	"\x04dogs\x18\x01 \x03(\v2\x15.gamepb.dogpb.DogInfoR\x04dogs\x12$\n" +
+	"\x0ecurrent_dog_id\x18\x02 \x01(\x03R\fcurrentDogId\x12!\n" +
+	"\fprotect_time\x18\x03 \x01(\x03R\vprotectTime\x12(\n" +
+	"\x10max_protect_time\x18\x04 \x01(\x03R\x0emaxProtectTime\x12+\n" +
+	"\x05items\x18\x05 \x03(\v2\x15.gamepb.dogpb.DogItemR\x05items\x12\x17\n" +
+	"\afield_6\x18\x06 \x01(\x03R\x06field6\x12,\n" +
+	"\x12pending_gift_count\x18\a \x01(\x03R\x10pendingGiftCount\x12>\n" +
+	"\fskill_usages\x18\b \x03(\v2\x1b.gamepb.dogpb.DogSkillUsageR\vskillUsages\")\n" +
+	"\x10DeployDogRequest\x12\x15\n" +
+	"\x06dog_id\x18\x01 \x01(\x03R\x05dogId\"'\n" +
+	"\x0eDeployDogReply\x12\x15\n" +
+	"\x06dog_id\x18\x01 \x01(\x03R\x05dogId\"\x14\n" +
+	"\x12WithdrawDogRequest\")\n" +
+	"\x10WithdrawDogReply\x12\x15\n" +
+	"\x06dog_id\x18\x01 \x01(\x03R\x05dogId\"?\n" +
+	"\x0eAddFoodRequest\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\"1\n" +
+	"\fAddFoodReply\x12!\n" +
+	"\fprotect_time\x18\x01 \x01(\x03R\vprotectTime\"\x18\n" +
+	"\x16ClaimSkillGiftsRequest\"]\n" +
+	"\x14ClaimSkillGiftsReply\x12 \n" +
+	"\x04item\x18\x01 \x01(\v2\f.corepb.ItemR\x04item\x12#\n" +
+	"\rclaimed_count\x18\x03 \x01(\x03R\fclaimedCount\".\n" +
+	"\x16PendingGiftCountNotify\x12\x14\n" +
+	"\x05count\x18\x01 \x01(\x03R\x05count\"_\n" +
+	"\x15GetProtectLogsRequest\x12\x17\n" +
+	"\afield_1\x18\x01 \x01(\x03R\x06field1\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\x12\x17\n" +
+	"\afield_3\x18\x03 \x01(\x03R\x06field3\"_\n" +
+	"\x15ProtectLogDisplayItem\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\x03R\x06itemId\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\x12\x17\n" +
+	"\afield_4\x18\x04 \x01(\x03R\x06field4\"'\n" +
+	"\x0fProtectLogExtra\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\fR\x05value\"\xeb\x03\n" +
+	"\x0fProtectLogEntry\x12\x1d\n" +
+	"\n" +
+	"friend_gid\x18\x01 \x01(\x03R\tfriendGid\x12\x1f\n" +
+	"\vfriend_name\x18\x02 \x01(\tR\n" +
+	"friendName\x12#\n" +
+	"\rfriend_avatar\x18\x03 \x01(\tR\ffriendAvatar\x12\x1c\n" +
+	"\ttimestamp\x18\x05 \x01(\x03R\ttimestamp\x12!\n" +
+	"\fstolen_count\x18\x06 \x01(\x03R\vstolenCount\x12%\n" +
+	"\x0eprotected_gold\x18\a \x01(\x03R\rprotectedGold\x12\x15\n" +
+	"\x06dog_id\x18\b \x01(\x03R\x05dogId\x12\x19\n" +
+	"\bdog_name\x18\t \x01(\tR\adogName\x12$\n" +
+	"\x0efriend_role_id\x18\n" +
+	" \x01(\x03R\ffriendRoleId\x12\x19\n" +
+	"\bfield_12\x18\f \x01(\x03R\afield12\x12\x19\n" +
+	"\bfield_13\x18\r \x01(\x03R\afield13\x12H\n" +
+	"\rdisplay_items\x18\x0e \x03(\v2#.gamepb.dogpb.ProtectLogDisplayItemR\fdisplayItems\x123\n" +
+	"\x05extra\x18\x14 \x01(\v2\x1d.gamepb.dogpb.ProtectLogExtraR\x05extra\"^\n" +
+	"\x13GetProtectLogsReply\x121\n" +
+	"\x04logs\x18\x01 \x03(\v2\x1d.gamepb.dogpb.ProtectLogEntryR\x04logs\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\"\x15\n" +
+	"\x13NewProtectLogNotifyb\x06proto3"
 
 var (
 	file_dogpb_proto_rawDescOnce sync.Once
@@ -290,21 +1296,43 @@ func file_dogpb_proto_rawDescGZIP() []byte {
 	return file_dogpb_proto_rawDescData
 }
 
-var file_dogpb_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_dogpb_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_dogpb_proto_goTypes = []any{
-	(*DogInfo)(nil),           // 0: gamepb.dogpb.DogInfo
-	(*DogItem)(nil),           // 1: gamepb.dogpb.DogItem
-	(*GetDogInfoRequest)(nil), // 2: gamepb.dogpb.GetDogInfoRequest
-	(*GetDogInfoReply)(nil),   // 3: gamepb.dogpb.GetDogInfoReply
+	(*DogInfo)(nil),                // 0: gamepb.dogpb.DogInfo
+	(*DogItem)(nil),                // 1: gamepb.dogpb.DogItem
+	(*DogSkillUsage)(nil),          // 2: gamepb.dogpb.DogSkillUsage
+	(*GetDogInfoRequest)(nil),      // 3: gamepb.dogpb.GetDogInfoRequest
+	(*GetDogInfoReply)(nil),        // 4: gamepb.dogpb.GetDogInfoReply
+	(*DeployDogRequest)(nil),       // 5: gamepb.dogpb.DeployDogRequest
+	(*DeployDogReply)(nil),         // 6: gamepb.dogpb.DeployDogReply
+	(*WithdrawDogRequest)(nil),     // 7: gamepb.dogpb.WithdrawDogRequest
+	(*WithdrawDogReply)(nil),       // 8: gamepb.dogpb.WithdrawDogReply
+	(*AddFoodRequest)(nil),         // 9: gamepb.dogpb.AddFoodRequest
+	(*AddFoodReply)(nil),           // 10: gamepb.dogpb.AddFoodReply
+	(*ClaimSkillGiftsRequest)(nil), // 11: gamepb.dogpb.ClaimSkillGiftsRequest
+	(*ClaimSkillGiftsReply)(nil),   // 12: gamepb.dogpb.ClaimSkillGiftsReply
+	(*PendingGiftCountNotify)(nil), // 13: gamepb.dogpb.PendingGiftCountNotify
+	(*GetProtectLogsRequest)(nil),  // 14: gamepb.dogpb.GetProtectLogsRequest
+	(*ProtectLogDisplayItem)(nil),  // 15: gamepb.dogpb.ProtectLogDisplayItem
+	(*ProtectLogExtra)(nil),        // 16: gamepb.dogpb.ProtectLogExtra
+	(*ProtectLogEntry)(nil),        // 17: gamepb.dogpb.ProtectLogEntry
+	(*GetProtectLogsReply)(nil),    // 18: gamepb.dogpb.GetProtectLogsReply
+	(*NewProtectLogNotify)(nil),    // 19: gamepb.dogpb.NewProtectLogNotify
+	(*corepb.Item)(nil),            // 20: corepb.Item
 }
 var file_dogpb_proto_depIdxs = []int32{
-	0, // 0: gamepb.dogpb.GetDogInfoReply.dogs:type_name -> gamepb.dogpb.DogInfo
-	1, // 1: gamepb.dogpb.GetDogInfoReply.items:type_name -> gamepb.dogpb.DogItem
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0,  // 0: gamepb.dogpb.GetDogInfoReply.dogs:type_name -> gamepb.dogpb.DogInfo
+	1,  // 1: gamepb.dogpb.GetDogInfoReply.items:type_name -> gamepb.dogpb.DogItem
+	2,  // 2: gamepb.dogpb.GetDogInfoReply.skill_usages:type_name -> gamepb.dogpb.DogSkillUsage
+	20, // 3: gamepb.dogpb.ClaimSkillGiftsReply.item:type_name -> corepb.Item
+	15, // 4: gamepb.dogpb.ProtectLogEntry.display_items:type_name -> gamepb.dogpb.ProtectLogDisplayItem
+	16, // 5: gamepb.dogpb.ProtectLogEntry.extra:type_name -> gamepb.dogpb.ProtectLogExtra
+	17, // 6: gamepb.dogpb.GetProtectLogsReply.logs:type_name -> gamepb.dogpb.ProtectLogEntry
+	7,  // [7:7] is the sub-list for method output_type
+	7,  // [7:7] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_dogpb_proto_init() }
@@ -318,7 +1346,7 @@ func file_dogpb_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dogpb_proto_rawDesc), len(file_dogpb_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

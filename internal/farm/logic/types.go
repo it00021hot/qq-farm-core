@@ -51,6 +51,9 @@ type PlantInfo struct {
 	LeftInorcFertTimes *int64             `json:"left_inorc_fert_times,omitempty"`
 	LeftFruitNum       int64              `json:"left_fruit_num"`
 	MutantConfigIDs    []int64            `json:"mutant_config_ids,omitempty"`
+	// InteractionItemIDs collects item ids from interaction_uses/interaction_targets
+	// (乌云瓶等已作用道具判定用)。
+	InteractionItemIDs []int64            `json:"interaction_item_ids,omitempty"`
 	Activity           *PlantActivityInfo `json:"activity,omitempty"`
 }
 
