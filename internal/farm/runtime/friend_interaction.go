@@ -83,6 +83,17 @@ type interactionStack struct {
 	expireAt  int64
 }
 
+// sellConditionSatisfied mirrors rust stack_sale_condition_satisfied:
+// 道具的 sell_cond 在当前时间 + 过期时间下是否已满足。
+func sellConditionSatisfied(info *logic.ItemInfo, expireAt int64) bool {
+	if info == nil || info.SellCond == nil || strings.TrimSpace(*info.SellCond) == "" {
+		return false
+	}
+	ctx := logic.DefaultSellConditionContext(logic.GetServerTimeSec())
+	ctx.ExpireTime = expireAt
+	return logic.IsSellConditionSatisfied(*info.SellCond, ctx)
+}
+
 // collectInteractionStacks returns usable (unlocked, positive) stacks for the item.
 func collectInteractionStacks(items []corepb.Item, itemID int64) []interactionStack {
 	stacks := make([]interactionStack, 0, 4)
@@ -113,6 +124,9 @@ type InteractionItemDTO struct {
 	Count      int64  `json:"count"`
 	TargetKind string `json:"targetKind"`
 	SelfUsable bool   `json:"selfUsable"`
+	// 对齐 rust item_dto：道具说明与满足出售条件的库存数（前端展示用）。
+	Description                 string `json:"description"`
+	SaleConditionSatisfiedCount int64  `json:"saleConditionSatisfiedCount"`
 }
 
 // GetFriendInteractionItems lists usable friend-land / friend-farm interaction items.
@@ -155,9 +169,19 @@ func GetFriendInteractionItems(ctx context.Context, api *game.API) ([]Interactio
 			name = info.Name
 		}
 		_, selfUsable := selfUsableInteractionItems[item.Id]
+		description, saleSatisfied := "", int64(0)
+		if info != nil {
+			description = info.Desc
+			for _, stack := range collectInteractionStacks(items, item.Id) {
+				if sellConditionSatisfied(info, stack.expireAt) {
+					saleSatisfied += stack.remaining
+				}
+			}
+		}
 		dto = append(dto, InteractionItemDTO{
 			ItemID: item.Id, Name: name, Image: logic.SeedImagePath(item.Id),
 			Count: total, TargetKind: kind, SelfUsable: selfUsable,
+			Description: description, SaleConditionSatisfiedCount: saleSatisfied,
 		})
 	}
 	return dto, nil

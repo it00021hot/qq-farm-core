@@ -94,7 +94,7 @@ func petObtainCondition(id int64) string {
 func petSkillDefinitions(petID int64) []map[string]any {
 	loyalty := func(rate int64) map[string]any {
 		return map[string]any{
-			"name": "忠心护主",
+			"name":        "忠心护主",
 			"description": fmt.Sprintf("作物被偷时，有%d%%概率触发看护，成功后扣除偷窃者一定金币。", rate),
 			"triggerRate": rate,
 			"source":      "game-config",
@@ -378,7 +378,7 @@ func dogInfoDTO(info *dogpb.GetDogInfoReply) map[string]any {
 			"level": dog.GetLevel(),
 			// 服务端对所有图鉴项均返回 1，不能据此判断是否已获得；
 			// 真实列表与游戏锁定状态逐项比对：1=已获得；缺失=未获得。
-			"owned": dog.GetOwned() == 1,
+			"owned":    dog.GetOwned() == 1,
 			"deployed": dog.GetId() == info.GetCurrentDogId(),
 		})
 	}
@@ -403,12 +403,12 @@ func dogInfoDTO(info *dogpb.GetDogInfoReply) map[string]any {
 		})
 	}
 	return map[string]any{
-		"dogs":              dogs,
-		"currentDogId":      info.GetCurrentDogId(),
-		"protectTime":       info.GetProtectTime(),
-		"maxProtectTime":    info.GetMaxProtectTime(),
-		"items":             items,
-		"pendingGiftCount":  info.GetPendingGiftCount(),
-		"skillUsages":       skills,
+		"dogs":             dogs,
+		"currentDogId":     info.GetCurrentDogId(),
+		"protectTime":      info.GetProtectTime(),
+		"maxProtectTime":   info.GetMaxProtectTime(),
+		"items":            items,
+		"pendingGiftCount": info.GetPendingGiftCount(),
+		"skillUsages":      skills,
 	}
 }
