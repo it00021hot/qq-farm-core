@@ -9,7 +9,6 @@ import (
 
 	"github.com/it00021hot/qq-farm-core/internal/app/model"
 	"github.com/it00021hot/qq-farm-core/internal/farm/hub"
-	"github.com/it00021hot/qq-farm-core/internal/farm/push"
 	"github.com/it00021hot/qq-farm-core/internal/vars"
 )
 
@@ -254,13 +253,5 @@ func ScheduleWxAuthorizedStart() {
 }
 
 func notifyWxOffline(acc model.FarmAccount, msg string) {
-	webhook := vars.Config.GetString("farm.pushWebhook")
-	if webhook == "" {
-		return
-	}
-	title := "农场账号 " + acc.Name + " 离线"
-	if strings.TrimSpace(acc.Name) == "" {
-		title = "农场账号离线"
-	}
-	go push.NotifyAll(webhook, title, msg)
+	go SendOfflineReminder(strings.TrimSpace(acc.Name), msg)
 }

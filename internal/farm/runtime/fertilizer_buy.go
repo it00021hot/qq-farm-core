@@ -2,10 +2,13 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"math/rand/v2"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/it00021hot/qq-farm-core/internal/farm/protocol"
 
 	"github.com/it00021hot/qq-farm-core/internal/farm/game"
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
@@ -43,6 +46,14 @@ func (s *Session) maybeEventFertilizerBuy(ctx context.Context) {
 	}
 	s.mu.Lock()
 	s.lastFertBuyCheckAt = now
+	s.mu.Unlock()
+	s.checkFertilizerBuyOnce(ctx)
+}
+
+// CheckFertilizerBuyNow runs one threshold check immediately (settings 立即检测按钮).
+func (s *Session) CheckFertilizerBuyNow(ctx context.Context) {
+	s.mu.Lock()
+	s.lastFertBuyCheckAt = time.Time{}
 	s.mu.Unlock()
 	s.checkFertilizerBuyOnce(ctx)
 }
@@ -154,4 +165,14 @@ func (s *Session) publishFertilizerBuyLog(message string, organicBought, normalB
 		"isWarn":    isWarn,
 		"accountId": parseAccountID(s.id),
 	})
+}
+
+// CheckFertilizerBuyNowByAccount runs the threshold check on one running account.
+func (f *Facade) CheckFertilizerBuyNowByAccount(accountID uint64) error {
+	session, ok := f.Session(accountID)
+	if !ok || session.Status() != StatusRunning {
+		return errors.New("账号未运行")
+	}
+	session.CheckFertilizerBuyNow(protocol.WithRequestClass(context.Background(), protocol.ClassFarm))
+	return nil
 }

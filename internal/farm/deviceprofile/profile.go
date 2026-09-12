@@ -65,6 +65,42 @@ var presets = []struct {
 }
 
 // Resolve picks a device profile from login-url os hint (literal os kept when present).
+// Preset is one named device fingerprint option for the settings UI.
+type Preset struct {
+	ID      string  `json:"id"`
+	Name    string  `json:"name"`
+	OS      string  `json:"os"`
+	Profile Profile `json:"profile"`
+}
+
+var presetNames = []struct{ id, name, alias string }{
+	{"windows", "Windows", "windows"},
+	{"mac", "macOS", "mac"},
+	{"ios", "iPad", "ios"},
+	{"android", "Android", "android"},
+}
+
+// Presets exposes the built-in device fingerprint presets (settings 系统设置).
+func Presets() []Preset {
+	out := make([]Preset, 0, len(presetNames))
+	for _, pn := range presetNames {
+		for _, preset := range presets {
+			matched := false
+			for _, alias := range preset.aliases {
+				if alias == pn.alias {
+					matched = true
+					break
+				}
+			}
+			if matched {
+				out = append(out, Preset{ID: pn.id, Name: pn.name, OS: preset.profile.OS, Profile: preset.profile})
+				break
+			}
+		}
+	}
+	return out
+}
+
 func Resolve(osHint string) Profile {
 	needle := strings.ToLower(strings.TrimSpace(osHint))
 	base := presets[0].profile // default Windows like bot

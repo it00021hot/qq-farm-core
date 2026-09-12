@@ -107,12 +107,12 @@ func collectInteractionStacks(items []corepb.Item, itemID int64) []interactionSt
 
 // InteractionItemDTO is the panel row for one interaction item.
 type InteractionItemDTO struct {
-	ItemID    int64  `json:"itemId"`
-	Name      string `json:"name"`
-	Image     string `json:"image"`
-	Count     int64  `json:"count"`
+	ItemID     int64  `json:"itemId"`
+	Name       string `json:"name"`
+	Image      string `json:"image"`
+	Count      int64  `json:"count"`
 	TargetKind string `json:"targetKind"`
-	SelfUsable bool  `json:"selfUsable"`
+	SelfUsable bool   `json:"selfUsable"`
 }
 
 // GetFriendInteractionItems lists usable friend-land / friend-farm interaction items.
@@ -165,6 +165,21 @@ func GetFriendInteractionItems(ctx context.Context, api *game.API) ([]Interactio
 
 // UseFriendInteractionItemBatch enters the friend farm and applies the item to
 // each land in order (bot useFriendInteractionItemBatch).
+// GetSelfInteractionItems lists self-usable interaction items (SELF_USABLE whitelist).
+func GetSelfInteractionItems(ctx context.Context, api *game.API) ([]InteractionItemDTO, error) {
+	items, err := GetFriendInteractionItems(ctx, api)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]InteractionItemDTO, 0, len(items))
+	for _, item := range items {
+		if item.SelfUsable {
+			out = append(out, item)
+		}
+	}
+	return out, nil
+}
+
 func UseFriendInteractionItemBatch(ctx context.Context, s *Session, api *game.API, friendGID, itemID int64, landIDs []int64) (used, failed int, err error) {
 	if friendGID <= 0 || itemID <= 0 || len(landIDs) == 0 {
 		return 0, 0, fmt.Errorf("参数无效")

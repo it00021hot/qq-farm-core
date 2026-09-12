@@ -1,12 +1,13 @@
 package status
 
 import (
+	"github.com/gofiber/fiber/v3"
 	"github.com/it00021hot/qq-farm-core/internal/app/controller"
 	statussvc "github.com/it00021hot/qq-farm-core/internal/app/service/farm/status"
-	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
 	farmpush "github.com/it00021hot/qq-farm-core/internal/farm/push"
+	farmruntime "github.com/it00021hot/qq-farm-core/internal/farm/runtime"
+	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
 	"github.com/it00021hot/qq-farm-core/pkg/response"
-	"github.com/gofiber/fiber/v3"
 )
 
 type Controller struct {
@@ -84,4 +85,40 @@ func (c *Controller) QqBotBindStart(ctx fiber.Ctx) error {
 		"sessionId": sessionID,
 		"message":   "已发起绑定，请在 5 分钟内用你的 QQ 私聊机器人发送任意消息完成绑定",
 	})
+}
+
+// FertilizerCheckBuy runs one event-driven fertilizer threshold check immediately.
+func (c *Controller) FertilizerCheckBuy(ctx fiber.Ctx) error {
+	var req struct {
+		AccountID uint64 `json:"accountId" query:"accountId" validate:"required"`
+	}
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	if err := farmruntime.Default.CheckFertilizerBuyNowByAccount(req.AccountID); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", map[string]any{"started": true,
+		"message": "已触发化肥阈值检测，结果见看板日志"})
+}
+
+// QqBotBindPoll polls one pending bind session (rust poll_qq_bot_bind).
+func (c *Controller) QqBotBindPoll(ctx fiber.Ctx) error {
+	var req struct {
+		SessionID string `json:"sessionId" query:"sessionId" validate:"required"`
+	}
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	status, binding := farmpush.PollBindSession(req.SessionID)
+	return response.SuccessJSON(ctx, "", map[string]any{
+		"status":  status,
+		"binding": binding,
+	})
+}
+
+// QqBotBindUnbind clears the stored QQ bot binding.
+func (c *Controller) QqBotBindUnbind(ctx fiber.Ctx) error {
+	removed := farmpush.Unbind()
+	return response.SuccessJSON(ctx, "", map[string]any{"unbound": removed})
 }

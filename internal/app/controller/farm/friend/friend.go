@@ -1,11 +1,11 @@
 package friend
 
 import (
+	"github.com/gofiber/fiber/v3"
 	"github.com/it00021hot/qq-farm-core/internal/app/controller"
 	friendsvc "github.com/it00021hot/qq-farm-core/internal/app/service/farm/friend"
 	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
 	"github.com/it00021hot/qq-farm-core/pkg/response"
-	"github.com/gofiber/fiber/v3"
 )
 
 type Controller struct {
@@ -104,6 +104,18 @@ func (c *Controller) InteractionItems(ctx fiber.Ctx) error {
 		return response.BadRequestException(ctx, err.Error())
 	}
 	info, err := friendsvc.Friend.InteractionItems(ctx, req)
+	if err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	return response.SuccessJSON(ctx, "", info)
+}
+
+func (c *Controller) SelfInteractionItems(ctx fiber.Ctx) error {
+	var req farmtypes.FriendListReq
+	if err := c.Validate(ctx, &req); err != nil {
+		return response.BadRequestException(ctx, err.Error())
+	}
+	info, err := friendsvc.Friend.SelfInteractionItems(ctx, req)
 	if err != nil {
 		return response.BadRequestException(ctx, err.Error())
 	}

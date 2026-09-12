@@ -23,7 +23,7 @@ type QqBotBinding struct {
 
 var (
 	bindMu       sync.Mutex
-	bindSession  *bindSessionInfo     // panel-initiated pending session
+	bindSession  *bindSessionInfo             // panel-initiated pending session
 	bindings     = map[string]*QqBotBinding{} // username → binding
 	openidUser   = map[string]string{}        // openid → username
 	bindFilePath string
@@ -91,6 +91,43 @@ func CurrentBinding() *QqBotBinding {
 		}
 	}
 	return nil
+}
+
+// PollBindSession reports a panel-initiated bind session status (rust poll_qq_bot_bind):
+// pending / bound (with the fresh binding) / expired.
+func PollBindSession(sessionID string) (string, *QqBotBinding) {
+	bindMu.Lock()
+	defer bindMu.Unlock()
+	if bindSession == nil || bindSession.SessionID != sessionID {
+		return "expired", nil
+	}
+	if time.Now().After(bindSession.ExpiresAt) {
+		return "expired", nil
+	}
+	if b := bindings[bindSession.Username]; b != nil && b.UserOpenID != "" {
+		out := *b
+		return "bound", &out
+	}
+	return "pending", nil
+}
+
+// Unbind clears the stored binding (面板解绑，等价于机器人收到「解绑」).
+func Unbind() bool {
+	bindMu.Lock()
+	defer bindMu.Unlock()
+	removed := false
+	for username, binding := range bindings {
+		if binding.UserOpenID != "" {
+			delete(bindings, username)
+			delete(openidUser, binding.UserOpenID)
+			removed = true
+		}
+	}
+	if removed {
+		persistBindings()
+		applyBindingToService(&QqBotBinding{})
+	}
+	return removed
 }
 
 // HandleC2CMessage applies the bind/unbind protocol to one private message

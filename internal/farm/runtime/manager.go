@@ -343,7 +343,10 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 	defer func() {
 		s.cleanup()
 		st := s.Status()
-		if st != StatusError {
+		if st == StatusError {
+			// 离线提醒（rust offline reminder）：异常掉线时按配置渠道推送。
+			go SendOfflineReminder(s.nick, s.lastError())
+		} else {
 			s.setStatus(StatusStopped, "已停止")
 			persistRunStatus(parseAccountID(s.id), RunStopped, false)
 		}

@@ -56,11 +56,33 @@ func (s *Service) InteractionItems(ctx fiber.Ctx, req farm.FriendListReq) (map[s
 		return nil, err
 	}
 	return map[string]any{
-		"items":                   items,
-		"count":                   len(items),
+		"items":                    items,
+		"count":                    len(items),
 		"serverValidationRequired": true,
 		"confirmationRequired":     true,
-		"message": map[bool]string{true: "请选择好友农场或土地使用", false: "背包中暂无可用于好友农场的特殊互动道具"}[len(items) > 0],
+		"message":                  map[bool]string{true: "请选择好友农场或土地使用", false: "背包中暂无可用于好友农场的特殊互动道具"}[len(items) > 0],
+	}, nil
+}
+
+// SelfInteractionItems lists self-usable interaction items (SELF_USABLE 白名单).
+func (s *Service) SelfInteractionItems(ctx fiber.Ctx, req farm.FriendListReq) (map[string]any, error) {
+	session, err := s.liveSession(req.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	api := session.GameAPI()
+	callCtx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+	defer cancel()
+	items, err := farmruntime.GetSelfInteractionItems(callCtx, api)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{
+		"items":                    items,
+		"count":                    len(items),
+		"serverValidationRequired": true,
+		"confirmationRequired":     true,
+		"message":                  map[bool]string{true: "请选择自己农场中符合条件的土地使用", false: "背包中暂无可对自己农场使用的特殊互动道具"}[len(items) > 0],
 	}, nil
 }
 

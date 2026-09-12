@@ -14,6 +14,7 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/app/controller/farm/gameconfig"
 	"github.com/it00021hot/qq-farm-core/internal/app/controller/farm/lands"
 	farmlogs "github.com/it00021hot/qq-farm-core/internal/app/controller/farm/logs"
+	"github.com/it00021hot/qq-farm-core/internal/app/controller/farm/settings"
 	"github.com/it00021hot/qq-farm-core/internal/app/controller/farm/status"
 	farmws "github.com/it00021hot/qq-farm-core/internal/app/controller/farm/ws"
 	farmwxlogin "github.com/it00021hot/qq-farm-core/internal/app/controller/farm/wxlogin"
@@ -97,6 +98,23 @@ func InitFarmGroup(r fiber.Router, handles ...any) {
 		router.Post("/activity/pet-diary/operate", activity.Activity.PetDiaryOperate).Name("萌宠日记操作")
 		router.Get("/activity/pet-diary/records", activity.Activity.PetDiaryRecords).Name("萌宠日记记录")
 		router.Get("/activity/pet-diary/friend", activity.Activity.PetDiaryFriend).Name("萌宠日记好友宝藏")
+
+		// 互动道具（自己农场，selfUsable 白名单）
+		router.Get("/interaction-items/self", friend.Friend.SelfInteractionItems).Name("自用互动道具列表")
+		// 化肥立即检测补购（事件驱动）
+		router.Post("/fertilizer/check-buy", status.Status.FertilizerCheckBuy).Name("化肥立即检测补购")
+		// QQ 机器人绑定：轮询/解绑
+		router.Get("/system/qqbot/bind/poll", status.Status.QqBotBindPoll).Name("轮询QQ机器人绑定")
+		router.Post("/system/qqbot/bind/unbind", status.Status.QqBotBindUnbind).Name("解绑QQ机器人")
+		// 系统配置 + 设备预设
+		router.Get("/system-config", settings.Settings.SystemConfig).Name("系统配置")
+		router.Post("/system-config/save", settings.Settings.SaveSystemConfig).Name("保存系统配置")
+		router.Post("/system-config/reset", settings.Settings.ResetSystemConfig).Name("重置系统配置")
+		router.Get("/system-config/device-presets", settings.Settings.DevicePresets).Name("设备预设")
+		// 离线提醒
+		router.Get("/offline-reminder", settings.Settings.OfflineReminder).Name("离线提醒配置")
+		router.Post("/offline-reminder/save", settings.Settings.SaveOfflineReminder).Name("保存离线提醒")
+		router.Post("/offline-reminder/test", settings.Settings.TestOfflineReminder).Name("测试离线提醒")
 		router.Post("/activity/gift/claim", activity.Activity.ClaimGift).Name("领取礼包")
 		router.Get("/activity/qixi", activity.Activity.Qixi).Name("鹊桥寄情")
 		router.Post("/activity/qixi/bridge/claim", activity.Activity.ClaimQixiBridge).Name("领取鹊桥奖励")
