@@ -32,6 +32,34 @@ type UILandRow struct {
 	PlantSize        int64   `json:"plantSize,omitempty"`
 	OccupiedByMaster bool    `json:"occupiedByMaster,omitempty"`
 	OccupiedLandIDs  []int64 `json:"occupiedLandIds,omitempty"`
+	// 对齐 rust 地块明细管线（own/friend lands detail）
+	MatureAt                       int64                  `json:"matureAt,omitempty"`
+	PlantID                        int64                  `json:"plantId,omitempty"`
+	DisplayPlantID                 int64                  `json:"displayPlantId,omitempty"`
+	MutantConfigIDs                []int64                `json:"mutantConfigIds,omitempty"`
+	MutantEffects                  []MutantEffectDTO      `json:"mutantEffects,omitempty"`
+	IsMutated                      bool                   `json:"isMutated,omitempty"`
+	PurpleCrystalResonanceExpBonus int64                  `json:"purpleCrystalResonanceExpBonus,omitempty"`
+	LandBuff                       *LandBuffInfo          `json:"landBuff,omitempty"`
+	InteractionEffects             []InteractionEffectDTO `json:"interactionEffects,omitempty"`
+	NeedInteractionCleanup         bool                   `json:"needInteractionCleanup,omitempty"`
+}
+
+// MutantEffectDTO is one mutant effect row (rust mutant_effects entries).
+type MutantEffectDTO struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Icon        string `json:"icon"`
+	IconURL     string `json:"iconUrl"`
+	Description string `json:"description"`
+	Tag         string `json:"tag"`
+	ActivityID  int64  `json:"activityId"`
+}
+
+// InteractionEffectDTO is one applied interaction effect on a plant.
+type InteractionEffectDTO struct {
+	ItemID   int64  `json:"itemId"`
+	ItemName string `json:"itemName"`
 }
 
 // LandsUIResponse is returned by GET /farm/lands.
@@ -288,6 +316,51 @@ func FormatLandsResponse(lands []LandInfo) LandsUIResponse {
 		needWeed := len(plant.WeedOwners) > 0 || (ToTimeSec(current.WeedsTime) > 0 && ToTimeSec(current.WeedsTime) <= nowSec)
 		needBug := len(plant.InsectOwners) > 0 || (ToTimeSec(current.InsectTime) > 0 && ToTimeSec(current.InsectTime) <= nowSec)
 
+		// 变异/互动明细（rust 地块明细管线）
+		mutantIDs := uniqueInt64(plant.MutantConfigIDs)
+		mutantEffects := make([]MutantEffectDTO, 0, len(mutantIDs))
+		for _, mid := range mutantIDs {
+			effect := GetMutantEffectByID(mid)
+			row := MutantEffectDTO{ID: mid, IconURL: GetMutantImageByID(mid)}
+			if effect != nil {
+				row.Name = effect.Name
+				row.Icon = effect.Icon
+				row.Tag = effect.Tag
+				row.ActivityID = effect.ActivityID
+				if effect.Desc != nil {
+					row.Description = *effect.Desc
+				}
+			}
+			mutantEffects = append(mutantEffects, row)
+		}
+		purpleCrystal := int64(0)
+		if land.Level == 5 && len(mutantIDs) > 0 && land.Buff != nil {
+			purpleCrystal = maxInt64(land.Buff.PlantExpBonus, 0)
+		}
+		interactionEffects := make([]InteractionEffectDTO, 0, len(plant.InteractionItemIDs))
+		seenItems := map[int64]struct{}{}
+		for _, itemID := range plant.InteractionItemIDs {
+			if itemID <= 0 {
+				continue
+			}
+			if _, dup := seenItems[itemID]; dup {
+				continue
+			}
+			seenItems[itemID] = struct{}{}
+			itemName := ""
+			if item := GetItemByID(itemID); item != nil {
+				itemName = item.Name
+			}
+			interactionEffects = append(interactionEffects, InteractionEffectDTO{ItemID: itemID, ItemName: itemName})
+		}
+
+		var matureAt int64
+		if matureBegin > 0 {
+			matureAt = matureBegin
+		} else {
+			matureAt = nowSec + matureInSec
+		}
+
 		out = append(out, UILandRow{
 			ID: id, Unlocked: true, Status: landStatus, PlantName: plantName,
 			SeedID: seedID, SeedImage: seedImage, PhaseName: phaseName,
@@ -299,6 +372,12 @@ func FormatLandsResponse(lands []LandInfo) LandsUIResponse {
 			CouldUnlock: couldUnlock, CouldUpgrade: couldUpgrade,
 			MasterLandID: masterLandID, PlantSize: plantSize,
 			OccupiedByMaster: occupiedByMaster, OccupiedLandIDs: occupiedLandIDs,
+			MatureAt: matureAt, PlantID: plant.ID, DisplayPlantID: displayPlantID,
+			MutantConfigIDs: mutantIDs, MutantEffects: mutantEffects,
+			IsMutated:                      len(mutantIDs) > 0,
+			PurpleCrystalResonanceExpBonus: purpleCrystal, LandBuff: land.Buff,
+			InteractionEffects:     interactionEffects,
+			NeedInteractionCleanup: len(plant.InteractionItemIDs) > 0,
 		})
 	}
 
@@ -351,4 +430,27 @@ func DecrementMatureInSec(rows []UILandRow) {
 			rows[i].MatureInSec = int64(math.Max(0, float64(rows[i].MatureInSec-1)))
 		}
 	}
+}
+
+func maxInt64(a, b int64) int64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// CareerInfo is a friend career summary (rust career.rs CareerInfo).
+type CareerInfo struct {
+	Gid     int64  `json:"gid"`
+	Harvest int64  `json:"harvest"`
+	Steal   int64  `json:"steal"`
+	Level   int64  `json:"level"`
+	Name    string `json:"name"`
+}
+
+// FriendLandsResponse is the friend farm panel payload (lands + summary + career).
+type FriendLandsResponse struct {
+	Lands   []UILandRow `json:"lands"`
+	Summary LandSummary `json:"summary"`
+	Career  *CareerInfo `json:"career,omitempty"`
 }

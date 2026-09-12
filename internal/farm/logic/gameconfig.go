@@ -3,10 +3,10 @@ package logic
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -216,20 +216,25 @@ func (g *GameConfig) Load(dir string) error {
 
 // IllustratedConfigItem is an Illustrated.json row.
 type IllustratedConfigItem struct {
-	ID               int64  `json:"id"`
-	Type             string `json:"type"`
-	IllustratedType  string `json:"illustrated_type"`
-	Param            int64  `json:"param"`
-	ShowGuarantee    *bool  `json:"show_guarantee"`
-	Sort             int64  `json:"sort"`
+	ID              int64  `json:"id"`
+	Type            string `json:"type"`
+	IllustratedType string `json:"illustrated_type"`
+	Param           int64  `json:"param"`
+	ShowGuarantee   *bool  `json:"show_guarantee"`
+	Sort            int64  `json:"sort"`
 }
 
 // MutantEffectItem is a MutantEffect.json row.
 type MutantEffectItem struct {
-	ID       int64   `json:"id"`
-	Tips     string  `json:"tips"`
-	Rate     float64 `json:"rate"`
-	Activity bool    `json:"activity"`
+	ID         int64   `json:"id"`
+	Name       string  `json:"name"`
+	Icon       string  `json:"icon"`
+	Tag        string  `json:"tag"`
+	Desc       *string `json:"desc"`
+	ActivityID int64   `json:"activity_id"`
+	Tips       string  `json:"tips"`
+	Rate       float64 `json:"rate"`
+	Activity   bool    `json:"activity"`
 }
 
 func loadIllustratedTable(dir string) map[int64]*IllustratedConfigItem {
@@ -998,6 +1003,18 @@ func GetLandConfigByCoordinate(x, y int) *LandConfigItem {
 	return GlobalGameConfig.GetLandConfigByCoordinate(x, y)
 }
 func GetItemByID(id int64) *ItemInfo { return GlobalGameConfig.GetItemByID(id) }
+
+// GetMutantEffectByID returns one mutant effect row.
+func GetMutantEffectByID(id int64) *MutantEffectItem { return GlobalGameConfig.GetMutantEffect(id) }
+
+// GetMutantImageByID returns the mutant icon path (rust get_mutant_image_by_id):
+// /game-config/seed_images_named/mutant/{id}.webp
+func GetMutantImageByID(id int64) string {
+	if id <= 0 {
+		return ""
+	}
+	return "/game-config/seed_images_named/mutant/" + fmt.Sprintf("%d", id) + ".webp"
+}
 func GetAllSeeds() []SeedInfo        { return GlobalGameConfig.GetAllSeeds() }
 func GetAllFruits() []map[string]any { return GlobalGameConfig.GetAllFruits() }
 func GetAllItems(typeFilter int64) []map[string]any {

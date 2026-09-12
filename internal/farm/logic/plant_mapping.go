@@ -20,6 +20,7 @@ func LandsFromPlantPB(lands []*plantpb.LandInfo) []LandInfo {
 			SlaveLandIDs: append([]int64(nil), l.SlaveLandIds...),
 			LandSize:     l.LandSize,
 			LandsLevel:   l.LandsLevel,
+			Buff:         mapBuff(l.Buff),
 		}
 		if l.Plant != nil {
 			p := l.Plant
@@ -111,4 +112,15 @@ func uniquePositiveIDs(ids []int64) []int64 {
 		out = append(out, id)
 	}
 	return out
+}
+
+func mapBuff(buff *plantpb.LandInfo_Buff) *LandBuffInfo {
+	if buff == nil {
+		return nil
+	}
+	return &LandBuffInfo{
+		PlantYieldBonus:       buff.GetPlantYieldBonus(),
+		PlantingTimeReduction: buff.GetPlantingTimeReduction(),
+		PlantExpBonus:         buff.GetPlantExpBonus(),
+	}
 }

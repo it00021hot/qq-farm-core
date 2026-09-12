@@ -161,18 +161,30 @@ func (s *Service) Sync(ctx fiber.Ctx, req farmtypes.FriendSyncReq) (map[string]a
 	}, nil
 }
 
-func (s *Service) Lands(ctx fiber.Ctx, req farmtypes.FriendLandsReq) (logic.LandsUIResponse, error) {
+func (s *Service) Lands(ctx fiber.Ctx, req farmtypes.FriendLandsReq) (logic.FriendLandsResponse, error) {
 	session, err := s.session(ctx, req.AccountID)
 	if err != nil {
-		return logic.LandsUIResponse{}, errors.New("账号未在线或功能未就绪")
+		return logic.FriendLandsResponse{}, errors.New("账号未在线或功能未就绪")
 	}
 	callCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	lands, err := session.FriendLands(callCtx, req.Gid)
 	if err != nil {
-		return logic.LandsUIResponse{}, err
+		return logic.FriendLandsResponse{}, err
 	}
-	return logic.FormatFriendLandsResponse(lands), nil
+	// 附好友生涯统计（rust get_friend_lands_detail：career 查询失败不阻断）。
+	res := logic.FormatFriendLandsResponse(lands)
+	response := logic.FriendLandsResponse{Lands: res.Lands, Summary: res.Summary}
+	if careerReply, careerErr := session.GameAPI().CareerInfoGetForGID(callCtx, req.Gid); careerErr == nil && careerReply != nil {
+		response.Career = &logic.CareerInfo{
+			Gid:     careerReply.GetGid(),
+			Harvest: careerReply.GetTotalHarvestCount(),
+			Steal:   careerReply.GetTotalStealCount(),
+			Level:   careerReply.GetLevel(),
+			Name:    careerReply.GetName(),
+		}
+	}
+	return response, nil
 }
 
 func (s *Service) Op(ctx fiber.Ctx, req farmtypes.FriendOpReq) (map[string]any, error) {
