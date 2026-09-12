@@ -66,11 +66,11 @@ func SendOfflineReminder(accountName, msg string) {
 	defer cancel()
 	_ = callCtx
 	switch cfg.Provider {
-	case "qqBot":
+	case "qq_bot":
 		if err := push.QqBotShared().SendText(title, msg); err != nil {
 			slog.Warn("offline reminder qqbot send failed", "account", accountName, "err", err)
 		}
-	case "dingTalk":
+	case "ding_talk":
 		if strings.TrimSpace(cfg.Endpoint) == "" && strings.TrimSpace(cfg.Token) == "" {
 			return
 		}

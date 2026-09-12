@@ -231,9 +231,9 @@ func (Service) TestOfflineReminder(ctx fiber.Ctx, cfg OfflineReminder) (map[stri
 	reminder.Endpoint, reminder.Token, reminder.Secret = cfg.Endpoint, cfg.Token, cfg.Secret
 	reminder.Title, reminder.Msg = cfg.Title, cfg.Msg
 	switch reminder.Provider {
-	case "wechatBot":
+	case "wechat_bot":
 		return map[string]any{"ok": false, "code": "not_implemented", "msg": "微信机器人暂未实现"}, nil
-	case "dingTalk":
+	case "ding_talk":
 		if strings.TrimSpace(reminder.Endpoint) == "" && strings.TrimSpace(reminder.Token) == "" {
 			return map[string]any{"ok": false, "code": "missing_endpoint", "msg": "请填写钉钉 Webhook 地址或 Access Token"}, nil
 		}
@@ -241,7 +241,7 @@ func (Service) TestOfflineReminder(ctx fiber.Ctx, cfg OfflineReminder) (map[stri
 			return map[string]any{"ok": false, "code": "send_failed", "msg": err.Error()}, nil
 		}
 		return map[string]any{"ok": true, "msg": "钉钉测试消息已发送"}, nil
-	case "qqBot":
+	case "qq_bot":
 		if err := push.QqBotShared().SendText("测试通知", "这是一条来自 QQ Farm 面板的测试消息"); err != nil {
 			return map[string]any{"ok": false, "code": "send_failed", "msg": err.Error()}, nil
 		}

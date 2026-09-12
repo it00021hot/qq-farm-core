@@ -32,6 +32,7 @@ func InitFarmRuntime() {
 		dataDir = "runtime/data"
 	}
 	farmpush.InitQqBotBinding(dataDir)
+	farmpush.SetBotInviteURL(vars.Config.GetString("farm.qqBot.inviteUrl"))
 	qqBotOpenID := vars.Config.GetString("farm.qqBot.userOpenid")
 	if binding := farmpush.CurrentBinding(); binding != nil && binding.UserOpenID != "" {
 		qqBotOpenID = binding.UserOpenID

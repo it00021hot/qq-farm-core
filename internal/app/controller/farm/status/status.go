@@ -1,6 +1,7 @@
 package status
 
 import (
+	"time"
 	"github.com/gofiber/fiber/v3"
 	"github.com/it00021hot/qq-farm-core/internal/app/controller"
 	statussvc "github.com/it00021hot/qq-farm-core/internal/app/service/farm/status"
@@ -70,20 +71,27 @@ func (c *Controller) List(ctx fiber.Ctx) error {
 // QqBotBindStatus returns the current binding + pending session state.
 func (c *Controller) QqBotBindStatus(ctx fiber.Ctx) error {
 	binding := farmpush.CurrentBinding()
-	pending := farmpush.PendingBindUser()
+	bound := binding != nil
+	if binding == nil {
+		binding = &farmpush.QqBotBinding{}
+	}
 	return response.SuccessJSON(ctx, "", map[string]any{
-		"binding":       binding,
-		"pendingUser":   pending,
-		"pendingActive": pending != "",
+		"credentialsConfigured": farmpush.CredentialsConfigured(),
+		"bound":                 bound,
+		"binding":               binding,
+		"botInviteUrl":          farmpush.BotInviteURL(),
 	})
 }
 
 // QqBotBindStart opens a pending bind session (user then DMs the bot any message).
 func (c *Controller) QqBotBindStart(ctx fiber.Ctx) error {
 	sessionID := farmpush.StartBindSession("admin")
+	expiresAt := time.Now().Add(5 * time.Minute).UnixMilli()
 	return response.SuccessJSON(ctx, "", map[string]any{
-		"sessionId": sessionID,
-		"message":   "已发起绑定，请在 5 分钟内用你的 QQ 私聊机器人发送任意消息完成绑定",
+		"sessionId":   sessionID,
+		"botInviteUrl": farmpush.BotInviteURL(),
+		"qrDataUrl":   "",
+		"expiresAt":   expiresAt,
 	})
 }
 

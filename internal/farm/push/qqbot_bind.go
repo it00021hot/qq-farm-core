@@ -130,6 +130,21 @@ func Unbind() bool {
 	return removed
 }
 
+// CredentialsConfigured reports whether appId+clientSecret are configured.
+func CredentialsConfigured() bool {
+	return QqBotShared().CurrentConfig().complete()
+}
+
+// BotInviteURL returns the configured bot invite URL (farm.qqBot.inviteUrl).
+func BotInviteURL() string {
+	return botInviteURL
+}
+
+var botInviteURL string
+
+// SetBotInviteURL wires the configured invite URL (called at boot).
+func SetBotInviteURL(u string) { botInviteURL = strings.TrimSpace(u) }
+
 // HandleC2CMessage applies the bind/unbind protocol to one private message
 // (rust complete_from_message). Returns (repliedText, handled).
 func HandleC2CMessage(userOpenID, nickname, content string) (string, bool) {
