@@ -159,8 +159,9 @@ func (s *Session) publishFertilizerBuyLog(message string, organicBought, normalB
 		return
 	}
 	s.hub.PublishJSON("runtime_log", parseAccountID(s.id), map[string]any{
-		"tag":       "商城",
-		"event":     "化肥补充",
+		"tag":       "仓库",
+		"event":     "fertilizer_buy",
+		"module":    "warehouse",
 		"message":   message,
 		"isWarn":    isWarn,
 		"accountId": parseAccountID(s.id),

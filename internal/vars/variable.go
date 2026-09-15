@@ -15,7 +15,7 @@ import (
 
 var (
 	BasePath string // resource root (bundled assets: configs/resource)
-	DataPath string // writable runtime root (sqlite/logs/tsdk); defaults to BasePath
+	DataPath string // writable runtime root (turso db/logs/tsdk); defaults to BasePath
 	DB       *gorm.DB
 	MDB      map[string]*gorm.DB
 	Redis    *redis.Client

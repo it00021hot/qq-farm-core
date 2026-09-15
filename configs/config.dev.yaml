@@ -28,17 +28,17 @@ log:
   localTime: true # 是否使用本地时间
   compress: true # 是否压缩归档日志
 database:
-  sqlite:
-    enabled: true # 使用 SQLite 单文件（无外部数据库）
+  turso:
+    enabled: true # Turso 嵌入式引擎（SQLite 兼容，单文件、无外部数据库；可直接读旧 .db）
     autoMigrate: true
     path: 'runtime/data/qq-farm.db'
     prefix: 'cn_'
-    fileName: 'sqlite-sql'
+    fileName: 'turso-sql'
     logLevel: 1 # 1:silent 2:error 3:warn 4:info
     maxIdleConn: 1
     maxOpenConn: 1
   pgsql:
-    enabled: false # 已切 SQLite，保留段便于回退
+    enabled: false # 已切 Turso，保留段便于回退
     autoMigrate: false
     maxIdleConn: 10
     maxOpenConn: 100
@@ -84,7 +84,7 @@ farm:
   appId: 'wx5306c5978fdb76e4'
   tsdkGameId: 3167
   tsdkAppKey: '0'
-  clientVersion: '1.14.0.3_20260909'
+  clientVersion: '1.14.0.4_20260911'
   os: 'Windows'
   pushWebhook: ''
   # QQ 官方机器人渠道（rust 语义：AccessToken + Gateway + C2C 单聊）

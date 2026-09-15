@@ -20,6 +20,48 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/types/farm"
 )
 
+// petSnapshotWithBag 拉取宠物信息 + 背包并构建页面快照（activate/deploy 的
+// 前置与事后校验共用）。
+func petSnapshotWithBag(ctx context.Context, api *game.API) (map[string]any, error) {
+	info, err := api.GetDogInfo(ctx)
+	if err != nil {
+		return nil, err
+	}
+	bag, err := api.Bag(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return petSnapshot(info, game.GetBagItems(bag)), nil
+}
+
+// petSnapshotMap 在快照里按 id 找一只狗的条目。
+func petSnapshotMap(snapshot map[string]any, dogID int64) map[string]any {
+	dogs, _ := snapshot["dogs"].([]map[string]any)
+	for _, dog := range dogs {
+		if id, _ := dog["id"].(int64); id == dogID {
+			return dog
+		}
+	}
+	return nil
+}
+
+// petDogActivatable 对齐 rust services/pets.rs（bot 9907ffd）：未拥有，
+// 且 field_6=1（背包有同 ID 宠物卡）或背包里真有未锁定的同 ID 卡片；
+// 激活消耗卡片后 field_6 消失。
+func petDogActivatable(owned bool, raw *dogpb.DogInfo, bag []corepb.Item, id int64) bool {
+	if owned {
+		return false
+	}
+	hasBagCard := int64(0)
+	for i := range bag {
+		it := &bag[i]
+		if it.GetId() == id && !it.GetLocked() && it.GetCount() > 0 {
+			hasBagCard += it.GetCount()
+		}
+	}
+	return (raw != nil && raw.GetField_6() == 1) || hasBagCard > 0
+}
+
 // DogInfo returns the pet page payload, 1:1 with rust PetService.get_pet_info
 // （狗列表含技能文案与用量、狗粮读背包、护主剩余时间、待领礼包数）。
 func (s *Service) DogInfo(ctx fiber.Ctx, req farm.AccountIDReq) (map[string]any, error) {
@@ -30,15 +72,7 @@ func (s *Service) DogInfo(ctx fiber.Ctx, req farm.AccountIDReq) (map[string]any,
 	api := session.GameAPI()
 	callCtx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
-	info, err := api.GetDogInfo(callCtx)
-	if err != nil {
-		return nil, err
-	}
-	bag, err := api.Bag(callCtx)
-	if err != nil {
-		return nil, err
-	}
-	return petSnapshot(info, game.GetBagItems(bag)), nil
+	return petSnapshotWithBag(callCtx, api)
 }
 
 // petPetSnapshot 的常量与文案表对齐 rust services/pets.rs。
@@ -167,6 +201,7 @@ func petSnapshot(info *dogpb.GetDogInfoReply, bag []corepb.Item) map[string]any 
 		if id == currentDogID {
 			owned = true
 		}
+		activatable := petDogActivatable(owned, raw, bag, id)
 
 		skills := []map[string]any{}
 		for _, def := range petSkillDefinitions(id) {
@@ -204,7 +239,7 @@ func petSnapshot(info *dogpb.GetDogInfoReply, bag []corepb.Item) map[string]any 
 			"rarityLabel": petRarityLabel(rarity), "skills": skills,
 			"skillDescription": skillDescription, "obtainCondition": petObtainCondition(id),
 			"price": price, "level": level, "status": status,
-			"owned": owned, "active": id == currentDogID,
+			"owned": owned, "activatable": activatable, "active": id == currentDogID,
 		})
 	}
 
@@ -277,11 +312,63 @@ func (s *Service) DogOperate(ctx fiber.Ctx, req farm.DogOpReq) (map[string]any, 
 		if req.DogID <= 0 {
 			return nil, errors.New("dogId 必填")
 		}
+		// 前置状态校验（对齐 rust deploy_dog）：未获得时报错按 field_6 区分
+		// 「尚未激活」与「未获得」，提示用户先去宠物页激活。
+		before, err := petSnapshotWithBag(callCtx, api)
+		if err != nil {
+			return nil, err
+		}
+		beforeDog := petSnapshotMap(before, req.DogID)
+		if beforeDog == nil {
+			return nil, errors.New("该宠物不在图鉴中")
+		}
+		owned, _ := beforeDog["owned"].(bool)
+		if !owned {
+			if activatable, _ := beforeDog["activatable"].(bool); activatable {
+				return nil, errors.New("该宠物尚未激活，请先激活")
+			}
+			return nil, errors.New("未获得该宠物，无法上场")
+		}
 		reply, err := api.DeployDog(callCtx, req.DogID)
 		if err != nil {
 			return nil, err
 		}
 		return map[string]any{"dogId": reply.GetDogId(), "message": "狗狗已上场"}, nil
+	case "activate":
+		// 宠物激活（对齐 bot 9907ffd / rust activate_dog）：消耗背包中的
+		// 宠物卡，把图鉴项变成可上场的已获得宠物。
+		if req.DogID <= 0 {
+			return nil, errors.New("dogId 必填")
+		}
+		before, err := petSnapshotWithBag(callCtx, api)
+		if err != nil {
+			return nil, err
+		}
+		beforeDog := petSnapshotMap(before, req.DogID)
+		if beforeDog == nil {
+			return nil, errors.New("该宠物不在图鉴中")
+		}
+		if owned, _ := beforeDog["owned"].(bool); owned {
+			return nil, errors.New("该宠物已获得，无需重复激活")
+		}
+		if activatable, _ := beforeDog["activatable"].(bool); !activatable {
+			return nil, errors.New("背包中没有该宠物的卡片，无法激活")
+		}
+		if _, err := api.ActivateDog(callCtx, req.DogID); err != nil {
+			return nil, err
+		}
+		after, err := petSnapshotWithBag(callCtx, api)
+		if err != nil {
+			return nil, err
+		}
+		afterDog := petSnapshotMap(after, req.DogID)
+		if afterDog == nil {
+			return nil, errors.New("宠物激活状态未更新，请稍后重试")
+		}
+		if owned, _ := afterDog["owned"].(bool); !owned {
+			return nil, errors.New("宠物激活状态未更新，请稍后重试")
+		}
+		return map[string]any{"dogId": req.DogID, "message": "宠物已激活"}, nil
 	case "withdraw":
 		reply, err := api.WithdrawDog(callCtx)
 		if err != nil {

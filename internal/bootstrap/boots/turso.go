@@ -10,39 +10,43 @@ import (
 
 	"github.com/it00021hot/qq-farm-core/internal/vars"
 	"github.com/it00021hot/qq-farm-core/pkg/database"
-	sqlitedriver "github.com/it00021hot/qq-farm-core/pkg/database/driver/sqlite"
+	tursodriver "github.com/it00021hot/qq-farm-core/pkg/database/driver/turso"
 	logger2 "github.com/it00021hot/qq-farm-core/pkg/logger"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 )
 
-// InitSQLite initializes the default SQLite connection.
-func InitSQLite() error {
+// databaseDriver 适配 pkg/database.DriverInterface（dialector → Instance）。
+type databaseDriver struct{ dialector gorm.Dialector }
+
+func (d databaseDriver) Instance() gorm.Dialector { return d.dialector }
+
+// InitTurso initializes the default Turso (SQLite-compatible embedded) connection.
+func InitTurso() error {
 	if vars.DB != nil {
 		return nil
 	}
-	if !vars.Config.GetBool("database.sqlite.enabled") {
+	if !vars.Config.GetBool("database.turso.enabled") {
 		return nil
 	}
 
-	dbPath := vars.Config.GetString("database.sqlite.path")
+	dbPath := vars.Config.GetString("database.turso.path")
 	if dbPath == "" {
 		dbPath = "runtime/data/qq-farm.db"
 	}
 	if err := os.MkdirAll(filepath.Dir(dbPath), 0o755); err != nil {
-		return fmt.Errorf("create sqlite dir: %w", err)
+		return fmt.Errorf("create turso data dir: %w", err)
 	}
 
-	// Pure-Go sqlite (glebarez) DSN with busy timeout; WAL enabled after open.
-	dsn := fmt.Sprintf("%s?_pragma=busy_timeout(5000)&_pragma=foreign_keys(1)", dbPath)
-	logLevel := vars.Config.GetInt("database.sqlite.logLevel")
+	// turso 驱动的 DSN 就是文件路径；PRAGMA 在连接建立后单独执行。
+	logLevel := vars.Config.GetInt("database.turso.logLevel")
 	if logLevel == 0 {
 		logLevel = 1
 	}
-	fileName := vars.Config.GetString("database.sqlite.fileName")
+	fileName := vars.Config.GetString("database.turso.fileName")
 	if fileName == "" {
-		fileName = "sqlite-sql"
+		fileName = "turso-sql"
 	}
 
 	newLogger := logger.New(
@@ -56,17 +60,17 @@ func InitSQLite() error {
 		},
 	)
 
-	maxIdle := vars.Config.GetInt("database.sqlite.maxIdleConn")
+	maxIdle := vars.Config.GetInt("database.turso.maxIdleConn")
 	if maxIdle == 0 {
 		maxIdle = 1
 	}
-	maxOpen := vars.Config.GetInt("database.sqlite.maxOpenConn")
+	maxOpen := vars.Config.GetInt("database.turso.maxOpenConn")
 	if maxOpen == 0 {
 		maxOpen = 1
 	}
 
 	d, err := database.New(
-		sqlitedriver.New(sqlitedriver.WithDSN(dsn)),
+		databaseDriver{dialector: &tursodriver.Dialector{DriverName: tursodriver.DriverName, DSN: dbPath}},
 		&gorm.Config{
 			NamingStrategy: schema.NamingStrategy{
 				SingularTable: true,
@@ -80,8 +84,14 @@ func InitSQLite() error {
 		return err
 	}
 
-	if err := d.DB.Exec("PRAGMA journal_mode=WAL").Error; err != nil {
-		slog.Warn("failed to enable WAL mode", "err", err)
+	for _, pragma := range []string{
+		"PRAGMA journal_mode=WAL",
+		"PRAGMA busy_timeout=5000",
+		"PRAGMA foreign_keys=1",
+	} {
+		if err := d.DB.Exec(pragma).Error; err != nil {
+			slog.Warn("failed to apply pragma", "pragma", pragma, "err", err)
+		}
 	}
 
 	vars.DB = d.DB
@@ -89,14 +99,14 @@ func InitSQLite() error {
 		vars.MDB = make(map[string]*gorm.DB)
 	}
 	vars.MDB[database.DefaultAlias] = d.DB
-	slog.Info("Starting sqlite connection", "path", dbPath)
+	slog.Info("Starting turso connection", "path", dbPath)
 	return nil
 }
 
-// TablePrefix returns the configured table prefix (sqlite preferred, then pgsql).
+// TablePrefix returns the configured table prefix (turso preferred, then pgsql).
 func TablePrefix() string {
-	if vars.Config.GetBool("database.sqlite.enabled") {
-		p := vars.Config.GetString("database.sqlite.prefix")
+	if vars.Config.GetBool("database.turso.enabled") {
+		p := vars.Config.GetString("database.turso.prefix")
 		if p != "" {
 			return p
 		}
@@ -106,9 +116,9 @@ func TablePrefix() string {
 
 // AutoMigrateEnabled reports whether AutoMigrate should run.
 func AutoMigrateEnabled() bool {
-	if vars.Config.GetBool("database.sqlite.enabled") {
-		if v := vars.Config.Get("database.sqlite.autoMigrate"); v != nil {
-			return vars.Config.GetBool("database.sqlite.autoMigrate")
+	if vars.Config.GetBool("database.turso.enabled") {
+		if v := vars.Config.Get("database.turso.autoMigrate"); v != nil {
+			return vars.Config.GetBool("database.turso.autoMigrate")
 		}
 		return true
 	}

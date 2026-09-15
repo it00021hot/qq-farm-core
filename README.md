@@ -1,6 +1,6 @@
 # QQ 农场 · 后端（qq-farm-core）
 
-> 维护状态：本仓库已恢复维护（2026-09-11 起重新作为主力版本），核心逻辑对齐 qq-farm-bot 20260910（协议 1.14.0.1_20260909），页面操作交互参考 qq-farm-rust。
+> 维护状态：本仓库已恢复维护（2026-09-11 起重新作为主力版本），核心逻辑对齐 qq-farm-bot 20260914（协议 1.14.0.4_20260911，含 Login/Heartbeat 逐字节对齐、宠物激活、多格种子预留），跟随 qq-farm-rust 20260915 同步，页面操作交互参考 qq-farm-rust。
 
 QQ 农场智能助手后端：多账号托管、自动化种地/好友互动、活动与商城，以及管理端 API。
 
@@ -23,7 +23,7 @@ QQ 农场智能助手后端：多账号托管、自动化种地/好友互动、�
 | 实时 | WebSocket 推送运行状态；可选异常 Webhook |
 | 权限 | JWT 登录即可（单机自用，无 Casbin 菜单矩阵） |
 
-默认开发库为 **SQLite**（`runtime/data/qq-farm.db`），Redis 默认关闭，可单机启动。
+默认开发库为 **Turso** 嵌入式引擎（SQLite 兼容，`runtime/data/qq-farm.db` 单文件，可直接读旧 SQLite 库），Redis 默认关闭，可单机启动。
 
 ## 目录结构
 
@@ -46,7 +46,7 @@ internal/
   router/routes/       # auth / farm / system
 pkg/                   # appserver、配置、DB 迁移、响应等
 resource/farm/         # gameConfig、tsdk.wasm
-runtime/               # 日志、SQLite、tsdk 工作目录
+runtime/               # 日志、Turso 数据库、tsdk 工作目录
 scripts/               # proto 生成、安全检查等
 ```
 
@@ -115,7 +115,7 @@ farm:
   pushWebhook: ''                  # 可选：Bark / 企微机器人等
 ```
 
-数据库：`database.sqlite.enabled: true` 为默认；`pgsql` 段保留便于回退。
+数据库：`database.turso.enabled: true` 为默认（Turso Go 驱动 turso.tech/database/tursogo + SQLite 兼容方言）；`pgsql` 段保留便于回退。
 
 ## API 入口
 

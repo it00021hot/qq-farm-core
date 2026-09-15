@@ -145,6 +145,8 @@ type AccountConfig struct {
 	BagSeedPriority                    []int64             `json:"bagSeedPriority"`
 	BagSeedLandTypes                   map[string][]string `json:"bagSeedLandTypes"`
 	BagSeedFallbackStrategy            string              `json:"bagSeedFallbackStrategy"`
+	// 多格种子未来布局预留（bot bagSeedMultiLandReservationEnabled，默认关）。
+	BagSeedMultiLandReservationEnabled bool                `json:"bagSeedMultiLandReservationEnabled"`
 	AutoAcceptFriendMinLevel           int                 `json:"autoAcceptFriendMinLevel"`
 	AutoAcceptRequireOwnLevel          bool                `json:"autoAcceptRequireOwnLevel"`
 	AutoAcceptHarvestStealEnabled      bool                `json:"autoAcceptHarvestStealEnabled"`
@@ -218,6 +220,8 @@ func DefaultAccountConfig() AccountConfig {
 		BagSeedPriority:               []int64{29003, 20129, 21380, 20108, 26032},
 		BagSeedLandTypes:              map[string][]string{},
 		BagSeedFallbackStrategy:       StrategyPreferred,
+		// 多格预留 opt-in（bot 96fdb39 默认 false）。
+		BagSeedMultiLandReservationEnabled: false,
 		AutoAcceptFriendMinLevel:      0,
 		AutoAcceptRequireOwnLevel:     false,
 		AutoAcceptHarvestStealEnabled: true,

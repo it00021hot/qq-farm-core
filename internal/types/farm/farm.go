@@ -131,6 +131,8 @@ type AutomationModifyReq struct {
 	BagSeedPriority         []int64             `json:"bagSeedPriority"`
 	BagSeedLandTypes        map[string][]string `json:"bagSeedLandTypes"`
 	BagSeedFallbackStrategy *string             `json:"bagSeedFallbackStrategy"`
+	// 多格种子未来布局预留开关（runtime/farm_op.go 消费）。
+	BagSeedMultiLandReservationEnabled *bool `json:"bagSeedMultiLandReservationEnabled"`
 	// 好友申请自动接受过滤（runtime/friend_application.go 消费）。
 	AutoAcceptFriendMinLevel           *int            `json:"autoAcceptFriendMinLevel"`
 	AutoAcceptRequireOwnLevel          *bool           `json:"autoAcceptRequireOwnLevel"`

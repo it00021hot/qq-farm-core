@@ -259,7 +259,8 @@ func (s *Session) publishShopLog(event, message string, isWarn bool) {
 	}
 	s.hub.PublishJSON("runtime_log", parseAccountID(s.id), map[string]any{
 		"tag":       "商城",
-		"event":     event,
+		"event":     "mystery_shop_watch",
+		"module":    "warehouse",
 		"message":   message,
 		"isWarn":    isWarn,
 		"accountId": parseAccountID(s.id),

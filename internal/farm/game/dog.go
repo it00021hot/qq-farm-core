@@ -31,6 +31,20 @@ func (a *API) GetDogInfo(ctx context.Context) (*dogpb.GetDogInfoReply, error) {
 	return reply, nil
 }
 
+// ActivateDog activates an unowned illustrated pet by consuming a bag pet card
+// (bot 9907ffd：宠物页“激活”）。
+func (a *API) ActivateDog(ctx context.Context, dogID int64) (*dogpb.ActivateDogReply, error) {
+	raw, err := a.sendDog(ctx, "ActivateDog", marshalMessage(&dogpb.ActivateDogRequest{DogId: dogID}))
+	if err != nil {
+		return nil, err
+	}
+	reply := &dogpb.ActivateDogReply{}
+	if err := unmarshalMessage(raw, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
 // DeployDog deploys the given dog (dog page "上场").
 func (a *API) DeployDog(ctx context.Context, dogID int64) (*dogpb.DeployDogReply, error) {
 	raw, err := a.sendDog(ctx, "DeployDog", marshalMessage(&dogpb.DeployDogRequest{DogId: dogID}))

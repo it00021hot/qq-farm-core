@@ -25,7 +25,7 @@ func NormalizePaths() {
 	}
 
 	absUnder(vars.DataPath, "log.dirPath", "runtime/logs")
-	absUnder(vars.DataPath, "database.sqlite.path", "runtime/data/qq-farm.db")
+	absUnder(vars.DataPath, "database.turso.path", "runtime/data/qq-farm.db")
 	absUnder(vars.DataPath, "farm.tsdkDataDir", "runtime/tsdk")
 	absUnder(vars.BasePath, "farm.wasmPath", "resource/farm/tsdk.wasm")
 	absUnder(vars.BasePath, "farm.gameConfigDir", "resource/farm/gameConfig")
@@ -37,7 +37,7 @@ func NormalizePaths() {
 	}
 
 	_ = os.MkdirAll(vars.Config.GetString("log.dirPath"), 0o755)
-	if dbPath := vars.Config.GetString("database.sqlite.path"); dbPath != "" {
+	if dbPath := vars.Config.GetString("database.turso.path"); dbPath != "" {
 		_ = os.MkdirAll(filepath.Dir(dbPath), 0o755)
 	}
 	if tsdk := vars.Config.GetString("farm.tsdkDataDir"); tsdk != "" {

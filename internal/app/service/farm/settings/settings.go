@@ -22,11 +22,11 @@ import (
 const (
 	systemConfigKey  = "system"
 	offlineRemindKey = "offline_reminder"
-	defaultClientVer = "1.14.0.3_20260909"
+	defaultClientVer = "1.14.0.4_20260911"
 	// defaultClientVerUpdatedAtMs: 默认客户端版本的发布时间（毫秒）。
 	// 保存的版本只有在其时间戳**更新**时才沿用，防止旧存档把升级链锁死在
 	// 过期版本上（rust DEFAULT_CLIENT_VERSION_UPDATED_AT / bot resolveClientVersion）。
-	defaultClientVerUpdatedAtMs int64 = 1_789_111_371_648
+	defaultClientVerUpdatedAtMs int64 = 1_789_352_998_016
 	defaultTimeZone                   = "Asia/Shanghai"
 	defaultPlatform                   = "qq"
 	defaultOS                         = "Windows"
@@ -74,6 +74,56 @@ type SystemConfigPayload struct {
 	OS                     string                `json:"os"`
 	TimeZone               string                `json:"timeZone"`
 	DeviceInfo             deviceprofile.Profile `json:"deviceInfo"`
+}
+
+// systemDeviceView 是 deviceInfo 的对外视图：小驼峰键 + 镜像顶层 clientVersion
+// （rust 桌面端契约，web 设置页的输入框按此结构渲染/回填）。
+type systemDeviceView struct {
+	OS            string `json:"os"`
+	ClientVersion string `json:"clientVersion"`
+	SysSoftware   string `json:"sysSoftware"`
+	Network       string `json:"network"`
+	Memory        string `json:"memory"`
+	DeviceID      string `json:"deviceId"`
+	UserAgent     string `json:"userAgent"`
+}
+
+// systemPayloadView 是 SystemConfigPayload 的对外视图。
+type systemPayloadView struct {
+	ServerURL              string           `json:"serverUrl"`
+	ClientVersion          string           `json:"clientVersion"`
+	ClientVersionUpdatedAt int64            `json:"clientVersionUpdatedAt"`
+	Platform               string           `json:"platform"`
+	OS                     string           `json:"os"`
+	TimeZone               string           `json:"timeZone"`
+	DeviceInfo             systemDeviceView `json:"deviceInfo"`
+}
+
+// SystemConfigPanel 是系统配置 GET/SAVE/RESET 的统一返回（rust
+// get_settings_panel 的 {default, saved} 契约；前端取 saved 回显、default 供重置）。
+type SystemConfigPanel struct {
+	Default systemPayloadView `json:"default"`
+	Saved   systemPayloadView `json:"saved"`
+}
+
+func systemPayloadViewOf(p SystemConfigPayload) systemPayloadView {
+	return systemPayloadView{
+		ServerURL:              p.ServerURL,
+		ClientVersion:          p.ClientVersion,
+		ClientVersionUpdatedAt: p.ClientVersionUpdatedAt,
+		Platform:               p.Platform,
+		OS:                     p.OS,
+		TimeZone:               p.TimeZone,
+		DeviceInfo: systemDeviceView{
+			OS:            p.DeviceInfo.OS,
+			ClientVersion: p.ClientVersion,
+			SysSoftware:   p.DeviceInfo.SysSoftware,
+			Network:       p.DeviceInfo.Network,
+			Memory:        p.DeviceInfo.Memory,
+			DeviceID:      p.DeviceInfo.DeviceID,
+			UserAgent:     p.DeviceInfo.UserAgent,
+		},
+	}
 }
 
 // OfflineReminder mirrors rust global_config.OfflineReminder.
@@ -155,10 +205,9 @@ func deleteKey(key string) error {
 	return db.Where("config_key = ?", key).Delete(&model.FarmSystemConfig{}).Error
 }
 
-// SystemConfig returns the stored system config merged over defaults.
-func (Service) SystemConfig(ctx fiber.Ctx) (SystemConfigPayload, error) {
-	stored := SystemConfigPayload{}
-	_ = readKey(systemConfigKey, &stored)
+// resolveSystemConfig merges stored overrides over defaults（serverUrl/版本守卫/
+// 设备指纹等兜底链）。
+func resolveSystemConfig(stored SystemConfigPayload) SystemConfigPayload {
 	if stored.ClientVersion == "" {
 		stored.ClientVersion = vars.Config.GetString("farm.clientVersion")
 	}
@@ -181,18 +230,29 @@ func (Service) SystemConfig(ctx fiber.Ctx) (SystemConfigPayload, error) {
 	if stored.DeviceInfo == (deviceprofile.Profile{}) {
 		stored.DeviceInfo = deviceprofile.Resolve(stored.OS)
 	}
-	return stored, nil
+	return stored
+}
+
+// SystemConfig returns the system config panel: pure defaults + stored-merged view.
+func (Service) SystemConfig(ctx fiber.Ctx) (SystemConfigPanel, error) {
+	stored := SystemConfigPayload{}
+	_ = readKey(systemConfigKey, &stored)
+	saved := resolveSystemConfig(stored)
+	def := resolveSystemConfig(SystemConfigPayload{})
+	return SystemConfigPanel{Default: systemPayloadViewOf(def), Saved: systemPayloadViewOf(saved)}, nil
 }
 
 // SaveSystemConfig persists the payload and applies the live knobs.
-func (Service) SaveSystemConfig(ctx fiber.Ctx, payload SystemConfigPayload) (SystemConfigPayload, error) {
+func (Service) SaveSystemConfig(ctx fiber.Ctx, payload SystemConfigPayload) (SystemConfigPanel, error) {
+	// rust set_system_config 语义：顶层版本为空不拦截，沿用手头已存版本
+	//（仍为空则读取侧 resolveSystemConfig 回默认版本）。
+	current := SystemConfigPayload{}
+	_ = readKey(systemConfigKey, &current)
 	if strings.TrimSpace(payload.ClientVersion) == "" {
-		return payload, errors.New("clientVersion 不能为空")
+		payload.ClientVersion = current.ClientVersion
 	}
 	// 版本时间戳规则（rust set_system_config resolve_client_version_updated_at）：
 	// 显式传入优先；版本变化记 now；未变化保留当前值。
-	current := SystemConfigPayload{}
-	_ = readKey(systemConfigKey, &current)
 	payload.ClientVersionUpdatedAt = ResolveClientVersionUpdatedAt(
 		payload.ClientVersion,
 		current.ClientVersion,
@@ -201,19 +261,21 @@ func (Service) SaveSystemConfig(ctx fiber.Ctx, payload SystemConfigPayload) (Sys
 		time.Now().UnixMilli(),
 	)
 	if err := writeKey(systemConfigKey, "系统配置", payload); err != nil {
-		return payload, err
+		return SystemConfigPanel{}, err
 	}
 	// 立即生效：登录版本走 vars.Config 兜底链。
 	if strings.TrimSpace(payload.ClientVersion) != "" {
 		vars.Config.Set("farm.clientVersion", strings.TrimSpace(payload.ClientVersion))
 	}
-	return payload, nil
+	saved := resolveSystemConfig(payload)
+	def := resolveSystemConfig(SystemConfigPayload{})
+	return SystemConfigPanel{Default: systemPayloadViewOf(def), Saved: systemPayloadViewOf(saved)}, nil
 }
 
 // ResetSystemConfig clears overrides and returns defaults.
-func (Service) ResetSystemConfig(ctx fiber.Ctx) (SystemConfigPayload, error) {
+func (Service) ResetSystemConfig(ctx fiber.Ctx) (SystemConfigPanel, error) {
 	if err := deleteKey(systemConfigKey); err != nil {
-		return SystemConfigPayload{}, err
+		return SystemConfigPanel{}, err
 	}
 	vars.Config.Set("farm.clientVersion", defaultClientVer)
 	return Service{}.SystemConfig(ctx)

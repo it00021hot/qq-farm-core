@@ -1,8 +1,6 @@
 package wxlogin
 
 import (
-	"context"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/it00021hot/qq-farm-core/internal/app/controller"
 	farmwx "github.com/it00021hot/qq-farm-core/internal/farm/wxlogin"
@@ -26,13 +24,6 @@ type createTaskReq struct {
 
 type quickConfirmReq struct {
 	RedirectURL string `json:"redirect_url"`
-}
-
-type quickAuthorizeReq struct {
-	Port          uint16 `json:"port"`
-	AuthorizeUUID string `json:"authorize_uuid"`
-	X             int    `json:"x"`
-	Y             int    `json:"y"`
 }
 
 func ownerKey(ctx fiber.Ctx) string {
@@ -69,33 +60,6 @@ func (c *Controller) CreateQuickTask(ctx fiber.Ctx) error {
 		return response.BadRequestException(ctx, err.Error())
 	}
 	return response.SuccessJSON(ctx, "", quick.PublicView(session))
-}
-
-// DetectQuickTask POST /farm/wx-login/quick-tasks/:sessionId/detect
-func (c *Controller) DetectQuickTask(ctx fiber.Ctx) error {
-	profile, err := quick.Detect(context.Background(), ownerKey(ctx), ctx.Params("sessionId"))
-	if err != nil {
-		return response.BadRequestException(ctx, err.Error())
-	}
-	return response.SuccessJSON(ctx, "", map[string]any{
-		"port":           profile.Port,
-		"authorize_uuid": profile.AuthorizeUUID,
-		"nickname":       profile.Nickname,
-		"headimgurl":     profile.Headimgurl,
-	})
-}
-
-// AuthorizeQuickTask POST /farm/wx-login/quick-tasks/:sessionId/authorize
-func (c *Controller) AuthorizeQuickTask(ctx fiber.Ctx) error {
-	var req quickAuthorizeReq
-	_ = ctx.Bind().Body(&req)
-	redirectURL, err := quick.Authorize(context.Background(), ownerKey(ctx), ctx.Params("sessionId"), req.Port, req.AuthorizeUUID, req.X, req.Y)
-	if err != nil {
-		return response.BadRequestException(ctx, err.Error())
-	}
-	return response.SuccessJSON(ctx, "", map[string]any{
-		"redirect_url": redirectURL,
-	})
 }
 
 // ConfirmQuickTask POST /farm/wx-login/quick-tasks/:sessionId/confirm

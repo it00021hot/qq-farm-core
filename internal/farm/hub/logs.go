@@ -172,12 +172,17 @@ func logEntryFromEvent(typ string, accountID uint64, payload any) (LogEntry, boo
 		Tag:       asString(m["tag"]),
 		Msg:       asString(m["message"]),
 		Meta: LogMeta{
-			Event: asString(m["event"]),
+			// 对齐 rust PanelEvent：event 为 snake_case key（farm_cycle 等），
+			// module 为 farm/warehouse/friend/task/system，前端筛选按此匹配。
+			Event:  asString(m["event"]),
+			Module: asString(m["module"]),
 		},
 	}
 	switch typ {
 	case "farm_operation", "farm_tick":
-		entry.Meta.Module = "farm"
+		if entry.Meta.Module == "" {
+			entry.Meta.Module = "farm"
+		}
 		if entry.Tag == "" {
 			if entry.IsWarn {
 				entry.Tag = "错误"
@@ -186,25 +191,28 @@ func logEntryFromEvent(typ string, accountID uint64, payload any) (LogEntry, boo
 			}
 		}
 		if entry.Meta.Event == "" {
-			if typ == "farm_tick" {
-				entry.Meta.Event = "农场巡查"
-			} else {
-				entry.Meta.Event = "农场操作"
-			}
+			entry.Meta.Event = "farm_cycle"
 		}
 		if entry.Msg == "" {
 			entry.Msg = joinActions(m)
 		}
 	case "friend_interact":
-		entry.Meta.Module = "friend"
+		if entry.Meta.Module == "" {
+			entry.Meta.Module = "friend"
+		}
 		if entry.Tag == "" {
 			entry.Tag = "好友"
+		}
+		if entry.Meta.Event == "" {
+			entry.Meta.Event = "visit_friend"
 		}
 		if entry.Msg == "" {
 			entry.Msg = asString(m["action"])
 		}
 	case "account_status":
-		entry.Meta.Module = "system"
+		if entry.Meta.Module == "" {
+			entry.Meta.Module = "system"
+		}
 		st := asString(m["status"])
 		detail := asString(m["detail"])
 		entry.IsWarn = st == "error"
@@ -215,12 +223,14 @@ func logEntryFromEvent(typ string, accountID uint64, payload any) (LogEntry, boo
 				entry.Tag = "系统"
 			}
 		}
-		entry.Meta.Event = "账号状态"
+		entry.Meta.Event = "account_status"
 		if entry.Msg == "" {
 			entry.Msg = formatAccountStatusMsg(st, detail)
 		}
 	case "runtime_log":
-		entry.Meta.Module = "system"
+		if entry.Meta.Module == "" {
+			entry.Meta.Module = "system"
+		}
 		if entry.Tag == "" {
 			if entry.IsWarn {
 				entry.Tag = "错误"
@@ -229,7 +239,7 @@ func logEntryFromEvent(typ string, accountID uint64, payload any) (LogEntry, boo
 			}
 		}
 		if entry.Meta.Event == "" {
-			entry.Meta.Event = "登录"
+			entry.Meta.Event = "login"
 		}
 		if entry.Msg == "" {
 			entry.Msg = asString(m["msg"])
@@ -286,13 +296,7 @@ func joinActions(m map[string]any) string {
 		if errText := asString(m["error"]); errText != "" {
 			return errText
 		}
-		op := asString(m["op"])
-		switch op {
-		case "", "all":
-			return "巡查完成"
-		default:
-			return op
-		}
+		return asString(m["op"])
 	}
 	switch a := raw.(type) {
 	case []string:
@@ -305,16 +309,9 @@ func joinActions(m map[string]any) string {
 				parts = append(parts, s)
 			}
 		}
-		if len(parts) == 0 {
-			return "巡查完成"
-		}
 		return strings.Join(parts, "/")
 	default:
-		s := asString(raw)
-		if s == "" || s == "all" {
-			return "巡查完成"
-		}
-		return s
+		return asString(raw)
 	}
 }
 

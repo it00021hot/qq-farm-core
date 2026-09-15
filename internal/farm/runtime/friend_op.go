@@ -1094,7 +1094,8 @@ func logSellFruits(s *Session, accountID uint64, names []string, gold int64, sol
 	}
 	payload := map[string]any{
 		"tag":     "仓库",
-		"event":   "出售果实",
+		"event":   "sell_success",
+		"module":  "warehouse",
 		"message": msg,
 		"isWarn":  false,
 		"actions": []string{msg},
@@ -1905,18 +1906,20 @@ func lookupFriendNickname(accountID uint64, gid int64) string {
 	return strings.TrimSpace(row.Nickname)
 }
 
+// friendActionEvent 对齐 rust PanelEvent：好友动作 → snake_case 事件 key
+//（前端 log-events.ts EVENT_LABELS 按此渲染 chip/筛选）。
 func friendActionEvent(action string) string {
 	switch action {
 	case "steal":
-		return "偷好友菜"
+		return "visit_friend"
 	case "steal_score":
-		return "偷取积分"
+		return "steal_score"
 	case "help", "water", "weed", "bug":
-		return "帮助好友"
+		return "care_friend"
 	case "bad":
-		return "放虫放草"
+		return "bad_action"
 	default:
-		return "照顾好友"
+		return "care_friend"
 	}
 }
 

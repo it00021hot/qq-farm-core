@@ -744,7 +744,7 @@ func SeedImagePath(id int64) string {
 	return fmt.Sprintf("/game-config/seed_images_named/seed_images/%d.webp", id)
 }
 
-// GetAllSeeds returns catalog seed rows.
+// GetAllSeeds returns catalog seed rows, sorted by required level (asc), then seedId.
 func (g *GameConfig) GetAllSeeds() []SeedInfo {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
@@ -781,6 +781,13 @@ func (g *GameConfig) GetAllSeeds() []SeedInfo {
 			HarvestCount:  p.Fruit.Count,
 		})
 	}
+	// map 遍历顺序随机：面板列表按解锁等级升序展示（等级相同按 seedId）。
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].RequiredLevel != out[j].RequiredLevel {
+			return out[i].RequiredLevel < out[j].RequiredLevel
+		}
+		return out[i].SeedID < out[j].SeedID
+	})
 	return out
 }
 
@@ -859,6 +866,17 @@ func (g *GameConfig) GetAllFruits() []map[string]any {
 			"image":      SeedImagePath(item.ID),
 		})
 	}
+	// 等级升序、id 兜底，保证面板顺序稳定。
+	sort.Slice(out, func(i, j int) bool {
+		li, _ := out[i]["level"].(int64)
+		lj, _ := out[j]["level"].(int64)
+		if li != lj {
+			return li < lj
+		}
+		ii, _ := out[i]["id"].(int64)
+		ij, _ := out[j]["id"].(int64)
+		return ii < ij
+	})
 	return out
 }
 
@@ -918,6 +936,22 @@ func (g *GameConfig) GetAllItems(typeFilter int64) []map[string]any {
 			"image":           SeedImagePath(item.ID),
 		})
 	}
+	// 等级升序、type+id 兜底，保证面板顺序稳定。
+	sort.Slice(out, func(i, j int) bool {
+		li, _ := out[i]["level"].(int64)
+		lj, _ := out[j]["level"].(int64)
+		if li != lj {
+			return li < lj
+		}
+		ti, _ := out[i]["type"].(int64)
+		tj, _ := out[j]["type"].(int64)
+		if ti != tj {
+			return ti < tj
+		}
+		ii, _ := out[i]["id"].(int64)
+		ij, _ := out[j]["id"].(int64)
+		return ii < ij
+	})
 	return out
 }
 
@@ -961,6 +995,17 @@ func (g *GameConfig) GetAllPlants() []map[string]any {
 			"image":         image,
 		})
 	}
+	// 等级升序、plantId 兜底，保证面板顺序稳定。
+	sort.Slice(out, func(i, j int) bool {
+		li, _ := out[i]["landLevelNeed"].(int64)
+		lj, _ := out[j]["landLevelNeed"].(int64)
+		if li != lj {
+			return li < lj
+		}
+		pi, _ := out[i]["plantId"].(int64)
+		pj, _ := out[j]["plantId"].(int64)
+		return pi < pj
+	})
 	return out
 }
 

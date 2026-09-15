@@ -449,7 +449,7 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 		ver = vars.Config.GetString("farm.clientVersion")
 	}
 	if ver == "" {
-		ver = "1.14.0.3_20260909"
+		ver = "1.14.0.4_20260911"
 	}
 	sep := "?"
 	if strings.Contains(url, "?") {
@@ -566,31 +566,17 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 
 func (s *Session) doLogin(ctx context.Context, client *protocol.Client, ver string, dev deviceprofile.Profile) error {
 	if ver == "" {
-		ver = "1.14.0.3_20260909"
+		ver = "1.14.0.4_20260911"
 	}
-	// Exact LoginRequest shape from network.ts sendLogin — sparse DeviceInfo only.
+	// 官方客户端 Login 体逐字节对齐（bot 9709bcb）：device_info 只保留
+	// client_version + sys_software，显式写出 proto3 默认值字段（固定 73 字节）。
 	sysSoft := dev.SysSoftware
 	if sysSoft == "" {
 		sysSoft = "Windows"
 	}
-	req := &userpb.LoginRequest{
-		SceneId: "1234567",
-		DeviceInfo: &userpb.DeviceInfo{
-			ClientVersion: ver,
-			SysSoftware:   sysSoft,
-			ScreenWidth:   0,
-		},
-		ReportData: &userpb.ReportData{
-			MinigameChannel: "other-qq",
-			MinigamePlatid:  2,
-		},
-	}
 	loginCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
-	requestBody, err := proto.Marshal(req)
-	if err != nil {
-		return fmt.Errorf("登录请求编码失败: %w", err)
-	}
+	requestBody := protocol.BuildLoginBody(ver, sysSoft)
 	body, _, err := client.Send(loginCtx, "gamepb.userpb.UserService", "Login", requestBody)
 	if err != nil {
 		return fmt.Errorf("登录失败: %w", err)
@@ -715,13 +701,11 @@ func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 				continue
 			}
 			if ver == "" {
-				ver = "1.14.0.3_20260909"
+				ver = "1.14.0.4_20260911"
 			}
 
-			heartbeatBody, marshalErr := proto.Marshal(&userpb.HeartbeatRequest{Gid: gid, ClientVersion: ver})
-			if marshalErr != nil {
-				continue
-			}
+			// 官方抓包逐字节对齐（bot 9709bcb）：field_3 显式写 0，固定 27 字节。
+			heartbeatBody := protocol.BuildHeartbeatBody(gid, ver)
 			hbCtx, cancel := context.WithTimeout(ctx, heartbeatRPCTimeout)
 			raw, _, err := client.Send(hbCtx, "gamepb.userpb.UserService", "Heartbeat", heartbeatBody)
 			cancel()
@@ -923,6 +907,7 @@ func (s *Session) RunFarmOp(ctx context.Context, op string) (hadWork bool, actio
 		WithStatsAccount(parseAccountID(s.id)),
 		WithPlayerState(playerLevel, gold),
 		WithOperationLimitsSink(s.ensureHelpState().updateLimits),
+		WithLogSink(s.publishPanelLog),
 	)
 	s.mu.Lock()
 	s.isFirstFarmCheck = false
@@ -930,39 +915,37 @@ func (s *Session) RunFarmOp(ctx context.Context, op string) (hadWork bool, actio
 		s.landCount = len(lands)
 	}
 	s.mu.Unlock()
-	if s.hub != nil {
+	// 对齐 rust scheduler：空闲轮次不产生任何面板日志；汇总/收获/种植等
+	// 独立条目已由 RunFarmOperation 内部经 publishPanelLog 发出。
+	// 这里只补错误条目与非巡田操作的动作条目。
+	if s.hub != nil && (err != nil || (hadWork && op != "all" && op != "cycle")) {
 		msg := strings.Join(actions, "/")
-		if msg == "" {
-			if op == "all" || op == "cycle" {
-				msg = "巡查完成"
-			} else if op != "" {
-				msg = op
-			} else {
-				msg = "操作完成"
-			}
-		}
-		if msg == "all" || msg == "cycle" {
-			msg = "巡查完成"
-		}
 		tag := "农场"
+		if op != "" && op != "all" && op != "cycle" {
+			msg = strings.TrimSpace(op + " " + msg)
+		}
 		if err != nil {
 			tag = "错误"
-			if len(actions) == 0 {
-				msg = err.Error()
+			errText := err.Error()
+			if msg == "" {
+				msg = errText
 			} else {
-				msg = msg + " · " + err.Error()
+				msg = msg + " · " + errText
 			}
 		}
-		s.hub.PublishJSON("farm_operation", parseAccountID(s.id), map[string]any{
-			"op":      op,
-			"hadWork": hadWork,
-			"actions": actions,
-			"error":   errorText(err),
-			"tag":     tag,
-			"event":   "农场操作",
-			"message": msg,
-			"isWarn":  err != nil,
-		})
+		if msg != "" {
+			s.hub.PublishJSON("farm_operation", parseAccountID(s.id), map[string]any{
+				"op":      op,
+				"hadWork": hadWork,
+				"actions": actions,
+				"error":   errorText(err),
+				"tag":     tag,
+				"event":   "farm_cycle",
+				"message": msg,
+				"module":  "farm",
+				"isWarn":  err != nil,
+			})
+		}
 	}
 	if err != nil {
 		s.failTransport(err)
@@ -2065,8 +2048,9 @@ func (s *Session) claimDogSkillGifts(ctx context.Context, api *game.API, pending
 		slog.Info("拾取同气连枝礼包", "account", s.id, "item", itemName, "count", claimed)
 		if s.hub != nil {
 			s.hub.PublishJSON("runtime_log", parseAccountID(s.id), map[string]any{
-				"tag":       "宠物",
-				"event":     "领取同气连枝礼包",
+				"tag":       "仓库",
+				"event":     "dog_skill_gift",
+				"module":    "warehouse",
 				"message":   fmt.Sprintf("拾取%s x%d", itemName, claimed),
 				"isWarn":    false,
 				"accountId": parseAccountID(s.id),
@@ -2320,37 +2304,30 @@ func (s *Session) farmTick(ctx context.Context) {
 	if logicInQuietHours(cfg) && !cfg.FriendQuietHours.ContinueFarm {
 		return
 	}
-	hadWork, actions, err := s.RunFarmOp(ctx, "all")
+	hadWork, _, err := s.RunFarmOp(ctx, "all")
 	if err != nil {
 		slog.Warn("farm tick failed", "account", s.id, "err", err)
 	}
 	// 施肥轮结束即检测化肥余量（事件驱动补充，bot maybe_event_fertilizer_buy）。
 	s.maybeEventFertilizerBuy(ctx)
-	if s.hub != nil && (hadWork || err != nil) {
-		msg := strings.Join(actions, "/")
-		if msg == "" {
-			msg = "巡查完成"
-		}
-		tag := "农场"
-		if err != nil {
-			tag = "错误"
-			if msg == "巡查完成" {
-				msg = err.Error()
-			} else {
-				msg = msg + " · " + err.Error()
-			}
-		}
-		s.hub.PublishJSON("farm_tick", parseAccountID(s.id), map[string]any{
-			"hadWork": hadWork,
-			"actions": actions,
-			"error":   errorText(err),
-			"tag":     tag,
-			"event":   "农场巡查",
-			"message": msg,
-			"isWarn":  err != nil,
-		})
-	}
+	// 面板日志已由 RunFarmOp/RunFarmOperation 按 rust 语义发（空闲轮静默）。
+	_ = hadWork
 	s.publishStatusSnapshot()
+}
+
+// publishPanelLog 把 RunFarmOperation 产生的面板日志条目广播到 hub
+//（WS 推送 + 环形缓冲，farm_operation 类型触发前端状态刷新）。
+func (s *Session) publishPanelLog(entry FarmLogEntry) {
+	if s.hub == nil {
+		return
+	}
+	s.hub.PublishJSON("farm_operation", parseAccountID(s.id), map[string]any{
+		"tag":     entry.Tag,
+		"event":   entry.Event,
+		"module":  entry.Module,
+		"message": entry.Msg,
+		"isWarn":  entry.IsWarn,
+	})
 }
 
 // friendLoop keeps friend work independent from farm ticks while serializing game RPCs.

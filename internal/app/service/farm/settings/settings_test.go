@@ -4,7 +4,7 @@ import "testing"
 
 func TestResolveClientVersionGuard(t *testing.T) {
 	def := defaultClientVerUpdatedAtMs
-	if def != 1_789_111_371_648 {
+	if def != 1_789_352_998_016 {
 		t.Fatalf("default updatedAt = %d", def)
 	}
 	// 已保存版本更旧（updatedAt == 默认）→ 回默认版本。

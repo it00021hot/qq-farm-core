@@ -28,12 +28,12 @@ log:
   localTime: true
   compress: true
 database:
-  sqlite:
+  turso:
     enabled: true
     autoMigrate: true
     path: 'runtime/data/qq-farm.db'
     prefix: 'cn_'
-    fileName: 'sqlite-sql'
+    fileName: 'turso-sql'
     logLevel: 2
     maxIdleConn: 1
     maxOpenConn: 1

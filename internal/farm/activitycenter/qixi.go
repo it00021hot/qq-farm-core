@@ -495,6 +495,16 @@ func buildActivityDirectory(windows []logic.ActivityWindow, season, shop, solarT
 		fmt.Sprint(qixi["bridgeActivityId"]),
 		fmt.Sprint(qixi["giftActivityId"]),
 	}, "qixi", "qixi", 50)
+	// 公益小红花（静态活动 ID 对齐 bot 注册表；rust directory.rs priority 70）
+	add([]string{"2026090900", "2026090901"}, "charity", "charity", 70)
+	// 萌宠成长日记（静态活动 ID 对齐 bot 注册表，priority 5 最高：
+	// 与 stellar 同组时萌宠日记优先，点「S3 萌宠」直达萌宠日记而非空千星游记）
+	add([]string{"2026090100", "2026090101", "2026090102", "2026090103"}, "pet", "pet", 5)
+	// 雨落成诗（静态活动 ID 对齐 bot 注册表；rust directory.rs priority 80）
+	add([]string{
+		"2026070300", "2026070301", "2026070302",
+		"2026070303", "2026070304", "2026070305",
+	}, "weather", "weather", 80)
 
 	type group struct {
 		id, name     string

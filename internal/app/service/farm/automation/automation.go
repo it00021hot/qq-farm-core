@@ -57,7 +57,8 @@ func detailMap(accountID uint64, cfg logic.AccountConfig, configJSON string) map
 		"fertilizerBuyNormalThresholdHours":  cfg.FertilizerBuyNormalThresholdHours,
 		"fertilizerBuyCheckIntervalMinutes":  cfg.FertilizerBuyCheckIntervalMinutes,
 		// 兜种土地类型与好友申请自动接受过滤（runtime/friend_application.go 消费）。
-		"bagSeedLandTypes":              cfg.BagSeedLandTypes,
+		"bagSeedLandTypes":                    cfg.BagSeedLandTypes,
+		"bagSeedMultiLandReservationEnabled":  cfg.BagSeedMultiLandReservationEnabled,
 		"autoAcceptFriendMinLevel":      cfg.AutoAcceptFriendMinLevel,
 		"autoAcceptRequireOwnLevel":     cfg.AutoAcceptRequireOwnLevel,
 		"autoAcceptHarvestStealEnabled": cfg.AutoAcceptHarvestStealEnabled,
@@ -119,6 +120,9 @@ func (s *Service) Modify(ctx fiber.Ctx, req farmtypes.AutomationModifyReq) error
 		}
 		if req.BagSeedFallbackStrategy != nil {
 			cfg.BagSeedFallbackStrategy = *req.BagSeedFallbackStrategy
+		}
+		if req.BagSeedMultiLandReservationEnabled != nil {
+			cfg.BagSeedMultiLandReservationEnabled = *req.BagSeedMultiLandReservationEnabled
 		}
 		if req.PlantOrderRandom != nil {
 			cfg.PlantOrderRandom = *req.PlantOrderRandom

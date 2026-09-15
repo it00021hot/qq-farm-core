@@ -207,7 +207,8 @@ func buildPetDiaryOnce(ctx context.Context, api *game.API) (map[string]any, erro
 			}
 			if term.EndTime >= head.GetStartTime() && term.BeginTime <= head.GetEndTime() {
 				terms = append(terms, map[string]any{
-					"id": term.TermId, "name": term.Name,
+					// Name 是 proto bytes（UTF-8 文本），必须解码否则前端显示 base64 乱码。
+					"id": term.TermId, "name": bytesText(term.Name),
 					"startTime": term.BeginTime, "endTime": term.EndTime,
 					"status": term.Status, "canClaim": term.Status == 2,
 				})

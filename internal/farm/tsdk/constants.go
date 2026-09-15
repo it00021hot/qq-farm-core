@@ -8,8 +8,8 @@ import (
 
 // Runtime constants — mirrored from qq-farm-bot/core/src/utils/tsdk-runtime.ts (v3.9.0).
 const (
-	TSDKVersion = "v3.9.0.1788165223"
-	TSDKSHA256  = "a95b178193c4ad7cf01fd44b6ec7086b1711069659e0bf9180860466a7b5f99f"
+	TSDKVersion = "v3.9.0.1789137379"
+	TSDKSHA256  = "1744e339d43425f9f24834fd49b3239f824f57fe76242d5b3128ac55b3110ac5"
 	// MiniProgramAppID is the WX mini-program app id (host profile wx).
 	MiniProgramAppID = "wx5306c5978fdb76e4"
 	// QQMiniProgramAppID is the QQ mini-program app id (host profile qq).

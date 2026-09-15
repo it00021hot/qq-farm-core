@@ -29,6 +29,11 @@ Defaults: `ENV=dev`, `PORT=9528`. Seed admin: `admin` / `admin888`. DB auto-migr
 
 - Formatter: `gofumpt` via `make lint`
 - Controller: bind/validate only; Service: business logic; Model: table mapping
+- **JSON 序列化一律小驼峰**：所有进入 HTTP 响应/请求的结构体字段必须显式写
+  `json:"camelCase"` 标签（Go 默认输出大写字段名，是前后端键名不匹配白屏/丢数据
+  的惯犯来源）。例外：`logic.AutomationConfig` / `AccountConfig` 的账号配置
+  JSON 沿用 bot/rust 的 snake_case 契约，两侧已配对，勿改。新增接口时对照
+  `qq-farm-web/src/typings/api/farm.d.ts` 的前端类型核对键名
 
 ## Verification
 

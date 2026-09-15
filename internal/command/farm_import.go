@@ -22,7 +22,7 @@ func FarmImportJSON() *cli.Command {
 			&cli.StringFlag{Name: "env", Aliases: []string{"e"}, Value: "dev"},
 		},
 		Action: func(c *cli.Context) error {
-			bootstrap.BootService(bootstrap.SQLiteService)
+			bootstrap.BootService(bootstrap.TursoService)
 			raw, err := os.ReadFile(c.String("file"))
 			if err != nil {
 				return err

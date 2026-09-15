@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"slices"
 	"strings"
 	"time"
 
@@ -21,11 +22,38 @@ import (
 // FarmOperationOption customizes one farm operation.
 type FarmOperationOption func(*farmOperationOptions)
 
+// FarmLogEntry 对齐 rust infra/panel_log：一条面板日志（tag/event 为 rust
+// PanelEvent 体系的中文 tag + snake_case key，前端 log-events.ts 按此渲染）。
+type FarmLogEntry struct {
+	Tag    string // 农场/收获/种植/施肥/仓库/解锁/升级/好友/系统/错误
+	Event  string // farm_cycle / harvest_crop / plant_seed / fertilize / ...
+	Msg    string
+	Module string // farm / warehouse / friend / task / system（空默认 farm）
+	IsWarn bool
+}
+
 type farmOperationOptions struct {
 	accountID   uint64
 	playerLevel int64
 	gold        int64
 	limitsSink  func([]*plantpb.OperationLimit)
+	logSink     func(FarmLogEntry)
+}
+
+// emit 向面板发一条日志（无 sink 或消息为空时静默）。
+func (o *farmOperationOptions) emit(entry FarmLogEntry) {
+	if o == nil || o.logSink == nil || entry.Msg == "" {
+		return
+	}
+	if entry.Module == "" {
+		entry.Module = "farm"
+	}
+	o.logSink(entry)
+}
+
+// WithLogSink 注入面板日志出口（Session 侧桥接到 hub 广播 + 环形缓冲）。
+func WithLogSink(sink func(FarmLogEntry)) FarmOperationOption {
+	return func(o *farmOperationOptions) { o.logSink = sink }
 }
 
 // WithStatsAccount enables daily cn_farm_stats increments for this operation.
@@ -223,11 +251,18 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 				}
 			}
 		}
+		// 对齐 rust scheduler：收获成功独立面板条目（收获完成 N 块土地）。
+		if len(harvested) > 0 {
+			options.emit(FarmLogEntry{Tag: "收获", Event: "harvest_crop",
+				Msg: fmt.Sprintf("收获完成 %d 块土地", len(harvested))})
+		}
 	}
 	if len(harvested) > 0 && cfg.Automation.Sell {
-		sold, gold, _, sellErr := sellAllFruitsDetailed(ctx, api)
+		sold, gold, names, sellErr := sellAllFruitsDetailed(ctx, api)
 		if sellErr != nil {
 			opErrs = append(opErrs, fmt.Errorf("出售果实: %w", sellErr))
+			options.emit(FarmLogEntry{Tag: "仓库", Event: "sell_done", Module: "warehouse",
+				Msg: "出售失败: " + sellErr.Error(), IsWarn: true})
 		} else if sold > 0 {
 			if gold > 0 {
 				actions = append(actions, fmt.Sprintf("出售%d(+%d金)", sold, gold))
@@ -235,9 +270,14 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 				if options.accountID > 0 {
 					stats.RecordExpGold(options.accountID, 0, 0, gold)
 				}
+				// 对齐 rust warehouse：出售成功独立条目（module=warehouse）。
+				options.emit(FarmLogEntry{Tag: "仓库", Event: "sell_success", Module: "warehouse",
+					Msg: fmt.Sprintf("出售 %s，获得 %d 金币", strings.Join(names, ", "), gold)})
 			} else {
 				actions = append(actions, fmt.Sprintf("出售%d", sold))
 				recordOpCount(options, "sell", 1)
+				options.emit(FarmLogEntry{Tag: "仓库", Event: "sell_done", Module: "warehouse",
+					Msg: fmt.Sprintf("出售 %s", strings.Join(names, ", "))})
 			}
 		}
 	}
@@ -294,11 +334,22 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 			}
 		}
 		if len(available) > 0 {
-			plantedIDs, plantErrs := plantAvailableLands(ctx, api, cfg, available, options.playerLevel, options.gold)
+			plantedIDs, plantNotes, plantErrs := plantAvailableLands(ctx, api, cfg, available, options.playerLevel, options.gold)
 			opErrs = append(opErrs, plantErrs...)
+			actions = append(actions, plantNotes...)
+			// 多格预留独立条目（rust plant_from_bag_seeds：预留 N 块空地等凑布局）。
+			for _, note := range plantNotes {
+				if strings.HasPrefix(note, "预留") {
+					options.emit(FarmLogEntry{Tag: "种植", Event: "plant_seed",
+						Msg: note + " 块空地等待凑齐布局"})
+				}
+			}
 			if len(plantedIDs) > 0 {
 				actions = append(actions, fmt.Sprintf("种植%d", len(plantedIDs)))
 				recordOpCount(options, "plant", len(plantedIDs))
+				// 对齐 rust scheduler：种植成功独立面板条目。
+				options.emit(FarmLogEntry{Tag: "种植", Event: "plant_seed",
+					Msg: fmt.Sprintf("种植完成 %d 块土地", len(plantedIDs))})
 				// Both 改由巡田末尾统一跑全场，种完后不再立刻补肥，避免同一轮打两遍。
 				if cfg.Automation.Fertilizer != logic.FertilizerBoth {
 					runFertilizerByConfig(ctx, api, cfg, plantedIDs, false, false, &actions, &opErrs, options)
@@ -309,7 +360,12 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 
 	if op == "all" && cfg.Automation.FertilizerMultiSeason && len(postHarvestGrowing) > 0 &&
 		cfg.Automation.Fertilizer != logic.FertilizerBoth {
-		runFertilizerByConfig(ctx, api, cfg, postHarvestGrowing, false, true, &actions, &opErrs, options)
+		normal, organic := runFertilizerByConfig(ctx, api, cfg, postHarvestGrowing, false, true, &actions, &opErrs, options)
+		// 对齐 rust scheduler：多季补肥完成 普通 a / 有机 b。
+		if normal+organic > 0 {
+			options.emit(FarmLogEntry{Tag: "施肥", Event: "fertilize",
+				Msg: fmt.Sprintf("多季补肥完成 普通%d / 有机%d", normal, organic)})
+		}
 	}
 
 	shouldUpgrade := op == "upgrade" || (op == "all" && cfg.Automation.LandUpgrade)
@@ -321,6 +377,9 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 				continue
 			}
 			unlocked++
+			// 对齐 rust scheduler：土地#N 解锁成功。
+			options.emit(FarmLogEntry{Tag: "解锁", Event: "unlock_land",
+				Msg: fmt.Sprintf("土地#%d 解锁成功", id)})
 		}
 		if unlocked > 0 {
 			actions = append(actions, fmt.Sprintf("解锁%d", unlocked))
@@ -332,6 +391,8 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 				continue
 			}
 			upgraded++
+			options.emit(FarmLogEntry{Tag: "升级", Event: "upgrade_land",
+				Msg: fmt.Sprintf("土地#%d 升级成功", id)})
 		}
 		if upgraded > 0 {
 			actions = append(actions, fmt.Sprintf("升级%d", upgraded))
@@ -342,7 +403,19 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 	// End fertilizer pass: smart skips normal (organic on fast-mature lands only),
 	// Both runs the full-field pass here (normal + organic ripening, bot scheduler).
 	if op == "all" && (cfg.Automation.Fertilizer == logic.FertilizerSmart || cfg.Automation.Fertilizer == logic.FertilizerBoth) {
-		runFertilizerByConfig(ctx, api, cfg, nil, cfg.Automation.Fertilizer == logic.FertilizerSmart, false, &actions, &opErrs, options)
+		normal, organic := runFertilizerByConfig(ctx, api, cfg, nil, cfg.Automation.Fertilizer == logic.FertilizerSmart, false, &actions, &opErrs, options)
+		// 对齐 rust scheduler：巡田施肥完成 普通 a / 有机 b。
+		if normal+organic > 0 {
+			options.emit(FarmLogEntry{Tag: "施肥", Event: "fertilize",
+				Msg: fmt.Sprintf("巡田施肥完成 普通%d / 有机%d", normal, organic)})
+		}
+	}
+
+	// 对齐 rust scheduler run_one_cycle：巡田汇总只在有动作时记录，
+	// 消息为状态摘要 [收:N 农:N 水:N 枯:N 空:N 解:N 升:N 长:N] → 动作列表。
+	if (op == "all" || op == "cycle") && len(actions) > 0 {
+		options.emit(FarmLogEntry{Tag: "农场", Event: "farm_cycle",
+			Msg: farmCycleSummary(analysis, actions)})
 	}
 
 	return len(actions) > 0, actions, lands, errors.Join(opErrs...)
@@ -351,37 +424,49 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 // plantAvailableLands plants empty lands and returns confirmed planted master land IDs.
 // bagSeedLandTypes 非空时（rust plant_from_bag_seeds）：先拉一次最新地块建
 // landId→类型映射，受限种子先种且只落在命中类型的空地；解析失败 logWarn
-// 按不限制处理，不能导致整轮种不下去。
-func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountConfig, available []int64, playerLevel, gold int64) ([]int64, []error) {
+// 按不限制处理，不能导致整轮种不下去。多格预留开关打开时同样复用这次全量
+// 地块拉取取全部已解锁土地（rust all_unlocked_land_ids，开关默认关闭零额外请求）。
+// 第二个返回值是附加动作说明（如多格预留），由调用方并入本轮 actions。
+func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountConfig, available []int64, playerLevel, gold int64) ([]int64, []string, []error) {
 	remaining := uniqueLandIDs(available)
 	var (
 		plantedIDs []int64
+		notes      []string
 		errs       []error
 	)
 
 	fallbackAllowed := true
 	var bagSeeds []logic.BagSeed
 	useBag := cfg.PlantingStrategy == logic.StrategyBagPriority
-	// 背包种子土地类型限制上下文：限制表为空零额外请求；非空才拉最新土地
-	// （rust resolve_land_type_map_for_bag_seeds，仅背包种植路径消费）。
+	// 背包种子土地类型限制上下文：限制表为空且未开多格预留时零额外请求；
+	// 否则才拉最新土地（rust resolve_land_type_map_for_bag_seeds + 预留全量土地）。
 	landTypeAvailable := false
 	landTypeByID := map[int64]string{}
+	var allUnlockedLandIDs []int64
 	if useBag {
-		if len(cfg.BagSeedLandTypes) > 0 {
+		needAllLands := len(cfg.BagSeedLandTypes) > 0 || cfg.BagSeedMultiLandReservationEnabled
+		if needAllLands {
 			latest, _, latestErr := api.AllLands(ctx)
 			if latestErr != nil {
-				// rust：解析失败仅 warn，按不限制处理。
+				// rust：解析失败仅 warn，按不限制处理；本轮不做多格预留。
 				slog.Warn("解析土地类型失败，本轮背包种子按不限制处理", "err", latestErr)
 			} else {
 				landTypeByID = landTypes(latest)
 				landTypeAvailable = len(landTypeByID) > 0
+				if cfg.BagSeedMultiLandReservationEnabled {
+					for _, l := range latest {
+						if l.Unlocked && l.ID > 0 {
+							allUnlockedLandIDs = append(allUnlockedLandIDs, l.ID)
+						}
+					}
+				}
 			}
 		}
 		var bagErr error
 		bagSeeds, bagErr = api.BagSeeds(ctx)
 		if bagErr != nil {
 			errs = append(errs, fmt.Errorf("读取背包种子: %w", bagErr))
-			return plantedIDs, errs
+			return plantedIDs, notes, errs
 		}
 	}
 	if useBag {
@@ -394,6 +479,8 @@ func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountCo
 		// 有土地限制的种子排在最前先种，否则不限种子会把受限种子唯一兼容的地块占光。
 		orderedSeeds := logic.SortSeedsRestrictedFirst(
 			logic.SortBagSeedsForPlanting(bagSeeds, cfg.BagSeedPriority), cfg.BagSeedLandTypes)
+		// 多格预留每轮最多一次（bot futureLayoutReserved）。
+		reservedAnchor := int64(0)
 		for _, seed := range orderedSeeds {
 			if !fallbackAllowed || len(remaining) == 0 {
 				break
@@ -411,6 +498,29 @@ func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountCo
 				}
 			}
 			_, layouts := logic.PlanBagPlantingLayouts(allowedTarget, seed.PlantSize, seed.Count)
+			// 多格预留（bot 96fdb39 + ee4de82）：为排在前面的多格种子保住
+			// 尚未凑齐布局的空地，只预留当前已空出的部分；每轮最多一次，
+			// 且只对显式优先级种子生效。
+			if len(layouts) == 0 && cfg.BagSeedMultiLandReservationEnabled && reservedAnchor == 0 &&
+				seed.PlantSize > 1 && slices.Contains(cfg.BagSeedPriority, seed.SeedID) {
+				allEligible := allUnlockedLandIDs
+				if landTypeAvailable {
+					if seedTypes, restricted := logic.ResolveSeedLandTypes(cfg.BagSeedLandTypes, seed.SeedID); restricted {
+						allEligible = logic.FilterLandIDsByTypes(allUnlockedLandIDs, landTypeByID, seedTypes)
+					}
+				}
+				if reservation, ok := logic.SelectFutureLayoutReservation(allowedTarget, allEligible, seed.PlantSize); ok {
+					remaining = removeLandIDs(remaining, reservation.ReservedLandIDs)
+					reservedAnchor = reservation.Layout.AnchorLandID
+					note := fmt.Sprintf("预留%d", len(reservation.ReservedLandIDs))
+					notes = append(notes, note)
+					slog.Info("背包种子预留未来布局",
+						"seedId", seed.SeedID, "name", seed.Name,
+						"anchorLandId", reservation.Layout.AnchorLandID,
+						"layoutLandIds", reservation.Layout.LandIDs,
+						"reservedLandIds", reservation.ReservedLandIDs)
+				}
+			}
 			stopSeed := false
 			for _, layout := range layouts {
 				if !fallbackAllowed || len(remaining) == 0 {
@@ -451,7 +561,7 @@ func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountCo
 		}
 	}
 	if !fallbackAllowed || len(remaining) == 0 {
-		return uniqueLandIDs(plantedIDs), errs
+		return uniqueLandIDs(plantedIDs), notes, errs
 	}
 
 	strategy := cfg.PlantingStrategy
@@ -463,7 +573,7 @@ func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountCo
 	}
 	shop, err := api.ShopInfo(ctx, 2)
 	if err != nil {
-		return uniqueLandIDs(plantedIDs), append(errs, fmt.Errorf("读取种子商店: %w", err))
+		return uniqueLandIDs(plantedIDs), notes, append(errs, fmt.Errorf("读取种子商店: %w", err))
 	}
 	candidates := shopSeedCandidates(shop, playerLevel)
 	candidates = logic.SortSeedCandidatesByStrategy(candidates, strategy, cfg.PreferredSeedID, playerLevel, rankingsForStrategy(strategy))
@@ -511,7 +621,7 @@ func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountCo
 			break
 		}
 	}
-	return uniqueLandIDs(plantedIDs), errs
+	return uniqueLandIDs(plantedIDs), notes, errs
 }
 
 // plantOneLayout plants one layout, confirms footprint, and returns master + occupied IDs.
@@ -951,6 +1061,31 @@ func uniqueLandIDs(groups ...[]int64) []int64 {
 		}
 	}
 	return out
+}
+
+// farmCycleSummary 对齐 rust scheduler farm_cycle_status_parts + farming_action：
+// 巡田汇总消息 `[收:N 农:N 水:N 枯:N 空:N 解:N 升:N 长:N] → 动作/动作`，
+// 零值部分省略（rust 同款）。
+func farmCycleSummary(analysis logic.LandAnalysis, actions []string) string {
+	parts := make([]string, 0, 8)
+	add := func(label string, n int) {
+		if n > 0 {
+			parts = append(parts, fmt.Sprintf("%s:%d", label, n))
+		}
+	}
+	add("收", len(analysis.Harvestable))
+	add("农", len(analysis.NeedWeed)+len(analysis.NeedBug)+len(analysis.NeedInteraction))
+	add("水", len(analysis.NeedWater))
+	add("枯", len(analysis.Dead))
+	add("空", len(analysis.Empty))
+	add("解", len(analysis.Unlockable))
+	add("升", len(analysis.Upgradable))
+	add("长", len(analysis.Growing))
+	summary := ""
+	if len(parts) > 0 {
+		summary = "[" + strings.Join(parts, " ") + "] → "
+	}
+	return summary + strings.Join(actions, "/")
 }
 
 func waitFarmDelay(ctx context.Context, delay time.Duration) error {

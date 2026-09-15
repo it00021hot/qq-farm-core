@@ -348,6 +348,15 @@ func RunFriendCheckTick(ctx context.Context, s *Session, opts RunFriendTickOptio
 	summary := formatVisitSummary(totals)
 	if summary != "" {
 		slog.Info("巡查完成", "account", accountID, "visited", len(plan.Visits), "summary", summary)
+		// 对齐 rust friend scheduler：好友巡查汇总面板日志（非空才记）。
+		if s.hub != nil {
+			s.hub.PublishJSON("friend_interact", accountID, map[string]any{
+				"tag":     "好友",
+				"event":   "friend_cycle",
+				"module":  "friend",
+				"message": "巡查完成 → " + summary,
+			})
+		}
 		return true, nil
 	}
 	return false, nil
