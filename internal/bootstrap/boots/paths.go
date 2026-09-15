@@ -29,10 +29,8 @@ func NormalizePaths() {
 	absUnder(vars.DataPath, "farm.tsdkDataDir", "runtime/tsdk")
 	absUnder(vars.BasePath, "farm.wasmPath", "resource/farm/tsdk.wasm")
 	absUnder(vars.BasePath, "farm.gameConfigDir", "resource/farm/gameConfig")
-	absUnder(vars.BasePath, "swagger.filePath", "./docs/swagger.json")
 
 	if vars.DesktopMode {
-		vars.Config.Set("swagger.enabled", false)
 		vars.Config.Set("server.prefork", false)
 	}
 

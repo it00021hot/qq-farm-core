@@ -9,7 +9,6 @@ import (
 	"github.com/it00021hot/qq-farm-core/pkg/config"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -18,13 +17,12 @@ var (
 	DataPath string // writable runtime root (turso db/logs/tsdk); defaults to BasePath
 	DB       *gorm.DB
 	MDB      map[string]*gorm.DB
-	Redis    *redis.Client
 	Router   fiber.Router
 	Routes   []fiber.Route
 	Config   config.Config
 	Logger   *slog.Logger
 
-	// DesktopMode disables swagger and other browser-oriented extras.
+	// DesktopMode tunes behavior for the embedded desktop shell.
 	DesktopMode bool
 )
 

@@ -6,12 +6,6 @@ server:
   maxPageSize: 500
   whiteList: '*'
   originList: '*'
-swagger:
-  enabled: true
-  basePath: '/'
-  filePath: './docs/swagger.json'
-  path: 'docs'
-  title: 'Go-skeleton API Docs'
 jwt:
   expire: 7200
   accessExpire: 7200
@@ -37,45 +31,8 @@ database:
     logLevel: 2
     maxIdleConn: 1
     maxOpenConn: 1
-  pgsql:
-    enabled: false
-    autoMigrate: false
-    maxIdleConn: 10
-    maxOpenConn: 100
-    maxLifeTime: 60
-    maxIdleTime: 0
-    sources:
-      default:
-        separation: false
-        fileName: 'default-sql'
-        logLevel: 1
-        prefix: "cn_"
-        master: 'host=127.0.0.1 user=postgres password= password dbname=go_skeleton port=5432 sslmode=disable TimeZone=Asia/Shanghai'
-        slave: []
-  mongo:
-    enable: false
-    uri:
-    minPoolSize: 10
-    maxPoolSize: 20
-redis:
-  enabled: false
-  host: '127.0.0.1'
-  port: '6379'
-  password: ''
-  dbNum: 0
-  prefix: 'qq_farm:'
-  poolSize: 0
-  maxIdleConn: 0
-  minIdleConn: 0
-  maxIdleTime: 0
-  maxLifeTime: 0
-amqp:
-  enabled: false
-  host: '127.0.0.1'
-  port: '5672'
-  user: 'guest'
-  password: ''
-  vhost: ''
+cache:
+  prefix: 'qq_farm:' # 内存缓存 key 前缀（auth token 等，原 redis.prefix）
 farm:
   gatewayUrl: 'wss://gate-obt.nqf.qq.com/prod/ws'
   wasmPath: 'resource/farm/tsdk.wasm'

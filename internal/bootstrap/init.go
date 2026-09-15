@@ -10,9 +10,7 @@ import (
 
 // Define service list
 const (
-	PgsqlService = `Pgsql`
 	TursoService = `Turso`
-	RedisService = `Redis`
 )
 
 type bootServiceMap map[string]func() error
@@ -21,8 +19,6 @@ var (
 	BootedService []string
 	serviceMap    = bootServiceMap{
 		TursoService: boots.InitTurso,
-		PgsqlService: boots.InitMultiPgsql,
-		RedisService: boots.InitRedis,
 	}
 )
 

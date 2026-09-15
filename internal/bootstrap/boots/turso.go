@@ -103,27 +103,15 @@ func InitTurso() error {
 	return nil
 }
 
-// TablePrefix returns the configured table prefix (turso preferred, then pgsql).
+// TablePrefix returns the configured table prefix.
 func TablePrefix() string {
-	if vars.Config.GetBool("database.turso.enabled") {
-		p := vars.Config.GetString("database.turso.prefix")
-		if p != "" {
-			return p
-		}
-	}
-	return vars.Config.GetString("database.pgsql.sources." + database.DefaultAlias + ".prefix")
+	return vars.Config.GetString("database.turso.prefix")
 }
 
 // AutoMigrateEnabled reports whether AutoMigrate should run.
 func AutoMigrateEnabled() bool {
-	if vars.Config.GetBool("database.turso.enabled") {
-		if v := vars.Config.Get("database.turso.autoMigrate"); v != nil {
-			return vars.Config.GetBool("database.turso.autoMigrate")
-		}
-		return true
-	}
-	if v := vars.Config.Get("database.pgsql.autoMigrate"); v != nil {
-		return vars.Config.GetBool("database.pgsql.autoMigrate")
+	if v := vars.Config.Get("database.turso.autoMigrate"); v != nil {
+		return vars.Config.GetBool("database.turso.autoMigrate")
 	}
 	return true
 }

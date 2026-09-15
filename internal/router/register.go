@@ -9,7 +9,6 @@ import (
 	"github.com/it00021hot/qq-farm-core/pkg/helper"
 	"github.com/it00021hot/qq-farm-core/pkg/response"
 	"github.com/goccy/go-json"
-	"github.com/gofiber/contrib/v3/swagger"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/compress"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -65,16 +64,6 @@ func Register(appName string, opts ...RegisterOptions) *fiber.App {
 		compress.New(),
 		requestid.New(),
 	)
-
-	// swagger
-	if vars.Config.GetBool("swagger.enabled") {
-		r.Use(swagger.New(swagger.Config{
-			BasePath: vars.Config.GetString("swagger.basePath"),
-			FilePath: vars.Config.GetString("swagger.filePath"),
-			Path:     vars.Config.GetString("swagger.path"),
-			Title:    vars.Config.GetString("swagger.title"),
-		}))
-	}
 
 	// common
 	routes.InitCommonGroup(r, cfg.SkipRootIndex, publicMiddleware...)

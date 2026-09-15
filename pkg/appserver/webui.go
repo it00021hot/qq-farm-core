@@ -42,7 +42,7 @@ func mountWebUI(app *fiber.App, webFS fs.FS) {
 	}))
 }
 
-// isReservedAPIPath reports paths that belong to the Fiber API (or docs), not the SPA.
+// isReservedAPIPath reports paths that belong to the Fiber API, not the SPA.
 func isReservedAPIPath(path string) bool {
 	path = strings.TrimPrefix(path, "/")
 	if path == "" {
@@ -50,7 +50,7 @@ func isReservedAPIPath(path string) bool {
 	}
 	first, _, _ := strings.Cut(path, "/")
 	switch first {
-	case "auth", "farm", "system", "api", "game-config", "token", "ping", "docs", "swagger":
+	case "auth", "farm", "system", "api", "game-config", "token", "ping":
 		return true
 	default:
 		return false

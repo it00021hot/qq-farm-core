@@ -3,7 +3,6 @@ package migrate
 import (
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/it00021hot/qq-farm-core/internal/app/model"
@@ -70,46 +69,7 @@ func Seed(db *gorm.DB) error {
 	if err := seedAdmin(db); err != nil {
 		return err
 	}
-	if err := syncPostgresSequences(db); err != nil {
-		return err
-	}
 	slog.Info("Database seed completed")
-	return nil
-}
-
-func syncPostgresSequences(db *gorm.DB) error {
-	if db == nil || db.Dialector == nil {
-		return nil
-	}
-	name := strings.ToLower(db.Dialector.Name())
-	if name != "postgres" && name != "postgresql" {
-		return nil
-	}
-	tables := []string{
-		"cn_sys_admin",
-		"cn_farm_account",
-		"cn_farm_account_config",
-		"cn_farm_friend_gid",
-		"cn_farm_stats",
-		"cn_farm_interact_log",
-		"cn_farm_system_config",
-		"cn_farm_game_config",
-		"cn_farm_activity_state",
-	}
-	for _, table := range tables {
-		sql := fmt.Sprintf(
-			`SELECT setval(pg_get_serial_sequence('%s', 'id'), COALESCE((SELECT MAX(id) FROM %s), 1), true)`,
-			table, table,
-		)
-		if err := db.Exec(sql).Error; err != nil {
-			if strings.Contains(err.Error(), "pg_get_serial_sequence") ||
-				strings.Contains(err.Error(), "null value") ||
-				strings.Contains(strings.ToLower(err.Error()), "does not exist") {
-				continue
-			}
-			return fmt.Errorf("sync sequence %s: %w", table, err)
-		}
-	}
 	return nil
 }
 
@@ -146,33 +106,4 @@ func Run(db *gorm.DB) error {
 		return err
 	}
 	return Seed(db)
-}
-
-// ReplaceDBName 将 postgres DSN 中的 dbname 替换为指定库名
-func ReplaceDBName(dsn, dbName string) string {
-	parts := strings.Fields(dsn)
-	out := make([]string, 0, len(parts))
-	replaced := false
-	for _, p := range parts {
-		if strings.HasPrefix(p, "dbname=") {
-			out = append(out, "dbname="+dbName)
-			replaced = true
-			continue
-		}
-		out = append(out, p)
-	}
-	if !replaced {
-		out = append(out, "dbname="+dbName)
-	}
-	return strings.Join(out, " ")
-}
-
-// ParseDBName 从 DSN 解析 dbname
-func ParseDBName(dsn string) string {
-	for _, p := range strings.Fields(dsn) {
-		if strings.HasPrefix(p, "dbname=") {
-			return strings.TrimPrefix(p, "dbname=")
-		}
-	}
-	return ""
 }
