@@ -34,6 +34,12 @@ type friendPlantSummary struct {
 	InsectNum int64 `json:"insectNum,omitempty"`
 }
 
+// friendPetBadge 好友宠物徽标（对齐 rust petState/pet 字段）。
+type friendPetBadge struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
 type friendView struct {
 	ID        uint64              `json:"id,omitempty"`
 	AccountID uint64              `json:"accountId"`
@@ -44,6 +50,8 @@ type friendView struct {
 	Avatar    string              `json:"avatar,omitempty"`
 	SyncedAt  uint                `json:"syncedAt,omitempty"`
 	Plant     *friendPlantSummary `json:"plant,omitempty"`
+	PetState  string              `json:"petState,omitempty"`
+	Pet       *friendPetBadge     `json:"pet,omitempty"`
 }
 
 func friendNickname(f friendpb.GameFriend) string {
@@ -92,7 +100,9 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.FriendListReq) (response.Pag
 
 	liveMap := map[int64]friendpb.GameFriend{}
 	var myGID int64
+	var liveSession *farmruntime.Session
 	if session, err := s.session(ctx, req.AccountID); err == nil {
+		liveSession = session
 		myGID = session.GID()
 		if req.Force {
 			session.ClearFriendPushHints()
@@ -137,7 +147,20 @@ func (s *Service) List(ctx fiber.Ctx, req farmtypes.FriendListReq) (response.Pag
 			copy := f
 			live = &copy
 		}
-		records = append(records, enrichFromLive(row, live))
+		view := enrichFromLive(row, live)
+		// 好友宠物状态徽标（对齐 rust apply_pet_state_overlays：protect/other/unknown + pet 信息）。
+		if liveSession != nil {
+			state, dogID := liveSession.FriendPetBadge(row.Gid)
+			view.PetState = state
+			if dogID > 0 {
+				pet := friendPetBadge{ID: dogID}
+				if item := logic.GetItemByID(dogID); item != nil {
+					pet.Name = item.Name
+				}
+				view.Pet = &pet
+			}
+		}
+		records = append(records, view)
 	}
 	return response.NewPageData(records, req.Current, req.Size, total), nil
 }

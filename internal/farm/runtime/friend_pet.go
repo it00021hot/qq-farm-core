@@ -202,6 +202,34 @@ func (c *friendPetCache) state(gid int64) friendDogState {
 
 func (c *friendPetCache) knownToday(gid int64) bool { return c.state(gid) != dogStateUnknown }
 
+// dogID 返回该好友当前宠物的道具 ID（0 表示无宠物/未知）。
+func (c *friendPetCache) dogID(gid int64) int64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.loadLocked()
+	entry, ok := c.entries[gid]
+	if !ok {
+		return 0
+	}
+	return entry.DogID
+}
+
+// FriendPetBadge 返回好友宠物状态徽标数据（对齐 rust scheduler
+// apply_pet_state_overlays：protect/other/unknown 三态 + 宠物道具 ID）。
+func (s *Session) FriendPetBadge(gid int64) (state string, dogID int64) {
+	if s.petCache == nil {
+		return "unknown", 0
+	}
+	switch s.petCache.state(gid) {
+	case dogStateProtect:
+		return "protect", ProtectDogID
+	case dogStateNone:
+		return "other", s.petCache.dogID(gid)
+	default:
+		return "unknown", 0
+	}
+}
+
 func (c *friendPetCache) forget(gid int64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
