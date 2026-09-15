@@ -18,9 +18,9 @@ type ActivityWindow struct {
 }
 
 type activityWindowsState struct {
-	mu      sync.RWMutex
-	windows map[string]ActivityWindow
-	loaded  bool
+	mu       sync.RWMutex
+	windows  map[string]ActivityWindow
+	loaded   bool
 	loadedAt time.Time
 }
 
@@ -67,6 +67,16 @@ func ActivityWindowsLoaded() bool {
 	globalActivityWindows.mu.RLock()
 	defer globalActivityWindows.mu.RUnlock()
 	return globalActivityWindows.loaded
+}
+
+// InvalidateActivityWindows 立即失效活动窗口缓存（对齐 rust
+// config/activity_windows.rs invalidate_activity_windows：ActiviesChangeNotify
+// 推送到达时 loaded_at=None，下次访问因不在 TTL 内而重新拉取；缓存值与 loaded
+// 标记保留，供失效窗口期的兜底读取）。
+func InvalidateActivityWindows() {
+	globalActivityWindows.mu.Lock()
+	defer globalActivityWindows.mu.Unlock()
+	globalActivityWindows.loadedAt = time.Time{}
 }
 
 // ActivityWindowByID returns one cached window.

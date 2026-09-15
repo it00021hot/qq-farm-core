@@ -14,6 +14,7 @@ func CredentialsFromAccount(acc *model.FarmAccount) YybCredentials {
 		LoginBuffer:            acc.WxLoginBuffer,
 		ExpiresAt:              acc.WxTokenExpiresAt,
 		RefreshTokenObservedAt: acc.WxRefreshTokenObservedAt,
+		BufferConsumed:         acc.WxBufferConsumed,
 	}
 }
 
@@ -26,7 +27,10 @@ func CredentialPersistUpdates(creds YybCredentials, now uint) map[string]any {
 		"wx_refresh_token":             creds.RefreshToken,
 		"wx_token_expires_at":          creds.ExpiresAt,
 		"wx_refresh_token_observed_at": creds.RefreshTokenObservedAt,
-		"updated_at":                   now,
+		// login_buffer 一次性消费标记随凭据一起落盘（rust worker.rs
+		// persist_wx_gateway_credentials 的 wx_buffer_consumed）。
+		"wx_buffer_consumed": creds.BufferConsumed,
+		"updated_at":         now,
 	}
 }
 
@@ -39,6 +43,8 @@ func ClearWxAuthUpdates(now uint) map[string]any {
 		"wx_refresh_token":             "",
 		"wx_token_expires_at":          int64(0),
 		"wx_refresh_token_observed_at": int64(0),
-		"updated_at":                   now,
+		// 清授权同时复位消费标记（对齐 rust accounts.rs clear_wx_auth）。
+		"wx_buffer_consumed": false,
+		"updated_at":         now,
 	}
 }

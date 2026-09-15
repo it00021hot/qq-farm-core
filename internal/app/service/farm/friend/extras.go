@@ -86,7 +86,7 @@ func (s *Service) SelfInteractionItems(ctx fiber.Ctx, req farm.FriendListReq) (m
 	}, nil
 }
 
-// InteractionUse 批量使用互动道具：friendGid + itemId + landIds（土地类）或仅 friendGid（农场类 5005）。
+// InteractionUse 批量使用互动道具：friendGid + itemId + landIds（土地类）。
 func (s *Service) InteractionUse(ctx fiber.Ctx, req farm.InteractionUseReq) (map[string]any, error) {
 	session, err := s.liveSession(req.AccountID)
 	if err != nil {

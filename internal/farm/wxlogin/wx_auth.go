@@ -50,6 +50,10 @@ type YybCredentials struct {
 	ExpiresAt              int64
 	ExpiresIn              int64
 	RefreshTokenObservedAt int64
+	// BufferConsumed 标记 LoginBuffer 是否已被消费（对齐 rust
+	// YybCredentials.buffer_consumed / accounts.rs wx_buffer_consumed：
+	// 单个 login_buffer 一次性，重试复用必被服务端 ManualAuth 拒绝）。
+	BufferConsumed bool
 }
 
 func (c YybCredentials) TokenDueForRefresh(aheadSecs int64) bool {

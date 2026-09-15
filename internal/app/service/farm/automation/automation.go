@@ -5,13 +5,13 @@ import (
 	"errors"
 	"time"
 
+	"github.com/gofiber/fiber/v3"
 	"github.com/it00021hot/qq-farm-core/internal/app/model"
 	"github.com/it00021hot/qq-farm-core/internal/app/service"
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	farmruntime "github.com/it00021hot/qq-farm-core/internal/farm/runtime"
 	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
 	"github.com/it00021hot/qq-farm-core/internal/vars"
-	"github.com/gofiber/fiber/v3"
 )
 
 type Service struct {
@@ -56,7 +56,18 @@ func detailMap(accountID uint64, cfg logic.AccountConfig, configJSON string) map
 		"fertilizerBuyNormalCount":           cfg.FertilizerBuyNormalCount,
 		"fertilizerBuyNormalThresholdHours":  cfg.FertilizerBuyNormalThresholdHours,
 		"fertilizerBuyCheckIntervalMinutes":  cfg.FertilizerBuyCheckIntervalMinutes,
-		"configJson":                         configJSON,
+		// 兜种土地类型与好友申请自动接受过滤（runtime/friend_application.go 消费）。
+		"bagSeedLandTypes":              cfg.BagSeedLandTypes,
+		"autoAcceptFriendMinLevel":      cfg.AutoAcceptFriendMinLevel,
+		"autoAcceptRequireOwnLevel":     cfg.AutoAcceptRequireOwnLevel,
+		"autoAcceptHarvestStealEnabled": cfg.AutoAcceptHarvestStealEnabled,
+		"autoAcceptHarvestStealHarvest": cfg.AutoAcceptHarvestStealHarvest,
+		"autoAcceptHarvestStealSteal":   cfg.AutoAcceptHarvestStealSteal,
+		// 运行时管理状态（好友同步维护），仅读回显，不走 Modify。
+		"knownFriendGids":               cfg.KnownFriendGids,
+		"knownFriendGidSyncCooldownSec": cfg.KnownFriendGidSyncCooldownSec,
+		"friendsListCacheTtlSec":        cfg.FriendsListCacheTtlSec,
+		"configJson":                    configJSON,
 	}
 }
 
@@ -103,6 +114,9 @@ func (s *Service) Modify(ctx fiber.Ctx, req farmtypes.AutomationModifyReq) error
 		if req.BagSeedPriority != nil {
 			cfg.BagSeedPriority = req.BagSeedPriority
 		}
+		if req.BagSeedLandTypes != nil {
+			cfg.BagSeedLandTypes = req.BagSeedLandTypes
+		}
 		if req.BagSeedFallbackStrategy != nil {
 			cfg.BagSeedFallbackStrategy = *req.BagSeedFallbackStrategy
 		}
@@ -136,7 +150,26 @@ func (s *Service) Modify(ctx fiber.Ctx, req farmtypes.AutomationModifyReq) error
 		if req.PlantBlacklist != nil {
 			cfg.PlantBlacklist = req.PlantBlacklist
 		}
+		// 好友申请自动接受过滤字段。
+		if req.AutoAcceptFriendMinLevel != nil {
+			cfg.AutoAcceptFriendMinLevel = *req.AutoAcceptFriendMinLevel
+		}
+		if req.AutoAcceptRequireOwnLevel != nil {
+			cfg.AutoAcceptRequireOwnLevel = *req.AutoAcceptRequireOwnLevel
+		}
+		if req.AutoAcceptHarvestStealEnabled != nil {
+			cfg.AutoAcceptHarvestStealEnabled = *req.AutoAcceptHarvestStealEnabled
+		}
+		if req.AutoAcceptHarvestStealHarvest != nil {
+			cfg.AutoAcceptHarvestStealHarvest = *req.AutoAcceptHarvestStealHarvest
+		}
+		if req.AutoAcceptHarvestStealSteal != nil {
+			cfg.AutoAcceptHarvestStealSteal = *req.AutoAcceptHarvestStealSteal
+		}
 	}
+	// 合并后统一走 logic 的 clamp/normalize 路径（等价 Load+Normalize），
+	// 保证落库与运行时都拿到归一化后的值。
+	cfg = logic.ParseAccountConfigJSON(mustJSON(cfg))
 
 	raw := mustJSON(cfg)
 	if err := db.Model(&row).Updates(map[string]any{

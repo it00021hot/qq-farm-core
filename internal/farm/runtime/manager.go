@@ -30,6 +30,7 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/itempb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/plantpb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/seasonpb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/taskpb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/userpb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/protocol"
 	"github.com/it00021hot/qq-farm-core/internal/farm/push"
@@ -75,6 +76,9 @@ type Session struct {
 	cfg    SessionConfig
 	hub    *hub.Hub
 	status AccountStatus
+	// generation 会话世代号（rust WorkerHandle.generation）：每次启动/重启递增，
+	// 退出回调据此识别“过期世代”，避免旧会话迟到的清理波及新会话。
+	generation uint64
 
 	mu                 sync.Mutex
 	cancel             context.CancelFunc
@@ -193,6 +197,9 @@ func (s *Session) setStatus(st AccountStatus, detail string) {
 		if m := getManager(); m != nil {
 			m.clearWxReconnectAttempts(accountID)
 		}
+		// 会话存活打点（rust note_online，内部 30s 节流落盘）：
+		// 供进程重启后的自动重连避开服务端旧 session 释放窗口。
+		NoteSessionOnline(accountID)
 	}
 	// Push offline/error alerts once when leaving a healthy/running state.
 	if st == StatusError && prev != StatusError {
@@ -339,6 +346,19 @@ func (s *Session) Stop() {
 	}
 }
 
+// WaitExit blocks until the session leaves starting/running/stopping or the timeout elapses.
+func (s *Session) WaitExit(timeout time.Duration) {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		switch s.Status() {
+		case StatusStarting, StatusRunning, StatusStopping:
+			time.Sleep(50 * time.Millisecond)
+		default:
+			return
+		}
+	}
+}
+
 func (s *Session) run(ctx context.Context, ready chan<- error) {
 	defer func() {
 		s.cleanup()
@@ -357,9 +377,19 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 				delete(m.sess, s.id)
 			}
 			m.mu.Unlock()
+			// 过期世代（rust Stopped 事件 :568-582）：这个 worker 已被
+			// restart/start 替换，它的退出不得清存活打点、也不得排重连
+			// （否则幽灵重连再开一个会话与新 worker 互踢）。
+			if m.isStaleGeneration(s.id, s.generation) {
+				slog.Debug("忽略过期世代 worker 的退出清理（已有新 worker 接管）", "account", s.id)
+				return
+			}
+			// 该账号已无在跑会话：清除存活打点（rust note_offline），
+			// 重启后无需再等释放窗口。
+			NoteSessionOffline(s.id)
 			if st == StatusError {
 				kicked := strings.Contains(s.lastError(), "踢")
-				m.scheduleWxReconnect(s.id, kicked)
+				m.scheduleWxReconnect(s.id, kicked, s.lastError())
 			}
 		}
 	}()
@@ -438,7 +468,9 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 		ready <- fmt.Errorf("TSDK 未就绪，拒绝明文登录（避免异常协议流量）")
 		return
 	}
-	enc = rt
+	// 加密器包一层连续失败计数（对齐 rust TsdkRuntime::transform 内部统计：
+	// 加密路径的 alloc failed 是 wasm 内存增长的首要信号，达阈值触发重建）
+	enc = &trackedEncryptor{rt: rt}
 
 	header := make(map[string][]string)
 	header["Origin"] = []string{deviceprofile.DefaultGatewayOrigin}
@@ -466,6 +498,8 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 	if err != nil {
 		_ = client.Close()
 		s.setStatus(StatusError, err.Error())
+		// HTTP 400 特化：登录码失效提示（对齐 rust worker.rs/engine.rs ws_400 分类）。
+		s.logWs400DialFailure(err)
 		ready <- fmt.Errorf("网关连接失败（请检查 Code 是否有效）: %w", err)
 		return
 	}
@@ -490,11 +524,16 @@ func (s *Session) run(ctx context.Context, ready chan<- error) {
 	s.mu.Unlock()
 	ready <- nil
 
+	// 上线推送（rust WorkerEvent::Started → AccountNoticeKind::Online）。
+	go SendAccountNotice(NoticeOnline, parseAccountID(s.id), s.nick)
+
 	// Post-login loops (aligned with qq-farm-bot): game Heartbeat + ACE.
 	// 请求班次标记对齐 bot request-context.ts：定时任务整体跑在对应班次里，
 	// 内部所有请求自动继承；面板请求无标记 → 默认前台。
 	go s.gameHeartbeatLoop(ctx)
 	go s.aceLoop(ctx)
+	// TSDK wasm 连续失败 → 重建闭环（rust worker.rs WasmReset handler）。
+	go s.tsdkRebuildLoop(ctx)
 	// 统一好友巡查循环（bot friendCheckLoop：一位好友只进一次农场做完三件事）。
 	friendCtx := protocol.WithRequestClass(ctx, protocol.ClassFriend)
 	go s.friendCheckLoop(friendCtx)
@@ -590,6 +629,12 @@ func (s *Session) doLogin(ctx context.Context, client *protocol.Client, ver stri
 	if rt != nil && reply.Basic.OpenId != "" {
 		if err := rt.BindUser(reply.Basic.OpenId); err != nil {
 			slog.Warn("tsdk bindUser failed", "account", s.id, "err", err)
+		} else {
+			// 对齐 bot network.ts:770-774 / rust gateway.rs login 第 6 步：
+			// bindUser 成功后取加密初始化凭据 stage 进 token provider，
+			// 由下一条出站消息携带（恰好一次）。缺这一步服务端 ACE 会话
+			// 不完整，会不定时静默丢弃连接。
+			s.stageInitCredential(client, rt)
 		}
 	}
 
@@ -685,7 +730,14 @@ func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 				missCount++
 				client.NoteHeartbeatMiss()
 				inboundSilence := time.Duration(client.InboundSilenceMs()) * time.Millisecond
-				if missCount < maxHeartbeatMiss || inboundSilence <= heartbeatStaleAfter {
+				// TSDK 重建期放宽静默阈值到 90s（rust worker_loop:948-953：
+				// rebuilding → stale_ms.max(90_000)，重建期间 encrypt 短暂
+				// 阻塞/失败是正常的）
+				staleAfter := heartbeatStaleAfter
+				if client.IsRebuilding() {
+					staleAfter = 90 * time.Second
+				}
+				if missCount < maxHeartbeatMiss || inboundSilence <= staleAfter {
 					// 静默跳过门未满足：不打告警（bot 心跳静默跳过门告警）。
 					continue
 				}
@@ -707,6 +759,10 @@ func (s *Session) gameHeartbeatLoop(ctx context.Context) {
 
 			missCount = 0
 			client.ClearHeartbeatMisses()
+			// 心跳确认在线：刷新会话存活打点（rust note_online 挂在每次
+			// connected=true 的状态广播上；Go 侧等价信号是心跳成功，25s 一次，
+			// 进程被杀后打点≈掉线时刻，重启重登才能等满释放窗口）。
+			NoteSessionOnline(s.id)
 			// bot: 解码失败不影响心跳成功判定。
 			var reply userpb.HeartbeatReply
 			if proto.Unmarshal(raw, &reply) == nil && reply.GetServerTime() > 0 {
@@ -754,40 +810,61 @@ func (s *Session) aceLoop(ctx context.Context) {
 			s.sendAntiData(ctx)
 			antiBusy.Unlock()
 		case <-proc.C:
+			// 离线短路（rust ace_simple_task 首行 sender_online 检查）：
+			// 连接已死/非 Online 时停止 wasm 产出/消费，防数据只产不消。
+			if !s.transportOnline() {
+				continue
+			}
 			s.mu.Lock()
 			rt := s.tsdk
 			s.mu.Unlock()
 			if rt != nil {
-				_ = rt.ProcessReceivedData()
+				s.recordTsdkResult(rt, rt.ProcessReceivedData())
 			}
 		case <-tick.C:
+			if !s.transportOnline() {
+				continue
+			}
 			s.mu.Lock()
 			rt := s.tsdk
 			s.mu.Unlock()
 			if rt != nil {
-				_ = rt.HeartbeatTick()
+				s.recordTsdkResult(rt, rt.HeartbeatTick())
 			}
 		case <-speed.C:
+			if !s.transportOnline() {
+				continue
+			}
 			s.mu.Lock()
 			rt := s.tsdk
 			s.mu.Unlock()
 			if rt != nil {
 				elapsed := time.Since(lastSpeed).Milliseconds()
-				_ = rt.DetectSpeedHack(elapsed)
+				s.recordTsdkResult(rt, rt.DetectSpeedHack(elapsed))
 				lastSpeed = time.Now()
 			}
 		case <-status.C:
+			if !s.transportOnline() {
+				continue
+			}
 			s.mu.Lock()
 			rt := s.tsdk
 			s.mu.Unlock()
 			if rt != nil {
-				_ = rt.SendStatus()
+				s.recordTsdkResult(rt, rt.SendStatus())
 			}
 		}
 	}
 }
 
 func (s *Session) sendAntiData(ctx context.Context) {
+	// 断线短路（rust ace.rs send_anti_data_inner 首行 sender_online 检查）：
+	// 离线时上报必然失败，get_data_to_server 产出的数据永远等不到
+	// send_data_from_server 回灌，wasm 内部队列持续增长，
+	// 最终 memory.grow 失败 → alloc failed。
+	if !s.transportOnline() {
+		return
+	}
 	s.mu.Lock()
 	rt := s.tsdk
 	client := s.client
@@ -795,7 +872,13 @@ func (s *Session) sendAntiData(ctx context.Context) {
 	if rt == nil || client == nil {
 		return
 	}
+	// pending_reset 短路（rust is_reset_pending 分支）：停止 anti_data 消费，
+	// 由 tsdkRebuildLoop 观察并触发重建。
+	if rt.IsResetPending() {
+		return
+	}
 	data, err := rt.GetDataToServer()
+	s.recordTsdkResult(rt, err)
 	if err != nil || len(data) == 0 {
 		return
 	}
@@ -817,7 +900,7 @@ func (s *Session) sendAntiData(ctx context.Context) {
 		return
 	}
 	if len(reply.Result) > 0 {
-		_ = rt.SendDataFromServer(reply.Result)
+		s.recordTsdkResult(rt, rt.SendDataFromServer(reply.Result))
 	}
 }
 
@@ -850,7 +933,7 @@ func (s *Session) RunFarmOp(ctx context.Context, op string) (hadWork bool, actio
 	if s.hub != nil {
 		msg := strings.Join(actions, "/")
 		if msg == "" {
-			if op == "all" {
+			if op == "all" || op == "cycle" {
 				msg = "巡查完成"
 			} else if op != "" {
 				msg = op
@@ -858,7 +941,7 @@ func (s *Session) RunFarmOp(ctx context.Context, op string) (hadWork bool, actio
 				msg = "操作完成"
 			}
 		}
-		if msg == "all" {
+		if msg == "all" || msg == "cycle" {
 			msg = "巡查完成"
 		}
 		tag := "农场"
@@ -992,51 +1075,86 @@ func (s *Session) GetAvailableSeeds(ctx context.Context) ([]logic.AvailableShopS
 	return list, nil
 }
 
-// SellBagItems sells items from the bag.
-func (s *Session) SellBagItems(ctx context.Context, items []corepb.Item) error {
+// SellBagItems sells items from the bag with the bot sellItems prechecks
+// (bag existence → 已锁定，不能出售 → 当前不可出售) and returns the SellReply.
+func (s *Session) SellBagItems(ctx context.Context, items []corepb.Item) (*itempb.SellReply, error) {
 	s.mu.Lock()
 	api := s.gameAPI
 	s.mu.Unlock()
 	if api == nil {
-		return fmt.Errorf("farm session is not connected")
+		return nil, fmt.Errorf("farm session is not connected")
 	}
-	_, err := api.Sell(ctx, items)
-	return err
+	if len(items) == 0 {
+		return nil, fmt.Errorf("没有可出售的物品")
+	}
+	bag, err := api.Bag(ctx)
+	if err != nil {
+		return nil, err
+	}
+	bagItems := game.GetBagItems(bag)
+	now := logic.GetServerTimeSec()
+	for i := range items {
+		item := &items[i]
+		if item.Id <= 0 || item.Count <= 0 {
+			return nil, fmt.Errorf("出售物品参数无效")
+		}
+		name := logic.ItemDisplayName(item.Id)
+		var bagItem *corepb.Item
+		for j := range bagItems {
+			if bagItems[j].Id == item.Id && (item.Uid <= 0 || bagItems[j].Uid == item.Uid) {
+				bagItem = &bagItems[j]
+				break
+			}
+		}
+		if bagItem == nil {
+			return nil, fmt.Errorf("背包中未找到%s", name)
+		}
+		if bagItem.Locked {
+			return nil, fmt.Errorf("%s已锁定，不能出售", name)
+		}
+		sellInfo := logic.GetEffectiveSellInfoAt(logic.GetItemByID(item.Id), logic.DefaultSellConditionContext(now), logic.ToTimeSec(bagItem.ExpireTime))
+		if !sellInfo.Sellable {
+			return nil, fmt.Errorf("%s当前不可出售", name)
+		}
+	}
+	return api.Sell(ctx, items)
 }
 
 // UseBagItem uses one bag item via ItemService.Use, falling back to BatchUse.
-func (s *Session) UseBagItem(ctx context.Context, itemID, count int64) error {
+// Returns the UseReply when the single-use path succeeds (nil reply for the
+// BatchUse fallback, whose shape differs).
+func (s *Session) UseBagItem(ctx context.Context, itemID, count int64) (*itempb.UseReply, error) {
 	s.mu.Lock()
 	api := s.gameAPI
 	s.mu.Unlock()
 	if api == nil {
-		return fmt.Errorf("farm session is not connected")
+		return nil, fmt.Errorf("farm session is not connected")
 	}
 	if itemID <= 0 || count <= 0 {
-		return fmt.Errorf("invalid item")
+		return nil, fmt.Errorf("invalid item")
 	}
-	if _, useErr := api.Use(ctx, itemID, count); useErr == nil {
-		return nil
-	} else {
-		bag, bagErr := api.Bag(ctx)
-		if bagErr != nil {
-			return useErr
-		}
-		items := []corepb.Item{}
-		for _, it := range game.GetBagItems(bag) {
-			if it.Id != itemID {
-				continue
-			}
-			items = append(items, it)
-		}
-		if len(items) == 0 {
-			return useErr
-		}
-		if _, batchErr := api.BatchUse(ctx, items); batchErr != nil {
-			return useErr
-		}
-		return nil
+	reply, useErr := api.Use(ctx, itemID, count)
+	if useErr == nil {
+		return reply, nil
 	}
+	bag, bagErr := api.Bag(ctx)
+	if bagErr != nil {
+		return nil, useErr
+	}
+	items := []corepb.Item{}
+	for _, it := range game.GetBagItems(bag) {
+		if it.Id != itemID {
+			continue
+		}
+		items = append(items, it)
+	}
+	if len(items) == 0 {
+		return nil, useErr
+	}
+	if _, batchErr := api.BatchUse(ctx, items); batchErr != nil {
+		return nil, useErr
+	}
+	return nil, nil
 }
 
 // Friends returns the live game friend list for this session.
@@ -1499,11 +1617,17 @@ func (s *Session) Level() int64 {
 }
 
 // NextChecksSnapshot mirrors bot status_sync nextChecks countdowns (seconds remaining).
+// 静默标记（rust status.rs）：helpQuiet/stealQuiet = 好友安静时段生效；
+// farmQuiet = 安静时段生效且未开 continueFarm（安静期默认只停帮助/偷菜，
+// 自家巡田继续，continueFarm=false 时农场巡查一并停，bot inFarmQuietHours）。
 type NextChecksSnapshot struct {
-	FarmRemainSec   int `json:"farmRemainSec"`
-	FriendRemainSec int `json:"friendRemainSec"`
-	HelpRemainSec   int `json:"helpRemainSec"`
-	StealRemainSec  int `json:"stealRemainSec"`
+	FarmRemainSec   int  `json:"farmRemainSec"`
+	FriendRemainSec int  `json:"friendRemainSec"`
+	HelpRemainSec   int  `json:"helpRemainSec"`
+	StealRemainSec  int  `json:"stealRemainSec"`
+	FarmQuiet       bool `json:"farmQuiet"`
+	HelpQuiet       bool `json:"helpQuiet"`
+	StealQuiet      bool `json:"stealQuiet"`
 }
 
 // StatusSnapshot is the live panel payload for dashboard / status API.
@@ -1579,6 +1703,14 @@ func (s *Session) Snapshot() StatusSnapshot {
 	if stealRemain > friendRemain {
 		friendRemain = stealRemain
 	}
+	// 静默标记（同 manager farmTick 的判定源，rust in_farm/in_friend_quiet_hours_for）。
+	friendQuiet := logic.InQuietHours(
+		s.cfg.AccountConfig.FriendQuietHours.Enabled,
+		s.cfg.AccountConfig.FriendQuietHours.Start,
+		s.cfg.AccountConfig.FriendQuietHours.End,
+		time.Now().Format("15:04"),
+	)
+	farmQuiet := friendQuiet && !s.cfg.AccountConfig.FriendQuietHours.ContinueFarm
 	uptime := int64(0)
 	if !s.startedAt.IsZero() && online {
 		uptime = int64(time.Since(s.startedAt).Seconds())
@@ -1621,6 +1753,9 @@ func (s *Session) Snapshot() StatusSnapshot {
 			FriendRemainSec: friendRemain,
 			HelpRemainSec:   helpRemain,
 			StealRemainSec:  stealRemain,
+			FarmQuiet:       farmQuiet,
+			HelpQuiet:       friendQuiet,
+			StealQuiet:      friendQuiet,
 		},
 	}
 }
@@ -1701,7 +1836,8 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 		slog.Warn("farm kickout", "account", s.id, "reason", reason, "type", messageType)
 		detail := "被踢下线: " + reason
 		if s.cfg.HasWxAuth || accountCanWxReconnect(parseAccountID(s.id)) {
-			detail = "被踢下线: " + reason + "，将在 " + wxReconnectDelayZh() + "后用应用宝授权重连"
+			// 被踢固定 3 分钟后重登（rust WX_KICKOUT_RECONNECT_DELAY_MS）。
+			detail = "被踢下线: " + reason + "，将在 " + durationZh(wxKickoutReconnectDelay()) + "后用应用宝授权重连"
 		}
 		s.setStatus(StatusError, detail)
 		persistRunStatus(parseAccountID(s.id), RunError, false)
@@ -1755,6 +1891,28 @@ func (s *Session) handleNotify(service, method string, body []byte) {
 			return
 		}
 		go s.claimDogSkillGifts(protocol.WithRequestClass(runCtx, protocol.ClassFarm), api, notify.Count)
+		return
+	}
+
+	// 任务推送：服务端下发最新任务列表时立即领取可领任务
+	// （rust worker.rs TaskInfoNotify → task.on_task_info_notify；单飞锁在
+	// claimTasksFromNotify 内，失败静默降级到周期 tick）。
+	if strings.Contains(messageType, "TaskInfoNotify") || (service == "gamepb.taskpb.TaskService" && method == "TaskInfoNotify") {
+		var notify taskpb.TaskInfoNotify
+		if err := proto.Unmarshal(eventBody, &notify); err != nil {
+			return
+		}
+		if notify.TaskInfo == nil {
+			return
+		}
+		s.mu.Lock()
+		api := s.gameAPI
+		runCtx := s.runCtx
+		s.mu.Unlock()
+		if api == nil || runCtx == nil {
+			return
+		}
+		go s.claimTasksFromNotify(protocol.WithRequestClass(runCtx, protocol.ClassFarm), api, notify.TaskInfo)
 		return
 	}
 
@@ -1846,7 +2004,8 @@ func (s *Session) failTransport(err error) {
 	}
 	detail := "网关连接已断开，已停止运行并等待重新扫码"
 	if s.cfg.HasWxAuth || accountCanWxReconnect(parseAccountID(s.id)) {
-		detail = "网关连接已断开，将在 " + wxReconnectDelayZh() + "后用应用宝授权重连"
+		// 首次掉线重连等 15 分钟（rust WX_RECONNECT_FIRST_DELAY_MS，实际按尝试次数 15/10/10）。
+		detail = "网关连接已断开，将在 " + durationZh(WxReconnectFirstDelay) + "后用应用宝授权重连"
 	}
 	slog.Warn("farm transport dead, stopping session", "account", s.id, "err", err)
 	s.setStatus(StatusError, detail)
@@ -1914,6 +2073,44 @@ func (s *Session) claimDogSkillGifts(ctx context.Context, api *game.API, pending
 			})
 		}
 	}
+}
+
+// farmingSkillGiftCount sums the 「同气连枝」gift rewards dropped in a help
+// farming reply (results[].reward.id == game.DogSkillGiftItemID; rust
+// DogSkillGiftService::farming_skill_gift_count).
+func farmingSkillGiftCount(results []*plantpb.FarmingResult) int64 {
+	var total int64
+	for _, r := range results {
+		if r == nil || r.Reward == nil || r.Reward.Id != game.DogSkillGiftItemID {
+			continue
+		}
+		if r.Reward.Count > 0 {
+			total += r.Reward.Count
+		}
+	}
+	return total
+}
+
+// maybeClaimDogSkillGiftsFromFarming inspects a help-farming reply for the
+// 同气连枝 gift drop and claims it asynchronously (rust friend/api.help_farm:
+// gift_count > 0 → spawn check_and_claim(gift_count)). claimDogSkillGifts'
+// single-flight flag also serializes this path against the
+// PendingGiftCountNotify path, so no double claim.
+func maybeClaimDogSkillGiftsFromFarming(s *Session, ctx context.Context, api *game.API, reply *plantpb.FarmingReply) {
+	if s == nil || api == nil || reply == nil {
+		return
+	}
+	giftCount := farmingSkillGiftCount(reply.Results)
+	if giftCount <= 0 {
+		return
+	}
+	s.mu.Lock()
+	runCtx := s.runCtx
+	s.mu.Unlock()
+	if runCtx == nil {
+		runCtx = ctx
+	}
+	go s.claimDogSkillGifts(protocol.WithRequestClass(runCtx, protocol.ClassFarm), api, giftCount)
 }
 
 func (s *Session) applyItemNotify(body []byte) {
@@ -2009,6 +2206,11 @@ func (s *Session) applyBattlePassNotify(body []byte) {
 }
 
 func (s *Session) applyActivityChangeNotify(body []byte) {
+	// 推送到达即失效活动窗口缓存（对齐 rust worker.rs ActivitiesChanged →
+	// activity_windows.rs invalidate_activity_windows：loaded_at=None，下次访问
+	// 重新拉取，缓存值保留仅作废新鲜度）。rust 不解码 payload、任何
+	// ActiviesChangeNotify 推送都失效，因此放在解码 / 空列表早退之前。
+	logic.InvalidateActivityWindows()
 	var notify activitypb.ActiviesChangeNotify
 	if err := proto.Unmarshal(body, &notify); err != nil {
 		slog.Debug("ActiviesChangeNotify decode failed", "account", s.id, "err", err)
@@ -2047,19 +2249,27 @@ func (s *Session) applyBasicNotify(body []byte) {
 	if err := proto.Unmarshal(body, &notify); err != nil || notify.Basic == nil {
 		return
 	}
+	// proto3 缺省值就是 0，必须按 wire tag 判断字段是否真的在包里（对齐 rust
+	// network/notify.rs BasicNotify 处理 + worker_loop apply_basic_notify）：
+	// 显式 gold=0 / exp=0 / level=0 也要应用，缺字段不得当作 0 应用。
+	// 字段号：BasicNotify.basic=1，BasicInfo 3=level、4=exp、5=gold。
+	hasLevel := basicNotifyFieldPresent(body, 1, 3)
+	hasExp := basicNotifyFieldPresent(body, 1, 4)
+	hasGold := basicNotifyFieldPresent(body, 1, 5)
 	leveledUp := false
 	s.mu.Lock()
 	changed := false
-	if notify.Basic.Level > 0 && s.playerLevel != notify.Basic.Level {
+	// level 额外要求 >0（对齐 rust：has_level && level > 0，防止等级被清零）。
+	if hasLevel && notify.Basic.Level > 0 && s.playerLevel != notify.Basic.Level {
 		s.playerLevel = notify.Basic.Level
 		leveledUp = true
 		changed = true
 	}
-	if notify.Basic.Exp > 0 && s.playerExp != notify.Basic.Exp {
+	if hasExp && notify.Basic.Exp >= 0 && s.playerExp != notify.Basic.Exp {
 		s.playerExp = notify.Basic.Exp
 		changed = true
 	}
-	if notify.Basic.Gold > 0 && s.gold != notify.Basic.Gold {
+	if hasGold && notify.Basic.Gold >= 0 && s.gold != notify.Basic.Gold {
 		s.gold = notify.Basic.Gold
 		changed = true
 	}
@@ -2543,6 +2753,12 @@ type AccountManager struct {
 	mu          sync.Mutex
 	sess        map[string]*Session
 	wxReconnect wxReconnectState
+	// 每账号生命周期锁（rust engine.rs:112-114 lifecycle_locks）：
+	// 串行化手动启动 / 定时重连 / 启动重连 / 重启，防止同账号双会话互踢。
+	lifecycleLocks map[string]*sync.Mutex
+	// 每账号世代号：每次启动/重启递增（rust engine.rs:115-116 generation），
+	// 过期会话的退出回调据此跳过清理，防止波及新会话。
+	generations map[string]uint64
 }
 
 // NewAccountManager creates a manager that broadcasts via h.
@@ -2558,6 +2774,8 @@ func NewAccountManager(h *hub.Hub) *AccountManager {
 			inflight: make(map[string]struct{}),
 			gen:      make(map[string]uint64),
 		},
+		lifecycleLocks: make(map[string]*sync.Mutex),
+		generations:    make(map[string]uint64),
 	}
 }
 
@@ -2565,7 +2783,21 @@ func NewAccountManager(h *hub.Hub) *AccountManager {
 func (m *AccountManager) Hub() *hub.Hub { return m.hub }
 
 // StartAccount starts (or restarts) an account session.
+// 账号生命周期串行化（rust engine.rs lifecycle_locks + restart_worker :1034-1051）：
+// 手动启动、定时重连、启动重连、授权换码重启统一持该账号生命周期锁进入，
+// 旧会话退出 + 宽限 + 新登录全程串行，防止并发操作各自建会话互踢。
 func (m *AccountManager) StartAccount(ctx context.Context, cfg SessionConfig) error {
+	if cfg.AccountID == "" {
+		return fmt.Errorf("account id required")
+	}
+	lock := m.lifecycleLock(cfg.AccountID)
+	lock.Lock()
+	defer lock.Unlock()
+	return m.startAccountLocked(ctx, cfg)
+}
+
+// startAccountLocked 是 StartAccount 的持锁实现：调用方必须已持有该账号生命周期锁。
+func (m *AccountManager) startAccountLocked(ctx context.Context, cfg SessionConfig) error {
 	if cfg.AccountID == "" {
 		return fmt.Errorf("account id required")
 	}
@@ -2602,14 +2834,31 @@ func (m *AccountManager) StartAccount(ctx context.Context, cfg SessionConfig) er
 		cfg.PushWebhook = vars.Config.GetString("farm.pushWebhook")
 	}
 
+	// worker 数上限（rust engine.rs max_workers=16，:872-874 超限报错；
+	// 重启替换自身不占用新名额）。
+	if err := m.checkWorkerLimit(cfg.AccountID); err != nil {
+		return err
+	}
+
 	m.mu.Lock()
-	if old, ok := m.sess[cfg.AccountID]; ok {
+	old, hadOld := m.sess[cfg.AccountID]
+	if hadOld {
 		old.Stop()
 		delete(m.sess, cfg.AccountID)
 	}
 	s := newSession(cfg, m.hub)
+	// 递增世代号（rust start_worker 的 generation.fetch_add）：
+	// 旧会话迟到的退出回调据此识别自己已过期。
+	s.generation = m.nextGenerationLocked(cfg.AccountID)
 	m.sess[cfg.AccountID] = s
 	m.mu.Unlock()
+
+	// 重启宽限（rust restart_worker + WX_RESTART_GRACE_MS）：服务端旧 session
+	// 释放需要时间，取消即重登会被判“已在其他终端登录”触发互踢循环。
+	if hadOld {
+		old.WaitExit(wxStopWaitCap)
+		time.Sleep(WxRestartGrace)
+	}
 
 	return s.Start(ctx)
 }

@@ -1,8 +1,11 @@
 package runtime
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 )
 
 func TestRemainSecFromDurationCeilLikeBot(t *testing.T) {
@@ -56,5 +59,54 @@ func TestNextChecksSnapshotFields(t *testing.T) {
 	}
 	if nc.FriendRemainSec != wantFriend {
 		t.Fatalf("friendRemainSec=%d want max(help,steal)=%d", nc.FriendRemainSec, wantFriend)
+	}
+	if nc.FarmQuiet || nc.HelpQuiet || nc.StealQuiet {
+		t.Fatalf("quiet flags should default false: %+v", nc)
+	}
+}
+
+func TestNextChecksQuietFlagsFollowConfig(t *testing.T) {
+	// 静默窗口覆盖整天（start==end → 全天生效），用配置驱动三种标记。
+	s := &Session{
+		id:     "1",
+		status: StatusRunning,
+		cfg: SessionConfig{AccountConfig: logic.AccountConfig{
+			FriendQuietHours: logic.QuietHoursConfig{Enabled: true, Start: "00:00", End: "00:00", ContinueFarm: true},
+		}},
+	}
+	nc := s.Snapshot().NextChecks
+	if !nc.HelpQuiet || !nc.StealQuiet {
+		t.Fatalf("friend quiet should mark help/steal quiet: %+v", nc)
+	}
+	if nc.FarmQuiet {
+		t.Fatalf("continueFarm=true keeps farm running: %+v", nc)
+	}
+
+	s.cfg.AccountConfig.FriendQuietHours.ContinueFarm = false
+	nc = s.Snapshot().NextChecks
+	if !nc.FarmQuiet {
+		t.Fatalf("continueFarm=false should mark farm quiet: %+v", nc)
+	}
+
+	s.cfg.AccountConfig.FriendQuietHours.Enabled = false
+	nc = s.Snapshot().NextChecks
+	if nc.FarmQuiet || nc.HelpQuiet || nc.StealQuiet {
+		t.Fatalf("disabled quiet hours should clear flags: %+v", nc)
+	}
+}
+
+func TestNextChecksQuietJSONNames(t *testing.T) {
+	raw, err := json.Marshal(NextChecksSnapshot{FarmQuiet: true, HelpQuiet: true, StealQuiet: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{"farmQuiet", "helpQuiet", "stealQuiet"} {
+		if v, ok := decoded[key].(bool); !ok || !v {
+			t.Fatalf("missing/invalid %s in %s", key, raw)
+		}
 	}
 }

@@ -405,6 +405,28 @@ func FormatFertilizerLandTypes(types []string) []string {
 	return out
 }
 
+// OwnerCleanableInteractionItemIDs: 农场主可清理的地块级互动道具 ID 集
+// （301101 黄金虫 / 301102 足球 / 5006 乌云）。抓包确认这三者由农场主通过
+// 自家 Farming 清理，好友帮助务农不能代为清理；乌云以 interaction_uses /
+// interaction_targets 的实时记录为准（对齐 rust OWNER_CLEANABLE_INTERACTION_ITEM_IDS）。
+var OwnerCleanableInteractionItemIDs = []int64{301101, 301102, 5006}
+
+// HasOwnerCleanableInteraction reports whether the plant carries an
+// owner-cleanable interaction item in interaction_uses / interaction_targets.
+func HasOwnerCleanableInteraction(plant *PlantInfo) bool {
+	if plant == nil {
+		return false
+	}
+	for _, itemID := range plant.InteractionItemIDs {
+		for _, cleanable := range OwnerCleanableInteractionItemIDs {
+			if itemID == cleanable {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // AnalyzeLands classifies unlocked lands (ported from land-analysis.ts).
 func AnalyzeLands(lands []LandInfo) LandAnalysis {
 	result := LandAnalysis{}
@@ -435,6 +457,11 @@ func AnalyzeLands(lands []LandInfo) LandAnalysis {
 		if current == nil {
 			result.Empty = append(result.Empty, id)
 			continue
+		}
+		// 互动道具清理并入一键务农目标（rust analyze_lands 同位置：dead/mature
+		// 地块上的黄金虫/足球/乌云也计入）。
+		if HasOwnerCleanableInteraction(plant) {
+			result.NeedInteraction = append(result.NeedInteraction, id)
 		}
 		phaseVal := current.Phase
 		if phaseVal == PhaseDead {

@@ -48,6 +48,19 @@ func getManager() *AccountManager {
 type Facade struct{}
 
 func (f *Facade) Start(accountID uint64) error {
+	return f.startAccount(accountID, true)
+}
+
+// startUnderLifecycleLock 在调用方已持有该账号生命周期锁时启动账号
+// （定时重连 / 启动重连路径：hasWorker 检查与启动在同一把锁内原子完成，
+// 对齐 rust start_wx_authorized_account 的持锁调用）。
+func (f *Facade) startUnderLifecycleLock(accountID uint64) error {
+	return f.startAccount(accountID, false)
+}
+
+// startAccount 换码 + 组装配置后启动账号；lockLifecycle=true 时由
+// StartAccount 获取账号生命周期锁，false 表示调用方已持锁。
+func (f *Facade) startAccount(accountID uint64, lockLifecycle bool) error {
 	m := getManager()
 	if m == nil {
 		// 阶段2：无引擎时仅更新库表状态由 service 处理；此处 no-op 成功
@@ -80,14 +93,21 @@ func (f *Facade) Start(accountID uint64) error {
 				handleWxAuthDead(accountID, acc.Name, msg, m)
 				return errors.New(msg)
 			}
-			m.scheduleWxReconnect(strconv.FormatUint(accountID, 10), false)
+			// 换码失败（rust wx_mint_failed）：不再自动重连，等手动重扫/重试。
+			// 外部推送 YybQr 通知（对齐 rust engine.rs wx_mint_failed 分支的
+			// spawn_account_notice(AccountNoticeKind::YybQr)）。注意与授权失效路径
+			// notifyWxAuthCleared 区分：此处授权仍存活，仅换码暂时失败。
+			go SendAccountNotice(NoticeYybQr, accountID, acc.Name)
+			m.scheduleWxReconnect(strconv.FormatUint(accountID, 10), false, "wx_mint_failed")
 			return errors.New(msg)
 		}
 		if strings.TrimSpace(minted) == "" {
 			msg := "应用宝换码失败，请重新扫码: empty code"
 			appendRuntimeLog(accountID, logEventLogin, msg, true)
 			persistRunStatus(accountID, RunError, false)
-			m.scheduleWxReconnect(strconv.FormatUint(accountID, 10), false)
+			// 空码同属「授权存活但换码失败」（rust wx_mint_failed 分支），同样外部推送。
+			go SendAccountNotice(NoticeYybQr, accountID, acc.Name)
+			m.scheduleWxReconnect(strconv.FormatUint(accountID, 10), false, "wx_mint_failed")
 			return errors.New(msg)
 		}
 		persistWxGatewayCredentials(accountID, minted, creds)
@@ -127,10 +147,16 @@ func (f *Facade) Start(accountID uint64) error {
 		cfg.AccountConfig = logic.DefaultAccountConfig()
 	}
 
-	return m.StartAccount(context.Background(), cfg)
+	if lockLifecycle {
+		return m.StartAccount(context.Background(), cfg)
+	}
+	return m.startAccountLocked(context.Background(), cfg)
 }
 
 func (f *Facade) Stop(accountID uint64) error {
+	// 手动停止 / 删除账号时中止在途的 YYB 扫码重登录 watcher（go 侧取消语义，
+	// rust 原实现轮询至超时自然结束；见 relogin_watcher.go 文件头）。
+	CancelReloginWatchersFor(accountID)
 	m := getManager()
 	if m == nil {
 		return nil
@@ -145,6 +171,8 @@ func (f *Facade) Stop(accountID uint64) error {
 
 // StopAll stops every in-process farm session (desktop / process shutdown).
 func (f *Facade) StopAll() {
+	// 进程级停止同时中止全部在途重登录 watcher（relogin_watcher.go）。
+	CancelAllReloginWatchers()
 	m := getManager()
 	if m == nil {
 		return
@@ -248,4 +276,3 @@ func persistAccountProfile(accountID uint64, basic *userpb.BasicInfo) {
 	}
 	_ = db.Model(&acc).Updates(updates).Error
 }
-

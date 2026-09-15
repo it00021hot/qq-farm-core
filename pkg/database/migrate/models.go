@@ -41,8 +41,10 @@ type farmAccount struct {
 	WxRefreshToken           string `gorm:"column:wx_refresh_token;size:512;not null;default:'';comment:应用宝refreshtoken"`
 	WxTokenExpiresAt         int64  `gorm:"column:wx_token_expires_at;not null;default:0;comment:应用宝token过期Unix秒"`
 	WxRefreshTokenObservedAt int64  `gorm:"column:wx_refresh_token_observed_at;not null;default:0;comment:refresh_token首次观察Unix秒"`
-	CreatedAt                uint   `gorm:"column:created_at;not null;comment:创建时间"`
-	UpdatedAt                uint   `gorm:"column:updated_at;not null;comment:更新时间"`
+	// WxBufferConsumed 对齐 rust accounts.rs wx_buffer_consumed（login_buffer 一次性消费标记）。
+	WxBufferConsumed bool `gorm:"column:wx_buffer_consumed;not null;default:false;comment:login_buffer已消费标记"`
+	CreatedAt        uint `gorm:"column:created_at;not null;comment:创建时间"`
+	UpdatedAt        uint `gorm:"column:updated_at;not null;comment:更新时间"`
 }
 
 func (*farmAccount) TableName() string { return "cn_farm_account" }

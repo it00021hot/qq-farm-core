@@ -133,6 +133,9 @@ func (s *Service) PetDiaryOperate(ctx fiber.Ctx, req farm.ActivityActionReq) (ma
 		opts["goodsId"] = v
 		opts["nodeId"] = v
 	}
+	if v, err := strconv.ParseInt(req.TermID, 10, 64); err == nil {
+		opts["termId"] = v
+	}
 	if v, err := strconv.ParseInt(req.FriendGID, 10, 64); err == nil {
 		opts["gid"] = v
 	}

@@ -384,3 +384,78 @@ func TestPlantRankingsExcludeRadishSeed(t *testing.T) {
 		}
 	}
 }
+
+func TestHasOwnerCleanableInteraction(t *testing.T) {
+	if logic.HasOwnerCleanableInteraction(nil) {
+		t.Fatal("nil plant should not need cleanup")
+	}
+	for _, itemID := range logic.OwnerCleanableInteractionItemIDs {
+		plant := &logic.PlantInfo{InteractionItemIDs: []int64{itemID}}
+		if !logic.HasOwnerCleanableInteraction(plant) {
+			t.Fatalf("item %d should be owner-cleanable", itemID)
+		}
+	}
+	if logic.HasOwnerCleanableInteraction(&logic.PlantInfo{InteractionItemIDs: []int64{301103}}) {
+		t.Fatal("301103 (七夕灵露) is not owner-cleanable")
+	}
+	if logic.HasOwnerCleanableInteraction(&logic.PlantInfo{}) {
+		t.Fatal("plant without interactions should not need cleanup")
+	}
+}
+
+func TestAnalyzeLandsNeedInteraction(t *testing.T) {
+	logic.SyncServerTime(1_700_000_000_000)
+	now := logic.GetServerTimeSec()
+	lands := []logic.LandInfo{
+		{
+			// growing land with a golden worm → cleanup target
+			ID: 1, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID:                 1,
+				InteractionItemIDs: []int64{301101},
+				Phases:             []logic.PlantPhaseInfo{{Phase: logic.PhaseSmallLeaves, BeginTime: now - 20}},
+			},
+		},
+		{
+			// dead land with a cloud (5006) → still counted (rust pushes before phase checks)
+			ID: 2, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID:                 2,
+				InteractionItemIDs: []int64{5006},
+				Phases:             []logic.PlantPhaseInfo{{Phase: logic.PhaseDead, BeginTime: now - 100}},
+			},
+		},
+		{
+			// growing land with a non-cleanable item (301103) → not a target
+			ID: 3, Unlocked: true,
+			Plant: &logic.PlantInfo{
+				ID:                 3,
+				InteractionItemIDs: []int64{301103},
+				Phases:             []logic.PlantPhaseInfo{{Phase: logic.PhaseSmallLeaves, BeginTime: now - 20}},
+			},
+		},
+		{
+			// occupied slave land is skipped entirely
+			ID: 4, Unlocked: true, MasterLandID: 5,
+			Plant: &logic.PlantInfo{
+				ID:                 4,
+				InteractionItemIDs: []int64{301102},
+				Phases:             []logic.PlantPhaseInfo{{Phase: logic.PhaseSmallLeaves, BeginTime: now - 20}},
+			},
+		},
+		{
+			ID: 5, Unlocked: true, SlaveLandIDs: []int64{4},
+			Plant: &logic.PlantInfo{
+				ID:     5,
+				Phases: []logic.PlantPhaseInfo{{Phase: logic.PhaseSmallLeaves, BeginTime: now - 20}},
+			},
+		},
+	}
+	result := logic.AnalyzeLands(lands)
+	if len(result.NeedInteraction) != 2 || result.NeedInteraction[0] != 1 || result.NeedInteraction[1] != 2 {
+		t.Fatalf("needInteraction=%v", result.NeedInteraction)
+	}
+	if len(result.Dead) != 1 || result.Dead[0] != 2 {
+		t.Fatalf("dead=%v", result.Dead)
+	}
+}

@@ -3,6 +3,7 @@ package logic
 import (
 	"math"
 	"sort"
+	"strconv"
 )
 
 // PlantingStrategyLabels mirrors planting.ts PLANTING_STRATEGY_LABELS.
@@ -175,6 +176,46 @@ func PlanBagPlantingLayouts(remainingLandIDs []int64, plantSize, seedCount int64
 	all = BuildPlantingLayouts(remainingLandIDs, plantSize)
 	selected = SelectNonOverlappingLayouts(all, seedCount)
 	return all, selected
+}
+
+// ResolveSeedLandTypes resolves one seed's bagSeedLandTypes restriction
+// (rust planting.resolve_seed_land_types). Missing key / empty list / all five
+// types selected → no restriction (second return false). Keys are decimal
+// seed-id strings, values are fertilizer land type keys ("purple-gold" etc).
+func ResolveSeedLandTypes(restrictions map[string][]string, seedID int64) ([]string, bool) {
+	if len(restrictions) == 0 {
+		return nil, false
+	}
+	types, ok := restrictions[strconv.FormatInt(seedID, 10)]
+	if !ok || len(types) == 0 || len(types) >= len(AllFertilizerLandTypes) {
+		return nil, false
+	}
+	return types, true
+}
+
+// SeedHasLandRestriction reports whether the seed may only land on matching land types.
+func SeedHasLandRestriction(restrictions map[string][]string, seedID int64) bool {
+	_, ok := ResolveSeedLandTypes(restrictions, seedID)
+	return ok
+}
+
+// SortSeedsRestrictedFirst stably moves seeds with land restrictions ahead of
+// unrestricted ones (rust plant_from_bag_seeds_ex): otherwise unrestricted
+// seeds would occupy the only lands a restricted seed fits.
+func SortSeedsRestrictedFirst(seeds []BagSeed, restrictions map[string][]string) []BagSeed {
+	if len(restrictions) == 0 {
+		return seeds
+	}
+	restricted := make([]BagSeed, 0, len(seeds))
+	unrestricted := make([]BagSeed, 0, len(seeds))
+	for _, seed := range seeds {
+		if SeedHasLandRestriction(restrictions, seed.SeedID) {
+			restricted = append(restricted, seed)
+		} else {
+			unrestricted = append(unrestricted, seed)
+		}
+	}
+	return append(restricted, unrestricted...)
 }
 
 // ComputeShopPurchaseUnits mirrors plantFromShop purchase math (pure).

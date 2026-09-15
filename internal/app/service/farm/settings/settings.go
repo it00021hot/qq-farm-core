@@ -23,22 +23,57 @@ const (
 	systemConfigKey  = "system"
 	offlineRemindKey = "offline_reminder"
 	defaultClientVer = "1.14.0.3_20260909"
-	defaultTimeZone  = "Asia/Shanghai"
-	defaultPlatform  = "qq"
-	defaultOS        = "Windows"
+	// defaultClientVerUpdatedAtMs: 默认客户端版本的发布时间（毫秒）。
+	// 保存的版本只有在其时间戳**更新**时才沿用，防止旧存档把升级链锁死在
+	// 过期版本上（rust DEFAULT_CLIENT_VERSION_UPDATED_AT / bot resolveClientVersion）。
+	defaultClientVerUpdatedAtMs int64 = 1_789_111_371_648
+	defaultTimeZone                   = "Asia/Shanghai"
+	defaultPlatform                   = "qq"
+	defaultOS                         = "Windows"
 )
+
+// DefaultClientVerUpdatedAt exposes the default version publish timestamp.
+func DefaultClientVerUpdatedAt() int64 { return defaultClientVerUpdatedAtMs }
+
+// ResolveClientVersion mirrors rust resolve_client_version: 保存值只有在其
+// updatedAt 比默认值新（严格大于）时才沿用，否则回默认版本与默认时间戳。
+func ResolveClientVersion(savedVersion string, savedUpdatedAt int64) (string, int64) {
+	version := strings.TrimSpace(savedVersion)
+	if version != "" && savedUpdatedAt > defaultClientVerUpdatedAtMs {
+		return version, savedUpdatedAt
+	}
+	return defaultClientVer, defaultClientVerUpdatedAtMs
+}
+
+// ResolveClientVersionUpdatedAt mirrors rust resolve_client_version_updated_at:
+// 显式传入的时间戳优先；版本发生变化记 now；否则保留当前值（缺省回默认）。
+func ResolveClientVersionUpdatedAt(clientVersion, currentVersion string, currentUpdatedAt, requestedUpdatedAt, nowMs int64) int64 {
+	if requestedUpdatedAt > 0 {
+		return requestedUpdatedAt
+	}
+	if strings.TrimSpace(clientVersion) != strings.TrimSpace(currentVersion) {
+		return nowMs
+	}
+	if currentUpdatedAt > 0 {
+		return currentUpdatedAt
+	}
+	return defaultClientVerUpdatedAtMs
+}
 
 // Service exposes settings-panel helpers.
 type Service struct{}
 
 // SystemConfigPayload mirrors rust SystemConfigPayload.
 type SystemConfigPayload struct {
-	ServerURL     string                `json:"serverUrl"`
-	ClientVersion string                `json:"clientVersion"`
-	Platform      string                `json:"platform"`
-	OS            string                `json:"os"`
-	TimeZone      string                `json:"timeZone"`
-	DeviceInfo    deviceprofile.Profile `json:"deviceInfo"`
+	ServerURL     string `json:"serverUrl"`
+	ClientVersion string `json:"clientVersion"`
+	// ClientVersionUpdatedAt 客户端版本的保存时间（毫秒）；决定保存版本能否
+	// 覆盖更新的默认值（rust clientVersionUpdatedAt）。
+	ClientVersionUpdatedAt int64                 `json:"clientVersionUpdatedAt"`
+	Platform               string                `json:"platform"`
+	OS                     string                `json:"os"`
+	TimeZone               string                `json:"timeZone"`
+	DeviceInfo             deviceprofile.Profile `json:"deviceInfo"`
 }
 
 // OfflineReminder mirrors rust global_config.OfflineReminder.
@@ -49,20 +84,18 @@ type OfflineReminder struct {
 		Nickname   string `json:"nickname"`
 		BoundAt    int64  `json:"boundAt"`
 	} `json:"qqBotBinding,omitempty"`
-	Title            string `json:"title"`
-	Msg              string `json:"msg"`
-	OfflineDeleteSec int64  `json:"offlineDeleteSec"`
-	Endpoint         string `json:"endpoint"`
-	Token            string `json:"token"`
-	Secret           string `json:"secret"`
+	Title    string `json:"title"`
+	Msg      string `json:"msg"`
+	Endpoint string `json:"endpoint"`
+	Token    string `json:"token"`
+	Secret   string `json:"secret"`
 }
 
 func defaultOfflineReminder() OfflineReminder {
 	return OfflineReminder{
-		Provider:         "none",
-		Title:            "农场账号离线",
-		Msg:              "账号已离线，请打开面板重新登录",
-		OfflineDeleteSec: 300,
+		Provider: "none",
+		Title:    "农场账号离线",
+		Msg:      "账号已离线，请打开面板重新登录",
 	}
 }
 
@@ -129,9 +162,10 @@ func (Service) SystemConfig(ctx fiber.Ctx) (SystemConfigPayload, error) {
 	if stored.ClientVersion == "" {
 		stored.ClientVersion = vars.Config.GetString("farm.clientVersion")
 	}
-	if stored.ClientVersion == "" {
-		stored.ClientVersion = defaultClientVer
-	}
+	// 版本守卫（rust bootstrap resolve_client_version）：保存的版本只有在其
+	// updatedAt 比默认值新时才沿用，否则回默认。
+	stored.ClientVersion, stored.ClientVersionUpdatedAt =
+		ResolveClientVersion(stored.ClientVersion, stored.ClientVersionUpdatedAt)
 	if stored.ServerURL == "" {
 		stored.ServerURL = vars.Config.GetString("farm.gatewayURL")
 	}
@@ -155,6 +189,17 @@ func (Service) SaveSystemConfig(ctx fiber.Ctx, payload SystemConfigPayload) (Sys
 	if strings.TrimSpace(payload.ClientVersion) == "" {
 		return payload, errors.New("clientVersion 不能为空")
 	}
+	// 版本时间戳规则（rust set_system_config resolve_client_version_updated_at）：
+	// 显式传入优先；版本变化记 now；未变化保留当前值。
+	current := SystemConfigPayload{}
+	_ = readKey(systemConfigKey, &current)
+	payload.ClientVersionUpdatedAt = ResolveClientVersionUpdatedAt(
+		payload.ClientVersion,
+		current.ClientVersion,
+		current.ClientVersionUpdatedAt,
+		payload.ClientVersionUpdatedAt,
+		time.Now().UnixMilli(),
+	)
 	if err := writeKey(systemConfigKey, "系统配置", payload); err != nil {
 		return payload, err
 	}
@@ -194,9 +239,6 @@ func (Service) OfflineReminder(ctx fiber.Ctx) (OfflineReminder, error) {
 	}
 	if stored.Msg == "" {
 		stored.Msg = base.Msg
-	}
-	if stored.OfflineDeleteSec <= 0 {
-		stored.OfflineDeleteSec = base.OfflineDeleteSec
 	}
 	// 绑定状态实时来自 qqbot-binding.json（与 QQ 机器人绑定页共用状态）。
 	if binding := push.CurrentBinding(); binding != nil {

@@ -32,9 +32,6 @@ var selfUsableInteractionItems = map[int64]struct{}{
 	301103: {}, // 七夕活动土地道具
 }
 
-// friendFarmItemIDs mirrors bot FRIEND_FARM_ITEM_IDS.
-var friendFarmItemIDs = map[int64]struct{}{5005: {}}
-
 // interactionMutationMu serializes interaction batches (bot serializeMutation).
 var interactionMutationMu sync.Mutex
 
@@ -55,17 +52,6 @@ func isFriendLandInteractionInfo(info *logic.ItemInfo) bool {
 	}
 	desc := info.Desc + " " + info.EffectDesc
 	return strings.Contains(desc, "好友") || strings.Contains(desc, "他人")
-}
-
-func isFriendFarmInteractionInfo(info *logic.ItemInfo) bool {
-	if info == nil {
-		return false
-	}
-	if info.Type != interactionItemType || info.CanUse <= 0 {
-		return false
-	}
-	_, ok := friendFarmItemIDs[info.ID]
-	return ok
 }
 
 func isSelfLandInteractionInfo(info *logic.ItemInfo) bool {
@@ -129,8 +115,43 @@ type InteractionItemDTO struct {
 	SaleConditionSatisfiedCount int64  `json:"saleConditionSatisfiedCount"`
 }
 
-// GetFriendInteractionItems lists usable friend-land / friend-farm interaction items.
+// interactionKindOf 由道具元数据给出目标类别："land"=好友土地、""=跳过。
+type interactionKindOf = func(info *logic.ItemInfo) string
+
+// GetFriendInteractionItems lists usable friend-land interaction items.
 func GetFriendInteractionItems(ctx context.Context, api *game.API) ([]InteractionItemDTO, error) {
+	return listInteractionItems(ctx, api, func(info *logic.ItemInfo) string {
+		if isFriendLandInteractionInfo(info) {
+			return "land"
+		}
+		return ""
+	})
+}
+
+// GetSelfInteractionItems lists self-usable interaction items (SELF_USABLE 白名单).
+// 走自用谓词收集而非过滤好友清单：5003 闪电变异瓶的描述不含"好友/他人"，走好友清单
+// 会漏列（对齐 bot getSelfInteractionItems 基于 isSelfLandInteractionMetadata 的独立谓词）。
+func GetSelfInteractionItems(ctx context.Context, api *game.API) ([]InteractionItemDTO, error) {
+	dtos, err := listInteractionItems(ctx, api, func(info *logic.ItemInfo) string {
+		if isSelfLandInteractionInfo(info) {
+			return "land"
+		}
+		return ""
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]InteractionItemDTO, 0, len(dtos))
+	for _, item := range dtos {
+		if item.SelfUsable {
+			out = append(out, item)
+		}
+	}
+	return out, nil
+}
+
+// listInteractionItems 按类别谓词列出可用互动道具（对齐 bot collectInteractionInventory）。
+func listInteractionItems(ctx context.Context, api *game.API, kindOf interactionKindOf) ([]InteractionItemDTO, error) {
 	bag, err := api.Bag(ctx)
 	if err != nil {
 		return nil, err
@@ -147,13 +168,8 @@ func GetFriendInteractionItems(ctx context.Context, api *game.API) ([]Interactio
 		}
 		seen[item.Id] = struct{}{}
 		info := logic.GetItemByID(item.Id)
-		kind := ""
-		switch {
-		case isFriendLandInteractionInfo(info):
-			kind = "land"
-		case isFriendFarmInteractionInfo(info):
-			kind = "farm"
-		default:
+		kind := kindOf(info)
+		if kind == "" {
 			continue
 		}
 		stacks := collectInteractionStacks(items, item.Id)
@@ -189,21 +205,6 @@ func GetFriendInteractionItems(ctx context.Context, api *game.API) ([]Interactio
 
 // UseFriendInteractionItemBatch enters the friend farm and applies the item to
 // each land in order (bot useFriendInteractionItemBatch).
-// GetSelfInteractionItems lists self-usable interaction items (SELF_USABLE whitelist).
-func GetSelfInteractionItems(ctx context.Context, api *game.API) ([]InteractionItemDTO, error) {
-	items, err := GetFriendInteractionItems(ctx, api)
-	if err != nil {
-		return nil, err
-	}
-	out := make([]InteractionItemDTO, 0, len(items))
-	for _, item := range items {
-		if item.SelfUsable {
-			out = append(out, item)
-		}
-	}
-	return out, nil
-}
-
 func UseFriendInteractionItemBatch(ctx context.Context, s *Session, api *game.API, friendGID, itemID int64, landIDs []int64) (used, failed int, err error) {
 	if friendGID <= 0 || itemID <= 0 || len(landIDs) == 0 {
 		return 0, 0, fmt.Errorf("参数无效")

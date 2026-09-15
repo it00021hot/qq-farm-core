@@ -107,6 +107,13 @@ func RunTaskClaims(ctx context.Context, api *game.API, cfg logic.AccountConfig, 
 	}
 
 	normalized := normalizeTaskInfo(reply.TaskInfo)
+	claimTasksAndActives(ctx, api, accountID, normalized)
+	claimIllustratedIfWorthwhile(ctx, api, accountID)
+}
+
+// claimTasksAndActives claims one round of claimable tasks and active rewards
+// from an already fetched TaskInfo (rust task.do_check_and_claim tail).
+func claimTasksAndActives(ctx context.Context, api *game.API, accountID uint64, normalized normalizedTaskInfo) {
 	claimable := append(
 		append(
 			analyzeTaskList(normalized.dailyTasks, "daily"),
@@ -125,7 +132,39 @@ func RunTaskClaims(ctx context.Context, api *game.API, cfg logic.AccountConfig, 
 	}
 
 	claimActives(ctx, api, normalized.actives)
-	claimIllustratedIfWorthwhile(ctx, api, accountID)
+}
+
+// claimTasksFromNotify claims claimable tasks immediately when the server pushes
+// TaskInfoNotify (rust worker.rs → task.on_task_info_notify). Gated by
+// Automation.Task, single-flight via DailyState.taskChecking (TryLock — a claim
+// already in flight wins); failures stay silent and the periodic tick remains
+// the fallback.
+func (s *Session) claimTasksFromNotify(ctx context.Context, api *game.API, info *taskpb.TaskInfo) {
+	if api == nil || info == nil {
+		return
+	}
+	s.mu.Lock()
+	cfg := s.cfg.AccountConfig
+	accountID := parseAccountID(s.id)
+	s.mu.Unlock()
+	if !cfg.Automation.Task {
+		return
+	}
+
+	s.dailyState.mu.Lock()
+	if s.dailyState.taskChecking {
+		s.dailyState.mu.Unlock()
+		return
+	}
+	s.dailyState.taskChecking = true
+	s.dailyState.mu.Unlock()
+	defer func() {
+		s.dailyState.mu.Lock()
+		s.dailyState.taskChecking = false
+		s.dailyState.mu.Unlock()
+	}()
+
+	claimTasksAndActives(ctx, api, accountID, normalizeTaskInfo(info))
 }
 
 type normalizedTaskInfo struct {

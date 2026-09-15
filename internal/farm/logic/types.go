@@ -92,6 +92,7 @@ type LandAnalysis struct {
 	NeedWater       []int64           `json:"needWater"`
 	NeedWeed        []int64           `json:"needWeed"`
 	NeedBug         []int64           `json:"needBug"`
+	NeedInteraction []int64           `json:"needInteraction"`
 	Growing         []int64           `json:"growing"`
 	Empty           []int64           `json:"empty"`
 	Dead            []int64           `json:"dead"`

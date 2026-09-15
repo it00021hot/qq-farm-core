@@ -85,6 +85,16 @@ type Runtime struct {
 	destroyed bool
 	userBound bool
 	host      *host
+
+	// ===== 连续失败 / 重建状态（由 r.mu 保护）=====
+	// 对齐 rust TsdkRuntime 的 consecutive_fail_count / pending_reset /
+	// last_open_id：任一 wasm 调用失败 +1，成功清零；达到
+	// WASMConsecutiveFailThreshold 时置 pendingReset，host 侧调用短路，
+	// 由 runtime 层重建循环观察并重建（见 rebuild.go）。
+	consecFails  int
+	pendingReset bool
+	// lastOpenID 记录上次成功 bindUser 的 openID（Rebuild 用它重绑用户）。
+	lastOpenID string
 }
 
 // New creates an uninitialized Runtime. Call Init before Encrypt/Decrypt.
@@ -127,7 +137,12 @@ func (r *Runtime) Init(parent context.Context) error {
 	if r.destroyed {
 		return fmt.Errorf("tsdk: runtime destroyed")
 	}
+	return r.initLocked(parent)
+}
 
+// initLocked 加载 wasm、注册宿主导入、解密 mergewasm 段并完成初始化序列
+// （调用方持有 r.mu；失败时清理半初始化状态）。Init 与 Rebuild 共用。
+func (r *Runtime) initLocked(parent context.Context) error {
 	wasm, err := os.ReadFile(r.cfg.WASMPath)
 	if err != nil {
 		return fmt.Errorf("tsdk: read wasm: %w", err)
@@ -245,6 +260,11 @@ func (r *Runtime) instantiateHost(ctx context.Context) error {
 }
 
 func (r *Runtime) assertReadyLocked() error {
+	// pending_reset 短路优先（对齐 rust：pending_reset 期间所有 host-side
+	// helper 直接报错，防止继续向坏死的 wasm 实例投递数据）
+	if r.pendingReset {
+		return fmt.Errorf("tsdk: 已请求重置，等待 worker 重建")
+	}
 	if !r.ready || r.mod == nil || r.destroyed {
 		return fmt.Errorf("tsdk: not ready")
 	}
@@ -347,6 +367,12 @@ func (r *Runtime) BindUser(openID string) error {
 	if err := r.assertReadyLocked(); err != nil {
 		return err
 	}
+	return r.bindUserLocked(openID)
+}
+
+// bindUserLocked 是 BindUser 的核心逻辑（调用方持有 r.mu），Rebuild 重绑时
+// 复用（对齐 rust bind_user_inner：不走 pending_reset 短路检查——此刻已清）。
+func (r *Runtime) bindUserLocked(openID string) error {
 	openID = trimSpace(openID)
 	if openID == "" || r.userBound {
 		return nil
@@ -360,6 +386,8 @@ func (r *Runtime) BindUser(openID string) error {
 		return err
 	}
 	r.userBound = true
+	// 记录 openID 供 Rebuild 重绑（对齐 rust last_open_id）
+	r.lastOpenID = openID
 	return nil
 }
 
@@ -529,8 +557,15 @@ func (r *Runtime) DetectSpeedHack(elapsedMs int64) error {
 func (r *Runtime) Destroy() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.ready = false
+	r.destroyLocked()
 	r.destroyed = true
+}
+
+// destroyLocked 关闭 wasm 模块并释放其内存（调用方持有 r.mu）。
+// Destroy 与 Rebuild 共用；Rebuild 在销毁后立即重新 initLocked。
+func (r *Runtime) destroyLocked() {
+	r.ready = false
+	r.userBound = false
 	r.host.mu.Lock()
 	r.host.serverTimeGeneration++
 	r.host.mu.Unlock()

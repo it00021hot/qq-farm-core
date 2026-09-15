@@ -50,7 +50,7 @@ type LandsReq struct {
 // OperateReq requests a manual farm operation.
 type OperateReq struct {
 	AccountID uint64 `json:"accountId" validate:"required"`
-	Op        string `json:"op" validate:"required,oneof=all harvest clear plant upgrade"`
+	Op        string `json:"op" validate:"required,oneof=all cycle harvest water weed bug insecticide fertilize plant clear remove upgrade unlock"`
 }
 
 // BagReq requests live bag items for a running account.
@@ -123,13 +123,20 @@ type AutomationDetailReq struct {
 
 // AutomationModifyReq 修改自动化配置（结构化，对齐 AccountConfig）
 type AutomationModifyReq struct {
-	AccountID                          uint64          `json:"accountId" validate:"required"`
-	Automation                         *map[string]any `json:"automation"`
-	Intervals                          *map[string]any `json:"intervals"`
-	PlantingStrategy                   *string         `json:"plantingStrategy"`
-	PreferredSeedID                    *int64          `json:"preferredSeedId"`
-	BagSeedPriority                    []int64         `json:"bagSeedPriority"`
-	BagSeedFallbackStrategy            *string         `json:"bagSeedFallbackStrategy"`
+	AccountID               uint64              `json:"accountId" validate:"required"`
+	Automation              *map[string]any     `json:"automation"`
+	Intervals               *map[string]any     `json:"intervals"`
+	PlantingStrategy        *string             `json:"plantingStrategy"`
+	PreferredSeedID         *int64              `json:"preferredSeedId"`
+	BagSeedPriority         []int64             `json:"bagSeedPriority"`
+	BagSeedLandTypes        map[string][]string `json:"bagSeedLandTypes"`
+	BagSeedFallbackStrategy *string             `json:"bagSeedFallbackStrategy"`
+	// 好友申请自动接受过滤（runtime/friend_application.go 消费）。
+	AutoAcceptFriendMinLevel           *int            `json:"autoAcceptFriendMinLevel"`
+	AutoAcceptRequireOwnLevel          *bool           `json:"autoAcceptRequireOwnLevel"`
+	AutoAcceptHarvestStealEnabled      *bool           `json:"autoAcceptHarvestStealEnabled"`
+	AutoAcceptHarvestStealHarvest      *int            `json:"autoAcceptHarvestStealHarvest"`
+	AutoAcceptHarvestStealSteal        *int            `json:"autoAcceptHarvestStealSteal"`
 	PlantOrderRandom                   *bool           `json:"plantOrderRandom"`
 	PlantDelaySeconds                  *int            `json:"plantDelaySeconds"`
 	StealDelaySeconds                  *int            `json:"stealDelaySeconds"`
@@ -203,9 +210,9 @@ type FriendOpReq struct {
 
 // InteractionUseReq 特殊互动道具批量使用
 type InteractionUseReq struct {
-	AccountID uint64 `json:"accountId" validate:"required"`
-	FriendGid int64  `json:"friendGid"`
-	ItemId    int64  `json:"itemId" validate:"required"`
+	AccountID uint64  `json:"accountId" validate:"required"`
+	FriendGid int64   `json:"friendGid"`
+	ItemId    int64   `json:"itemId" validate:"required"`
 	LandIds   []int64 `json:"landIds"`
 }
 

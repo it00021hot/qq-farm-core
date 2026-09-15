@@ -10,6 +10,7 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/activitypb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
+	"github.com/it00021hot/qq-farm-core/internal/farm/proto/solartermspb"
 )
 
 // GetPetDiaryRecords returns interact (31) or plundered (44) logs.
@@ -99,6 +100,9 @@ func GetPetDiaryFriendInfo(ctx context.Context, api *game.API, friendGID int64) 
 
 // OperatePetDiary runs one action with the full bot preconditions.
 func OperatePetDiary(ctx context.Context, api *game.API, action string, opts map[string]any) (map[string]any, error) {
+	if action == "solar" {
+		return ClaimPetDiarySolarTerm(ctx, api, opts)
+	}
 	operateType, ok := petDiaryCommands[action]
 	if !ok {
 		return nil, petDiaryErr("未知萌宠操作")
@@ -413,6 +417,79 @@ func OperatePetDiary(ctx context.Context, api *game.API, action string, opts map
 		"refreshError": refreshError,
 		"message":      message,
 	}, nil
+}
+
+// ClaimPetDiarySolarTerm 节令小礼：只允许领取与萌宠活动窗口重叠且 canClaim
+// （status==2）的节令；领取后校验回包 term_id 与 status==3（rust
+// claim_pet_diary_solar_term）。
+func ClaimPetDiarySolarTerm(ctx context.Context, api *game.API, opts map[string]any) (map[string]any, error) {
+	termID, _ := opts["termId"].(int64)
+	if termID <= 0 {
+		return nil, petDiaryErr("节令编号必须是正十进制整数")
+	}
+	pet, _, _, err := readPetDiaryGroup(ctx, api)
+	if err != nil {
+		return nil, err
+	}
+	head := pet.GetHead()
+	if !petDiaryHeadActive(head) {
+		return nil, petDiaryErr("萌宠成长日记当前不在活动时间内")
+	}
+	solar, err := api.GetSolarTerms(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, term := range solar.GetTerms() {
+		if term == nil || term.TermId != termID {
+			continue
+		}
+		if !petSolarTermClaimable(term, head) {
+			return nil, petDiaryErr("该节令当前不可领取")
+		}
+		reply, err := api.ClaimSolarTerms(ctx, termID)
+		if err != nil {
+			return nil, err
+		}
+		if !petSolarClaimReplyMatches(reply, termID) {
+			return nil, petDiaryErr("节令回包不匹配，请刷新确认领取状态")
+		}
+		rewards := []map[string]any{}
+		for _, r := range reply.GetRewards() {
+			if r == nil || r.ItemId <= 0 {
+				continue
+			}
+			rewards = append(rewards, petItemRow(r.ItemId, r.Count))
+		}
+		snapshot, snapErr := BuildPetDiary(ctx, api)
+		refreshError := ""
+		if snapErr != nil {
+			refreshError = "领取已成功，刷新失败：" + snapErr.Error()
+			snapshot = nil
+		}
+		return map[string]any{
+			"action":       "solar",
+			"rewards":      rewards,
+			"snapshot":     snapshot,
+			"refreshError": refreshError,
+			"message":      "节令好礼领取成功",
+		}, nil
+	}
+	return nil, petDiaryErr("该节令当前不可领取")
+}
+
+// petSolarTermClaimable: 窗口重叠（term.end >= head.start && term.begin <= head.end）
+// 且可领取（status==2，rust dto.rs can_claim 语义）。
+func petSolarTermClaimable(term *solartermspb.SolarTermInfo, head *activitypb.PetDiaryActivityHead) bool {
+	if term == nil || head == nil {
+		return false
+	}
+	return term.EndTime >= head.GetStartTime() && term.BeginTime <= head.GetEndTime() && term.Status == 2
+}
+
+// petSolarClaimReplyMatches validates the claim echo: term_id 相同且 status==3（已领取）。
+func petSolarClaimReplyMatches(reply *solartermspb.ClaimSolarTermsReply, termID int64) bool {
+	term := reply.GetTerm()
+	return term.GetTermId() == termID && term.GetStatus() == 3
 }
 
 // petDiaryResult extracts the per-action reply payload (bot result passthrough).

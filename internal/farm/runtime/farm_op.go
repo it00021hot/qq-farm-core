@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math"
 	"strings"
 	"time"
@@ -58,7 +59,8 @@ func feedOperationLimits(opts farmOperationOptions, limits []*plantpb.OperationL
 }
 
 // RunFarmOperation performs a manual or automated own-farm operation.
-// Supported operations are all, harvest, clear, plant, and upgrade.
+// Supported operations are all, cycle, harvest, clear, plant, upgrade, unlock,
+// water, weed, bug, insecticide, fertilize, and remove.
 func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfig, op string, opts ...FarmOperationOption) (hadWork bool, actions []string, lands []logic.LandInfo, err error) {
 	options := farmOperationOptions{}
 	for _, opt := range opts {
@@ -70,9 +72,14 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 		return false, nil, nil, errors.New("farm API is unavailable")
 	}
 	switch op {
-	case "all", "harvest", "clear", "plant", "upgrade":
+	case "all", "cycle", "harvest", "clear", "plant", "upgrade", "unlock",
+		"water", "weed", "bug", "insecticide", "fertilize", "remove":
 	default:
 		return false, nil, nil, fmt.Errorf("unsupported farm operation %q", op)
+	}
+	if op == "cycle" {
+		// rust operate: "cycle" is an alias of the full "all" round.
+		op = "all"
 	}
 
 	lands, allLandsReply, err := api.AllLands(ctx)
@@ -99,24 +106,97 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 		recordOpCount(options, label, count)
 	}
 
+	// ----- 单步操作（rust scheduler op_* 语义：单次 AllLands 分析后只做该步） -----
+	switch op {
+	case "water":
+		// op_water：dry_num>0 的地块全部浇水。
+		record("浇水", len(analysis.NeedWater), func() error {
+			return api.WaterLand(ctx, analysis.NeedWater)
+		})
+		return len(actions) > 0, actions, lands, errors.Join(opErrs...)
+	case "weed", "bug", "insecticide":
+		// op_weed / op_insecticide：长草或生虫的地块一键务农（一次清两种）。
+		ids := make([]int64, 0, len(analysis.NeedWeed)+len(analysis.NeedBug))
+		for i := range lands {
+			plant := lands[i].Plant
+			if plant == nil {
+				continue
+			}
+			if len(plant.WeedOwners) > 0 || len(plant.InsectOwners) > 0 {
+				ids = append(ids, lands[i].ID)
+			}
+		}
+		ids = uniqueLandIDs(ids)
+		label := "除草"
+		if op != "weed" {
+			label = "除虫"
+		}
+		record(label, len(ids), func() error {
+			return api.Farming(ctx, ids)
+		})
+		return len(actions) > 0, actions, lands, errors.Join(opErrs...)
+	case "fertilize":
+		// op_fertilize：对当前所有种植地块按化肥配置跑一轮施肥，返回 normal/organic 计数。
+		var planted []int64
+		for i := range lands {
+			if lands[i].Plant != nil {
+				planted = append(planted, lands[i].ID)
+			}
+		}
+		if len(planted) > 0 {
+			normal, organic := runFertilizerByConfig(ctx, api, cfg, planted, false, false, &actions, &opErrs, options)
+			actions = append(actions, fmt.Sprintf("施肥(普通肥%d/有机肥%d)", normal, organic))
+		}
+		return len(actions) > 0, actions, lands, errors.Join(opErrs...)
+	case "remove":
+		// op_remove：铲除所有枯死地块。
+		record("铲除", len(analysis.Dead), func() error {
+			return api.RemovePlant(ctx, analysis.Dead)
+		})
+		return len(actions) > 0, actions, lands, errors.Join(opErrs...)
+	case "unlock":
+		// op_unlock：解锁第一块可解锁土地（rust 返回该 landId，这里记入 actions）。
+		if len(analysis.Unlockable) > 0 {
+			id := analysis.Unlockable[0]
+			if callErr := api.UnlockLand(ctx, id, false); callErr != nil {
+				opErrs = append(opErrs, fmt.Errorf("解锁土地%d: %w", id, callErr))
+			} else {
+				actions = append(actions, fmt.Sprintf("解锁%d", id))
+			}
+		}
+		return len(actions) > 0, actions, lands, errors.Join(opErrs...)
+	}
+
 	if op == "all" || op == "clear" {
-		farmingIDs := uniqueLandIDs(analysis.NeedWeed, analysis.NeedBug, analysis.NeedWater)
+		// 互动道具地块（黄金虫/足球/乌云）并入一键务农目标（rust scheduler 同链）。
+		farmingIDs := uniqueLandIDs(analysis.NeedWeed, analysis.NeedBug, analysis.NeedWater, analysis.NeedInteraction)
 		if !(op == "all" && cfg.Automation.SkipOwnWeedBug) {
 			weedN, bugN, waterN := len(analysis.NeedWeed), len(analysis.NeedBug), len(analysis.NeedWater)
-			record("务农", len(farmingIDs), func() error { return api.Farming(ctx, farmingIDs) })
-			if len(farmingIDs) > 0 && len(actions) > 0 && strings.HasPrefix(actions[len(actions)-1], "务农") {
-				parts := make([]string, 0, 3)
-				if weedN > 0 {
-					parts = append(parts, fmt.Sprintf("草%d", weedN))
-				}
-				if bugN > 0 {
-					parts = append(parts, fmt.Sprintf("虫%d", bugN))
-				}
-				if waterN > 0 {
-					parts = append(parts, fmt.Sprintf("水%d", waterN))
-				}
-				if len(parts) > 0 {
-					actions[len(actions)-1] = fmt.Sprintf("务农%d(%s)", len(farmingIDs), strings.Join(parts, "/"))
+			itemN := len(analysis.NeedInteraction)
+			if total := len(farmingIDs); total > 0 {
+				if callErr := api.Farming(ctx, farmingIDs); callErr != nil {
+					opErrs = append(opErrs, fmt.Errorf("务农: %w", callErr))
+				} else {
+					// 对齐 rust 一键务农明细：草N/虫N/水N/道具N。
+					parts := make([]string, 0, 4)
+					if weedN > 0 {
+						parts = append(parts, fmt.Sprintf("草%d", weedN))
+					}
+					if bugN > 0 {
+						parts = append(parts, fmt.Sprintf("虫%d", bugN))
+					}
+					if waterN > 0 {
+						parts = append(parts, fmt.Sprintf("水%d", waterN))
+					}
+					if itemN > 0 {
+						parts = append(parts, fmt.Sprintf("道具%d", itemN))
+					}
+					label := fmt.Sprintf("务农%d", len(farmingIDs))
+					if len(parts) > 0 {
+						label += fmt.Sprintf("(%s)", strings.Join(parts, "/"))
+					}
+					actions = append(actions, label)
+					recordOpCount(options, "务农", len(farmingIDs))
 				}
 			}
 		}
@@ -269,6 +349,9 @@ func RunFarmOperation(ctx context.Context, api *game.API, cfg logic.AccountConfi
 }
 
 // plantAvailableLands plants empty lands and returns confirmed planted master land IDs.
+// bagSeedLandTypes 非空时（rust plant_from_bag_seeds）：先拉一次最新地块建
+// landId→类型映射，受限种子先种且只落在命中类型的空地；解析失败 logWarn
+// 按不限制处理，不能导致整轮种不下去。
 func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountConfig, available []int64, playerLevel, gold int64) ([]int64, []error) {
 	remaining := uniqueLandIDs(available)
 	var (
@@ -279,7 +362,21 @@ func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountCo
 	fallbackAllowed := true
 	var bagSeeds []logic.BagSeed
 	useBag := cfg.PlantingStrategy == logic.StrategyBagPriority
+	// 背包种子土地类型限制上下文：限制表为空零额外请求；非空才拉最新土地
+	// （rust resolve_land_type_map_for_bag_seeds，仅背包种植路径消费）。
+	landTypeAvailable := false
+	landTypeByID := map[int64]string{}
 	if useBag {
+		if len(cfg.BagSeedLandTypes) > 0 {
+			latest, _, latestErr := api.AllLands(ctx)
+			if latestErr != nil {
+				// rust：解析失败仅 warn，按不限制处理。
+				slog.Warn("解析土地类型失败，本轮背包种子按不限制处理", "err", latestErr)
+			} else {
+				landTypeByID = landTypes(latest)
+				landTypeAvailable = len(landTypeByID) > 0
+			}
+		}
 		var bagErr error
 		bagSeeds, bagErr = api.BagSeeds(ctx)
 		if bagErr != nil {
@@ -294,11 +391,26 @@ func plantAvailableLands(ctx context.Context, api *game.API, cfg logic.AccountCo
 				levelLocked[seed.SeedID] = true
 			}
 		}
-		for _, seed := range logic.SortBagSeedsForPlanting(bagSeeds, cfg.BagSeedPriority) {
+		// 有土地限制的种子排在最前先种，否则不限种子会把受限种子唯一兼容的地块占光。
+		orderedSeeds := logic.SortSeedsRestrictedFirst(
+			logic.SortBagSeedsForPlanting(bagSeeds, cfg.BagSeedPriority), cfg.BagSeedLandTypes)
+		for _, seed := range orderedSeeds {
 			if !fallbackAllowed || len(remaining) == 0 {
 				break
 			}
-			_, layouts := logic.PlanBagPlantingLayouts(remaining, seed.PlantSize, seed.Count)
+			// 受限种子只在命中类型的空地上装箱；未命中的空地留给后续种子。
+			allowedTarget := remaining
+			if landTypeAvailable {
+				if seedTypes, restricted := logic.ResolveSeedLandTypes(cfg.BagSeedLandTypes, seed.SeedID); restricted {
+					allowedTarget = logic.FilterLandIDsByTypes(remaining, landTypeByID, seedTypes)
+					if len(allowedTarget) == 0 {
+						slog.Info("背包种子无匹配类型空地，已跳过",
+							"seedId", seed.SeedID, "name", seed.Name)
+						continue
+					}
+				}
+			}
+			_, layouts := logic.PlanBagPlantingLayouts(allowedTarget, seed.PlantSize, seed.Count)
 			stopSeed := false
 			for _, layout := range layouts {
 				if !fallbackAllowed || len(remaining) == 0 {
@@ -437,19 +549,20 @@ func plantOneLayout(ctx context.Context, api *game.API, seedID int64, layout log
 // lands that can still take organic fertilizer (restricted to the planted
 // multi-season lands), Smart targets soon-to-mature lands.
 // Lands are re-fetched here; on fetch failure the whole round is skipped
-// (fail-closed, stricter than bot).
-func runFertilizerByConfig(ctx context.Context, api *game.API, cfg logic.AccountConfig, planted []int64, skipNormal bool, multiSeason bool, actions *[]string, errs *[]error, opts farmOperationOptions) {
+// (fail-closed, stricter than bot). Returns applied normal/organic counts
+// (rust FertilizeResult{normal, organic}).
+func runFertilizerByConfig(ctx context.Context, api *game.API, cfg logic.AccountConfig, planted []int64, skipNormal bool, multiSeason bool, actions *[]string, errs *[]error, opts farmOperationOptions) (normal int, organic int) {
 	mode := cfg.Automation.Fertilizer
 	if mode == logic.FertilizerNone {
-		return
+		return 0, 0
 	}
 	selectedTypes := logic.NormalizeFertilizerLandTypes(cfg.Automation.FertilizerLandTypes)
 	if len(selectedTypes) == 0 {
-		return
+		return 0, 0
 	}
 	plantedIDs := uniqueLandIDs(planted)
 	if len(plantedIDs) == 0 && mode == logic.FertilizerNormal {
-		return
+		return 0, 0
 	}
 	reason := "常规施肥"
 	if multiSeason {
@@ -459,11 +572,11 @@ func runFertilizerByConfig(ctx context.Context, api *game.API, cfg logic.Account
 	latestLands, reply, refreshErr := api.AllLands(ctx)
 	if refreshErr != nil {
 		*errs = append(*errs, fmt.Errorf("%s：获取土地信息失败，已跳过本轮施肥: %w", reason, refreshErr))
-		return
+		return 0, 0
 	}
 	if len(latestLands) == 0 {
 		*errs = append(*errs, fmt.Errorf("%s：获取土地信息失败，已跳过本轮施肥", reason))
-		return
+		return 0, 0
 	}
 	if reply != nil {
 		feedOperationLimits(opts, reply.OperationLimits)
@@ -482,7 +595,9 @@ func runFertilizerByConfig(ctx context.Context, api *game.API, cfg logic.Account
 
 	total := 0
 	if !skipNormal && (mode == logic.FertilizerNormal || mode == logic.FertilizerBoth || mode == logic.FertilizerSmart) {
-		total += fertilizeNormalStep(ctx, api, normalTargets, mode == logic.FertilizerBoth, reason, actions, errs)
+		appliedNormal := fertilizeNormalStep(ctx, api, normalTargets, mode == logic.FertilizerBoth, reason, actions, errs)
+		normal = appliedNormal
+		total += appliedNormal
 	}
 
 	if mode == logic.FertilizerOrganic || mode == logic.FertilizerBoth || mode == logic.FertilizerSmart {
@@ -523,12 +638,14 @@ func runFertilizerByConfig(ctx context.Context, api *game.API, cfg logic.Account
 			if limit := game.OrganicOperationLimit(len(organicTargets)); count >= limit {
 				*actions = append(*actions, fmt.Sprintf("有机肥循环达到单次上限%d，已停止继续请求", limit))
 			}
+			organic = count
 			total += count
 		}
 	}
 	if total > 0 && opts.accountID > 0 {
 		stats.RecordOp(opts.accountID, 0, "fertilize", total)
 	}
+	return normal, organic
 }
 
 // fertilizeNormalStep applies normal fertilizer land by land. continueOnError

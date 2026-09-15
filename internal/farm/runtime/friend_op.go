@@ -1128,6 +1128,8 @@ func stealSideHelp(ctx context.Context, s *Session, api *game.API, gid int64, la
 	}
 	if reply != nil {
 		s.ensureHelpState().updateLimits(reply.OperationLimits)
+		// 帮忙务农掉落同气连枝礼包 → 自动领取（rust friend/api.help_farm）。
+		maybeClaimDogSkillGiftsFromFarming(s, ctx, api, reply)
 	}
 	count = len(allHelp)
 	if reply != nil {
@@ -1189,6 +1191,8 @@ func helpFriend(ctx context.Context, s *Session, api *game.API, cfg logic.Accoun
 	count := len(allHelp)
 	if reply != nil {
 		helpState.updateLimits(reply.OperationLimits)
+		// 帮忙务农掉落同气连枝礼包 → 自动领取（rust friend/api.help_farm）。
+		maybeClaimDogSkillGiftsFromFarming(s, ctx, api, reply)
 		if landIDs := farmingResultLandIDs(reply.Results); len(landIDs) > 0 {
 			count = len(landIDs)
 		} else if len(reply.Results) > 0 {
@@ -1588,6 +1592,8 @@ func manualHelpFriend(ctx context.Context, s *Session, api *game.API, gid int64,
 		}
 		if s != nil && reply != nil {
 			s.ensureHelpState().updateLimits(reply.OperationLimits)
+			// 帮忙务农掉落同气连枝礼包 → 自动领取（rust friend/api.help_farm）。
+			maybeClaimDogSkillGiftsFromFarming(s, ctx, api, reply)
 		}
 		count := len(allHelp)
 		if reply != nil {
@@ -1625,6 +1631,8 @@ func manualHelpFriend(ctx context.Context, s *Session, api *game.API, gid int64,
 		}
 		if s != nil && reply != nil {
 			s.ensureHelpState().updateLimits(reply.OperationLimits)
+			// 帮忙务农掉落同气连枝礼包 → 自动领取（rust friend/api.help_farm）。
+			maybeClaimDogSkillGiftsFromFarming(s, ctx, api, reply)
 		}
 		out.Count = len(needWeed)
 		out.Summary = fmt.Sprintf("除草%d", out.Count)
@@ -1642,6 +1650,8 @@ func manualHelpFriend(ctx context.Context, s *Session, api *game.API, gid int64,
 		}
 		if s != nil && reply != nil {
 			s.ensureHelpState().updateLimits(reply.OperationLimits)
+			// 帮忙务农掉落同气连枝礼包 → 自动领取（rust friend/api.help_farm）。
+			maybeClaimDogSkillGiftsFromFarming(s, ctx, api, reply)
 		}
 		out.Count = len(needBug)
 		out.Summary = fmt.Sprintf("除虫%d", out.Count)

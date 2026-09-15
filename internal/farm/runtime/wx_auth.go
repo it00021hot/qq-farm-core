@@ -54,7 +54,8 @@ func notifyWxAuthCleared(accountID uint64, accountName, msg string) {
 		"status": string(StatusError),
 		"detail": "应用宝授权已失效，请重新扫码",
 	})
-	notifyWxOffline(model.FarmAccount{ID: accountID, Name: display}, msg)
+	// 应用宝授权失效推送（rust YybQr 通知），与站内 account_status 事件同点触发。
+	go SendAccountNotice(NoticeYybQr, accountID, display)
 }
 
 func persistWxGatewayCredentials(accountID uint64, code string, creds wxlogin.YybCredentials) {

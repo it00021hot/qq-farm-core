@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofiber/fiber/v3"
 	"github.com/it00021hot/qq-farm-core/internal/app/model"
 	"github.com/it00021hot/qq-farm-core/internal/app/service"
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
@@ -13,7 +14,6 @@ import (
 	farmruntime "github.com/it00021hot/qq-farm-core/internal/farm/runtime"
 	farmtypes "github.com/it00021hot/qq-farm-core/internal/types/farm"
 	"github.com/it00021hot/qq-farm-core/internal/vars"
-	"github.com/gofiber/fiber/v3"
 )
 
 type Service struct {
@@ -48,22 +48,36 @@ func (s *Service) Sell(ctx fiber.Ctx, req farmtypes.BagSellReq) (map[string]any,
 	sellItems := make([]corepb.Item, 0, len(req.Items))
 	for _, it := range req.Items {
 		if it.ID <= 0 || it.Count <= 0 {
-			continue
+			return nil, errors.New("出售物品参数无效")
 		}
 		sellItems = append(sellItems, corepb.Item{Id: it.ID, Count: it.Count, Uid: it.UID})
 	}
 	if len(sellItems) == 0 {
-		return nil, errors.New("缺少出售物品")
+		return nil, errors.New("没有可出售的物品")
 	}
 	callCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	if err := session.SellBagItems(callCtx, sellItems); err != nil {
+	reply, err := session.SellBagItems(callCtx, sellItems)
+	if err != nil {
 		return nil, friendlyFarmErr(err)
+	}
+	// 汇总文案对齐 rust bag_sell：`出售 白萝卜×12，获得 金币×100`。
+	sold := logic.AggregateGains(reply.GetSellItems())
+	gained := logic.AggregateGains(reply.GetGetItems())
+	var parts []string
+	if text := logic.FormatGains(sold); text != "" {
+		parts = append(parts, "出售 "+text)
+	}
+	if text := logic.FormatGains(gained); text != "" {
+		parts = append(parts, "获得 "+text)
 	}
 	return map[string]any{
 		"accountId": req.AccountID,
 		"count":     len(sellItems),
 		"ok":        true,
+		"sold":      gainRows(sold),
+		"gained":    gainRows(gained),
+		"summary":   strings.Join(parts, "，"),
 	}, nil
 }
 
@@ -74,15 +88,40 @@ func (s *Service) Use(ctx fiber.Ctx, req farmtypes.BagUseReq) (map[string]any, e
 	}
 	callCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	if err := session.UseBagItem(callCtx, req.ItemID, req.Count); err != nil {
+	reply, err := session.UseBagItem(callCtx, req.ItemID, req.Count)
+	if err != nil {
 		return nil, friendlyFarmErr(err)
+	}
+	// 汇总文案对齐 rust bag_use：`获得 金币×100`（回包 items + land_reward）。
+	var gained []logic.GainEntry
+	if reply != nil {
+		gained = logic.AggregateGains(append(append([]*corepb.Item{}, reply.GetItems()...), reply.GetLandReward().GetItems()...))
+	}
+	summary := ""
+	if text := logic.FormatGains(gained); text != "" {
+		summary = "获得 " + text
 	}
 	return map[string]any{
 		"accountId": req.AccountID,
 		"itemId":    req.ItemID,
 		"count":     req.Count,
 		"ok":        true,
+		"rewards":   gainRows(gained),
+		"summary":   summary,
 	}, nil
+}
+
+// gainRows renders aggregated gains as {id, count, name} rows (rust gain_dtos).
+func gainRows(entries []logic.GainEntry) []map[string]any {
+	rows := make([]map[string]any, 0, len(entries))
+	for _, e := range entries {
+		rows = append(rows, map[string]any{
+			"id":    e.ID,
+			"count": e.Count,
+			"name":  logic.GainDisplayName(e.ID),
+		})
+	}
+	return rows
 }
 
 func (s *Service) Get(ctx fiber.Ctx, req farmtypes.BagReq) (logic.BagUIResponse, error) {

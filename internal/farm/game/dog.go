@@ -6,6 +6,10 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/dogpb"
 )
 
+// DogSkillGiftItemID 是「同气连枝」礼包物品 id（宠物技能掉落，
+// 帮忙务农回包 FarmingReply.results[].reward.id 识别用；rust game_ids.rs）。
+const DogSkillGiftItemID int64 = 101351
+
 func (a *API) sendDog(ctx context.Context, method string, body []byte) ([]byte, error) {
 	if err := a.requireSender(); err != nil {
 		return nil, err

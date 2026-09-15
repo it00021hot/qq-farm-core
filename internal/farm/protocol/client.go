@@ -4,6 +4,8 @@ package protocol
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"net"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -100,8 +102,15 @@ type Client struct {
 
 	// liveness / load snapshot (bot lastInboundAt + heartbeatMissCount)
 	lastInboundAt     time.Time
-	heartbeatMisses  int
+	heartbeatMisses   int
 	lastPressureLogAt time.Time
+
+	// 出站 token 提供器：登录后暂存一次性 TSDK 初始化凭据，由下一条消息
+	// 携带（对齐 rust Gateway.token_provider / bot GatewayTokenProvider）。
+	tokens *GatewayTokenProvider
+	// rebuilding 标记：TSDK 重建期间置位，心跳判死静默阈值放宽到 90s
+	// （对齐 rust Gateway.rebuilding / begin_rebuild / end_rebuild）。
+	rebuilding atomic.Bool
 }
 
 type rpcResult struct {
@@ -138,6 +147,7 @@ func NewClient(opts Options) *Client {
 		pending:        make(map[int64]*queuedRequest),
 		clientSeq:      1,
 		lastInboundAt:  time.Now(),
+		tokens:         NewGatewayTokenProvider(),
 	}
 }
 
@@ -158,9 +168,31 @@ func (c *Client) Connect(ctx context.Context) error {
 	if c.header.Get("User-Agent") == "" {
 		c.header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 MicroMessenger/7.0.20.1781(0x6700143B) NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF WindowsWechat(0x63090a13)")
 	}
-	dialer := websocket.Dialer{HandshakeTimeout: 15 * time.Second}
-	conn, _, err := dialer.DialContext(ctx, c.url, c.header)
+	dialer := websocket.Dialer{
+		HandshakeTimeout: 15 * time.Second,
+		// 对齐 rust network/client.rs connect（tcp.set_nodelay(false)）：bot 跑在
+		// Node 上，socket 默认开启 Nagle，小帧按内核节奏合批发送；Go net 默认
+		// TCP_NODELAY=true（逐帧立发）。这里在拨号回调里对 TCP 连接显式关闭
+		// nodelay，对齐 bot 的发送节奏，避免与 bot 不同的逐帧立发 TCP 分段模式。
+		NetDialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			conn, err := (&net.Dialer{}).DialContext(ctx, network, addr)
+			if err != nil {
+				return nil, err
+			}
+			if tcp, ok := conn.(*net.TCPConn); ok {
+				_ = tcp.SetNoDelay(false)
+			}
+			return conn, nil
+		},
+	}
+	conn, resp, err := dialer.DialContext(ctx, c.url, c.header)
 	if err != nil {
+		// 握手被网关以非 101 状态码拒绝时，gorilla 只返回 ErrBadHandshake（不带
+		// 状态码）。这里把 HTTP 状态码并入错误串，供上层按 rust parse_ws_http_code
+		// 的同款格式（"unexpected server response: 400"）识别登录码失效。
+		if resp != nil && resp.StatusCode != 0 {
+			return fmt.Errorf("protocol: dial: unexpected server response: %d: %w", resp.StatusCode, err)
+		}
 		return fmt.Errorf("protocol: dial: %w", err)
 	}
 	c.conn = conn
@@ -181,6 +213,8 @@ func (c *Client) StartHeartbeat() {}
 // Close shuts down the connection and pending RPCs.
 func (c *Client) Close() error {
 	c.closed.Store(true)
+	// 会话结束：丢弃未消费的一次性初始化凭据（对齐 rust end_session → clear）。
+	c.tokens.Clear()
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.hbCancel != nil {
@@ -366,6 +400,15 @@ func (c *Client) writeFrameLocked(seq int64, req *queuedRequest) error {
 		}
 		finalBody = enc
 	}
+	// 出站 token：有暂存的一次性 TSDK 初始化凭据则原子消费、恰好随本条
+	// 消息发送一次（对齐 rust send_rpc 路径的 token_provider.next_marked）。
+	token, staged := c.tokens.NextMarked()
+	if staged {
+		slog.Info("TSDK 初始化凭据已随本条请求发送",
+			"service", req.service,
+			"method", req.method,
+		)
+	}
 	msg := &gatepb.Message{
 		Meta: &gatepb.Meta{
 			ServiceName: req.service,
@@ -375,7 +418,7 @@ func (c *Client) writeFrameLocked(seq int64, req *queuedRequest) error {
 			ServerSeq:   c.serverSeq,
 		},
 		Body:  finalBody,
-		Token: CreateGatewayToken(),
+		Token: token,
 	}
 	frame, err := proto.Marshal(msg)
 	if err != nil {
@@ -479,12 +522,7 @@ func (c *Client) handleFrame(data []byte) {
 		if !ok {
 			return
 		}
-		if msg.Meta.ErrorCode != 0 {
-			c.settle(req, rpcResult{meta: msg.Meta, err: fmt.Errorf("%s.%s error code=%d %s",
-				msg.Meta.ServiceName, msg.Meta.MethodName, msg.Meta.ErrorCode, msg.Meta.ErrorMessage)})
-		} else {
-			c.settle(req, rpcResult{body: body, meta: msg.Meta})
-		}
+		c.settleResponse(req, msg.Meta, body)
 		return
 	}
 
@@ -496,12 +534,39 @@ func (c *Client) handleFrame(data []byte) {
 		}
 		return
 	}
+
+	// 其余帧（MessageType 缺失/未知）：对齐 rust gateway.rs dispatch_loop 的
+	// 回包容错——部分大包如 FriendService.GetAll 不带标准 Response type。仅当
+	// client_seq != 0 且命中 pending、method 名为空或与 pending 请求一致时，
+	// 按回包容错完成；其余帧照旧丢弃（显式 Notify 一律走 onNotify，绝不当回包）。
+	if msg.Meta.ClientSeq != 0 {
+		if req, ok := c.pending[msg.Meta.ClientSeq]; ok &&
+			(msg.Meta.MethodName == "" || msg.Meta.MethodName == req.method) {
+			delete(c.pending, msg.Meta.ClientSeq)
+			c.mu.Unlock()
+			c.settleResponse(req, msg.Meta, body)
+			return
+		}
+	}
 	c.mu.Unlock()
+}
+
+// settleResponse 以回包语义完成一个在途请求：错误码非 0 记为失败，否则交付 body
+// （对齐 rust handle_response：error_code != 0 → fail，否则 complete）。
+func (c *Client) settleResponse(req *queuedRequest, meta *gatepb.Meta, body []byte) {
+	if meta.ErrorCode != 0 {
+		c.settle(req, rpcResult{meta: meta, err: fmt.Errorf("%s.%s error code=%d %s",
+			meta.ServiceName, meta.MethodName, meta.ErrorCode, meta.ErrorMessage)})
+		return
+	}
+	c.settle(req, rpcResult{body: body, meta: meta})
 }
 
 func (c *Client) rejectAll(err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	// 读循环死亡 = 会话结束：清一次性初始化凭据（对齐 rust end_session → clear）。
+	c.tokens.Clear()
 	for seq, req := range c.pending {
 		c.settleLocked(req, rpcResult{err: err})
 		delete(c.pending, seq)
@@ -593,6 +658,44 @@ func (c *Client) InboundSilenceMs() int64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return time.Since(c.lastInboundAt).Milliseconds()
+}
+
+// StageInitToken 暂存一次性 TSDK 初始化凭据（登录 bindUser 成功后由 Session
+// 调用，对齐 rust gateway.rs login 第 6 步 stage_init_token）。
+func (c *Client) StageInitToken(value string) (int, error) {
+	return c.tokens.StageInitToken(value)
+}
+
+// ClearTokens 丢弃未消费的一次性初始化凭据（会话结束/重连时调用，
+// 对齐 rust end_session → token_provider.clear()）。
+func (c *Client) ClearTokens() { c.tokens.Clear() }
+
+// ReplaceEncryptor 原子替换加密器（TSDK 重建时调用，对齐 rust
+// Gateway.replace_encryptor）。新 encryptor 对后续所有出站帧立即可见；
+// 替换瞬间的在途请求不受影响。
+func (c *Client) ReplaceEncryptor(e Encryptor) {
+	c.mu.Lock()
+	c.encryptor = e
+	c.mu.Unlock()
+}
+
+// BeginRebuild 进入 TSDK 重建期：期间心跳判死静默阈值放宽到 90s
+// （对齐 rust Gateway.begin_rebuild，WorkerLoop 据此放宽 silence 阈值）。
+func (c *Client) BeginRebuild() { c.rebuilding.Store(true) }
+
+// EndRebuild 退出 TSDK 重建期（对齐 rust Gateway.end_rebuild）。
+func (c *Client) EndRebuild() { c.rebuilding.Store(false) }
+
+// IsRebuilding reports whether the TSDK rebuild is in progress.
+func (c *Client) IsRebuilding() bool { return c.rebuilding.Load() }
+
+// Connected reports whether the websocket is dialed and open.
+// Session 层离线短路（ACE AntiData 等）用它 + 会话状态等价 rust 的
+// `gateway.phase() == Online` 判断。
+func (c *Client) Connected() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.conn != nil && !c.closed.Load()
 }
 
 // logRequestPressureLocked throttles queue pressure warnings to one per 5s;

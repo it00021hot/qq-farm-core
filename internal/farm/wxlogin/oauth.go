@@ -331,10 +331,23 @@ func (s *WxLoginService) RefreshCredentialsAndBuffer(ctx context.Context, creds 
 		return YybCredentials{}, err
 	}
 	current.LoginBuffer = loginBuffer
+	// 新签发的 buffer 尚未消费（对齐 rust accounts.rs persist_yyb_credentials 的
+	// has_new_buffer → buffer_consumed=false；rust 靠持久化层复位，go 侧凭据
+	// 结构自带标记，故在重签出口直接复位，保活路径才能覆盖旧的已消费标记）。
+	current.BufferConsumed = false
 	return current, nil
 }
 
+// mintCodeFn 原生协议换码入口的包级变量，测试可替换（生产为 getNativeWxLoginCode）。
+var mintCodeFn = getNativeWxLoginCode
+
 // MintGatewayCode mints a one-shot wx.login code from login_buffer.
+//
+// 对齐 rust service.rs mint_gateway_code（login_buffer 一次性消费记账）：
+//   - 未消费过的 buffer（刚扫码 / 刚重签）直接换；
+//   - 已消费过的先 RefreshCredentialsAndBuffer 重签再换，不再先撞必被服务端
+//     ManualAuth 拒绝的旧 buffer（减少一次必然失败的请求）；
+//   - 成功换码后 BufferConsumed 置位，随凭据一起落盘。
 func (s *WxLoginService) MintGatewayCode(ctx context.Context, creds YybCredentials, appID string) (string, YybCredentials, error) {
 	current := creds
 	if strings.TrimSpace(current.LoginBuffer) == "" {
@@ -343,8 +356,17 @@ func (s *WxLoginService) MintGatewayCode(ctx context.Context, creds YybCredentia
 	if strings.TrimSpace(appID) == "" {
 		appID = TargetMiniProgramID
 	}
-	code, err := getNativeWxLoginCode(ctx, current.LoginBuffer, appID)
+	if current.BufferConsumed {
+		// 已消费的 buffer：先刷新凭据 + 重签 login_buffer（rust service.rs:408-410）。
+		refreshed, err := s.RefreshCredentialsAndBuffer(ctx, current)
+		if err != nil {
+			return "", current, err
+		}
+		current = refreshed
+	}
+	code, err := mintCodeFn(ctx, current.LoginBuffer, appID)
 	if err == nil {
+		current.BufferConsumed = true
 		return code, current, nil
 	}
 	slog.Warn("login_buffer mint failed, refreshing via Yingyongbao", "err", err)
@@ -363,10 +385,12 @@ func (s *WxLoginService) MintGatewayCode(ctx context.Context, creds YybCredentia
 	} else {
 		return "", current, mapNativeMintErr(err, nil)
 	}
-	code, err = getNativeWxLoginCode(ctx, current.LoginBuffer, appID)
+	code, err = mintCodeFn(ctx, current.LoginBuffer, appID)
 	if err != nil {
 		return "", current, mapNativeMintErr(err, nil)
 	}
+	// 成功换码：无论哪条路径拿到的新 buffer 都已被本次换码消费（rust service.rs:428）。
+	current.BufferConsumed = true
 	return code, current, nil
 }
 
@@ -516,6 +540,9 @@ func parseRefreshTokenJSON(data []byte, base YybCredentials) (YybCredentials, er
 	}
 	updated.AccessToken = accessToken
 	updated.LoginBuffer = base.LoginBuffer
+	// buffer 消费标记沿用入参（对齐 rust parse_refresh_token_json 透传；
+	// RefreshCredentialsAndBuffer 重签新 buffer 后会复位为未消费）。
+	updated.BufferConsumed = base.BufferConsumed
 	updated.ExpiresAt = now + expiresIn
 	updated.ExpiresIn = expiresIn
 	return updated, nil

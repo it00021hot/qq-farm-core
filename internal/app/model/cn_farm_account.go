@@ -29,10 +29,14 @@ type FarmAccount struct {
 	WxRefreshToken           string `gorm:"column:wx_refresh_token;size:512;not null;default:'';comment:应用宝refreshtoken" json:"-"`
 	WxTokenExpiresAt         int64  `gorm:"column:wx_token_expires_at;not null;default:0;comment:应用宝token过期Unix秒" json:"-"`
 	WxRefreshTokenObservedAt int64  `gorm:"column:wx_refresh_token_observed_at;not null;default:0;comment:refresh_token首次观察Unix秒" json:"-"`
-	WxAuthorized             bool   `gorm:"-" json:"wxAuthorized"`
-	WxRescanRecommended      bool   `gorm:"-" json:"wxRescanRecommended"`
-	CreatedAt                uint   `gorm:"column:created_at;not null;comment:创建时间" json:"createdAt"`
-	UpdatedAt                uint   `gorm:"column:updated_at;not null;comment:更新时间" json:"updatedAt"`
+	// WxBufferConsumed 标记 wx_login_buffer 是否已被消费（对齐 rust
+	// accounts.rs wx_buffer_consumed：单个 login_buffer 一次性，换码成功后置位，
+	// 重连换码时先刷新凭据重签再换，避免先撞必被 ManualAuth 拒绝的旧 buffer）。
+	WxBufferConsumed    bool `gorm:"column:wx_buffer_consumed;not null;default:false;comment:login_buffer已消费标记" json:"-"`
+	WxAuthorized        bool `gorm:"-" json:"wxAuthorized"`
+	WxRescanRecommended bool `gorm:"-" json:"wxRescanRecommended"`
+	CreatedAt           uint `gorm:"column:created_at;not null;comment:创建时间" json:"createdAt"`
+	UpdatedAt           uint `gorm:"column:updated_at;not null;comment:更新时间" json:"updatedAt"`
 }
 
 func (*FarmAccount) TableName() string { return TableNameFarmAccount }
