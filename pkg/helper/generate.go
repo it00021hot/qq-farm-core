@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/gogf/gf/v2/text/gstr"
 	uuid2 "github.com/google/uuid"
 	"github.com/hashicorp/go-uuid"
 	"github.com/spf13/cast"
@@ -99,7 +98,10 @@ func GenerateUuid(size int) string {
 	if err != nil {
 		return ""
 	}
-	return gstr.SubStr(str, 0, size)
+	if size > len(str) {
+		size = len(str)
+	}
+	return str[:size]
 }
 
 // RandString 随机字符串
