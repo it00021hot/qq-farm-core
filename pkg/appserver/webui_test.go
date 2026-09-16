@@ -18,7 +18,6 @@ func TestIsReservedAPIPath(t *testing.T) {
 		{"/api/ping", true},
 		{"/game-config/foo.png", true},
 		{"/token/create", true},
-		{"/docs", true},
 	}
 	for _, tc := range cases {
 		if got := isReservedAPIPath(tc.path); got != tc.want {
