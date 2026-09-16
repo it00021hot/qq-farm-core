@@ -6,8 +6,8 @@ QQ 农场智能助手后端：多账号托管、自动化种地/好友互动、�
 
 - 仓库：[github.com/it00021hot/qq-farm-core](https://github.com/it00021hot/qq-farm-core)
 - Go 模块：`github.com/it00021hot/qq-farm-core`
-- 配套前端：[`../qq-farm-web`](../qq-farm-web) · [GitHub](https://github.com/it00021hot/qq-farm-web)
-- 桌面端（Wails）：[`../qq-farm-desktop`](../qq-farm-desktop) · [GitHub](https://github.com/it00021hot/qq-farm-desktop)（通过 [`pkg/appserver`](pkg/appserver) 进程内启动本服务）
+- 配套前端：[qq-farm-web](https://github.com/it00021hot/qq-farm-web)（作为 `frontend/` 子模块随桌面端分发）
+- 桌面端（Wails）：[qq-farm-desktop](https://github.com/it00021hot/qq-farm-desktop)（以 `core/` 子模块引用本仓库，通过 [`pkg/appserver`](pkg/appserver) 进程内启动本服务）
 
 ## 功能概览
 
@@ -77,7 +77,7 @@ go run ./cmd/app -e=dev -p=9528
 go get github.com/it00021hot/qq-farm-core@v0.1.0
 ```
 
-本地联调可在 `qq-farm-desktop/go.mod` 临时：
+桌面端以子模块方式引用本仓库（`qq-farm-desktop/core/`，其 `go.mod` 中 `replace => ./core`），无需额外配置；如在其他仓库本地联调，可在其 `go.mod` 中：
 
 ```
 replace github.com/it00021hot/qq-farm-core => ../qq-farm-core
