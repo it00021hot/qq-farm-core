@@ -19,6 +19,7 @@ import (
 	"github.com/it00021hot/qq-farm-core/internal/farm/logic"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/activitypb"
 	"github.com/it00021hot/qq-farm-core/internal/farm/proto/corepb"
+	"github.com/it00021hot/qq-farm-core/internal/vars"
 )
 
 const (
@@ -115,11 +116,14 @@ func loadPetDiaryCatalog() (*petDiaryCatalog, map[string]string, error) {
 	return &catalog, assets, nil
 }
 
+// dataRootOrDefault resolves the farm resource root. The desktop shell extracts
+// resources under vars.BasePath and may launch with an unrelated working
+// directory, so the fallback must never stay CWD-relative.
 func dataRootOrDefault(env string) string {
 	if env != "" {
 		return env
 	}
-	return "resource/farm"
+	return filepath.Join(vars.BasePath, "resource", "farm")
 }
 
 func petDiaryImage(assets map[string]string, path string) string {
